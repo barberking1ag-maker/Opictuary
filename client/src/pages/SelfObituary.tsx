@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { FileText, Video, Heart, Lock, CheckCircle2 } from "lucide-react";
+import { FontSelector } from "@/components/FontSelector";
+import { SymbolSelector } from "@/components/SymbolSelector";
 
 const selfObituarySchema = z.object({
   userEmail: z.string().email("Valid email is required"),
@@ -20,6 +22,8 @@ const selfObituarySchema = z.object({
   epitaph: z.string().optional(),
   finalWordsText: z.string().optional(),
   finalWordsVideoUrl: z.string().url().optional().or(z.literal("")),
+  fontFamily: z.string().optional(),
+  symbol: z.string().optional(),
   emergencyContactName: z.string().min(1, "Emergency contact name is required"),
   emergencyContactEmail: z.string().email("Valid email is required"),
   emergencyContactPhone: z.string().optional(),
@@ -42,6 +46,8 @@ export default function SelfObituary() {
       epitaph: "",
       finalWordsText: "",
       finalWordsVideoUrl: "",
+      fontFamily: "",
+      symbol: "",
       emergencyContactName: "",
       emergencyContactEmail: "",
       emergencyContactPhone: "",
@@ -228,6 +234,42 @@ export default function SelfObituary() {
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Personalization</CardTitle>
+              <CardDescription>Choose how your memorial will be displayed</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fontFamily"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <FontSelector value={field.value} onChange={field.onChange} testId="select-font" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="symbol"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <SymbolSelector value={field.value} onChange={field.onChange} testId="select-symbol" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
