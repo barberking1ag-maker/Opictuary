@@ -40,9 +40,21 @@ export default function CelebrityMemorials() {
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-br from-primary/10 to-accent/10 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl md:text-5xl font-serif font-semibold text-foreground mb-4">
-            Celebrity & Influencer Memorials
-          </h1>
+          <div className="flex items-center gap-4 mb-4">
+            <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+              <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
+              <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
+              <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
+              <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+              <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+              <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+              <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+              <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
+            </svg>
+            <h1 className="text-4xl md:text-5xl font-serif font-semibold text-foreground">
+              Celebrity & Influencer Memorials
+            </h1>
+          </div>
           <p className="text-lg text-muted-foreground max-w-3xl">
             Honor iconic figures and support their favorite charities. Each memorial unlocks with a $10 donation, 
             with 95% going directly to the charity.
