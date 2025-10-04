@@ -8,6 +8,34 @@ Opictuary is a digital memorial platform that enables families and friends to cr
 
 Preferred communication style: Simple, everyday language.
 
+## Mobile App Deployment
+
+Opictuary is configured as a **native mobile application** using Capacitor + PWA technology:
+
+**PWA Foundation:**
+- Progressive Web App manifest for installability
+- Service worker with offline caching strategy
+- Mobile-optimized viewport and touch interactions
+- App icons and splash screens
+
+**Capacitor Integration:**
+- iOS and Android native app containers
+- Camera plugin for QR code scanning (`useQRScanner` hook)
+- Push notifications for scheduled messages (`usePushNotifications` hook)
+- Splash screen and status bar customization
+
+**Build & Deployment:**
+- `npm run build` - Builds production assets to `dist/public`
+- `npx cap sync` - Syncs web assets to iOS/Android platforms
+- `npx cap open ios` - Opens iOS project in Xcode
+- `npx cap open android` - Opens Android project in Android Studio
+
+**Native Features:**
+- QR code scanning via device camera
+- Push notifications for scheduled messages
+- Offline content caching
+- Native splash screen and status bar styling
+
 ## System Architecture
 
 ### Frontend Architecture
