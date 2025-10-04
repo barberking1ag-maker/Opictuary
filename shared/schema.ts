@@ -252,6 +252,25 @@ export const prisonAuditLogs = pgTable("prison_audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Memorial Product & Service Advertisements
+export const advertisements = pgTable("advertisements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  productName: text("product_name").notNull(),
+  category: text("category").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url"),
+  contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone"),
+  websiteUrl: text("website_url"),
+  pricing: text("pricing"),
+  isActive: boolean("is_active").default(true),
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
 // Relations
 export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   memories: many(memories),
@@ -419,6 +438,13 @@ export const insertPrisonAuditLogSchema = createInsertSchema(prisonAuditLogs).om
   createdAt: true,
 });
 
+export const insertAdvertisementSchema = createInsertSchema(advertisements).omit({
+  id: true,
+  createdAt: true,
+  impressions: true,
+  clicks: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -479,3 +505,6 @@ export type PrisonAccessSession = typeof prisonAccessSessions.$inferSelect;
 
 export type InsertPrisonAuditLog = z.infer<typeof insertPrisonAuditLogSchema>;
 export type PrisonAuditLog = typeof prisonAuditLogs.$inferSelect;
+
+export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
+export type Advertisement = typeof advertisements.$inferSelect;

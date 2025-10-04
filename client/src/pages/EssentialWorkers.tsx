@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Shield, Activity, Flame, Cross } from "lucide-react";
 import type { EssentialWorkerMemorial } from "@shared/schema";
 import { getFontFamily, getSymbolIcon } from "@/lib/customization";
+import { AdDisplay } from "@/components/AdDisplay";
 
 const categoryIcons = {
   police: Shield,
@@ -122,7 +123,8 @@ export default function EssentialWorkers() {
           ))}
         </div>
       ) : memorials && memorials.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
           {memorials.map((memorial) => {
             const customFont = getFontFamily(memorial.fontFamily);
             const SymbolIcon = getSymbolIcon(memorial.symbol);
@@ -203,6 +205,12 @@ export default function EssentialWorkers() {
             </Card>
           );
           })}
+          </div>
+          <div className="lg:col-span-1">
+            <div className="sticky top-4">
+              <AdDisplay category="memorials" maxAds={3} />
+            </div>
+          </div>
         </div>
       ) : (
         <div className="text-center py-12">

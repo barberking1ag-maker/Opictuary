@@ -13,6 +13,7 @@ import {
   musicPlaylists,
   essentialWorkersMemorials,
   selfWrittenObituaries,
+  advertisements,
   prisonFacilities,
   prisonAccessRequests,
   prisonVerifications,
@@ -47,6 +48,8 @@ import {
   type InsertEssentialWorkerMemorial,
   type SelfWrittenObituary,
   type InsertSelfWrittenObituary,
+  type Advertisement,
+  type InsertAdvertisement,
   type PrisonFacility,
   type InsertPrisonFacility,
   type PrisonAccessRequest,
@@ -130,6 +133,15 @@ export interface IStorage {
   createSelfWrittenObituary(obituary: InsertSelfWrittenObituary): Promise<SelfWrittenObituary>;
   updateSelfWrittenObituary(id: string, obituary: Partial<InsertSelfWrittenObituary>): Promise<SelfWrittenObituary | undefined>;
   activateSelfWrittenObituary(id: string): Promise<SelfWrittenObituary | undefined>;
+
+  // Advertisement operations
+  listAdvertisements(category?: string): Promise<Advertisement[]>;
+  getAdvertisement(id: string): Promise<Advertisement | undefined>;
+  createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
+  updateAdvertisement(id: string, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
+  deleteAdvertisement(id: string): Promise<void>;
+  incrementAdImpression(id: string): Promise<void>;
+  incrementAdClick(id: string): Promise<void>;
 
   // Prison Access System operations
   listPrisonFacilities(): Promise<PrisonFacility[]>;
@@ -572,6 +584,58 @@ export class DatabaseStorage implements IStorage {
       .where(eq(selfWrittenObituaries.id, id))
       .returning();
     return activated || undefined;
+  }
+
+  // Advertisement operations
+  async listAdvertisements(category?: string): Promise<Advertisement[]> {
+    const conditions = [eq(advertisements.isActive, true)];
+    
+    if (category && category.trim() !== "") {
+      conditions.push(eq(advertisements.category, category));
+    }
+
+    const ads = await db
+      .select()
+      .from(advertisements)
+      .where(and(...conditions))
+      .orderBy(desc(advertisements.createdAt));
+
+    const now = new Date();
+    return ads.filter(ad => !ad.expiresAt || new Date(ad.expiresAt) > now);
+  }
+
+  async getAdvertisement(id: string): Promise<Advertisement | undefined> {
+    const [ad] = await db.select().from(advertisements).where(eq(advertisements.id, id));
+    return ad || undefined;
+  }
+
+  async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
+    const [created] = await db.insert(advertisements).values(ad).returning();
+    return created;
+  }
+
+  async updateAdvertisement(id: string, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined> {
+    const [updated] = await db.update(advertisements)
+      .set(ad)
+      .where(eq(advertisements.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteAdvertisement(id: string): Promise<void> {
+    await db.delete(advertisements).where(eq(advertisements.id, id));
+  }
+
+  async incrementAdImpression(id: string): Promise<void> {
+    await db.update(advertisements)
+      .set({ impressions: sql`${advertisements.impressions} + 1` })
+      .where(eq(advertisements.id, id));
+  }
+
+  async incrementAdClick(id: string): Promise<void> {
+    await db.update(advertisements)
+      .set({ clicks: sql`${advertisements.clicks} + 1` })
+      .where(eq(advertisements.id, id));
   }
 }
 

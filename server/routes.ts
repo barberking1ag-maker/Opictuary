@@ -17,6 +17,7 @@ import {
   insertMusicPlaylistSchema,
   insertEssentialWorkerMemorialSchema,
   insertSelfWrittenObituarySchema,
+  insertAdvertisementSchema,
   insertPrisonFacilitySchema,
   insertPrisonAccessRequestSchema,
   insertPrisonVerificationSchema,
@@ -496,6 +497,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Obituary not found" });
       }
       res.json(obituary);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Advertisement routes
+  app.get("/api/advertisements", async (req, res) => {
+    try {
+      const { category } = req.query;
+      const ads = await storage.listAdvertisements(category as string);
+      res.json(ads);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/advertisements/:id", async (req, res) => {
+    try {
+      const ad = await storage.getAdvertisement(req.params.id);
+      if (!ad) {
+        return res.status(404).json({ error: "Advertisement not found" });
+      }
+      res.json(ad);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/advertisements", async (req, res) => {
+    try {
+      const data = insertAdvertisementSchema.parse(req.body);
+      const ad = await storage.createAdvertisement(data);
+      res.status(201).json(ad);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/advertisements/:id", async (req, res) => {
+    try {
+      const data = insertAdvertisementSchema.partial().parse(req.body);
+      const ad = await storage.updateAdvertisement(req.params.id, data);
+      if (!ad) {
+        return res.status(404).json({ error: "Advertisement not found" });
+      }
+      res.json(ad);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/advertisements/:id", async (req, res) => {
+    try {
+      await storage.deleteAdvertisement(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/advertisements/:id/impression", async (req, res) => {
+    try {
+      await storage.incrementAdImpression(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/advertisements/:id/click", async (req, res) => {
+    try {
+      await storage.incrementAdClick(req.params.id);
+      res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
