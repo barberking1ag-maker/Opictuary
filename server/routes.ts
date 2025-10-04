@@ -665,6 +665,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      if (error.message?.includes('unique constraint') && error.message?.includes('email')) {
+        return res.status(409).json({ error: 'A partner with this email already exists' });
+      }
       res.status(500).json({ error: error.message });
     }
   });

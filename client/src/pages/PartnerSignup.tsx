@@ -55,7 +55,8 @@ export default function PartnerSignup() {
 
   const submitPartner = useMutation({
     mutationFn: async (data: PartnerSignupForm) => {
-      return await apiRequest("POST", "/api/funeral-home-partners", data);
+      const res = await apiRequest("POST", "/api/funeral-home-partners", data);
+      return await res.json();
     },
     onSuccess: (data) => {
       setPartnerData(data);
