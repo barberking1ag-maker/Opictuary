@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Heart, Shield, Activity, Flame, Cross } from "lucide-react";
 import type { EssentialWorkerMemorial } from "@shared/schema";
+import { getFontFamily, getSymbolIcon } from "@/lib/customization";
 
 const categoryIcons = {
   police: Shield,
@@ -122,7 +123,11 @@ export default function EssentialWorkers() {
         </div>
       ) : memorials && memorials.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {memorials.map((memorial) => (
+          {memorials.map((memorial) => {
+            const customFont = getFontFamily(memorial.fontFamily);
+            const SymbolIcon = getSymbolIcon(memorial.symbol);
+            
+            return (
             <Card key={memorial.id} className="overflow-hidden hover-elevate" data-testid={`card-memorial-${memorial.id}`}>
               {memorial.imageUrl && (
                 <div className="h-48 overflow-hidden bg-muted">
@@ -135,7 +140,12 @@ export default function EssentialWorkers() {
               )}
               <CardHeader>
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <CardTitle className="text-xl">{memorial.fullName}</CardTitle>
+                  <CardTitle className="text-xl" style={customFont ? { fontFamily: customFont } : undefined}>
+                    {SymbolIcon && (
+                      <SymbolIcon className="inline-block w-5 h-5 mr-2 text-primary" />
+                    )}
+                    {memorial.fullName}
+                  </CardTitle>
                   <div className={`p-2 rounded-lg ${categoryColors[memorial.category as keyof typeof categoryColors]}`}>
                     {getCategoryIcon(memorial.category)}
                   </div>
@@ -161,7 +171,7 @@ export default function EssentialWorkers() {
                 )}
 
                 {memorial.biography && (
-                  <p className="text-sm text-muted-foreground line-clamp-3">
+                  <p className="text-sm text-muted-foreground line-clamp-3" style={customFont ? { fontFamily: customFont } : undefined}>
                     {memorial.biography}
                   </p>
                 )}
@@ -191,7 +201,8 @@ export default function EssentialWorkers() {
                 )}
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
         </div>
       ) : (
         <div className="text-center py-12">

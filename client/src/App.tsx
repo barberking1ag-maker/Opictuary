@@ -9,8 +9,9 @@ import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
 import SelfObituary from "@/pages/SelfObituary";
+import CustomizationDemo from "@/pages/CustomizationDemo";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon, Shield, Heart, FileText } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette } from "lucide-react";
 
 function Router() {
   return (
@@ -71,6 +72,12 @@ function Router() {
                   Prison Access
                 </Button>
               </Link>
+              <Link href="/customization">
+                <Button variant="ghost" size="sm" data-testid="nav-customization">
+                  <Palette className="w-4 h-4 mr-1" />
+                  Customize
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -82,6 +89,7 @@ function Router() {
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
         <Route path="/self-obituary" component={SelfObituary} />
+        <Route path="/customization" component={CustomizationDemo} />
         <Route component={NotFound} />
       </Switch>
     </div>
