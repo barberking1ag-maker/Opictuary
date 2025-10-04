@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 
 export function useQRScanner() {
@@ -16,14 +16,24 @@ export function useQRScanner() {
       setIsScanning(true);
       setError(null);
 
-      const result = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera
+      const granted = await checkPermissions();
+      if (!granted) {
+        const permissionGranted = await requestPermissions();
+        if (!permissionGranted) {
+          setError('Camera permission denied');
+          return null;
+        }
+      }
+
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: [BarcodeFormat.QrCode]
       });
 
-      return result.webPath || null;
+      if (barcodes.length > 0) {
+        return barcodes[0].rawValue;
+      }
+
+      return null;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to scan QR code';
       setError(errorMessage);
@@ -35,8 +45,8 @@ export function useQRScanner() {
 
   const checkPermissions = async () => {
     try {
-      const permissions = await Camera.checkPermissions();
-      return permissions.camera === 'granted';
+      const { camera } = await BarcodeScanner.checkPermissions();
+      return camera === 'granted';
     } catch (err) {
       console.error('Error checking camera permissions:', err);
       return false;
@@ -45,8 +55,8 @@ export function useQRScanner() {
 
   const requestPermissions = async () => {
     try {
-      const permissions = await Camera.requestPermissions();
-      return permissions.camera === 'granted';
+      const { camera } = await BarcodeScanner.requestPermissions();
+      return camera === 'granted';
     } catch (err) {
       console.error('Error requesting camera permissions:', err);
       return false;
