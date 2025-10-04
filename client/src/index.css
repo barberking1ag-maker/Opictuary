@@ -14,67 +14,67 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 220 5% 98%;
+  --background: 210 25% 98%;
 
-  --foreground: 220 15% 15%;
+  --foreground: 220 20% 18%;
 
-  --border: 220 10% 88%;
+  --border: 220 15% 85%;
 
-  --card: 220 6% 96%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 220 15% 18%;
+  --card-foreground: 220 20% 20%;
 
-  --card-border: 220 10% 90%;
+  --card-border: 220 20% 88%;
 
-  --sidebar: 220 6% 94%;
+  --sidebar: 250 30% 96%;
 
-  --sidebar-foreground: 220 15% 20%;
+  --sidebar-foreground: 250 35% 25%;
 
-  --sidebar-border: 220 10% 86%;
+  --sidebar-border: 250 25% 88%;
 
-  --sidebar-primary: 220 15% 25%;
+  --sidebar-primary: 250 50% 55%;
 
-  --sidebar-primary-foreground: 220 5% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 8% 88%;
+  --sidebar-accent: 250 40% 92%;
 
-  --sidebar-accent-foreground: 220 15% 25%;
+  --sidebar-accent-foreground: 250 45% 35%;
 
-  --sidebar-ring: 220 15% 25%;
+  --sidebar-ring: 250 50% 55%;
 
-  --popover: 220 8% 92%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 220 15% 20%;
+  --popover-foreground: 220 20% 22%;
 
-  --popover-border: 220 10% 84%;
+  --popover-border: 220 20% 86%;
 
-  --primary: 220 15% 25%;
+  --primary: 250 60% 48%;
 
-  --primary-foreground: 220 5% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 10% 86%;
+  --secondary: 35 85% 34%;
 
-  --secondary-foreground: 220 15% 22%;
+  --secondary-foreground: 0 0% 100%;
 
-  --muted: 220 12% 90%;
+  --muted: 220 18% 92%;
 
-  --muted-foreground: 220 12% 38%;
+  --muted-foreground: 220 15% 42%;
 
-  --accent: 200 18% 88%;
+  --accent: 190 70% 42%;
 
-  --accent-foreground: 200 20% 28%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 65% 48%;
+  --destructive: 0 75% 55%;
 
-  --destructive-foreground: 0 5% 98%;
+  --destructive-foreground: 0 0% 100%;
 
   --input: 220 15% 72%;
   --ring: 220 15% 25%;
-  --chart-1: 220 15% 25%;
-  --chart-2: 200 40% 45%;
-  --chart-3: 35 65% 48%;
-  --chart-4: 280 30% 45%;
-  --chart-5: 160 35% 42%;
+  --chart-1: 250 60% 48%;
+  --chart-2: 190 70% 42%;
+  --chart-3: 35 85% 34%;
+  --chart-4: 280 55% 52%;
+  --chart-5: 160 60% 45%;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Crimson Text', Georgia, serif;

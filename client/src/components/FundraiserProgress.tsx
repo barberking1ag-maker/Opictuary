@@ -53,6 +53,7 @@ export default function FundraiserProgress({
         </div>
 
         <Button 
+          variant="default"
           className="w-full mb-6" 
           size="lg"
           onClick={onDonate}
