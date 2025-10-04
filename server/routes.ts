@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ZodError } from "zod";
 import { z } from "zod";
+import Stripe from "stripe";
 import { 
   insertMemorialSchema, 
   insertMemorySchema, 
@@ -33,6 +34,11 @@ import {
 const inviteCodeSchema = z.object({
   inviteCode: z.string().min(1, "Invite code is required"),
 });
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Memorial routes
@@ -257,6 +263,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const donations = await storage.getDonationsByFundraiserId(req.params.fundraiserId);
       res.json(donations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/fundraisers/:fundraiserId/create-donation-payment-intent", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid donation amount" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(Number(amount) * 100),
+        currency: "usd",
+        metadata: {
+          fundraiserId: req.params.fundraiserId,
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

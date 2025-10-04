@@ -78,6 +78,7 @@ export const donations = pgTable("donations", {
   donorName: text("donor_name").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   isAnonymous: boolean("is_anonymous").default(false),
+  stripePaymentId: text("stripe_payment_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
