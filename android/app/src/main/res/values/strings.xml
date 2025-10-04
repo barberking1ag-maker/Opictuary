@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Opictuary</string>
+    <string name="title_activity_main">Opictuary</string>
+    <string name="package_name">com.opictuary.app</string>
+    <string name="custom_url_scheme">com.opictuary.app</string>
+</resources>
