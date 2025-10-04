@@ -8,6 +8,16 @@ Opictuary is a digital memorial platform that enables families and friends to cr
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**October 4, 2025 - Mobile App Access Control Enhancement:**
+- Implemented invite code verification flow for both web and mobile platforms
+- Removed hardcoded memorial ID - all memorials now load dynamically based on invite code
+- Added security requirement: invite code modal cannot be dismissed without valid code
+- Push notification tokens now persist with correct memorial ID after verification
+- QR scanner integration works seamlessly with invite code flow
+- Unified access control across web and mobile experiences
+
 ## Mobile App Deployment
 
 Opictuary is configured as a **native mobile application** using Capacitor + PWA technology:
@@ -31,10 +41,18 @@ Opictuary is configured as a **native mobile application** using Capacitor + PWA
 - `npx cap open android` - Opens Android project in Android Studio
 
 **Native Features:**
-- QR code scanning via device camera
-- Push notifications for scheduled messages
+- QR code scanning via device camera (extracts invite codes from QR data)
+- Push notifications for scheduled messages (tokens persisted with memorial ID)
 - Offline content caching
 - Native splash screen and status bar styling
+
+**Mobile-Specific Implementation:**
+- Invite code modal opens automatically on app launch
+- Modal cannot be dismissed until valid invite code is entered (security requirement)
+- QR scanner parses both raw invite codes and URL-encoded codes
+- Push notification tokens automatically registered after memorial access granted
+- All memorial data loaded dynamically based on verified invite code
+- Unified access flow for both web and mobile platforms
 
 ## System Architecture
 

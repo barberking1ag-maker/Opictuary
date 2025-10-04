@@ -25,8 +25,9 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
 export default function Home() {
-  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [codeModalOpen, setCodeModalOpen] = useState(true);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const [memorialId, setMemorialId] = useState<string | null>(null);
   const { toast } = useToast();
   const { registerToken, isNative } = usePushNotifications();
 
@@ -39,32 +40,61 @@ export default function Home() {
   const [condolenceSearchQuery, setCondolenceSearchQuery] = useState("");
   const [condolenceSortBy, setCondolenceSortBy] = useState("newest");
 
+  const verifyInviteCodeMutation = useMutation({
+    mutationFn: async (inviteCode: string) => {
+      const res = await apiRequest("POST", "/api/memorials/validate-code", { inviteCode });
+      return await res.json() as Memorial;
+    },
+    onSuccess: (memorial) => {
+      setMemorialId(memorial.id);
+      setCodeModalOpen(false);
+      toast({
+        title: "Access Granted",
+        description: `Welcome to ${memorial.name}'s memorial.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Invalid Code",
+        description: "The access code you entered is incorrect. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const { data: memorial } = useQuery<Memorial>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}`],
+    queryKey: [`/api/memorials/${memorialId}`],
+    enabled: !!memorialId,
   });
 
   const { data: memories = [] } = useQuery<Memory[]>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`],
+    queryKey: [`/api/memorials/${memorialId}/memories`],
+    enabled: !!memorialId,
   });
 
   const { data: condolences = [] } = useQuery<Condolence[]>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/condolences`],
+    queryKey: [`/api/memorials/${memorialId}/condolences`],
+    enabled: !!memorialId,
   });
 
   const { data: fundraisers = [] } = useQuery<Fundraiser[]>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/fundraisers`],
+    queryKey: [`/api/memorials/${memorialId}/fundraisers`],
+    enabled: !!memorialId,
   });
 
   const { data: events = [] } = useQuery<LegacyEvent[]>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/legacy-events`],
+    queryKey: [`/api/memorials/${memorialId}/legacy-events`],
+    enabled: !!memorialId,
   });
 
   const { data: playlist } = useQuery<MusicPlaylist>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/playlist`],
+    queryKey: [`/api/memorials/${memorialId}/playlist`],
+    enabled: !!memorialId,
   });
 
   const { data: griefSupport } = useQuery<GriefSupport>({
-    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/grief-support`],
+    queryKey: [`/api/memorials/${memorialId}/grief-support`],
+    enabled: !!memorialId,
   });
 
   const firstFundraiser = fundraisers[0];
@@ -84,7 +114,7 @@ export default function Home() {
       return await apiRequest("POST", `/api/memories/${memoryId}/approve`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/memories`] });
       toast({
         title: "Memory Approved",
         description: "The memory has been approved and is now visible to all visitors.",
@@ -97,7 +127,7 @@ export default function Home() {
       return await apiRequest("DELETE", `/api/memories/${memoryId}/reject`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/memories`] });
       toast({
         title: "Memory Rejected",
         description: "The memory has been removed.",
@@ -155,10 +185,23 @@ export default function Home() {
 
   const pendingMemories = memories.filter(m => !m.isApproved);
 
-  if (!memorial) {
+  if (!memorialId || !memorial) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading memorial...</p>
+        <InviteCodeModal 
+          open={codeModalOpen}
+          onOpenChange={(open) => {
+            if (memorialId) {
+              setCodeModalOpen(open);
+            }
+          }}
+          onSubmit={(code) => {
+            verifyInviteCodeMutation.mutate(code);
+          }}
+        />
+        {memorialId && !memorial && (
+          <p className="text-muted-foreground">Loading memorial...</p>
+        )}
       </div>
     );
   }
@@ -382,15 +425,6 @@ export default function Home() {
         />
       </div>
 
-      <InviteCodeModal 
-        open={codeModalOpen}
-        onOpenChange={setCodeModalOpen}
-        onSubmit={(code) => {
-          console.log('Code submitted:', code);
-          setCodeModalOpen(false);
-        }}
-      />
-
       {firstFundraiser && (
         <DonationPaymentModal
           open={donationModalOpen}
@@ -399,7 +433,7 @@ export default function Home() {
           fundraiserTitle={firstFundraiser.title}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: [`/api/fundraisers/${firstFundraiser.id}/donations`] });
-            queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/fundraisers`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/fundraisers`] });
             setDonationModalOpen(false);
           }}
         />
