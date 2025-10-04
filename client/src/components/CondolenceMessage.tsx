@@ -17,15 +17,15 @@ export default function CondolenceMessage({
   const initials = authorName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
-    <Card className="p-4" data-testid="card-condolence">
-      <div className="flex gap-3">
-        <Avatar>
+    <Card className="p-6 shadow-sm" data-testid="card-condolence">
+      <div className="flex gap-4">
+        <Avatar className="w-10 h-10">
           <AvatarImage src={authorAvatar} />
-          <AvatarFallback>{initials}</AvatarFallback>
+          <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 mb-1">
-            <h4 className="font-medium text-foreground" data-testid="text-condolence-author">
+          <div className="flex items-baseline gap-2 mb-2">
+            <h4 className="font-semibold text-foreground" data-testid="text-condolence-author">
               {authorName}
             </h4>
             <span className="text-xs text-muted-foreground" data-testid="text-condolence-time">

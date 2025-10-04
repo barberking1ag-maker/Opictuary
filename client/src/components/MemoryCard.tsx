@@ -34,9 +34,9 @@ export default function MemoryCard({
   const initials = authorName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
-    <Card className={`overflow-hidden ${isPending ? 'bg-amber-50 dark:bg-amber-950/20' : ''}`} data-testid={`card-memory-${isPending ? 'pending' : 'approved'}`}>
+    <Card className={`overflow-hidden shadow-sm ${isPending ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200' : ''}`} data-testid={`card-memory-${isPending ? 'pending' : 'approved'}`}>
       {isPending && (
-        <div className="px-6 py-3 bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800">
+        <div className="px-6 py-3 bg-amber-100/50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800">
           <Badge variant="outline" className="bg-amber-200 dark:bg-amber-900 border-amber-400 dark:border-amber-700 text-amber-900 dark:text-amber-100">
             Pending Approval
           </Badge>
@@ -45,12 +45,12 @@ export default function MemoryCard({
       
       <div className="p-6">
         <div className="flex items-start gap-3 mb-4">
-          <Avatar>
+          <Avatar className="w-10 h-10">
             <AvatarImage src={authorAvatar} />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h3 className="font-medium text-foreground" data-testid="text-author-name">{authorName}</h3>
+            <h3 className="font-semibold text-foreground" data-testid="text-author-name">{authorName}</h3>
             <p className="text-sm text-muted-foreground" data-testid="text-timestamp">{timestamp}</p>
           </div>
           <Button size="icon" variant="ghost" data-testid="button-memory-options">
@@ -59,7 +59,7 @@ export default function MemoryCard({
         </div>
 
         {imageUrl && (
-          <div className="mb-4 rounded-md overflow-hidden">
+          <div className="mb-4 rounded-lg overflow-hidden">
             <img src={imageUrl} alt="Memory" className="w-full h-64 object-cover" data-testid="img-memory" />
           </div>
         )}
