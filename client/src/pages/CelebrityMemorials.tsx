@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { CelebrityMemorial } from "@shared/schema";
 import CelebrityMemorialCard from "@/components/CelebrityMemorialCard";
 import DonationGateModal from "@/components/DonationGateModal";
 import { Input } from "@/components/ui/input";
@@ -6,80 +8,28 @@ import { Search } from "lucide-react";
 
 export default function CelebrityMemorials() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCelebrity, setSelectedCelebrity] = useState<any>(null);
+  const [selectedCelebrity, setSelectedCelebrity] = useState<CelebrityMemorial | null>(null);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
 
-  //todo: remove mock functionality
-  const mockCelebrities = [
-    {
-      id: 1,
-      name: "Queen Elizabeth II",
-      title: "Queen of the United Kingdom (1926-2022)",
-      charityName: "The Queen's Commonwealth Trust",
-      donationAmount: 10,
-      fanCount: 125847,
-      isUnlocked: false
-    },
-    {
-      id: 2,
-      name: "Kobe Bryant",
-      title: "NBA Legend & Philanthropist (1978-2020)",
-      charityName: "Mamba & Mambacita Sports Foundation",
-      donationAmount: 10,
-      fanCount: 98432,
-      isUnlocked: false
-    },
-    {
-      id: 3,
-      name: "David Bowie",
-      title: "Music Icon & Cultural Pioneer (1947-2016)",
-      charityName: "Save the Children",
-      donationAmount: 10,
-      fanCount: 87234,
-      isUnlocked: false
-    },
-    {
-      id: 4,
-      name: "Ruth Bader Ginsburg",
-      title: "Supreme Court Justice (1933-2020)",
-      charityName: "American Civil Liberties Union",
-      donationAmount: 10,
-      fanCount: 76543,
-      isUnlocked: false
-    },
-    {
-      id: 5,
-      name: "Robin Williams",
-      title: "Actor & Comedian (1951-2014)",
-      charityName: "St. Jude Children's Research Hospital",
-      donationAmount: 10,
-      fanCount: 112389,
-      isUnlocked: false
-    },
-    {
-      id: 6,
-      name: "Princess Diana",
-      title: "Princess of Wales (1961-1997)",
-      charityName: "The Diana Award",
-      donationAmount: 10,
-      fanCount: 156782,
-      isUnlocked: false
-    }
-  ];
+  const { data: celebrities = [], isLoading } = useQuery<CelebrityMemorial[]>({
+    queryKey: ["/api/celebrity-memorials"],
+  });
 
-  const filteredCelebrities = mockCelebrities.filter(celebrity =>
+  const filteredCelebrities = celebrities.filter(celebrity =>
     celebrity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     celebrity.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDonate = (celebrity: any) => {
+  const handleDonate = (celebrity: CelebrityMemorial) => {
     setSelectedCelebrity(celebrity);
     setDonationModalOpen(true);
   };
 
-  const handleDonationSubmit = (amount: number, email: string) => {
+  const handleDonationSubmit = async (amount: number, email: string) => {
+    if (!selectedCelebrity) return;
+    
     console.log('Donation completed:', { 
-      celebrity: selectedCelebrity?.name, 
+      celebrity: selectedCelebrity.name, 
       amount, 
       email 
     });
@@ -114,21 +64,39 @@ export default function CelebrityMemorials() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCelebrities.map((celebrity) => (
-            <CelebrityMemorialCard
-              key={celebrity.id}
-              {...celebrity}
-              onDonate={() => handleDonate(celebrity)}
-              onView={() => console.log('View memorial:', celebrity.name)}
-            />
-          ))}
-        </div>
-
-        {filteredCelebrities.length === 0 && (
+        {isLoading ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">No celebrities found matching your search.</p>
+            <p className="text-muted-foreground">Loading celebrity memorials...</p>
           </div>
+        ) : (
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCelebrities.map((celebrity) => (
+                <CelebrityMemorialCard
+                  key={celebrity.id}
+                  name={celebrity.name}
+                  title={celebrity.title}
+                  imageUrl={celebrity.imageUrl || undefined}
+                  charityName={celebrity.charityName}
+                  donationAmount={Number(celebrity.donationAmount)}
+                  fanCount={celebrity.fanCount || 0}
+                  isUnlocked={false}
+                  onDonate={() => handleDonate(celebrity)}
+                  onView={() => console.log('View memorial:', celebrity.name)}
+                />
+              ))}
+            </div>
+
+            {filteredCelebrities.length === 0 && !isLoading && (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground">
+                  {celebrities.length === 0 
+                    ? "No celebrity memorials available yet."
+                    : "No celebrities found matching your search."}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -138,7 +106,8 @@ export default function CelebrityMemorials() {
           onOpenChange={setDonationModalOpen}
           celebrityName={selectedCelebrity.name}
           charityName={selectedCelebrity.charityName}
-          donationAmount={selectedCelebrity.donationAmount}
+          donationAmount={Number(selectedCelebrity.donationAmount)}
+          platformPercentage={selectedCelebrity.platformPercentage || 5}
           onSubmit={handleDonationSubmit}
         />
       )}
