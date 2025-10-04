@@ -18,29 +18,47 @@ export default function MemorialHero({
   onEnterCode,
   onShare
 }: MemorialHeroProps) {
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
   return (
-    <div className="relative h-[500px] w-full overflow-hidden">
+    <div className="relative h-[600px] w-full overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: imageUrl ? `url(${imageUrl})` : 'linear-gradient(135deg, hsl(220, 15%, 85%) 0%, hsl(220, 15%, 65%) 100%)'
+          backgroundImage: imageUrl 
+            ? `url(${imageUrl})` 
+            : 'linear-gradient(135deg, hsl(220, 15%, 92%) 0%, hsl(220, 15%, 78%) 100%)'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
       
-      <div className="relative h-full flex flex-col justify-end p-8 md:p-12">
-        <div className="max-w-4xl">
-          <h1 className="text-5xl md:text-6xl font-serif font-semibold text-white mb-3" data-testid="text-memorial-name">
+      <div className="relative h-full flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-4">
+            <p className="text-sm text-white/90 tracking-wide">In Loving Memory</p>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-serif font-semibold text-white mb-4 tracking-tight" data-testid="text-memorial-name">
             {name}
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8" data-testid="text-memorial-dates">
-            {birthDate} - {deathDate}
-          </p>
           
-          <div className="flex flex-wrap gap-4">
+          <div className="flex items-center justify-center gap-3 text-white/90">
+            <time className="text-lg md:text-xl font-light" data-testid="text-memorial-dates">
+              {formatDate(birthDate)}
+            </time>
+            <span className="text-2xl font-light">—</span>
+            <time className="text-lg md:text-xl font-light">
+              {formatDate(deathDate)}
+            </time>
+          </div>
+          
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
             <Button 
               size="lg" 
-              className="bg-white/90 backdrop-blur-md text-foreground border border-white/20 hover-elevate active-elevate-2"
+              className="bg-white/95 backdrop-blur-md text-foreground border border-white/20 hover-elevate active-elevate-2 shadow-lg"
               onClick={onEnterCode}
               data-testid="button-enter-code"
             >
@@ -50,7 +68,7 @@ export default function MemorialHero({
             <Button 
               size="lg" 
               variant="outline" 
-              className="bg-white/10 backdrop-blur-md text-white border-white/30 hover-elevate active-elevate-2"
+              className="bg-white/15 backdrop-blur-md text-white border-white/40 hover-elevate active-elevate-2"
               onClick={onShare}
               data-testid="button-share"
             >
