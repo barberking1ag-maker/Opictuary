@@ -6,8 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import Home from "@/pages/Home";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
+import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon } from "lucide-react";
+import { Star, Home as HomeIcon, Shield } from "lucide-react";
 
 function Router() {
   return (
@@ -43,6 +44,12 @@ function Router() {
                   Celebrity Memorials
                 </Button>
               </Link>
+              <Link href="/prison-access">
+                <Button variant="ghost" data-testid="nav-prison-access">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Prison Access
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -51,6 +58,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
+        <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route component={NotFound} />
       </Switch>
     </div>
