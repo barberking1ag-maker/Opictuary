@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
 import MemorialHero from "@/components/MemorialHero";
 import MemorialTabs from "@/components/MemorialTabs";
@@ -14,14 +14,28 @@ import InviteCodeModal from "@/components/InviteCodeModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
 import GriefSupportPanel from "@/components/GriefSupportPanel";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
+import ContentControls from "@/components/ContentControls";
+import AdminContentPanel from "@/components/AdminContentPanel";
+import MemoryTimeline from "@/components/MemoryTimeline";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
 export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const [memorySearchQuery, setMemorySearchQuery] = useState("");
+  const [memorySortBy, setMemorySortBy] = useState("newest");
+  const [memoryViewMode, setMemoryViewMode] = useState<"grid" | "list" | "timeline">("list");
+  const [showApproved, setShowApproved] = useState(true);
+  const [showPending, setShowPending] = useState(true);
+
+  const [condolenceSearchQuery, setCondolenceSearchQuery] = useState("");
+  const [condolenceSortBy, setCondolenceSortBy] = useState("newest");
 
   const { data: memorial } = useQuery<Memorial>({
     queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}`],
@@ -62,6 +76,80 @@ export default function Home() {
     amount: Number(d.amount),
     timestamp: new Date(d.createdAt || "").toLocaleDateString(),
   }));
+
+  const approveMutation = useMutation({
+    mutationFn: async (memoryId: string) => {
+      return await apiRequest(`/api/memories/${memoryId}/approve`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
+      toast({
+        title: "Memory Approved",
+        description: "The memory has been approved and is now visible to all visitors.",
+      });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (memoryId: string) => {
+      return await apiRequest(`/api/memories/${memoryId}/reject`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
+      toast({
+        title: "Memory Rejected",
+        description: "The memory has been removed.",
+      });
+    },
+  });
+
+  const filteredMemories = useMemo(() => {
+    let filtered = memories.filter(m => {
+      const matchesSearch = m.authorName.toLowerCase().includes(memorySearchQuery.toLowerCase()) ||
+                           m.caption.toLowerCase().includes(memorySearchQuery.toLowerCase());
+      const matchesStatus = (showApproved && m.isApproved) || (showPending && !m.isApproved);
+      return matchesSearch && matchesStatus;
+    });
+
+    filtered.sort((a, b) => {
+      if (memorySortBy === "newest") {
+        return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
+      } else if (memorySortBy === "oldest") {
+        return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
+      } else if (memorySortBy === "author") {
+        return a.authorName.localeCompare(b.authorName);
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [memories, memorySearchQuery, memorySortBy, showApproved, showPending]);
+
+  const filteredCondolences = useMemo(() => {
+    let filtered = condolences.filter(c =>
+      c.authorName.toLowerCase().includes(condolenceSearchQuery.toLowerCase()) ||
+      c.message.toLowerCase().includes(condolenceSearchQuery.toLowerCase())
+    );
+
+    filtered.sort((a, b) => {
+      if (condolenceSortBy === "newest") {
+        return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
+      } else if (condolenceSortBy === "oldest") {
+        return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
+      } else if (condolenceSortBy === "author") {
+        return a.authorName.localeCompare(b.authorName);
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [condolences, condolenceSearchQuery, condolenceSortBy]);
+
+  const pendingMemories = memories.filter(m => !m.isApproved);
 
   if (!memorial) {
     return (
@@ -124,45 +212,99 @@ export default function Home() {
 
         <MemorialTabs 
           memoriesContent={
-            <div className="space-y-6">
-              <Button className="w-full" data-testid="button-add-memory">
+            <div>
+              <AdminContentPanel 
+                pendingMemories={pendingMemories}
+                onApprove={(id) => approveMutation.mutate(id)}
+                onReject={(id) => rejectMutation.mutate(id)}
+                onPreview={(memory) => console.log('Preview:', memory)}
+              />
+
+              <Button className="w-full mb-6" data-testid="button-add-memory">
                 <Plus className="w-5 h-5 mr-2" />
                 Share a Memory
               </Button>
-              {memories.map((memory) => (
-                <MemoryCard 
-                  key={memory.id}
-                  authorName={memory.authorName}
-                  caption={memory.caption}
-                  timestamp={new Date(memory.createdAt || "").toLocaleDateString()}
-                  commentCount={0}
-                  isPending={!memory.isApproved}
-                  onComment={() => console.log('Comment clicked')}
-                  onApprove={() => console.log('Approved')}
-                  onReject={() => console.log('Rejected')}
-                />
-              ))}
-              {memories.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No memories shared yet. Be the first to share a memory.</p>
+
+              <ContentControls 
+                searchQuery={memorySearchQuery}
+                onSearchChange={setMemorySearchQuery}
+                sortBy={memorySortBy}
+                onSortChange={setMemorySortBy}
+                viewMode={memoryViewMode}
+                onViewModeChange={setMemoryViewMode}
+                showApproved={showApproved}
+                showPending={showPending}
+                onApprovedToggle={() => setShowApproved(!showApproved)}
+                onPendingToggle={() => setShowPending(!showPending)}
+                totalCount={memories.length}
+                filteredCount={filteredMemories.length}
+              />
+
+              {memoryViewMode === "timeline" ? (
+                <MemoryTimeline memories={filteredMemories} />
+              ) : (
+                <div className={memoryViewMode === "grid" ? "grid gap-6 md:grid-cols-2" : "space-y-6"}>
+                  {filteredMemories.map((memory) => (
+                    <MemoryCard 
+                      key={memory.id}
+                      authorName={memory.authorName}
+                      caption={memory.caption}
+                      imageUrl={memory.mediaUrl || undefined}
+                      timestamp={new Date(memory.createdAt || "").toLocaleDateString()}
+                      commentCount={0}
+                      isPending={!memory.isApproved}
+                      onComment={() => console.log('Comment clicked')}
+                      onApprove={() => approveMutation.mutate(memory.id)}
+                      onReject={() => rejectMutation.mutate(memory.id)}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {filteredMemories.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  {memories.length === 0 
+                    ? "No memories shared yet. Be the first to share a memory."
+                    : "No memories match your filters."}
+                </p>
               )}
             </div>
           }
           condolencesContent={
-            <div className="space-y-6">
-              <Button className="w-full" data-testid="button-leave-condolence">
+            <div>
+              <Button className="w-full mb-6" data-testid="button-leave-condolence">
                 <Plus className="w-5 h-5 mr-2" />
                 Leave a Condolence
               </Button>
-              {condolences.map((condolence) => (
-                <CondolenceMessage 
-                  key={condolence.id}
-                  authorName={condolence.authorName}
-                  message={condolence.message}
-                  timestamp={new Date(condolence.createdAt || "").toLocaleDateString()}
-                />
-              ))}
-              {condolences.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No condolences yet.</p>
+
+              <ContentControls 
+                searchQuery={condolenceSearchQuery}
+                onSearchChange={setCondolenceSearchQuery}
+                sortBy={condolenceSortBy}
+                onSortChange={setCondolenceSortBy}
+                viewMode="list"
+                onViewModeChange={() => {}}
+                totalCount={condolences.length}
+                filteredCount={filteredCondolences.length}
+              />
+
+              <div className="space-y-4">
+                {filteredCondolences.map((condolence) => (
+                  <CondolenceMessage 
+                    key={condolence.id}
+                    authorName={condolence.authorName}
+                    message={condolence.message}
+                    timestamp={new Date(condolence.createdAt || "").toLocaleDateString()}
+                  />
+                ))}
+              </div>
+              
+              {filteredCondolences.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  {condolences.length === 0 
+                    ? "No condolences yet."
+                    : "No condolences match your search."}
+                </p>
               )}
             </div>
           }
