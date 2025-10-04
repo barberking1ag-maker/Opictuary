@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
 import MemorialHero from "@/components/MemorialHero";
 import MemorialTabs from "@/components/MemorialTabs";
@@ -12,6 +13,7 @@ import MusicPlayer from "@/components/MusicPlayer";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
 import GriefSupportPanel from "@/components/GriefSupportPanel";
+import DonationPaymentModal from "@/components/DonationPaymentModal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -19,6 +21,7 @@ const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
 export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [donationModalOpen, setDonationModalOpen] = useState(false);
 
   const { data: memorial } = useQuery<Memorial>({
     queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}`],
@@ -196,7 +199,7 @@ export default function Home() {
                     currentAmount={Number(firstFundraiser.currentAmount)}
                     goalAmount={Number(firstFundraiser.goalAmount)}
                     donors={donorsForDisplay}
-                    onDonate={() => console.log('Donate clicked')}
+                    onDonate={() => setDonationModalOpen(true)}
                   />
                   
                   {griefSupport && (
@@ -246,6 +249,20 @@ export default function Home() {
           setCodeModalOpen(false);
         }}
       />
+
+      {firstFundraiser && (
+        <DonationPaymentModal
+          open={donationModalOpen}
+          onOpenChange={setDonationModalOpen}
+          fundraiserId={firstFundraiser.id}
+          fundraiserTitle={firstFundraiser.title}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/fundraisers/${firstFundraiser.id}/donations`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/fundraisers`] });
+            setDonationModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
