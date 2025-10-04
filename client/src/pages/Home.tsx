@@ -72,37 +72,41 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <div className="bg-gradient-to-br from-primary/15 to-secondary/15 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-4">
-          <svg width="64" height="64" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary flex-shrink-0 drop-shadow-md">
-            <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
-            <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
-            <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
-            <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-            <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-            <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-            <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-            <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
-          </svg>
-          <div>
-            <h1 className="text-2xl font-serif font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-1">Opictuary</h1>
-            <p className="text-sm text-muted-foreground">A digital memorial platform</p>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+                <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
+                <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
+                <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
+                <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+                <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+                <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+                <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+                <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
+              </svg>
+              <div>
+                <h1 className="text-xl font-serif font-semibold text-foreground">Opictuary</h1>
+                <p className="text-xs text-muted-foreground">Honoring memories with dignity</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {memorial.prefaceText && (
         <div 
-          className="relative py-16 bg-cover bg-center"
+          className="relative py-20 md:py-24 bg-cover bg-center"
           style={{
             backgroundImage: memorial.backgroundImage 
-              ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${memorial.backgroundImage})`
-              : 'linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1))'
+              ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)), url(${memorial.backgroundImage})`
+              : 'linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--secondary) / 0.12))'
           }}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <blockquote className="text-xl md:text-2xl font-serif italic text-white drop-shadow-lg">
+            <blockquote className="text-2xl md:text-3xl font-serif italic text-white drop-shadow-lg leading-relaxed">
               "{memorial.prefaceText}"
             </blockquote>
           </div>
@@ -117,8 +121,8 @@ export default function Home() {
         onShare={() => console.log('Share clicked')}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8 flex justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="mb-12 flex justify-center">
           <FlowerOrderButton 
             memorialName={memorial.name}
             deliveryLocation={memorial.cemeteryName || undefined}
