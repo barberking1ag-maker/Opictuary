@@ -7,7 +7,11 @@ interface MemoryTimelineProps {
 }
 
 export default function MemoryTimeline({ memories }: MemoryTimelineProps) {
-  const groupedByDate = memories.reduce((acc, memory) => {
+  const sortedMemories = [...memories].sort((a, b) => 
+    new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
+  );
+
+  const groupedByDate = sortedMemories.reduce((acc, memory) => {
     const date = new Date(memory.createdAt || "").toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 

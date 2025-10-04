@@ -9,8 +9,8 @@ interface ContentControlsProps {
   onSearchChange: (query: string) => void;
   sortBy: string;
   onSortChange: (value: string) => void;
-  viewMode: "grid" | "list" | "timeline";
-  onViewModeChange: (mode: "grid" | "list" | "timeline") => void;
+  viewMode?: "grid" | "list" | "timeline";
+  onViewModeChange?: (mode: "grid" | "list" | "timeline") => void;
   showApproved?: boolean;
   showPending?: boolean;
   onApprovedToggle?: () => void;
@@ -91,35 +91,37 @@ export default function ContentControls({
             </DropdownMenu>
           )}
 
-          <div className="flex border border-border rounded-md" data-testid="view-mode-toggle">
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="icon"
-              className="rounded-r-none border-r"
-              onClick={() => onViewModeChange("grid")}
-              data-testid="button-view-grid"
-            >
-              <Grid3x3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="icon"
-              className="rounded-none border-r"
-              onClick={() => onViewModeChange("list")}
-              data-testid="button-view-list"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "timeline" ? "default" : "ghost"}
-              size="icon"
-              className="rounded-l-none"
-              onClick={() => onViewModeChange("timeline")}
-              data-testid="button-view-timeline"
-            >
-              <Calendar className="w-4 h-4" />
-            </Button>
-          </div>
+          {viewMode && onViewModeChange && (
+            <div className="flex border border-border rounded-md" data-testid="view-mode-toggle">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="icon"
+                className="rounded-r-none border-r"
+                onClick={() => onViewModeChange("grid")}
+                data-testid="button-view-grid"
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="icon"
+                className="rounded-none border-r"
+                onClick={() => onViewModeChange("list")}
+                data-testid="button-view-list"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === "timeline" ? "default" : "ghost"}
+                size="icon"
+                className="rounded-l-none"
+                onClick={() => onViewModeChange("timeline")}
+                data-testid="button-view-timeline"
+              >
+                <Calendar className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

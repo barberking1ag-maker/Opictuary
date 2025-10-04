@@ -79,9 +79,7 @@ export default function Home() {
 
   const approveMutation = useMutation({
     mutationFn: async (memoryId: string) => {
-      return await apiRequest(`/api/memories/${memoryId}/approve`, {
-        method: "POST",
-      });
+      return await apiRequest("POST", `/api/memories/${memoryId}/approve`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
@@ -94,9 +92,7 @@ export default function Home() {
 
   const rejectMutation = useMutation({
     mutationFn: async (memoryId: string) => {
-      return await apiRequest(`/api/memories/${memoryId}/reject`, {
-        method: "DELETE",
-      });
+      return await apiRequest("DELETE", `/api/memories/${memoryId}/reject`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`] });
@@ -282,8 +278,6 @@ export default function Home() {
                 onSearchChange={setCondolenceSearchQuery}
                 sortBy={condolenceSortBy}
                 onSortChange={setCondolenceSortBy}
-                viewMode="list"
-                onViewModeChange={() => {}}
                 totalCount={condolences.length}
                 filteredCount={filteredCondolences.length}
               />
