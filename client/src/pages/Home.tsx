@@ -9,6 +9,7 @@ import CemeteryMap from "@/components/CemeteryMap";
 import MusicPlayer from "@/components/MusicPlayer";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
+import GriefSupportPanel from "@/components/GriefSupportPanel";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -122,7 +123,7 @@ export default function Home() {
             </div>
           }
           fundraiserContent={
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto space-y-8">
               <FundraiserProgress 
                 title="Memorial Fund"
                 description="Help us cover the funeral expenses and celebrate Margaret's life with dignity."
@@ -130,6 +131,11 @@ export default function Home() {
                 goalAmount={15000}
                 donors={mockDonors}
                 onDonate={() => console.log('Donate clicked')}
+              />
+              
+              <GriefSupportPanel 
+                familyContact="Contact the Johnson family"
+                pastoralContact="Pastor David Miller - First Community Church"
               />
             </div>
           }
