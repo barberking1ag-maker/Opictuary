@@ -60,7 +60,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div>
       <MemorialHero 
         name="Margaret Rose Johnson"
         birthDate="March 15, 1945"
