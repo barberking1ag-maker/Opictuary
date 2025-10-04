@@ -88,6 +88,13 @@ export default function PrisonAccessRequest() {
     createRequest.mutate(data);
   };
 
+  const validateAndAdvance = async (nextStep: number, fieldsToValidate: (keyof AccessRequestForm)[]) => {
+    const isValid = await form.trigger(fieldsToValidate);
+    if (isValid) {
+      setStep(nextStep);
+    }
+  };
+
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center gap-4 mb-8">
       {[1, 2, 3, 4].map((s) => (
@@ -132,11 +139,11 @@ export default function PrisonAccessRequest() {
             <div className="bg-muted/50 p-6 rounded-lg space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Request ID:</span>
-                <span className="text-sm font-mono text-muted-foreground">{submittedRequestId}</span>
+                <span className="text-sm font-mono text-muted-foreground" data-testid="text-request-id">{submittedRequestId}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Status:</span>
-                <span className="text-sm text-amber-600 font-medium">Pending Review</span>
+                <span className="text-sm text-amber-600 font-medium" data-testid="text-request-status">Pending Review</span>
               </div>
             </div>
 
@@ -267,7 +274,11 @@ export default function PrisonAccessRequest() {
                 />
 
                 <div className="flex justify-end pt-4">
-                  <Button type="button" onClick={() => setStep(2)} data-testid="button-next-step">
+                  <Button 
+                    type="button" 
+                    onClick={() => validateAndAdvance(2, ["memorialId", "facilityId"])} 
+                    data-testid="button-next-step-1"
+                  >
                     Next Step
                   </Button>
                 </div>
@@ -348,10 +359,14 @@ export default function PrisonAccessRequest() {
                 />
 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setStep(1)} data-testid="button-back">
+                  <Button type="button" variant="outline" onClick={() => setStep(1)} data-testid="button-back-step-2">
                     Back
                   </Button>
-                  <Button type="button" onClick={() => setStep(3)} data-testid="button-next-step">
+                  <Button 
+                    type="button" 
+                    onClick={() => validateAndAdvance(3, ["inmateFirstName", "inmateLastName", "inmateDocNumber", "relationshipToDeceased"])} 
+                    data-testid="button-next-step-2"
+                  >
                     Next Step
                   </Button>
                 </div>
@@ -418,10 +433,14 @@ export default function PrisonAccessRequest() {
                 </div>
 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setStep(2)} data-testid="button-back">
+                  <Button type="button" variant="outline" onClick={() => setStep(2)} data-testid="button-back-step-3">
                     Back
                   </Button>
-                  <Button type="button" onClick={() => setStep(4)} data-testid="button-next-step">
+                  <Button 
+                    type="button" 
+                    onClick={() => validateAndAdvance(4, ["requestedByName", "requestedByEmail"])} 
+                    data-testid="button-next-step-3"
+                  >
                     Next Step
                   </Button>
                 </div>
@@ -488,7 +507,7 @@ export default function PrisonAccessRequest() {
                 </div>
 
                 <div className="flex justify-between pt-4">
-                  <Button type="button" variant="outline" onClick={() => setStep(3)} data-testid="button-back">
+                  <Button type="button" variant="outline" onClick={() => setStep(3)} data-testid="button-back-step-4">
                     Back
                   </Button>
                   <Button type="submit" disabled={createRequest.isPending} data-testid="button-submit-request">

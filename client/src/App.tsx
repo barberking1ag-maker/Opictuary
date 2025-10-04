@@ -17,18 +17,25 @@ function Router() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
-                <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
-                <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
-                <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
-                <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-                <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-                <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-                <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-                <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+                <defs>
+                  <radialGradient id="spiritual-light" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.3"/>
+                    <stop offset="50%" stopColor="currentColor" stopOpacity="0.1"/>
+                    <stop offset="100%" stopColor="currentColor" stopOpacity="0"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="20" cy="20" r="18" fill="url(#spiritual-light)"/>
+                <circle cx="20" cy="20" r="10" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.9"/>
+                <ellipse cx="20" cy="6" rx="14" ry="2.5" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.8"/>
+                <path d="M6 6 Q 20 4, 34 6" stroke="currentColor" strokeWidth="1" opacity="0.6" fill="none"/>
+                <circle cx="20" cy="20" r="6" fill="currentColor" opacity="0.1"/>
               </svg>
-              <h1 className="text-xl font-serif font-semibold text-foreground">
-                Opictuary
+              <h1 className="text-xl font-serif font-semibold text-foreground relative">
+                <span className="relative inline-block">
+                  <span className="absolute -top-3 left-0 right-0 text-center text-xs opacity-60">✦</span>
+                  O
+                </span>pictuary
               </h1>
             </div>
             <div className="flex gap-2">
