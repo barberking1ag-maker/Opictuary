@@ -11,6 +11,12 @@ import {
   griefSupport,
   legacyEvents,
   musicPlaylists,
+  prisonFacilities,
+  prisonAccessRequests,
+  prisonVerifications,
+  prisonPayments,
+  prisonAccessSessions,
+  prisonAuditLogs,
   type User,
   type InsertUser,
   type Memorial,
@@ -35,6 +41,18 @@ import {
   type InsertLegacyEvent,
   type MusicPlaylist,
   type InsertMusicPlaylist,
+  type PrisonFacility,
+  type InsertPrisonFacility,
+  type PrisonAccessRequest,
+  type InsertPrisonAccessRequest,
+  type PrisonVerification,
+  type InsertPrisonVerification,
+  type PrisonPayment,
+  type InsertPrisonPayment,
+  type PrisonAccessSession,
+  type InsertPrisonAccessSession,
+  type PrisonAuditLog,
+  type InsertPrisonAuditLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -93,6 +111,23 @@ export interface IStorage {
   // Music Playlist operations
   getMusicPlaylistByMemorialId(memorialId: string): Promise<MusicPlaylist | undefined>;
   upsertMusicPlaylist(playlist: InsertMusicPlaylist): Promise<MusicPlaylist>;
+
+  // Prison Access System operations
+  listPrisonFacilities(): Promise<PrisonFacility[]>;
+  createPrisonFacility(facility: InsertPrisonFacility): Promise<PrisonFacility>;
+  createPrisonAccessRequest(request: InsertPrisonAccessRequest): Promise<PrisonAccessRequest>;
+  listPrisonAccessRequests(status?: string, memorialId?: string): Promise<PrisonAccessRequest[]>;
+  getPrisonAccessRequest(id: string): Promise<PrisonAccessRequest | undefined>;
+  updatePrisonAccessRequestStatus(id: string, status: string, adminNotes?: string): Promise<PrisonAccessRequest | undefined>;
+  createPrisonVerification(verification: InsertPrisonVerification): Promise<PrisonVerification>;
+  getPrisonVerificationsByRequestId(requestId: string): Promise<PrisonVerification[]>;
+  createPrisonPayment(payment: InsertPrisonPayment): Promise<PrisonPayment>;
+  confirmPrisonPayment(id: string): Promise<PrisonPayment | undefined>;
+  createPrisonAccessSession(session: InsertPrisonAccessSession): Promise<PrisonAccessSession>;
+  validatePrisonAccessToken(token: string): Promise<PrisonAccessSession | undefined>;
+  deactivatePrisonAccessSession(id: string): Promise<PrisonAccessSession | undefined>;
+  createPrisonAuditLog(log: InsertPrisonAuditLog): Promise<PrisonAuditLog>;
+  getPrisonAuditLogs(requestId?: string, sessionId?: string): Promise<PrisonAuditLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -305,6 +340,143 @@ export class DatabaseStorage implements IStorage {
       }).returning();
       return created;
     }
+  }
+
+  // Prison Access System operations
+  async listPrisonFacilities(): Promise<PrisonFacility[]> {
+    return await db.select().from(prisonFacilities).where(eq(prisonFacilities.isActive, true));
+  }
+
+  async createPrisonFacility(facility: InsertPrisonFacility): Promise<PrisonFacility> {
+    const [created] = await db.insert(prisonFacilities).values(facility).returning();
+    return created;
+  }
+
+  async createPrisonAccessRequest(request: InsertPrisonAccessRequest): Promise<PrisonAccessRequest> {
+    const [created] = await db.insert(prisonAccessRequests).values(request).returning();
+    return created;
+  }
+
+  async listPrisonAccessRequests(status?: string, memorialId?: string): Promise<PrisonAccessRequest[]> {
+    let query = db.select().from(prisonAccessRequests);
+    
+    const conditions = [];
+    if (status) {
+      conditions.push(eq(prisonAccessRequests.status, status));
+    }
+    if (memorialId) {
+      conditions.push(eq(prisonAccessRequests.memorialId, memorialId));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(prisonAccessRequests.createdAt));
+  }
+
+  async getPrisonAccessRequest(id: string): Promise<PrisonAccessRequest | undefined> {
+    const [request] = await db.select().from(prisonAccessRequests).where(eq(prisonAccessRequests.id, id));
+    return request || undefined;
+  }
+
+  async updatePrisonAccessRequestStatus(id: string, status: string, adminNotes?: string): Promise<PrisonAccessRequest | undefined> {
+    const [updated] = await db.update(prisonAccessRequests)
+      .set({ 
+        status,
+        adminNotes,
+        updatedAt: new Date()
+      })
+      .where(eq(prisonAccessRequests.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createPrisonVerification(verification: InsertPrisonVerification): Promise<PrisonVerification> {
+    const [created] = await db.insert(prisonVerifications).values({
+      ...verification,
+      verificationData: verification.verificationData as any,
+    }).returning();
+    return created;
+  }
+
+  async getPrisonVerificationsByRequestId(requestId: string): Promise<PrisonVerification[]> {
+    return await db.select().from(prisonVerifications).where(eq(prisonVerifications.requestId, requestId));
+  }
+
+  async createPrisonPayment(payment: InsertPrisonPayment): Promise<PrisonPayment> {
+    const [created] = await db.insert(prisonPayments).values(payment).returning();
+    return created;
+  }
+
+  async confirmPrisonPayment(id: string): Promise<PrisonPayment | undefined> {
+    const [updated] = await db.update(prisonPayments)
+      .set({ 
+        status: 'confirmed',
+        paidAt: new Date()
+      })
+      .where(eq(prisonPayments.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createPrisonAccessSession(session: InsertPrisonAccessSession): Promise<PrisonAccessSession> {
+    const [created] = await db.insert(prisonAccessSessions).values(session).returning();
+    return created;
+  }
+
+  async validatePrisonAccessToken(token: string): Promise<PrisonAccessSession | undefined> {
+    const [session] = await db.select()
+      .from(prisonAccessSessions)
+      .where(
+        and(
+          eq(prisonAccessSessions.accessToken, token),
+          eq(prisonAccessSessions.isActive, true),
+          sql`${prisonAccessSessions.expiresAt} > NOW()`
+        )
+      );
+
+    if (session) {
+      await db.update(prisonAccessSessions)
+        .set({ lastAccessedAt: new Date() })
+        .where(eq(prisonAccessSessions.id, session.id));
+    }
+
+    return session || undefined;
+  }
+
+  async deactivatePrisonAccessSession(id: string): Promise<PrisonAccessSession | undefined> {
+    const [updated] = await db.update(prisonAccessSessions)
+      .set({ isActive: false })
+      .where(eq(prisonAccessSessions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createPrisonAuditLog(log: InsertPrisonAuditLog): Promise<PrisonAuditLog> {
+    const [created] = await db.insert(prisonAuditLogs).values({
+      ...log,
+      metadata: log.metadata as any,
+    }).returning();
+    return created;
+  }
+
+  async getPrisonAuditLogs(requestId?: string, sessionId?: string): Promise<PrisonAuditLog[]> {
+    let query = db.select().from(prisonAuditLogs);
+    
+    const conditions = [];
+    if (requestId) {
+      conditions.push(eq(prisonAuditLogs.requestId, requestId));
+    }
+    if (sessionId) {
+      conditions.push(eq(prisonAuditLogs.sessionId, sessionId));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(prisonAuditLogs.createdAt));
   }
 }
 

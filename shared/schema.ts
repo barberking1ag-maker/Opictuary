@@ -129,6 +129,85 @@ export const musicPlaylists = pgTable("music_playlists", {
   tracks: json("tracks").$type<Array<{ id: string; title: string; artist: string; duration: string }>>().notNull(),
 });
 
+// Prison Access System
+export const prisonFacilities = pgTable("prison_facilities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  state: text("state").notNull(),
+  facilityCode: text("facility_code").notNull().unique(),
+  serviceProvider: text("service_provider"),
+  feePerSession: decimal("fee_per_session", { precision: 10, scale: 2 }),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const prisonAccessRequests = pgTable("prison_access_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  facilityId: varchar("facility_id").notNull().references(() => prisonFacilities.id),
+  inmateFirstName: text("inmate_first_name").notNull(),
+  inmateLastName: text("inmate_last_name").notNull(),
+  inmateDocNumber: text("inmate_doc_number").notNull(),
+  relationshipToDeceased: text("relationship_to_deceased").notNull(),
+  requestedByName: text("requested_by_name").notNull(),
+  requestedByEmail: text("requested_by_email").notNull(),
+  requestedByPhone: text("requested_by_phone"),
+  relationshipProofUrl: text("relationship_proof_url"),
+  status: text("status").notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const prisonVerifications = pgTable("prison_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => prisonAccessRequests.id, { onDelete: "cascade" }),
+  verificationType: text("verification_type").notNull(),
+  verifiedBy: text("verified_by").notNull(),
+  verificationData: json("verification_data").$type<Record<string, any>>(),
+  status: text("status").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const prisonPayments = pgTable("prison_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => prisonAccessRequests.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(),
+  transactionId: text("transaction_id"),
+  payerName: text("payer_name").notNull(),
+  payerEmail: text("payer_email").notNull(),
+  status: text("status").notNull().default("pending"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const prisonAccessSessions = pgTable("prison_access_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").notNull().references(() => prisonAccessRequests.id, { onDelete: "cascade" }),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  accessToken: text("access_token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isActive: boolean("is_active").default(true),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const prisonAuditLogs = pgTable("prison_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestId: varchar("request_id").references(() => prisonAccessRequests.id, { onDelete: "set null" }),
+  sessionId: varchar("session_id").references(() => prisonAccessSessions.id, { onDelete: "set null" }),
+  action: text("action").notNull(),
+  performedBy: text("performed_by").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  metadata: json("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   memories: many(memories),
@@ -250,6 +329,40 @@ export const insertMusicPlaylistSchema = createInsertSchema(musicPlaylists).omit
   id: true,
 });
 
+export const insertPrisonFacilitySchema = createInsertSchema(prisonFacilities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPrisonAccessRequestSchema = createInsertSchema(prisonAccessRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+});
+
+export const insertPrisonVerificationSchema = createInsertSchema(prisonVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPrisonPaymentSchema = createInsertSchema(prisonPayments).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+});
+
+export const insertPrisonAccessSessionSchema = createInsertSchema(prisonAccessSessions).omit({
+  id: true,
+  createdAt: true,
+  isActive: true,
+});
+
+export const insertPrisonAuditLogSchema = createInsertSchema(prisonAuditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -286,3 +399,21 @@ export type LegacyEvent = typeof legacyEvents.$inferSelect;
 
 export type InsertMusicPlaylist = z.infer<typeof insertMusicPlaylistSchema>;
 export type MusicPlaylist = typeof musicPlaylists.$inferSelect;
+
+export type InsertPrisonFacility = z.infer<typeof insertPrisonFacilitySchema>;
+export type PrisonFacility = typeof prisonFacilities.$inferSelect;
+
+export type InsertPrisonAccessRequest = z.infer<typeof insertPrisonAccessRequestSchema>;
+export type PrisonAccessRequest = typeof prisonAccessRequests.$inferSelect;
+
+export type InsertPrisonVerification = z.infer<typeof insertPrisonVerificationSchema>;
+export type PrisonVerification = typeof prisonVerifications.$inferSelect;
+
+export type InsertPrisonPayment = z.infer<typeof insertPrisonPaymentSchema>;
+export type PrisonPayment = typeof prisonPayments.$inferSelect;
+
+export type InsertPrisonAccessSession = z.infer<typeof insertPrisonAccessSessionSchema>;
+export type PrisonAccessSession = typeof prisonAccessSessions.$inferSelect;
+
+export type InsertPrisonAuditLog = z.infer<typeof insertPrisonAuditLogSchema>;
+export type PrisonAuditLog = typeof prisonAuditLogs.$inferSelect;

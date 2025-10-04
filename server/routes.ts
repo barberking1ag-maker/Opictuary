@@ -15,6 +15,12 @@ import {
   insertGriefSupportSchema,
   insertLegacyEventSchema,
   insertMusicPlaylistSchema,
+  insertPrisonFacilitySchema,
+  insertPrisonAccessRequestSchema,
+  insertPrisonVerificationSchema,
+  insertPrisonPaymentSchema,
+  insertPrisonAccessSessionSchema,
+  insertPrisonAuditLogSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -377,6 +383,277 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Access System routes
+  
+  // Prison Facilities
+  app.get("/api/prison-facilities", async (req, res) => {
+    try {
+      const facilities = await storage.listPrisonFacilities();
+      res.json(facilities);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/prison-facilities", async (req, res) => {
+    try {
+      const data = insertPrisonFacilitySchema.parse(req.body);
+      const facility = await storage.createPrisonFacility(data);
+      res.status(201).json(facility);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Access Requests
+  app.post("/api/prison-access-requests", async (req, res) => {
+    try {
+      const data = insertPrisonAccessRequestSchema.parse(req.body);
+      const request = await storage.createPrisonAccessRequest(data);
+      
+      await storage.createPrisonAuditLog({
+        requestId: request.id,
+        action: "REQUEST_CREATED",
+        performedBy: data.requestedByEmail,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { requestData: data },
+      });
+
+      res.status(201).json(request);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/prison-access-requests", async (req, res) => {
+    try {
+      const { status, memorialId } = req.query;
+      const requests = await storage.listPrisonAccessRequests(
+        status as string,
+        memorialId as string
+      );
+      res.json(requests);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/prison-access-requests/:id", async (req, res) => {
+    try {
+      const request = await storage.getPrisonAccessRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/prison-access-requests/:id/status", async (req, res) => {
+    try {
+      const { status, adminNotes } = req.body;
+      const request = await storage.updatePrisonAccessRequestStatus(
+        req.params.id,
+        status,
+        adminNotes
+      );
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+
+      await storage.createPrisonAuditLog({
+        requestId: request.id,
+        action: `STATUS_CHANGED_TO_${status.toUpperCase()}`,
+        performedBy: req.body.performedBy || "admin",
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { newStatus: status, notes: adminNotes },
+      });
+
+      res.json(request);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Verifications
+  app.post("/api/prison-access-requests/:requestId/verifications", async (req, res) => {
+    try {
+      const data = insertPrisonVerificationSchema.parse({
+        ...req.body,
+        requestId: req.params.requestId,
+      });
+      const verification = await storage.createPrisonVerification(data);
+
+      await storage.createPrisonAuditLog({
+        requestId: req.params.requestId,
+        action: `VERIFICATION_${data.verificationType.toUpperCase()}_${data.status.toUpperCase()}`,
+        performedBy: data.verifiedBy,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { verificationType: data.verificationType, status: data.status },
+      });
+
+      res.status(201).json(verification);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/prison-access-requests/:requestId/verifications", async (req, res) => {
+    try {
+      const verifications = await storage.getPrisonVerificationsByRequestId(req.params.requestId);
+      res.json(verifications);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Payments
+  app.post("/api/prison-access-requests/:requestId/payments", async (req, res) => {
+    try {
+      const data = insertPrisonPaymentSchema.parse({
+        ...req.body,
+        requestId: req.params.requestId,
+      });
+      const payment = await storage.createPrisonPayment(data);
+
+      await storage.createPrisonAuditLog({
+        requestId: req.params.requestId,
+        action: "PAYMENT_INITIATED",
+        performedBy: data.payerEmail,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { amount: data.amount, paymentMethod: data.paymentMethod },
+      });
+
+      res.status(201).json(payment);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/prison-payments/:id/confirm", async (req, res) => {
+    try {
+      const payment = await storage.confirmPrisonPayment(req.params.id);
+      if (!payment) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+
+      await storage.createPrisonAuditLog({
+        requestId: payment.requestId,
+        action: "PAYMENT_CONFIRMED",
+        performedBy: "system",
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { paymentId: payment.id, amount: payment.amount },
+      });
+
+      res.json(payment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Access Sessions
+  app.post("/api/prison-access-sessions", async (req, res) => {
+    try {
+      const data = insertPrisonAccessSessionSchema.parse(req.body);
+      const session = await storage.createPrisonAccessSession(data);
+
+      await storage.createPrisonAuditLog({
+        requestId: data.requestId,
+        sessionId: session.id,
+        action: "ACCESS_SESSION_CREATED",
+        performedBy: "system",
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { memorialId: data.memorialId, expiresAt: data.expiresAt },
+      });
+
+      res.status(201).json(session);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/prison-access-sessions/validate/:token", async (req, res) => {
+    try {
+      const session = await storage.validatePrisonAccessToken(req.params.token);
+      if (!session) {
+        return res.status(404).json({ error: "Invalid or expired access token" });
+      }
+
+      await storage.createPrisonAuditLog({
+        requestId: session.requestId,
+        sessionId: session.id,
+        action: "ACCESS_TOKEN_VALIDATED",
+        performedBy: "inmate",
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { memorialId: session.memorialId },
+      });
+
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/prison-access-sessions/:id/deactivate", async (req, res) => {
+    try {
+      const session = await storage.deactivatePrisonAccessSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      await storage.createPrisonAuditLog({
+        requestId: session.requestId,
+        sessionId: session.id,
+        action: "ACCESS_SESSION_DEACTIVATED",
+        performedBy: req.body.performedBy || "admin",
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        metadata: { reason: req.body.reason },
+      });
+
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prison Audit Logs
+  app.get("/api/prison-audit-logs", async (req, res) => {
+    try {
+      const { requestId, sessionId } = req.query;
+      const logs = await storage.getPrisonAuditLogs(
+        requestId as string,
+        sessionId as string
+      );
+      res.json(logs);
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
