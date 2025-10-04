@@ -384,6 +384,21 @@ export const celebrityDonationsRelations = relations(celebrityDonations, ({ one 
   }),
 }));
 
+export const pushTokens = pgTable("push_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  platform: text("platform").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const pushTokensRelations = relations(pushTokens, ({ one }) => ({
+  memorial: one(memorials, {
+    fields: [pushTokens.memorialId],
+    references: [memorials.id],
+  }),
+}));
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -521,6 +536,11 @@ export const insertPartnerPayoutSchema = createInsertSchema(partnerPayouts).omit
   createdAt: true,
 });
 
+export const insertPushTokenSchema = createInsertSchema(pushTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -596,3 +616,6 @@ export type PartnerCommission = typeof partnerCommissions.$inferSelect;
 
 export type InsertPartnerPayout = z.infer<typeof insertPartnerPayoutSchema>;
 export type PartnerPayout = typeof partnerPayouts.$inferSelect;
+
+export type InsertPushToken = z.infer<typeof insertPushTokenSchema>;
+export type PushToken = typeof pushTokens.$inferSelect;

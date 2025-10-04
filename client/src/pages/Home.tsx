@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
@@ -20,6 +20,7 @@ import MemoryTimeline from "@/components/MemoryTimeline";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -27,6 +28,7 @@ export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
   const { toast } = useToast();
+  const { registerToken, isNative } = usePushNotifications();
 
   const [memorySearchQuery, setMemorySearchQuery] = useState("");
   const [memorySortBy, setMemorySortBy] = useState("newest");
@@ -102,6 +104,12 @@ export default function Home() {
       });
     },
   });
+
+  useEffect(() => {
+    if (isNative && memorial?.id) {
+      registerToken(memorial.id);
+    }
+  }, [isNative, memorial, registerToken]);
 
   const filteredMemories = useMemo(() => {
     let filtered = memories.filter(m => {

@@ -24,6 +24,7 @@ import {
   prisonPayments,
   prisonAccessSessions,
   prisonAuditLogs,
+  pushTokens,
   type User,
   type InsertUser,
   type Memorial,
@@ -74,6 +75,8 @@ import {
   type InsertPrisonAccessSession,
   type PrisonAuditLog,
   type InsertPrisonAuditLog,
+  type PushToken,
+  type InsertPushToken,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -187,6 +190,10 @@ export interface IStorage {
   deactivatePrisonAccessSession(id: string): Promise<PrisonAccessSession | undefined>;
   createPrisonAuditLog(log: InsertPrisonAuditLog): Promise<PrisonAuditLog>;
   getPrisonAuditLogs(requestId?: string, sessionId?: string): Promise<PrisonAuditLog[]>;
+
+  // Push Token operations
+  createPushToken(token: InsertPushToken): Promise<PushToken>;
+  getPushTokensByMemorialId(memorialId: string): Promise<PushToken[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -770,6 +777,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(partnerPayouts.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // Push Token operations
+  async createPushToken(token: InsertPushToken): Promise<PushToken> {
+    const [created] = await db.insert(pushTokens).values(token).returning();
+    return created;
+  }
+
+  async getPushTokensByMemorialId(memorialId: string): Promise<PushToken[]> {
+    return await db.select().from(pushTokens)
+      .where(eq(pushTokens.memorialId, memorialId))
+      .orderBy(desc(pushTokens.createdAt));
   }
 }
 

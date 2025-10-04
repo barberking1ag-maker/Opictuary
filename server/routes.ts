@@ -29,6 +29,7 @@ import {
   insertPrisonPaymentSchema,
   insertPrisonAccessSessionSchema,
   insertPrisonAuditLogSchema,
+  insertPushTokenSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -1034,6 +1035,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(logs);
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Push Notifications
+  app.post("/api/push-tokens", async (req, res) => {
+    try {
+      const data = insertPushTokenSchema.parse(req.body);
+      const pushToken = await storage.createPushToken(data);
+      res.json(pushToken);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       res.status(500).json({ error: error.message });
     }
   });
