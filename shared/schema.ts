@@ -271,6 +271,60 @@ export const advertisements = pgTable("advertisements", {
   expiresAt: timestamp("expires_at"),
 });
 
+// Funeral Home Partnership System
+export const funeralHomePartners = pgTable("funeral_home_partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessName: text("business_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull(),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull().default("3.00"),
+  referralCode: text("referral_code").notNull().unique(),
+  bankAccountName: text("bank_account_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankRoutingNumber: text("bank_routing_number"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const partnerReferrals = pgTable("partner_referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id").notNull().references(() => funeralHomePartners.id, { onDelete: "cascade" }),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  referralCode: text("referral_code").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const partnerCommissions = pgTable("partner_commissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id").notNull().references(() => funeralHomePartners.id, { onDelete: "cascade" }),
+  referralId: varchar("referral_id").notNull().references(() => partnerReferrals.id, { onDelete: "cascade" }),
+  transactionType: text("transaction_type").notNull(),
+  transactionId: varchar("transaction_id").notNull(),
+  transactionAmount: decimal("transaction_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const partnerPayouts = pgTable("partner_payouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id").notNull().references(() => funeralHomePartners.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  status: text("status").notNull().default("pending"),
+  paidAt: timestamp("paid_at"),
+  paymentMethod: text("payment_method"),
+  transactionId: text("transaction_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   memories: many(memories),
@@ -445,6 +499,27 @@ export const insertAdvertisementSchema = createInsertSchema(advertisements).omit
   clicks: true,
 });
 
+export const insertFuneralHomePartnerSchema = createInsertSchema(funeralHomePartners).omit({
+  id: true,
+  createdAt: true,
+  referralCode: true,
+});
+
+export const insertPartnerReferralSchema = createInsertSchema(partnerReferrals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPartnerCommissionSchema = createInsertSchema(partnerCommissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPartnerPayoutSchema = createInsertSchema(partnerPayouts).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -508,3 +583,15 @@ export type PrisonAuditLog = typeof prisonAuditLogs.$inferSelect;
 
 export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
 export type Advertisement = typeof advertisements.$inferSelect;
+
+export type InsertFuneralHomePartner = z.infer<typeof insertFuneralHomePartnerSchema>;
+export type FuneralHomePartner = typeof funeralHomePartners.$inferSelect;
+
+export type InsertPartnerReferral = z.infer<typeof insertPartnerReferralSchema>;
+export type PartnerReferral = typeof partnerReferrals.$inferSelect;
+
+export type InsertPartnerCommission = z.infer<typeof insertPartnerCommissionSchema>;
+export type PartnerCommission = typeof partnerCommissions.$inferSelect;
+
+export type InsertPartnerPayout = z.infer<typeof insertPartnerPayoutSchema>;
+export type PartnerPayout = typeof partnerPayouts.$inferSelect;

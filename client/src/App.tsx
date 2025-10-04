@@ -11,8 +11,10 @@ import EssentialWorkers from "@/pages/EssentialWorkers";
 import SelfObituary from "@/pages/SelfObituary";
 import CustomizationDemo from "@/pages/CustomizationDemo";
 import AdvertiserSubmission from "@/pages/AdvertiserSubmission";
+import PartnerSignup from "@/pages/PartnerSignup";
+import PartnerDashboard from "@/pages/PartnerDashboard";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon } from "lucide-react";
 
 function Router() {
   return (
@@ -85,6 +87,12 @@ function Router() {
                   Advertise
                 </Button>
               </Link>
+              <Link href="/partner-signup">
+                <Button variant="ghost" size="sm" data-testid="nav-partner">
+                  <HandshakeIcon className="w-4 h-4 mr-1" />
+                  Partner
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -98,6 +106,8 @@ function Router() {
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/customization" component={CustomizationDemo} />
         <Route path="/advertise" component={AdvertiserSubmission} />
+        <Route path="/partner-signup" component={PartnerSignup} />
+        <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
         <Route component={NotFound} />
       </Switch>
     </div>

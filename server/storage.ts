@@ -14,6 +14,10 @@ import {
   essentialWorkersMemorials,
   selfWrittenObituaries,
   advertisements,
+  funeralHomePartners,
+  partnerReferrals,
+  partnerCommissions,
+  partnerPayouts,
   prisonFacilities,
   prisonAccessRequests,
   prisonVerifications,
@@ -50,6 +54,14 @@ import {
   type InsertSelfWrittenObituary,
   type Advertisement,
   type InsertAdvertisement,
+  type FuneralHomePartner,
+  type InsertFuneralHomePartner,
+  type PartnerReferral,
+  type InsertPartnerReferral,
+  type PartnerCommission,
+  type InsertPartnerCommission,
+  type PartnerPayout,
+  type InsertPartnerPayout,
   type PrisonFacility,
   type InsertPrisonFacility,
   type PrisonAccessRequest,
@@ -142,6 +154,22 @@ export interface IStorage {
   deleteAdvertisement(id: string): Promise<void>;
   incrementAdImpression(id: string): Promise<void>;
   incrementAdClick(id: string): Promise<void>;
+
+  // Funeral Home Partner operations
+  listFuneralHomePartners(isActive?: boolean): Promise<FuneralHomePartner[]>;
+  getFuneralHomePartner(id: string): Promise<FuneralHomePartner | undefined>;
+  getFuneralHomePartnerByReferralCode(referralCode: string): Promise<FuneralHomePartner | undefined>;
+  createFuneralHomePartner(partner: InsertFuneralHomePartner): Promise<FuneralHomePartner>;
+  updateFuneralHomePartner(id: string, partner: Partial<InsertFuneralHomePartner>): Promise<FuneralHomePartner | undefined>;
+  createPartnerReferral(referral: InsertPartnerReferral): Promise<PartnerReferral>;
+  getPartnerReferralsByPartnerId(partnerId: string): Promise<PartnerReferral[]>;
+  getPartnerReferralByMemorialId(memorialId: string): Promise<PartnerReferral | undefined>;
+  createPartnerCommission(commission: InsertPartnerCommission): Promise<PartnerCommission>;
+  getPartnerCommissionsByPartnerId(partnerId: string, status?: string): Promise<PartnerCommission[]>;
+  updatePartnerCommissionStatus(id: string, status: string): Promise<PartnerCommission | undefined>;
+  createPartnerPayout(payout: InsertPartnerPayout): Promise<PartnerPayout>;
+  getPartnerPayoutsByPartnerId(partnerId: string): Promise<PartnerPayout[]>;
+  updatePartnerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<PartnerPayout | undefined>;
 
   // Prison Access System operations
   listPrisonFacilities(): Promise<PrisonFacility[]>;
@@ -636,6 +664,112 @@ export class DatabaseStorage implements IStorage {
     await db.update(advertisements)
       .set({ clicks: sql`${advertisements.clicks} + 1` })
       .where(eq(advertisements.id, id));
+  }
+
+  // Funeral Home Partner operations
+  async listFuneralHomePartners(isActive?: boolean): Promise<FuneralHomePartner[]> {
+    const conditions = [];
+    if (isActive !== undefined) {
+      conditions.push(eq(funeralHomePartners.isActive, isActive));
+    }
+
+    const query = conditions.length > 0
+      ? db.select().from(funeralHomePartners).where(and(...conditions))
+      : db.select().from(funeralHomePartners);
+
+    return await query.orderBy(desc(funeralHomePartners.createdAt));
+  }
+
+  async getFuneralHomePartner(id: string): Promise<FuneralHomePartner | undefined> {
+    const [partner] = await db.select().from(funeralHomePartners).where(eq(funeralHomePartners.id, id));
+    return partner || undefined;
+  }
+
+  async getFuneralHomePartnerByReferralCode(referralCode: string): Promise<FuneralHomePartner | undefined> {
+    const [partner] = await db.select().from(funeralHomePartners).where(eq(funeralHomePartners.referralCode, referralCode));
+    return partner || undefined;
+  }
+
+  async createFuneralHomePartner(partner: InsertFuneralHomePartner): Promise<FuneralHomePartner> {
+    const referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const [created] = await db.insert(funeralHomePartners).values({
+      ...partner,
+      referralCode,
+    }).returning();
+    return created;
+  }
+
+  async updateFuneralHomePartner(id: string, partner: Partial<InsertFuneralHomePartner>): Promise<FuneralHomePartner | undefined> {
+    const [updated] = await db.update(funeralHomePartners)
+      .set(partner)
+      .where(eq(funeralHomePartners.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createPartnerReferral(referral: InsertPartnerReferral): Promise<PartnerReferral> {
+    const [created] = await db.insert(partnerReferrals).values(referral).returning();
+    return created;
+  }
+
+  async getPartnerReferralsByPartnerId(partnerId: string): Promise<PartnerReferral[]> {
+    return await db.select().from(partnerReferrals)
+      .where(eq(partnerReferrals.partnerId, partnerId))
+      .orderBy(desc(partnerReferrals.createdAt));
+  }
+
+  async getPartnerReferralByMemorialId(memorialId: string): Promise<PartnerReferral | undefined> {
+    const [referral] = await db.select().from(partnerReferrals)
+      .where(eq(partnerReferrals.memorialId, memorialId));
+    return referral || undefined;
+  }
+
+  async createPartnerCommission(commission: InsertPartnerCommission): Promise<PartnerCommission> {
+    const [created] = await db.insert(partnerCommissions).values(commission).returning();
+    return created;
+  }
+
+  async getPartnerCommissionsByPartnerId(partnerId: string, status?: string): Promise<PartnerCommission[]> {
+    const conditions = [eq(partnerCommissions.partnerId, partnerId)];
+    if (status) {
+      conditions.push(eq(partnerCommissions.status, status));
+    }
+
+    return await db.select().from(partnerCommissions)
+      .where(and(...conditions))
+      .orderBy(desc(partnerCommissions.createdAt));
+  }
+
+  async updatePartnerCommissionStatus(id: string, status: string): Promise<PartnerCommission | undefined> {
+    const [updated] = await db.update(partnerCommissions)
+      .set({ status })
+      .where(eq(partnerCommissions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createPartnerPayout(payout: InsertPartnerPayout): Promise<PartnerPayout> {
+    const [created] = await db.insert(partnerPayouts).values(payout).returning();
+    return created;
+  }
+
+  async getPartnerPayoutsByPartnerId(partnerId: string): Promise<PartnerPayout[]> {
+    return await db.select().from(partnerPayouts)
+      .where(eq(partnerPayouts.partnerId, partnerId))
+      .orderBy(desc(partnerPayouts.createdAt));
+  }
+
+  async updatePartnerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<PartnerPayout | undefined> {
+    const updateData: any = { status };
+    if (paidAt) {
+      updateData.paidAt = paidAt;
+    }
+
+    const [updated] = await db.update(partnerPayouts)
+      .set(updateData)
+      .where(eq(partnerPayouts.id, id))
+      .returning();
+    return updated || undefined;
   }
 }
 

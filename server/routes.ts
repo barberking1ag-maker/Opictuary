@@ -18,6 +18,10 @@ import {
   insertEssentialWorkerMemorialSchema,
   insertSelfWrittenObituarySchema,
   insertAdvertisementSchema,
+  insertFuneralHomePartnerSchema,
+  insertPartnerReferralSchema,
+  insertPartnerCommissionSchema,
+  insertPartnerPayoutSchema,
   insertPrisonFacilitySchema,
   insertPrisonAccessRequestSchema,
   insertPrisonVerificationSchema,
@@ -71,8 +75,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/memorials", async (req, res) => {
     try {
-      const data = insertMemorialSchema.parse(req.body);
+      const { referralCode, ...memorialData } = req.body;
+      const data = insertMemorialSchema.parse(memorialData);
       const memorial = await storage.createMemorial(data);
+
+      if (referralCode && referralCode.trim() !== "") {
+        const partner = await storage.getFuneralHomePartnerByReferralCode(referralCode.trim());
+        if (partner && partner.isActive) {
+          await storage.createPartnerReferral({
+            partnerId: partner.id,
+            memorialId: memorial.id,
+            referralCode: referralCode.trim(),
+          });
+        }
+      }
+
       res.status(201).json(memorial);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -252,6 +269,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fundraiserId: req.params.fundraiserId,
       });
       const donation = await storage.createDonation(data);
+
+      const fundraiser = await storage.getFundraiser(req.params.fundraiserId);
+      if (fundraiser) {
+        const referral = await storage.getPartnerReferralByMemorialId(fundraiser.memorialId);
+        if (referral) {
+          const partner = await storage.getFuneralHomePartner(referral.partnerId);
+          if (partner && partner.isActive) {
+            const commissionRate = Number(partner.commissionRate) / 100;
+            const commissionAmount = Number(donation.amount) * commissionRate;
+
+            await storage.createPartnerCommission({
+              partnerId: partner.id,
+              referralId: referral.id,
+              transactionType: 'donation',
+              transactionId: donation.id,
+              transactionAmount: donation.amount.toString(),
+              commissionAmount: commissionAmount.toFixed(2),
+              status: 'pending',
+            });
+          }
+        }
+      }
+
       res.status(201).json(donation);
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -576,6 +616,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.incrementAdClick(req.params.id);
       res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Funeral Home Partner routes
+  app.get("/api/funeral-home-partners", async (req, res) => {
+    try {
+      const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+      const partners = await storage.listFuneralHomePartners(isActive);
+      res.json(partners);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/funeral-home-partners/by-code/:code", async (req, res) => {
+    try {
+      const partner = await storage.getFuneralHomePartnerByReferralCode(req.params.code);
+      if (!partner) {
+        return res.status(404).json({ error: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/funeral-home-partners/:id", async (req, res) => {
+    try {
+      const partner = await storage.getFuneralHomePartner(req.params.id);
+      if (!partner) {
+        return res.status(404).json({ error: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/funeral-home-partners", async (req, res) => {
+    try {
+      const data = insertFuneralHomePartnerSchema.parse(req.body);
+      const partner = await storage.createFuneralHomePartner(data);
+      res.status(201).json(partner);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/funeral-home-partners/:id", async (req, res) => {
+    try {
+      const data = insertFuneralHomePartnerSchema.partial().parse(req.body);
+      const partner = await storage.updateFuneralHomePartner(req.params.id, data);
+      if (!partner) {
+        return res.status(404).json({ error: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/funeral-home-partners/:partnerId/referrals", async (req, res) => {
+    try {
+      const referrals = await storage.getPartnerReferralsByPartnerId(req.params.partnerId);
+      res.json(referrals);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/funeral-home-partners/:partnerId/referrals", async (req, res) => {
+    try {
+      const data = insertPartnerReferralSchema.parse({
+        ...req.body,
+        partnerId: req.params.partnerId,
+      });
+      const referral = await storage.createPartnerReferral(data);
+      res.status(201).json(referral);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/funeral-home-partners/:partnerId/commissions", async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const commissions = await storage.getPartnerCommissionsByPartnerId(req.params.partnerId, status);
+      res.json(commissions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/funeral-home-partners/:partnerId/payouts", async (req, res) => {
+    try {
+      const payouts = await storage.getPartnerPayoutsByPartnerId(req.params.partnerId);
+      res.json(payouts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
