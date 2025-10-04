@@ -11,6 +11,8 @@ import {
   griefSupport,
   legacyEvents,
   musicPlaylists,
+  essentialWorkersMemorials,
+  selfWrittenObituaries,
   prisonFacilities,
   prisonAccessRequests,
   prisonVerifications,
@@ -41,6 +43,10 @@ import {
   type InsertLegacyEvent,
   type MusicPlaylist,
   type InsertMusicPlaylist,
+  type EssentialWorkerMemorial,
+  type InsertEssentialWorkerMemorial,
+  type SelfWrittenObituary,
+  type InsertSelfWrittenObituary,
   type PrisonFacility,
   type InsertPrisonFacility,
   type PrisonAccessRequest,
@@ -111,6 +117,19 @@ export interface IStorage {
   // Music Playlist operations
   getMusicPlaylistByMemorialId(memorialId: string): Promise<MusicPlaylist | undefined>;
   upsertMusicPlaylist(playlist: InsertMusicPlaylist): Promise<MusicPlaylist>;
+
+  // Essential Workers Memorial operations
+  listEssentialWorkersMemorials(category?: string): Promise<EssentialWorkerMemorial[]>;
+  getEssentialWorkerMemorial(id: string): Promise<EssentialWorkerMemorial | undefined>;
+  createEssentialWorkerMemorial(memorial: InsertEssentialWorkerMemorial): Promise<EssentialWorkerMemorial>;
+  updateEssentialWorkerMemorial(id: string, memorial: Partial<InsertEssentialWorkerMemorial>): Promise<EssentialWorkerMemorial | undefined>;
+  deleteEssentialWorkerMemorial(id: string): Promise<void>;
+
+  // Self-Written Obituary operations
+  getSelfWrittenObituaryByEmail(email: string): Promise<SelfWrittenObituary | undefined>;
+  createSelfWrittenObituary(obituary: InsertSelfWrittenObituary): Promise<SelfWrittenObituary>;
+  updateSelfWrittenObituary(id: string, obituary: Partial<InsertSelfWrittenObituary>): Promise<SelfWrittenObituary | undefined>;
+  activateSelfWrittenObituary(id: string): Promise<SelfWrittenObituary | undefined>;
 
   // Prison Access System operations
   listPrisonFacilities(): Promise<PrisonFacility[]>;
@@ -477,6 +496,82 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await query.orderBy(desc(prisonAuditLogs.createdAt));
+  }
+
+  // Essential Workers Memorial operations
+  async listEssentialWorkersMemorials(category?: string): Promise<EssentialWorkerMemorial[]> {
+    const conditions = [eq(essentialWorkersMemorials.isPublic, true)];
+    
+    if (category && category.trim() !== "") {
+      conditions.push(eq(essentialWorkersMemorials.category, category));
+    }
+
+    return await db
+      .select()
+      .from(essentialWorkersMemorials)
+      .where(and(...conditions))
+      .orderBy(desc(essentialWorkersMemorials.createdAt));
+  }
+
+  async getEssentialWorkerMemorial(id: string): Promise<EssentialWorkerMemorial | undefined> {
+    const [memorial] = await db.select().from(essentialWorkersMemorials).where(eq(essentialWorkersMemorials.id, id));
+    return memorial || undefined;
+  }
+
+  async createEssentialWorkerMemorial(memorial: InsertEssentialWorkerMemorial): Promise<EssentialWorkerMemorial> {
+    const [created] = await db.insert(essentialWorkersMemorials).values({
+      ...memorial,
+      honors: memorial.honors as any,
+    }).returning();
+    return created;
+  }
+
+  async updateEssentialWorkerMemorial(id: string, memorial: Partial<InsertEssentialWorkerMemorial>): Promise<EssentialWorkerMemorial | undefined> {
+    const [updated] = await db.update(essentialWorkersMemorials)
+      .set({
+        ...memorial,
+        honors: memorial.honors as any,
+      })
+      .where(eq(essentialWorkersMemorials.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteEssentialWorkerMemorial(id: string): Promise<void> {
+    await db.delete(essentialWorkersMemorials).where(eq(essentialWorkersMemorials.id, id));
+  }
+
+  // Self-Written Obituary operations
+  async getSelfWrittenObituaryByEmail(email: string): Promise<SelfWrittenObituary | undefined> {
+    const [obituary] = await db.select().from(selfWrittenObituaries).where(eq(selfWrittenObituaries.userEmail, email));
+    return obituary || undefined;
+  }
+
+  async createSelfWrittenObituary(obituary: InsertSelfWrittenObituary): Promise<SelfWrittenObituary> {
+    const [created] = await db.insert(selfWrittenObituaries).values(obituary).returning();
+    return created;
+  }
+
+  async updateSelfWrittenObituary(id: string, obituary: Partial<InsertSelfWrittenObituary>): Promise<SelfWrittenObituary | undefined> {
+    const [updated] = await db.update(selfWrittenObituaries)
+      .set({
+        ...obituary,
+        updatedAt: new Date(),
+      })
+      .where(eq(selfWrittenObituaries.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async activateSelfWrittenObituary(id: string): Promise<SelfWrittenObituary | undefined> {
+    const [activated] = await db.update(selfWrittenObituaries)
+      .set({
+        isActivated: true,
+        activatedAt: new Date(),
+      })
+      .where(eq(selfWrittenObituaries.id, id))
+      .returning();
+    return activated || undefined;
   }
 }
 

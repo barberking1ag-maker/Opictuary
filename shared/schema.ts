@@ -129,6 +129,44 @@ export const musicPlaylists = pgTable("music_playlists", {
   tracks: json("tracks").$type<Array<{ id: string; title: string; artist: string; duration: string }>>().notNull(),
 });
 
+// Essential Workers Memorials
+export const essentialWorkersMemorials = pgTable("essential_workers_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fullName: text("full_name").notNull(),
+  profession: text("profession").notNull(),
+  category: text("category").notNull(),
+  department: text("department"),
+  yearsOfService: integer("years_of_service"),
+  biography: text("biography"),
+  imageUrl: text("image_url"),
+  lineOfDutyDeath: boolean("line_of_duty_death").default(false),
+  honors: json("honors").$type<Array<{ award: string; year: string; description: string }>>(),
+  birthDate: text("birth_date"),
+  deathDate: text("death_date"),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Self-Written Obituaries & Final Words
+export const selfWrittenObituaries = pgTable("self_written_obituaries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userEmail: text("user_email").notNull().unique(),
+  fullName: text("full_name").notNull(),
+  birthDate: text("birth_date"),
+  biography: text("biography"),
+  epitaph: text("epitaph"),
+  finalWordsText: text("final_words_text"),
+  finalWordsVideoUrl: text("final_words_video_url"),
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactEmail: text("emergency_contact_email"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  releaseInstructions: text("release_instructions"),
+  isActivated: boolean("is_activated").default(false),
+  activatedAt: timestamp("activated_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Prison Access System
 export const prisonFacilities = pgTable("prison_facilities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -329,6 +367,18 @@ export const insertMusicPlaylistSchema = createInsertSchema(musicPlaylists).omit
   id: true,
 });
 
+export const insertEssentialWorkerMemorialSchema = createInsertSchema(essentialWorkersMemorials).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSelfWrittenObituarySchema = createInsertSchema(selfWrittenObituaries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  activatedAt: true,
+});
+
 export const insertPrisonFacilitySchema = createInsertSchema(prisonFacilities).omit({
   id: true,
   createdAt: true,
@@ -399,6 +449,12 @@ export type LegacyEvent = typeof legacyEvents.$inferSelect;
 
 export type InsertMusicPlaylist = z.infer<typeof insertMusicPlaylistSchema>;
 export type MusicPlaylist = typeof musicPlaylists.$inferSelect;
+
+export type InsertEssentialWorkerMemorial = z.infer<typeof insertEssentialWorkerMemorialSchema>;
+export type EssentialWorkerMemorial = typeof essentialWorkersMemorials.$inferSelect;
+
+export type InsertSelfWrittenObituary = z.infer<typeof insertSelfWrittenObituarySchema>;
+export type SelfWrittenObituary = typeof selfWrittenObituaries.$inferSelect;
 
 export type InsertPrisonFacility = z.infer<typeof insertPrisonFacilitySchema>;
 export type PrisonFacility = typeof prisonFacilities.$inferSelect;

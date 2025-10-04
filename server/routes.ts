@@ -15,6 +15,8 @@ import {
   insertGriefSupportSchema,
   insertLegacyEventSchema,
   insertMusicPlaylistSchema,
+  insertEssentialWorkerMemorialSchema,
+  insertSelfWrittenObituarySchema,
   insertPrisonFacilitySchema,
   insertPrisonAccessRequestSchema,
   insertPrisonVerificationSchema,
@@ -383,6 +385,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Essential Workers Memorial routes
+  app.get("/api/essential-workers", async (req, res) => {
+    try {
+      const { category } = req.query;
+      const memorials = await storage.listEssentialWorkersMemorials(category as string);
+      res.json(memorials);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/essential-workers/:id", async (req, res) => {
+    try {
+      const memorial = await storage.getEssentialWorkerMemorial(req.params.id);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/essential-workers", async (req, res) => {
+    try {
+      const data = insertEssentialWorkerMemorialSchema.parse(req.body);
+      const memorial = await storage.createEssentialWorkerMemorial(data);
+      res.status(201).json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/essential-workers/:id", async (req, res) => {
+    try {
+      const data = insertEssentialWorkerMemorialSchema.partial().parse(req.body);
+      const memorial = await storage.updateEssentialWorkerMemorial(req.params.id, data);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/essential-workers/:id", async (req, res) => {
+    try {
+      await storage.deleteEssentialWorkerMemorial(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Self-Written Obituary routes
+  app.get("/api/self-obituary/:email", async (req, res) => {
+    try {
+      const obituary = await storage.getSelfWrittenObituaryByEmail(req.params.email);
+      res.json(obituary || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/self-obituary", async (req, res) => {
+    try {
+      const data = insertSelfWrittenObituarySchema.parse(req.body);
+      const obituary = await storage.createSelfWrittenObituary(data);
+      res.status(201).json(obituary);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/self-obituary/:id", async (req, res) => {
+    try {
+      const data = insertSelfWrittenObituarySchema.partial().parse(req.body);
+      const obituary = await storage.updateSelfWrittenObituary(req.params.id, data);
+      if (!obituary) {
+        return res.status(404).json({ error: "Obituary not found" });
+      }
+      res.json(obituary);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/self-obituary/:id/activate", async (req, res) => {
+    try {
+      const obituary = await storage.activateSelfWrittenObituary(req.params.id);
+      if (!obituary) {
+        return res.status(404).json({ error: "Obituary not found" });
+      }
+      res.json(obituary);
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });

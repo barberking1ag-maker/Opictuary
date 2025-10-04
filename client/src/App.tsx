@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import Home from "@/pages/Home";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
+import EssentialWorkers from "@/pages/EssentialWorkers";
+import SelfObituary from "@/pages/SelfObituary";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon, Shield } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText } from "lucide-react";
 
 function Router() {
   return (
@@ -40,20 +42,32 @@ function Router() {
             </div>
             <div className="flex gap-2">
               <Link href="/">
-                <Button variant="ghost" data-testid="nav-home">
-                  <HomeIcon className="w-4 h-4 mr-2" />
+                <Button variant="ghost" size="sm" data-testid="nav-home">
+                  <HomeIcon className="w-4 h-4 mr-1" />
                   Home
                 </Button>
               </Link>
+              <Link href="/essential-workers">
+                <Button variant="ghost" size="sm" data-testid="nav-essential-workers">
+                  <Heart className="w-4 h-4 mr-1" />
+                  Essential Workers
+                </Button>
+              </Link>
+              <Link href="/self-obituary">
+                <Button variant="ghost" size="sm" data-testid="nav-self-obituary">
+                  <FileText className="w-4 h-4 mr-1" />
+                  Write Yours
+                </Button>
+              </Link>
               <Link href="/celebrity-memorials">
-                <Button variant="ghost" data-testid="nav-celebrity">
-                  <Star className="w-4 h-4 mr-2" />
-                  Celebrity Memorials
+                <Button variant="ghost" size="sm" data-testid="nav-celebrity">
+                  <Star className="w-4 h-4 mr-1" />
+                  Celebrity
                 </Button>
               </Link>
               <Link href="/prison-access">
-                <Button variant="ghost" data-testid="nav-prison-access">
-                  <Shield className="w-4 h-4 mr-2" />
+                <Button variant="ghost" size="sm" data-testid="nav-prison-access">
+                  <Shield className="w-4 h-4 mr-1" />
                   Prison Access
                 </Button>
               </Link>
@@ -66,6 +80,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
+        <Route path="/essential-workers" component={EssentialWorkers} />
+        <Route path="/self-obituary" component={SelfObituary} />
         <Route component={NotFound} />
       </Switch>
     </div>
