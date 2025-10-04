@@ -17,6 +17,8 @@ export const memorials = pgTable("memorials", {
   deathDate: text("death_date").notNull(),
   biography: text("biography"),
   epitaph: text("epitaph"),
+  prefaceText: text("preface_text"),
+  backgroundImage: text("background_image"),
   inviteCode: varchar("invite_code", { length: 20 }).notNull().unique(),
   religion: text("religion"),
   cemeteryName: text("cemetery_name"),

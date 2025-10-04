@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
 import MemorialHero from "@/components/MemorialHero";
 import MemorialTabs from "@/components/MemorialTabs";
 import MemoryCard from "@/components/MemoryCard";
@@ -13,53 +15,58 @@ import GriefSupportPanel from "@/components/GriefSupportPanel";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
+const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
+
 export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
 
-  //todo: remove mock functionality
-  const mockMemories = [
-    {
-      authorName: "Sarah Williams",
-      caption: "I remember when Margaret taught me how to bake her famous apple pie. She was so patient and kind, always making sure I got every step just right. Those Sunday afternoons in her kitchen are some of my fondest memories.",
-      timestamp: "2 hours ago",
-      commentCount: 12
-    },
-    {
-      authorName: "David Chen",
-      caption: "Such a beautiful soul. Will be deeply missed by everyone who knew her.",
-      timestamp: "5 hours ago",
-      commentCount: 3,
-      isPending: true
-    }
-  ];
+  const { data: memorial } = useQuery<Memorial>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}`],
+  });
 
-  const mockCondolences = [
-    {
-      authorName: "Robert Martinez",
-      message: "Margaret was a light in this world. Her kindness and warmth touched everyone who knew her. My deepest condolences to the family during this difficult time.",
-      timestamp: "3 hours ago"
-    },
-    {
-      authorName: "Lisa Thompson",
-      message: "Sending prayers and love to the entire family. May her memory be a blessing.",
-      timestamp: "1 day ago"
-    }
-  ];
+  const { data: memories = [] } = useQuery<Memory[]>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/memories`],
+  });
 
-  const mockDonors = [
-    { name: "John Smith", amount: 500, timestamp: "2 hours ago" },
-    { name: "Emily Rodriguez", amount: 250, timestamp: "5 hours ago" },
-    { name: "Michael Chen", amount: 1000, timestamp: "1 day ago" },
-    { name: "Sarah Johnson", amount: 100, timestamp: "2 days ago" },
-    { name: "David Kim", amount: 300, timestamp: "3 days ago" }
-  ];
+  const { data: condolences = [] } = useQuery<Condolence[]>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/condolences`],
+  });
 
-  const mockPlaylist = [
-    { id: '1', title: 'Amazing Grace', artist: 'Traditional', duration: '3:42' },
-    { id: '2', title: 'What a Wonderful World', artist: 'Louis Armstrong', duration: '2:20' },
-    { id: '3', title: 'Over the Rainbow', artist: 'Judy Garland', duration: '2:45' },
-    { id: '4', title: 'Ave Maria', artist: 'Franz Schubert', duration: '4:15' }
-  ];
+  const { data: fundraisers = [] } = useQuery<Fundraiser[]>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/fundraisers`],
+  });
+
+  const { data: events = [] } = useQuery<LegacyEvent[]>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/legacy-events`],
+  });
+
+  const { data: playlist } = useQuery<MusicPlaylist>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/playlist`],
+  });
+
+  const { data: griefSupport } = useQuery<GriefSupport>({
+    queryKey: [`/api/memorials/${DEMO_MEMORIAL_ID}/grief-support`],
+  });
+
+  const firstFundraiser = fundraisers[0];
+  const { data: donations = [] } = useQuery<Donation[]>({
+    queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
+    enabled: !!firstFundraiser?.id,
+  });
+
+  const donorsForDisplay = donations.map(d => ({
+    name: d.isAnonymous ? "Anonymous" : d.donorName,
+    amount: Number(d.amount),
+    timestamp: new Date(d.createdAt || "").toLocaleDateString(),
+  }));
+
+  if (!memorial) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading memorial...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -82,10 +89,27 @@ export default function Home() {
         </div>
       </div>
 
+      {memorial.prefaceText && (
+        <div 
+          className="relative py-16 bg-cover bg-center"
+          style={{
+            backgroundImage: memorial.backgroundImage 
+              ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${memorial.backgroundImage})`
+              : 'linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <blockquote className="text-xl md:text-2xl font-serif italic text-white drop-shadow-lg">
+              "{memorial.prefaceText}"
+            </blockquote>
+          </div>
+        </div>
+      )}
+
       <MemorialHero 
-        name="Margaret Rose Johnson"
-        birthDate="March 15, 1945"
-        deathDate="September 28, 2024"
+        name={memorial.name}
+        birthDate={memorial.birthDate}
+        deathDate={memorial.deathDate}
         onEnterCode={() => setCodeModalOpen(true)}
         onShare={() => console.log('Share clicked')}
       />
@@ -93,8 +117,8 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 flex justify-center">
           <FlowerOrderButton 
-            memorialName="Margaret Rose Johnson"
-            deliveryLocation="Riverside Memorial Gardens"
+            memorialName={memorial.name}
+            deliveryLocation={memorial.cemeteryName || undefined}
           />
         </div>
 
@@ -105,15 +129,22 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Share a Memory
               </Button>
-              {mockMemories.map((memory, index) => (
+              {memories.map((memory) => (
                 <MemoryCard 
-                  key={index}
-                  {...memory}
+                  key={memory.id}
+                  authorName={memory.authorName}
+                  caption={memory.caption}
+                  timestamp={new Date(memory.createdAt || "").toLocaleDateString()}
+                  commentCount={0}
+                  isPending={!memory.isApproved}
                   onComment={() => console.log('Comment clicked')}
                   onApprove={() => console.log('Approved')}
                   onReject={() => console.log('Rejected')}
                 />
               ))}
+              {memories.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No memories shared yet. Be the first to share a memory.</p>
+              )}
             </div>
           }
           condolencesContent={
@@ -122,56 +153,87 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Leave a Condolence
               </Button>
-              {mockCondolences.map((condolence, index) => (
-                <CondolenceMessage key={index} {...condolence} />
+              {condolences.map((condolence) => (
+                <CondolenceMessage 
+                  key={condolence.id}
+                  authorName={condolence.authorName}
+                  message={condolence.message}
+                  timestamp={new Date(condolence.createdAt || "").toLocaleDateString()}
+                />
               ))}
+              {condolences.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No condolences yet.</p>
+              )}
             </div>
           }
           eventsContent={
             <div className="grid gap-6 md:grid-cols-2">
-              <LegacyEventCard 
-                title="Annual Memorial Picnic"
-                date="June 15, 2025"
-                time="12:00 PM"
-                location="Riverside Park, Pavilion 3"
-                attendeeCount={28}
-                description="Join us for our annual gathering to celebrate Margaret's life with food, music, and cherished memories."
-                isUpcoming={true}
-                onRSVP={() => console.log('RSVP clicked')}
-              />
+              {events.map((event) => (
+                <LegacyEventCard 
+                  key={event.id}
+                  title={event.title}
+                  date={event.eventDate}
+                  time={event.eventTime || ""}
+                  location={event.location || ""}
+                  attendeeCount={event.attendeeCount || 0}
+                  description={event.description || ""}
+                  isUpcoming={new Date(event.eventDate) > new Date()}
+                  onRSVP={() => console.log('RSVP clicked')}
+                />
+              ))}
+              {events.length === 0 && (
+                <p className="text-muted-foreground">No legacy events scheduled.</p>
+              )}
             </div>
           }
           fundraiserContent={
             <div className="max-w-2xl mx-auto space-y-8">
-              <FundraiserProgress 
-                title="Memorial Fund"
-                description="Help us cover the funeral expenses and celebrate Margaret's life with dignity."
-                currentAmount={8450}
-                goalAmount={15000}
-                donors={mockDonors}
-                onDonate={() => console.log('Donate clicked')}
-              />
-              
-              <GriefSupportPanel 
-                familyContact="Contact the Johnson family"
-                pastoralContact="Pastor David Miller - First Community Church"
-              />
+              {firstFundraiser ? (
+                <>
+                  <FundraiserProgress 
+                    title={firstFundraiser.title}
+                    description={firstFundraiser.description || ""}
+                    currentAmount={Number(firstFundraiser.currentAmount)}
+                    goalAmount={Number(firstFundraiser.goalAmount)}
+                    donors={donorsForDisplay}
+                    onDonate={() => console.log('Donate clicked')}
+                  />
+                  
+                  {griefSupport && (
+                    <GriefSupportPanel 
+                      familyContact={griefSupport.familyContact || undefined}
+                      pastoralContact={griefSupport.pastoralContact || undefined}
+                      customContacts={(griefSupport.customContacts as any) || []}
+                    />
+                  )}
+                </>
+              ) : (
+                <p className="text-center text-muted-foreground">No fundraiser active.</p>
+              )}
             </div>
           }
           mapContent={
-            <div className="max-w-2xl mx-auto">
-              <CemeteryMap 
-                cemeteryName="Riverside Memorial Gardens"
-                sectionLocation="Section C, Plot 142"
-                coordinates={{ lat: 40.7128, lng: -74.0060 }}
-                onGetDirections={() => console.log('Get directions clicked')}
-              />
-            </div>
+            memorial.cemeteryName ? (
+              <div className="max-w-2xl mx-auto">
+                <CemeteryMap 
+                  cemeteryName={memorial.cemeteryName}
+                  sectionLocation={memorial.cemeteryLocation || ""}
+                  coordinates={memorial.cemeteryCoordinates || undefined}
+                  onGetDirections={() => console.log('Get directions clicked')}
+                />
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground">Cemetery information not available.</p>
+            )
           }
           musicContent={
-            <div className="max-w-2xl mx-auto">
-              <MusicPlayer playlist={mockPlaylist} />
-            </div>
+            playlist ? (
+              <div className="max-w-2xl mx-auto">
+                <MusicPlayer playlist={playlist.tracks} />
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground">No music playlist available.</p>
+            )
           }
         />
       </div>
