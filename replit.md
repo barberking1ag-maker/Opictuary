@@ -79,6 +79,12 @@ Preferred communication style: Simple, everyday language.
 - `griefSupport` - Grief counseling and support resources
 - `celebrityMemorials` - Special memorial pages for public figures
 - `celebrityDonations` - Charity donations tied to celebrity memorial access
+- `prisonFacilities` - Correctional facility information for prison access integration
+- `prisonAccessRequests` - Inmate access requests with relationship verification
+- `prisonVerifications` - Identity and relationship verification records
+- `prisonPayments` - Payment records for facility access fees
+- `prisonAccessSessions` - Time-limited access tokens for inmates
+- `prisonAuditLogs` - Immutable audit trail for all prison access actions
 
 **Key Schema Decisions:**
 - UUIDs for primary keys (generated via `gen_random_uuid()`)
@@ -137,3 +143,46 @@ Preferred communication style: Simple, everyday language.
 - Video hosting service (memorial videos)
 - Email service (scheduled message delivery)
 - SMS/phone service (grief hotline integrations)
+
+### Prison Access System
+
+**Integration with Correctional Facilities:**
+Opictuary provides a specialized access system allowing incarcerated individuals to view memorials of loved ones through verified, paid sessions managed by prison facilities.
+
+**Third-Party Provider Integration:**
+- ConnectNetwork/GTL
+- ViaPath Technologies
+- Securus Technologies
+- Other facility-specific communication providers
+
+**Multi-Step Verification Workflow:**
+1. **Access Request Submission** - Family member or friend submits request on behalf of inmate
+2. **Identity Verification** - Validates inmate identity using DOC number and facility records
+3. **Relationship Verification** - Confirms relationship to deceased via documentation
+4. **Payment Processing** - Collects facility fees (typically $0.15/minute)
+5. **Access Token Issuance** - Generates time-limited secure access token for inmate use
+6. **Session Monitoring** - Tracks usage, logs all actions, maintains audit trail
+
+**Security & Compliance:**
+- All sessions are monitored and recorded
+- Immutable audit logs for regulatory compliance
+- IP address and user agent tracking
+- Time-limited access tokens that auto-expire
+- Facility admin controls for session management
+
+**Payment Model:**
+- Per-minute pricing set by correctional facility
+- Payment collected from family/friends before access granted
+- Integration with existing facility payment providers
+- Transparent fee disclosure
+
+**API Endpoints:**
+- `GET /api/prison-facilities` - List active prison facilities
+- `POST /api/prison-access-requests` - Submit new access request
+- `GET /api/prison-access-requests/:id` - Retrieve request details
+- `PATCH /api/prison-access-requests/:id/status` - Update request status
+- `POST /api/prison-access-requests/:requestId/verifications` - Submit verification
+- `POST /api/prison-access-requests/:requestId/payments` - Process payment
+- `POST /api/prison-access-sessions` - Create access session
+- `GET /api/prison-access-sessions/validate/:token` - Validate access token
+- `GET /api/prison-audit-logs` - Retrieve audit logs for compliance

@@ -418,14 +418,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertPrisonAccessRequestSchema.parse(req.body);
       const request = await storage.createPrisonAccessRequest(data);
       
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: request.id,
         action: "REQUEST_CREATED",
         performedBy: data.requestedByEmail,
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { requestData: data },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.status(201).json(request);
     } catch (error: any) {
@@ -473,14 +474,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Request not found" });
       }
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: request.id,
         action: `STATUS_CHANGED_TO_${status.toUpperCase()}`,
         performedBy: req.body.performedBy || "admin",
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { newStatus: status, notes: adminNotes },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.json(request);
     } catch (error: any) {
@@ -497,14 +499,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const verification = await storage.createPrisonVerification(data);
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: req.params.requestId,
         action: `VERIFICATION_${data.verificationType.toUpperCase()}_${data.status.toUpperCase()}`,
         performedBy: data.verifiedBy,
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { verificationType: data.verificationType, status: data.status },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.status(201).json(verification);
     } catch (error: any) {
@@ -533,14 +536,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const payment = await storage.createPrisonPayment(data);
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: req.params.requestId,
         action: "PAYMENT_INITIATED",
         performedBy: data.payerEmail,
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { amount: data.amount, paymentMethod: data.paymentMethod },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.status(201).json(payment);
     } catch (error: any) {
@@ -558,14 +562,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Payment not found" });
       }
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: payment.requestId,
         action: "PAYMENT_CONFIRMED",
         performedBy: "system",
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { paymentId: payment.id, amount: payment.amount },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.json(payment);
     } catch (error: any) {
@@ -579,15 +584,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertPrisonAccessSessionSchema.parse(req.body);
       const session = await storage.createPrisonAccessSession(data);
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: data.requestId,
         sessionId: session.id,
         action: "ACCESS_SESSION_CREATED",
         performedBy: "system",
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { memorialId: data.memorialId, expiresAt: data.expiresAt },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.status(201).json(session);
     } catch (error: any) {
@@ -605,15 +611,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Invalid or expired access token" });
       }
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: session.requestId,
         sessionId: session.id,
         action: "ACCESS_TOKEN_VALIDATED",
         performedBy: "inmate",
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { memorialId: session.memorialId },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.json(session);
     } catch (error: any) {
@@ -628,15 +635,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      await storage.createPrisonAuditLog({
+      const auditLog = insertPrisonAuditLogSchema.parse({
         requestId: session.requestId,
         sessionId: session.id,
         action: "ACCESS_SESSION_DEACTIVATED",
         performedBy: req.body.performedBy || "admin",
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('user-agent') || undefined,
         metadata: { reason: req.body.reason },
       });
+      await storage.createPrisonAuditLog(auditLog);
 
       res.json(session);
     } catch (error: any) {
