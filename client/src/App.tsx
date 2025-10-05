@@ -23,23 +23,35 @@ function Router() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
-                <defs>
-                  <radialGradient id="spiritual-light" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.3"/>
-                    <stop offset="50%" stopColor="currentColor" stopOpacity="0.1"/>
-                    <stop offset="100%" stopColor="currentColor" stopOpacity="0"/>
-                  </radialGradient>
-                </defs>
-                <circle cx="20" cy="20" r="18" fill="url(#spiritual-light)"/>
-                <circle cx="20" cy="20" r="10" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.9"/>
-                <ellipse cx="20" cy="6" rx="14" ry="2.5" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.8"/>
-                <path d="M6 6 Q 20 4, 34 6" stroke="currentColor" strokeWidth="1" opacity="0.6" fill="none"/>
-                <circle cx="20" cy="20" r="6" fill="currentColor" opacity="0.1"/>
-              </svg>
               <h1 className="text-xl font-serif font-semibold text-foreground relative">
                 <span className="relative inline-block">
-                  <span className="absolute -top-3 left-0 right-0 text-center text-xs opacity-60">✦</span>
+                  <svg 
+                    className="absolute -top-2 left-1/2 -translate-x-1/2" 
+                    width="20" 
+                    height="8" 
+                    viewBox="0 0 20 8" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <ellipse 
+                      cx="10" 
+                      cy="4" 
+                      rx="9" 
+                      ry="3" 
+                      fill="none" 
+                      stroke="#FFD700" 
+                      strokeWidth="1.5" 
+                      opacity="0.9"
+                    />
+                    <ellipse 
+                      cx="10" 
+                      cy="4" 
+                      rx="9" 
+                      ry="3" 
+                      fill="#FFD700" 
+                      opacity="0.15"
+                    />
+                  </svg>
                   O
                 </span>pictuary
               </h1>
