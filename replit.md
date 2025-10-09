@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 9, 2025 - Replit Authentication & Authorization System:**
+- Fully implemented Replit Auth using OpenID Connect (OIDC) with session storage
+- Added users table (id from OIDC "sub" claim, no UUID default)
+- Created authentication middleware (isAuthenticated) and protected routes
+- Secured all admin and QR code endpoints with authentication + authorization checks
+- Authorization pattern: verify user is creator OR has specific admin permissions
+- Client-side useAuth hook and error handling utilities
+- All tests passing: creator operations succeed, unauthorized access blocked with 403
+
 **October 9, 2025 - Creator/Admin System & QR Code Management:**
 - Added creator/admin roles system to distinguish memorial creator from deceased person
 - Implemented role-based access control with granular permissions
@@ -162,6 +171,60 @@ Opictuary is configured as a **native mobile application** using Capacitor + PWA
 - Invite codes act as shared secrets for access control
 - No user accounts required for most features
 - Content moderation through approval workflows
+
+### Replit Authentication System
+
+**Implementation (October 9, 2025):**
+Opictuary uses Replit Auth (OpenID Connect) for authentication of memorial creators and administrators who need to manage content, generate QR codes, and access privileged features.
+
+**Technical Stack:**
+- OpenID Connect (OIDC) provider: Replit Auth
+- Session storage: PostgreSQL with connect-pg-simple
+- User identification: OIDC "sub" claim (no UUID generation)
+- Middleware: isAuthenticated checks for valid session
+- Client hook: useAuth() for authentication status
+
+**Database Schema:**
+- `users` table: Stores authenticated users from OIDC (id = sub claim, email, names, profile image)
+- `sessions` table: Stores express-session data in PostgreSQL
+- **Important**: users.id has NO DEFAULT - always provided by OIDC sub claim
+
+**Authorization Pattern:**
+All admin-level operations follow a consistent authorization pattern:
+
+1. **Authentication Check**: Verify user has valid session (isAuthenticated middleware)
+2. **Identity Lookup**: Find memorial associated with the resource being accessed
+3. **Creator Check**: Verify user.email matches memorial.creatorEmail
+4. **Admin Permission Check**: OR verify user has memorialAdmin role with specific permission
+5. **Response**: 401 if unauthenticated, 403 if unauthorized, 200/204 if authorized
+
+**Protected Endpoints:**
+```
+GET    /api/memorials/:id/admins          - Creator or admin can view
+POST   /api/memorials/:id/admins          - Only creator can add admins
+DELETE /api/memorial-admins/:id           - Only creator can delete admins
+GET    /api/memorials/:id/qr-codes        - Creator or QR admin can view
+POST   /api/memorials/:id/qr-codes/generate - Creator or QR admin can generate
+DELETE /api/qr-codes/:id                  - Creator or QR admin can delete
+```
+
+**Client-Side Integration:**
+- `useAuth()` hook provides: { user, isLoading, isAuthenticated }
+- `handleAuthError()` utility for consistent error handling
+- Login redirects to `/api/login` (initiates OIDC flow)
+- Logout via `/api/logout` (destroys session)
+
+**Security Features:**
+- Session-based authentication (not JWT)
+- CSRF protection via session cookies
+- Granular role-based permissions (canManageQR, canApproveContent, canEditMemorial)
+- Authorization checks on every protected endpoint
+- Proper HTTP status codes (401 unauthenticated, 403 forbidden)
+
+**Optional Enhancements (Architect Suggestions):**
+- Email normalization to lowercase for consistency
+- Audit logging for admin actions
+- Expanded test coverage for edge cases
 
 ### External Dependencies
 
