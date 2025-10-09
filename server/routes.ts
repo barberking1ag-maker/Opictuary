@@ -654,32 +654,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Grief Support routes
-  app.get("/api/memorials/:memorialId/grief-support", async (req, res) => {
-    try {
-      const support = await storage.getGriefSupportByMemorialId(req.params.memorialId);
-      res.json(support || null);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/memorials/:memorialId/grief-support", async (req, res) => {
-    try {
-      const data = insertGriefSupportSchema.parse({
-        ...req.body,
-        memorialId: req.params.memorialId,
-      });
-      const support = await storage.upsertGriefSupport(data);
-      res.status(201).json(support);
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   // Legacy Event routes
   app.get("/api/memorials/:memorialId/legacy-events", async (req, res) => {
     try {

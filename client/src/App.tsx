@@ -15,6 +15,7 @@ import PartnerSignup from "@/pages/PartnerSignup";
 import PartnerDashboard from "@/pages/PartnerDashboard";
 import BadgePreview from "@/pages/BadgePreview";
 import DesignReference from "@/pages/DesignReference";
+import GriefSupport from "@/pages/GriefSupport";
 import NotFound from "@/pages/not-found";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout } from "lucide-react";
 
@@ -107,6 +108,7 @@ function Router() {
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
         <Route path="/self-obituary" component={SelfObituary} />
+        <Route path="/grief-support/:memorialId" component={GriefSupport} />
         <Route path="/customization" component={CustomizationDemo} />
         <Route path="/advertise" component={AdvertiserSubmission} />
         <Route path="/partner-signup" component={PartnerSignup} />
