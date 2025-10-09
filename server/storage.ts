@@ -110,7 +110,17 @@ export interface IStorage {
   // QR Code operations
   getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]>;
   getQRCodeById(id: string): Promise<QRCode | undefined>;
-  generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode>;
+  generateQRCode(
+    memorialId: string, 
+    purpose: string, 
+    issuedToEmail?: string,
+    title?: string,
+    description?: string,
+    videoUrl?: string,
+    imageUrl?: string,
+    mediaType?: string
+  ): Promise<QRCode>;
+  updateQRCode(id: string, data: Partial<Pick<QRCode, 'title' | 'description' | 'videoUrl' | 'imageUrl' | 'mediaType'>>): Promise<QRCode | undefined>;
   deleteQRCode(id: string): Promise<void>;
 
   // Memory operations
@@ -291,7 +301,16 @@ export class DatabaseStorage implements IStorage {
     return qrCode || undefined;
   }
 
-  async generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode> {
+  async generateQRCode(
+    memorialId: string, 
+    purpose: string, 
+    issuedToEmail?: string,
+    title?: string,
+    description?: string,
+    videoUrl?: string,
+    imageUrl?: string,
+    mediaType?: string
+  ): Promise<QRCode> {
     const memorial = await this.getMemorial(memorialId);
     if (!memorial) {
       throw new Error("Memorial not found");
@@ -305,10 +324,20 @@ export class DatabaseStorage implements IStorage {
       code: qrCodeString,
       purpose,
       issuedToEmail,
+      title,
+      description,
+      videoUrl,
+      imageUrl,
+      mediaType,
       status: "active",
     }).returning();
     
     return created;
+  }
+
+  async updateQRCode(id: string, data: Partial<Pick<QRCode, 'title' | 'description' | 'videoUrl' | 'imageUrl' | 'mediaType'>>): Promise<QRCode | undefined> {
+    const [updated] = await db.update(qrCodes).set(data).where(eq(qrCodes.id, id)).returning();
+    return updated || undefined;
   }
 
   async deleteQRCode(id: string): Promise<void> {

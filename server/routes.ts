@@ -33,11 +33,25 @@ import {
   insertPushTokenSchema,
   insertMemorialAdminSchema,
   insertQRCodeSchema,
+  type QRCode,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
   inviteCode: z.string().min(1, "Invite code is required"),
 });
+
+// QR Code media validation schemas
+const qrCodeMediaSchema = z.object({
+  purpose: z.string().optional(),
+  issuedToEmail: z.string().email().optional().or(z.literal('')),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  videoUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  mediaType: z.enum(['video', 'image', 'message', 'mixed']).optional(),
+});
+
+const qrCodeMediaUpdateSchema = qrCodeMediaSchema.partial();
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -267,14 +281,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Forbidden: You do not have permission to generate QR codes for this memorial" });
       }
 
-      const { purpose, issuedToEmail } = req.body;
+      // Validate request body
+      const validatedData = qrCodeMediaSchema.parse(req.body);
+      const { purpose, issuedToEmail, title, description, videoUrl, imageUrl, mediaType } = validatedData;
+      
       const qrCode = await storage.generateQRCode(
         req.params.memorialId,
         purpose || "tombstone",
-        issuedToEmail
+        issuedToEmail || undefined,
+        title,
+        description,
+        videoUrl || undefined,
+        imageUrl || undefined,
+        mediaType
       );
       res.status(201).json(qrCode);
     } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/qr-codes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the QR code to find the memorial
+      const qrCode = await storage.getQRCodeById(req.params.id);
+      
+      if (!qrCode) {
+        return res.status(404).json({ error: "QR code not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(qrCode.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin with QR management permission
+      const admins = await storage.getMemorialAdmins(qrCode.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isQRAdmin = admins.some(admin => admin.email === userEmail && admin.canManageQR);
+      
+      if (!isCreator && !isQRAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to update QR codes for this memorial" });
+      }
+      
+      // Validate and parse request body
+      const validatedData = qrCodeMediaUpdateSchema.parse(req.body);
+      
+      // Filter to only include provided fields to avoid overwriting with undefined
+      const updates: Partial<Pick<QRCode, 'title' | 'description' | 'videoUrl' | 'imageUrl' | 'mediaType'>> = {};
+      if (validatedData.title !== undefined) updates.title = validatedData.title;
+      if (validatedData.description !== undefined) updates.description = validatedData.description;
+      if (validatedData.videoUrl !== undefined) updates.videoUrl = validatedData.videoUrl || null;
+      if (validatedData.imageUrl !== undefined) updates.imageUrl = validatedData.imageUrl || null;
+      if (validatedData.mediaType !== undefined) updates.mediaType = validatedData.mediaType;
+      
+      // Guard against empty update payloads
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      const updated = await storage.updateQRCode(req.params.id, updates);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "QR code not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       res.status(500).json({ error: error.message });
     }
   });
