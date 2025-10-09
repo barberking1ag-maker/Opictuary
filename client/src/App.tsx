@@ -26,18 +26,18 @@ function Router() {
               <h1 className="text-xl font-serif font-semibold text-foreground relative">
                 <span className="relative inline-block">
                   <svg 
-                    className="absolute -top-2 left-1/2 -translate-x-1/2" 
+                    className="absolute -top-1 left-1/2 -translate-x-1/2" 
                     width="20" 
-                    height="8" 
-                    viewBox="0 0 20 8" 
+                    height="6" 
+                    viewBox="0 0 20 6" 
                     fill="none" 
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <ellipse 
                       cx="10" 
-                      cy="4" 
+                      cy="3" 
                       rx="9" 
-                      ry="3" 
+                      ry="2.5" 
                       fill="none" 
                       stroke="#FFD700" 
                       strokeWidth="1.5" 
@@ -45,9 +45,9 @@ function Router() {
                     />
                     <ellipse 
                       cx="10" 
-                      cy="4" 
+                      cy="3" 
                       rx="9" 
-                      ry="3" 
+                      ry="2.5" 
                       fill="#FFD700" 
                       opacity="0.15"
                     />
