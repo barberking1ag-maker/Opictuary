@@ -314,6 +314,8 @@ export const advertisements = pgTable("advertisements", {
   contactPhone: text("contact_phone"),
   websiteUrl: text("website_url"),
   pricing: text("pricing"),
+  discountPercentage: integer("discount_percentage"),
+  discountCode: text("discount_code"),
   isActive: boolean("is_active").default(true),
   impressions: integer("impressions").default(0),
   clicks: integer("clicks").default(0),

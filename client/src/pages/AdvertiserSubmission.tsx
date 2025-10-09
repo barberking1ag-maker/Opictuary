@@ -28,6 +28,10 @@ const adSubmissionSchema = z.object({
   pricing: z.string()
     .refine(val => val === "" || val.length >= 2, "Please provide pricing information")
     .optional().or(z.literal("")),
+  discountPercentage: z.string()
+    .refine(val => val === "" || (Number(val) >= 0 && Number(val) <= 100), "Must be between 0 and 100")
+    .optional().or(z.literal("")),
+  discountCode: z.string().optional().or(z.literal("")),
   expiresAt: z.string().optional(),
 });
 
@@ -62,12 +66,14 @@ export default function AdvertiserSubmission() {
       contactPhone: "",
       websiteUrl: "",
       pricing: "",
+      discountPercentage: "",
+      discountCode: "",
       expiresAt: "",
     },
   });
 
   const submitAd = useMutation({
-    mutationFn: async (data: AdSubmissionForm) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/advertisements", data);
       return await res.json();
     },
@@ -95,6 +101,8 @@ export default function AdvertiserSubmission() {
       expiresAt: data.expiresAt || undefined,
       contactPhone: data.contactPhone || undefined,
       pricing: data.pricing || undefined,
+      discountPercentage: data.discountPercentage ? Number(data.discountPercentage) : undefined,
+      discountCode: data.discountCode || undefined,
     };
     submitAd.mutate(normalizedData);
   };
@@ -327,6 +335,38 @@ export default function AdvertiserSubmission() {
                         <Input {...field} type="date" data-testid="input-expires-at" />
                       </FormControl>
                       <FormDescription className="text-xs">When ad should stop showing</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="discountPercentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount Percentage (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min="0" max="100" placeholder="e.g. 15" data-testid="input-discount-percentage" />
+                      </FormControl>
+                      <FormDescription className="text-xs">Shows as "15% OFF" badge</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="discountCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount Code (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. OPICTUARY15" data-testid="input-discount-code" />
+                      </FormControl>
+                      <FormDescription className="text-xs">Code visitors use at checkout</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
