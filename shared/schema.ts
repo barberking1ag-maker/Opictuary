@@ -314,8 +314,8 @@ export const advertisements = pgTable("advertisements", {
   contactPhone: text("contact_phone"),
   websiteUrl: text("website_url"),
   pricing: text("pricing"),
-  commissionPercentage: integer("commission_percentage"), // Percentage of sales the advertiser receives
-  referralCode: text("referral_code").unique(), // Unique code for tracking referrals
+  commissionPercentage: integer("commission_percentage"), // Percentage Opictuary receives from sales made through platform
+  referralCode: text("referral_code").unique(), // Unique code for tracking sales through Opictuary
   isActive: boolean("is_active").default(true),
   impressions: integer("impressions").default(0),
   clicks: integer("clicks").default(0),

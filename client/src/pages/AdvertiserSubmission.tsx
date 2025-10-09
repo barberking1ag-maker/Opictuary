@@ -347,11 +347,11 @@ export default function AdvertiserSubmission() {
                   name="commissionPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Commission Percentage (Optional)</FormLabel>
+                      <FormLabel>Platform Fee % (Optional)</FormLabel>
                       <FormControl>
                         <Input {...field} type="number" min="0" max="100" placeholder="e.g. 10" data-testid="input-commission-percentage" />
                       </FormControl>
-                      <FormDescription className="text-xs">% of sales you receive from referrals</FormDescription>
+                      <FormDescription className="text-xs">% Opictuary receives from your sales</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -366,7 +366,7 @@ export default function AdvertiserSubmission() {
                       <FormControl>
                         <Input {...field} placeholder="e.g. PARTNER123" data-testid="input-referral-code" />
                       </FormControl>
-                      <FormDescription className="text-xs">Unique code for tracking your referrals</FormDescription>
+                      <FormDescription className="text-xs">Unique code for tracking sales through Opictuary</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
