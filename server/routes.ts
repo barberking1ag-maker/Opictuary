@@ -20,6 +20,7 @@ import {
   insertEssentialWorkerMemorialSchema,
   insertSelfWrittenObituarySchema,
   insertAdvertisementSchema,
+  insertAdvertisementSaleSchema,
   insertFuneralHomePartnerSchema,
   insertPartnerReferralSchema,
   insertPartnerCommissionSchema,
@@ -934,6 +935,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.incrementAdClick(req.params.id);
       res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Advertisement Sales Tracking routes
+  const recordSaleSchema = z.object({
+    saleAmount: z.number().positive("Sale amount must be greater than 0"),
+    customerEmail: z.string().email().optional(),
+    orderReference: z.string().optional(),
+  });
+
+  app.post("/api/advertisements/:id/sale", async (req, res) => {
+    try {
+      const data = recordSaleSchema.parse(req.body);
+
+      const ad = await storage.getAdvertisement(req.params.id);
+      if (!ad) {
+        return res.status(404).json({ error: "Advertisement not found" });
+      }
+
+      if (!ad.referralCode) {
+        return res.status(400).json({ error: "Advertisement does not have a referral code" });
+      }
+
+      const platformFeePercentage = ad.commissionPercentage || 0;
+      const platformFeeAmount = (data.saleAmount * platformFeePercentage / 100).toFixed(2);
+
+      const sale = await storage.recordSale({
+        advertisementId: req.params.id,
+        referralCode: ad.referralCode,
+        saleAmount: data.saleAmount.toString(),
+        platformFeePercentage,
+        platformFeeAmount,
+        customerEmail: data.customerEmail,
+        orderReference: data.orderReference,
+      });
+
+      res.status(201).json(sale);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/advertisements/:id/sales", async (req, res) => {
+    try {
+      const sales = await storage.getAdvertisementSales(req.params.id);
+      res.json(sales);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/referral-sales/:referralCode", async (req, res) => {
+    try {
+      const sales = await storage.getSalesByReferralCode(req.params.referralCode);
+      res.json(sales);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

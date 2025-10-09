@@ -16,6 +16,7 @@ import {
   essentialWorkersMemorials,
   selfWrittenObituaries,
   advertisements,
+  advertisementSales,
   funeralHomePartners,
   partnerReferrals,
   partnerCommissions,
@@ -62,6 +63,8 @@ import {
   type InsertSelfWrittenObituary,
   type Advertisement,
   type InsertAdvertisement,
+  type AdvertisementSale,
+  type InsertAdvertisementSale,
   type FuneralHomePartner,
   type InsertFuneralHomePartner,
   type PartnerReferral,
@@ -186,6 +189,11 @@ export interface IStorage {
   deleteAdvertisement(id: string): Promise<void>;
   incrementAdImpression(id: string): Promise<void>;
   incrementAdClick(id: string): Promise<void>;
+
+  // Advertisement Sales Tracking
+  recordSale(sale: InsertAdvertisementSale): Promise<AdvertisementSale>;
+  getAdvertisementSales(advertisementId: string): Promise<AdvertisementSale[]>;
+  getSalesByReferralCode(referralCode: string): Promise<AdvertisementSale[]>;
 
   // Funeral Home Partner operations
   listFuneralHomePartners(isActive?: boolean): Promise<FuneralHomePartner[]>;
@@ -777,6 +785,38 @@ export class DatabaseStorage implements IStorage {
     await db.update(advertisements)
       .set({ clicks: sql`${advertisements.clicks} + 1` })
       .where(eq(advertisements.id, id));
+  }
+
+  // Advertisement Sales Tracking
+  async recordSale(sale: InsertAdvertisementSale): Promise<AdvertisementSale> {
+    const [recorded] = await db.insert(advertisementSales).values(sale).returning();
+    
+    // Update advertisement totals
+    await db.update(advertisements)
+      .set({
+        totalSales: sql`${advertisements.totalSales} + 1`,
+        totalRevenue: sql`${advertisements.totalRevenue} + ${sale.saleAmount}`,
+        totalPlatformFees: sql`${advertisements.totalPlatformFees} + ${sale.platformFeeAmount}`,
+      })
+      .where(eq(advertisements.id, sale.advertisementId));
+    
+    return recorded;
+  }
+
+  async getAdvertisementSales(advertisementId: string): Promise<AdvertisementSale[]> {
+    return await db
+      .select()
+      .from(advertisementSales)
+      .where(eq(advertisementSales.advertisementId, advertisementId))
+      .orderBy(desc(advertisementSales.createdAt));
+  }
+
+  async getSalesByReferralCode(referralCode: string): Promise<AdvertisementSale[]> {
+    return await db
+      .select()
+      .from(advertisementSales)
+      .where(eq(advertisementSales.referralCode, referralCode))
+      .orderBy(desc(advertisementSales.createdAt));
   }
 
   // Funeral Home Partner operations

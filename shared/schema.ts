@@ -319,8 +319,24 @@ export const advertisements = pgTable("advertisements", {
   isActive: boolean("is_active").default(true),
   impressions: integer("impressions").default(0),
   clicks: integer("clicks").default(0),
+  totalSales: integer("total_sales").default(0),
+  totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0"),
+  totalPlatformFees: decimal("total_platform_fees", { precision: 10, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
+});
+
+// Advertisement Sales Tracking
+export const advertisementSales = pgTable("advertisement_sales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  advertisementId: varchar("advertisement_id").notNull().references(() => advertisements.id, { onDelete: "cascade" }),
+  referralCode: text("referral_code").notNull(),
+  saleAmount: decimal("sale_amount", { precision: 10, scale: 2 }).notNull(),
+  platformFeePercentage: integer("platform_fee_percentage").notNull(),
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }).notNull(),
+  customerEmail: text("customer_email"),
+  orderReference: text("order_reference"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Funeral Home Partnership System
@@ -580,6 +596,14 @@ export const insertAdvertisementSchema = createInsertSchema(advertisements).omit
   createdAt: true,
   impressions: true,
   clicks: true,
+  totalSales: true,
+  totalRevenue: true,
+  totalPlatformFees: true,
+});
+
+export const insertAdvertisementSaleSchema = createInsertSchema(advertisementSales).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertFuneralHomePartnerSchema = createInsertSchema(funeralHomePartners).omit({
@@ -682,6 +706,9 @@ export type PrisonAuditLog = typeof prisonAuditLogs.$inferSelect;
 
 export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
 export type Advertisement = typeof advertisements.$inferSelect;
+
+export type InsertAdvertisementSale = z.infer<typeof insertAdvertisementSaleSchema>;
+export type AdvertisementSale = typeof advertisementSales.$inferSelect;
 
 export type InsertFuneralHomePartner = z.infer<typeof insertFuneralHomePartnerSchema>;
 export type FuneralHomePartner = typeof funeralHomePartners.$inferSelect;

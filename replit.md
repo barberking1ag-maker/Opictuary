@@ -10,12 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**October 9, 2025 - Advertising Platform Fee System & Grief Support Enhancement:**
-- Implemented platform fee system for advertisements (Opictuary revenue model)
-- Changed from customer discount codes to platform commission tracking
-- Updated advertisements schema: discountPercentage → commissionPercentage, discountCode → referralCode
-- Opictuary receives percentage of sales made through the platform (platform fee model)
-- Referral codes track sales generated through Opictuary advertising
+**October 9, 2025 - Advertising Platform Fee System & Sales Tracking:**
+- Implemented comprehensive sales tracking system for advertisements
+- Platform fee model: Opictuary receives percentage of sales made through platform
+- New advertisementSales table tracks individual sales with revenue and fee calculations
+- Each sale records: saleAmount, platformFeePercentage, platformFeeAmount, customerEmail, orderReference
+- Advertisements track aggregate metrics: totalSales, totalRevenue, totalPlatformFees
+- API endpoints for recording sales (POST /api/advertisements/:id/sale) and retrieving sales data
+- Referral codes uniquely identify and track sales through Opictuary
+- Automatic fee calculation based on advertisement's commission percentage
+
+**October 9, 2025 - Grief Support Enhancement:**
 - Enhanced grief support resources with spiritual and mental health sections
 - Added professional counseling resources (BetterHelp, Grief Recovery Method)
 - Added faith-based support (Stephen Ministry, Jewish Bereavement, Islamic Counseling)
