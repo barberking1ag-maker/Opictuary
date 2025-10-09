@@ -314,8 +314,8 @@ export const advertisements = pgTable("advertisements", {
   contactPhone: text("contact_phone"),
   websiteUrl: text("website_url"),
   pricing: text("pricing"),
-  discountPercentage: integer("discount_percentage"),
-  discountCode: text("discount_code"),
+  commissionPercentage: integer("commission_percentage"), // Percentage of sales the advertiser receives
+  referralCode: text("referral_code").unique(), // Unique code for tracking referrals
   isActive: boolean("is_active").default(true),
   impressions: integer("impressions").default(0),
   clicks: integer("clicks").default(0),

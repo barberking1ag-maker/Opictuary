@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Phone, Heart, Users, MessageCircle, Plus, X } from "lucide-react";
+import { Phone, Heart, Users, MessageCircle, Plus, X, Brain, Sparkles } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { GriefSupport } from "@shared/schema";
 
@@ -36,6 +36,57 @@ const NATIONAL_HOTLINES = [
     contact: "www.griefshare.org",
     description: "Find local grief support groups and online resources.",
     isEmergency: false,
+  },
+];
+
+const SPIRITUAL_MENTAL_HEALTH_RESOURCES = [
+  {
+    title: "BetterHelp Online Therapy",
+    contact: "www.betterhelp.com",
+    description: "Professional online counseling specializing in grief and bereavement therapy.",
+    category: "mental-health",
+  },
+  {
+    title: "Grief Recovery Method",
+    contact: "www.griefrecoverymethod.com",
+    description: "Evidence-based approach to dealing with loss through professional guidance.",
+    category: "mental-health",
+  },
+  {
+    title: "Stephen Ministry",
+    contact: "www.stephenministries.org",
+    description: "Christian caregiving ministry providing one-on-one spiritual support during grief.",
+    category: "spiritual",
+  },
+  {
+    title: "Jewish Bereavement Counseling",
+    contact: "www.jewishbereavement.org",
+    description: "Faith-based grief support rooted in Jewish traditions and practices.",
+    category: "spiritual",
+  },
+  {
+    title: "Islamic Counseling & Support",
+    contact: "www.muslimgriefsupport.com",
+    description: "Culturally sensitive grief support for Muslim families.",
+    category: "spiritual",
+  },
+  {
+    title: "Headspace Meditation App",
+    contact: "www.headspace.com/grief",
+    description: "Guided meditation and mindfulness exercises for coping with loss.",
+    category: "mental-health",
+  },
+  {
+    title: "What's Your Grief",
+    contact: "www.whatsyourgrief.com",
+    description: "Online community and resources for understanding and navigating grief.",
+    category: "mental-health",
+  },
+  {
+    title: "Hospice Foundation of America",
+    contact: "(877) 258-4433",
+    description: "Professional bereavement counseling and spiritual care resources.",
+    category: "both",
   },
 ];
 
@@ -204,6 +255,53 @@ export default function GriefSupport() {
                 </p>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              Spiritual & Mental Health Support
+            </CardTitle>
+            <CardDescription>Professional counseling, faith-based support, and mindfulness resources</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Mental Health & Counseling
+              </h3>
+              <div className="space-y-4">
+                {SPIRITUAL_MENTAL_HEALTH_RESOURCES.filter(r => r.category === "mental-health" || r.category === "both").map((resource, i) => (
+                  <div key={i} className="border-l-4 border-primary pl-4" data-testid={`mental-health-resource-${i}`}>
+                    <h4 className="font-semibold" data-testid={`mental-health-title-${i}`}>{resource.title}</h4>
+                    <p className="text-lg font-mono text-primary" data-testid={`mental-health-contact-${i}`}>{resource.contact}</p>
+                    <p className="text-sm text-muted-foreground" data-testid={`mental-health-description-${i}`}>
+                      {resource.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Spiritual & Faith-Based Support
+              </h3>
+              <div className="space-y-4">
+                {SPIRITUAL_MENTAL_HEALTH_RESOURCES.filter(r => r.category === "spiritual").map((resource, i) => (
+                  <div key={i} className="border-l-4 border-accent pl-4" data-testid={`spiritual-resource-${i}`}>
+                    <h4 className="font-semibold" data-testid={`spiritual-title-${i}`}>{resource.title}</h4>
+                    <p className="text-lg font-mono text-primary" data-testid={`spiritual-contact-${i}`}>{resource.contact}</p>
+                    <p className="text-sm text-muted-foreground" data-testid={`spiritual-description-${i}`}>
+                      {resource.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

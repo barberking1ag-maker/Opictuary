@@ -112,6 +112,7 @@ function Router() {
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
         <Route path="/customization" component={CustomizationDemo} />
         <Route path="/advertise" component={AdvertiserSubmission} />
+        <Route path="/advertiser-submission" component={AdvertiserSubmission} />
         <Route path="/advertising" component={AdvertisingOpportunities} />
         <Route path="/partner-signup" component={PartnerSignup} />
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />

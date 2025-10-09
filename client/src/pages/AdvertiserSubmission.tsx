@@ -28,10 +28,10 @@ const adSubmissionSchema = z.object({
   pricing: z.string()
     .refine(val => val === "" || val.length >= 2, "Please provide pricing information")
     .optional().or(z.literal("")),
-  discountPercentage: z.string()
+  commissionPercentage: z.string()
     .refine(val => val === "" || (Number(val) >= 0 && Number(val) <= 100), "Must be between 0 and 100")
     .optional().or(z.literal("")),
-  discountCode: z.string().optional().or(z.literal("")),
+  referralCode: z.string().optional().or(z.literal("")),
   expiresAt: z.string().optional(),
 });
 
@@ -66,8 +66,8 @@ export default function AdvertiserSubmission() {
       contactPhone: "",
       websiteUrl: "",
       pricing: "",
-      discountPercentage: "",
-      discountCode: "",
+      commissionPercentage: "",
+      referralCode: "",
       expiresAt: "",
     },
   });
@@ -101,8 +101,8 @@ export default function AdvertiserSubmission() {
       expiresAt: data.expiresAt || undefined,
       contactPhone: data.contactPhone || undefined,
       pricing: data.pricing || undefined,
-      discountPercentage: data.discountPercentage ? Number(data.discountPercentage) : undefined,
-      discountCode: data.discountCode || undefined,
+      commissionPercentage: data.commissionPercentage ? Number(data.commissionPercentage) : undefined,
+      referralCode: data.referralCode || undefined,
     };
     submitAd.mutate(normalizedData);
   };
@@ -344,14 +344,14 @@ export default function AdvertiserSubmission() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="discountPercentage"
+                  name="commissionPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Discount Percentage (Optional)</FormLabel>
+                      <FormLabel>Commission Percentage (Optional)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min="0" max="100" placeholder="e.g. 15" data-testid="input-discount-percentage" />
+                        <Input {...field} type="number" min="0" max="100" placeholder="e.g. 10" data-testid="input-commission-percentage" />
                       </FormControl>
-                      <FormDescription className="text-xs">Shows as "15% OFF" badge</FormDescription>
+                      <FormDescription className="text-xs">% of sales you receive from referrals</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -359,14 +359,14 @@ export default function AdvertiserSubmission() {
 
                 <FormField
                   control={form.control}
-                  name="discountCode"
+                  name="referralCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Discount Code (Optional)</FormLabel>
+                      <FormLabel>Referral Code (Optional)</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. OPICTUARY15" data-testid="input-discount-code" />
+                        <Input {...field} placeholder="e.g. PARTNER123" data-testid="input-referral-code" />
                       </FormControl>
-                      <FormDescription className="text-xs">Code visitors use at checkout</FormDescription>
+                      <FormDescription className="text-xs">Unique code for tracking your referrals</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

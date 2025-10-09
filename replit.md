@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 9, 2025 - Advertising Commission System & Grief Support Enhancement:**
+- Fixed advertising system to track commission percentages for partners (revenue sharing model)
+- Changed from customer discount codes to partner referral tracking
+- Updated advertisements schema: discountPercentage → commissionPercentage, discountCode → referralCode
+- Partners now receive percentage of sales from their referrals (not customer discounts)
+- Enhanced grief support resources with spiritual and mental health sections
+- Added professional counseling resources (BetterHelp, Grief Recovery Method)
+- Added faith-based support (Stephen Ministry, Jewish Bereavement, Islamic Counseling)
+- Added mindfulness resources (Headspace meditation, What's Your Grief community)
+- Organized resources by category: Mental Health & Counseling, Spiritual & Faith-Based Support
+
 **October 9, 2025 - Replit Authentication & Authorization System:**
 - Fully implemented Replit Auth using OpenID Connect (OIDC) with session storage
 - Added users table (id from OIDC "sub" claim, no UUID default)
@@ -92,216 +103,118 @@ Opictuary is configured as a **native mobile application** using Capacitor + PWA
 - "Dignity in Digital" - respectful, timeless aesthetic
 - Hybrid reference-based design inspired by Apple Memorial pages, Instagram, and GoFundMe
 - Multi-faith theming support (Christian, Jewish, Islamic, Buddhist, Hindu, Non-religious)
-- Neutral color palette by default with religion-specific accent colors
-- Responsive layout with mobile-first considerations
+- Rich purple backgrounds (280° hue), gold accents (45° hue), NO white backgrounds
+- Color palette emphasizes dignity and remembrance
 
-**State Management:**
-- TanStack Query for API data fetching and caching
-- Local React state for UI interactions
-- No global state management library (keeps architecture simple)
+**PWA & Mobile:**
+- Configured as Progressive Web App with offline support
+- Capacitor integration for native iOS/Android features
+- QR code scanning via camera
+- Push notifications for scheduled messages
+- Service worker for caching and offline functionality
 
 ### Backend Architecture
 
-**Server Framework:**
-- Express.js running on Node.js
-- TypeScript for type safety across frontend and backend
-- ESM (ES Modules) format throughout the codebase
+**Technology Stack:**
+- Express.js with Node.js and TypeScript
+- RESTful API design
+- Middleware for error handling and request logging
+- Vite integration for serving frontend assets
 
-**API Design:**
-- RESTful API structure under `/api` routes
-- JSON request/response format
-- Error handling middleware for consistent error responses
-- Request logging middleware for debugging
-
-**Development vs Production:**
-- Vite dev server integration in development mode
-- Static file serving in production
-- Hot module replacement (HMR) in development
+**API Structure:**
+- Memorial CRUD operations
+- Authentication and authorization endpoints
+- QR code generation and management
+- Media upload handling
+- Fundraising and donation processing
+- Prison access request processing
+- Advertisement management
 
 ### Data Storage
 
 **Database:**
-- PostgreSQL (configured via Drizzle ORM)
-- Neon serverless PostgreSQL provider (`@neondatabase/serverless`)
-- WebSocket support for serverless database connections
+- PostgreSQL (Neon serverless for scalability)
+- Drizzle ORM for type-safe queries and schema management
+- Session storage in PostgreSQL for Replit Auth
 
-**ORM Layer:**
-- Drizzle ORM for type-safe database queries
-- Schema-first approach with TypeScript types generated from database schema
-- Migration support via `drizzle-kit`
+**Key Data Models:**
+- `memorials` - Core memorial information
+- `memorialAdmins` - Admin permissions and roles
+- `qrCodes` - QR codes for tombstone placement
+- `memories` - Photos, videos, and stories
+- `condolences` - Visitor messages
+- `fundraisers` / `donations` - Fundraising campaigns
+- `legacyEvents` - Future life events (graduation, wedding, etc.)
+- `musicPlaylists` - Memorial music selections
+- `scheduledMessages` - Future message delivery
+- `griefSupport` - Support resources and contacts
+- `celebrityMemorials` / `celebrityDonations` - Public figure memorials
+- `prisonAccessRequests` / `prisonAccessSessions` / `prisonAuditLogs` - Prison access system
+- `advertisements` - Partner advertising with commission tracking
+- `funeralHomePartners` / `partnerReferrals` / `partnerCommissions` - Partner revenue sharing
 
-**Data Models:**
-- `memorials` - Core memorial pages with biographical information, creator tracking, and ownership type
-- `memorialAdmins` - Role-based access control with granular permissions (QR management, content approval, memorial editing)
-- `qrCodes` - QR code generation and issuance tracking for tombstone placement
-- `memories` - Photo/video memories with approval workflow
-- `condolences` - Sympathy messages from visitors
-- `fundraisers` - Memorial fundraising campaigns
-- `donations` - Fundraiser contribution records
-- `legacyEvents` - Memorial events and gatherings
-- `musicPlaylists` - Memorial music collections
-- `scheduledMessages` - Time-locked messages for future delivery
-- `griefSupport` - Grief counseling and support resources
-- `celebrityMemorials` - Special memorial pages for public figures
-- `celebrityDonations` - Charity donations tied to celebrity memorial access
-- `prisonFacilities` - Correctional facility information for prison access integration
-- `prisonAccessRequests` - Inmate access requests with relationship verification
-- `prisonVerifications` - Identity and relationship verification records
-- `prisonPayments` - Payment records for facility access fees
-- `prisonAccessSessions` - Time-limited access tokens for inmates
-- `prisonAuditLogs` - Immutable audit trail for all prison access actions
-
-**Key Schema Decisions:**
-- UUIDs for primary keys (generated via `gen_random_uuid()`)
-- Invite code system for privacy control (unique codes required for access)
-- Religion field for multi-faith theming
-- Cemetery coordinates stored as JSON for mapping features
-- Approval workflow for user-submitted content (memories)
-- Soft privacy via `isPublic` boolean flag
+**Privacy & Access Control:**
+- Invite code system for private memorial access
+- Optional public memorial setting
+- Role-based admin permissions
+- QR codes only issued to verified creators/admins
 
 ### Authentication & Authorization
 
-**Access Control:**
-- Invite code-based access system (no traditional user authentication)
-- Each memorial has a unique invite code required for viewing
-- Optional public memorial setting for unrestricted access
+**Replit Auth Integration:**
+- OpenID Connect (OIDC) provider
+- Session-based authentication with PostgreSQL storage
+- User data from OIDC claims (sub, email, first_name, last_name, profile_image_url)
+- No password management required
 
-**Privacy Model:**
-- Privacy-first approach: memorials are private by default
-- Invite codes act as shared secrets for access control
-- No user accounts required for most features
-- Content moderation through approval workflows
+**Authorization Patterns:**
+- Memorial creator identification via email match
+- Admin permission checks (canEditMemorial, canManageQR, canManageFundraisers, canManageEvents)
+- Protected endpoints require authentication + specific permissions
+- Client-side auth state management via useAuth hook
 
-### Replit Authentication System
-
-**Implementation (October 9, 2025):**
-Opictuary uses Replit Auth (OpenID Connect) for authentication of memorial creators and administrators who need to manage content, generate QR codes, and access privileged features.
-
-**Technical Stack:**
-- OpenID Connect (OIDC) provider: Replit Auth
-- Session storage: PostgreSQL with connect-pg-simple
-- User identification: OIDC "sub" claim (no UUID generation)
-- Middleware: isAuthenticated checks for valid session
-- Client hook: useAuth() for authentication status
-
-**Database Schema:**
-- `users` table: Stores authenticated users from OIDC (id = sub claim, email, names, profile image)
-- `sessions` table: Stores express-session data in PostgreSQL
-- **Important**: users.id has NO DEFAULT - always provided by OIDC sub claim
-
-**Authorization Pattern:**
-All admin-level operations follow a consistent authorization pattern:
-
-1. **Authentication Check**: Verify user has valid session (isAuthenticated middleware)
-2. **Identity Lookup**: Find memorial associated with the resource being accessed
-3. **Creator Check**: Verify user.email matches memorial.creatorEmail
-4. **Admin Permission Check**: OR verify user has memorialAdmin role with specific permission
-5. **Response**: 401 if unauthenticated, 403 if unauthorized, 200/204 if authorized
-
-**Protected Endpoints:**
-```
-GET    /api/memorials/:id/admins          - Creator or admin can view
-POST   /api/memorials/:id/admins          - Only creator can add admins
-DELETE /api/memorial-admins/:id           - Only creator can delete admins
-GET    /api/memorials/:id/qr-codes        - Creator or QR admin can view
-POST   /api/memorials/:id/qr-codes/generate - Creator or QR admin can generate
-DELETE /api/qr-codes/:id                  - Creator or QR admin can delete
-```
-
-**Client-Side Integration:**
-- `useAuth()` hook provides: { user, isLoading, isAuthenticated }
-- `handleAuthError()` utility for consistent error handling
-- Login redirects to `/api/login` (initiates OIDC flow)
-- Logout via `/api/logout` (destroys session)
-
-**Security Features:**
-- Session-based authentication (not JWT)
-- CSRF protection via session cookies
-- Granular role-based permissions (canManageQR, canApproveContent, canEditMemorial)
-- Authorization checks on every protected endpoint
-- Proper HTTP status codes (401 unauthenticated, 403 forbidden)
-
-**Optional Enhancements (Architect Suggestions):**
-- Email normalization to lowercase for consistency
-- Audit logging for admin actions
-- Expanded test coverage for edge cases
-
-### External Dependencies
-
-**Third-Party Services:**
-
-1. **Stripe** - Payment processing
-   - React Stripe.js integration for payment forms
-   - Handles donations and fundraiser contributions
-   - Platform fee collection (typically 5% on celebrity memorials)
-
-2. **QR Code Generation** - `qrcode` library
-   - Generates QR codes for tombstone placement
-   - Allows visitors to scan and access digital memorial from physical grave
-
-3. **Google Fonts** - Typography
-   - Crimson Text (serif)
-   - Inter (sans-serif)
-
-**UI Component Dependencies:**
-- Radix UI suite (20+ component primitives)
-- Lucide React (icon library)
-- class-variance-authority (component variant management)
-- cmdk (command palette component)
-- react-day-picker (calendar component)
-- vaul (drawer component)
-
-**Development Tools:**
-- Replit-specific plugins for dev experience
-- TypeScript for static type checking
-- PostCSS with Tailwind CSS for styling
-- ESBuild for production builds
-
-**Potential Future Integrations:**
-- Google Maps API (cemetery location mapping)
-- Video hosting service (memorial videos)
-- Email service (scheduled message delivery)
-- SMS/phone service (grief hotline integrations)
+**Protected Resources:**
+- Memorial editing and deletion
+- QR code generation and management
+- Admin management
+- Fundraiser and legacy event creation
+- Grief support contact management
 
 ### Prison Access System
 
-**Integration with Correctional Facilities:**
-Opictuary provides a specialized access system allowing incarcerated individuals to view memorials of loved ones through verified, paid sessions managed by prison facilities.
+**Purpose:**
+Enable incarcerated individuals to access and view memorials of loved ones through a secure, monitored system integrated with correctional facility infrastructure.
 
-**Third-Party Provider Integration:**
-- ConnectNetwork/GTL
-- ViaPath Technologies
-- Securus Technologies
-- Other facility-specific communication providers
+**Workflow:**
+1. **Request Submission**: Inmate submits access request with identity verification
+2. **Relationship Verification**: Facility staff verify relationship to deceased
+3. **Payment Processing**: Facility fee payment via Stripe
+4. **Access Token Generation**: Time-limited secure token issued
+5. **Monitored Session**: Access logged and audited
+6. **Session Expiration**: Automatic token expiration
 
-**Multi-Step Verification Workflow:**
-1. **Access Request Submission** - Family member or friend submits request on behalf of inmate
-2. **Identity Verification** - Validates inmate identity using DOC number and facility records
-3. **Relationship Verification** - Confirms relationship to deceased via documentation
-4. **Payment Processing** - Collects facility fees (typically $0.15/minute)
-5. **Access Token Issuance** - Generates time-limited secure access token for inmate use
-6. **Session Monitoring** - Tracks usage, logs all actions, maintains audit trail
+**Data Models:**
+- `prisonAccessRequests` - Initial access requests with verification status
+- `prisonAccessSessions` - Active/expired access sessions with tokens
+- `prisonAuditLogs` - Complete audit trail of all prison access activity
 
-**Security & Compliance:**
-- All sessions are monitored and recorded
-- Immutable audit logs for regulatory compliance
-- IP address and user agent tracking
-- Time-limited access tokens that auto-expire
-- Facility admin controls for session management
+**Security Features:**
+- Multi-step identity and relationship verification
+- Time-limited access tokens
+- Session monitoring and logging
+- Audit trail for compliance
+- Integration with correctional facility systems
 
-**Payment Model:**
-- Per-minute pricing set by correctional facility
-- Payment collected from family/friends before access granted
-- Integration with existing facility payment providers
-- Transparent fee disclosure
+## External Dependencies
 
-**API Endpoints:**
-- `GET /api/prison-facilities` - List active prison facilities
-- `POST /api/prison-access-requests` - Submit new access request
-- `GET /api/prison-access-requests/:id` - Retrieve request details
-- `PATCH /api/prison-access-requests/:id/status` - Update request status
-- `POST /api/prison-access-requests/:requestId/verifications` - Submit verification
-- `POST /api/prison-access-requests/:requestId/payments` - Process payment
-- `POST /api/prison-access-sessions` - Create access session
-- `GET /api/prison-access-sessions/validate/:token` - Validate access token
-- `GET /api/prison-audit-logs` - Retrieve audit logs for compliance
+1. **Stripe**: Payment processing for donations, fundraisers, and prison access fees
+2. **`qrcode` library**: QR code generation for tombstone placement
+3. **Google Fonts**: Crimson Text and Inter typography
+4. **Radix UI**: Accessible UI primitives
+5. **Lucide React**: Icon library
+6. **`class-variance-authority`**: Component variant management
+7. **`cmdk`**: Command palette component
+8. **`react-day-picker`**: Calendar component
+9. **`vaul`**: Drawer component
+10. **Capacitor**: Native mobile app features for iOS and Android
+11. **ConnectNetwork/GTL, ViaPath Technologies, Securus Technologies**: Prison access system integration
