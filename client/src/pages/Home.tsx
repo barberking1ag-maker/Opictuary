@@ -1,26 +1,15 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
-import MemorialHero from "@/components/MemorialHero";
-import MemorialTabs from "@/components/MemorialTabs";
-import MemoryCard from "@/components/MemoryCard";
-import CondolenceMessage from "@/components/CondolenceMessage";
-import LegacyEventCard from "@/components/LegacyEventCard";
-import FundraiserProgress from "@/components/FundraiserProgress";
-import CemeteryMap from "@/components/CemeteryMap";
-import MusicPlayer from "@/components/MusicPlayer";
-import InviteCodeModal from "@/components/InviteCodeModal";
-import FlowerOrderButton from "@/components/FlowerOrderButton";
-import GriefSupportPanel from "@/components/GriefSupportPanel";
-import DonationPaymentModal from "@/components/DonationPaymentModal";
-import ContentControls from "@/components/ContentControls";
-import AdminContentPanel from "@/components/AdminContentPanel";
-import MemoryTimeline from "@/components/MemoryTimeline";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import InviteCodeModal from "@/components/InviteCodeModal";
+import DonationPaymentModal from "@/components/DonationPaymentModal";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -29,16 +18,6 @@ export default function Home() {
   const [donationModalOpen, setDonationModalOpen] = useState(false);
   const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
   const { toast } = useToast();
-  const { registerToken, isNative } = usePushNotifications();
-
-  const [memorySearchQuery, setMemorySearchQuery] = useState("");
-  const [memorySortBy, setMemorySortBy] = useState("newest");
-  const [memoryViewMode, setMemoryViewMode] = useState<"grid" | "list" | "timeline">("list");
-  const [showApproved, setShowApproved] = useState(true);
-  const [showPending, setShowPending] = useState(true);
-
-  const [condolenceSearchQuery, setCondolenceSearchQuery] = useState("");
-  const [condolenceSortBy, setCondolenceSortBy] = useState("newest");
 
   const verifyInviteCodeMutation = useMutation({
     mutationFn: async (inviteCode: string) => {
@@ -92,98 +71,13 @@ export default function Home() {
     enabled: !!memorialId,
   });
 
-  const { data: griefSupport } = useQuery<GriefSupport>({
-    queryKey: [`/api/memorials/${memorialId}/grief-support`],
-    enabled: !!memorialId,
-  });
-
+  const approvedMemories = memories.filter(m => m.isApproved);
   const firstFundraiser = fundraisers[0];
+
   const { data: donations = [] } = useQuery<Donation[]>({
     queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
     enabled: !!firstFundraiser?.id,
   });
-
-  const donorsForDisplay = donations.map(d => ({
-    name: d.isAnonymous ? "Anonymous" : d.donorName,
-    amount: Number(d.amount),
-    timestamp: new Date(d.createdAt || "").toLocaleDateString(),
-  }));
-
-  const approveMutation = useMutation({
-    mutationFn: async (memoryId: string) => {
-      return await apiRequest("POST", `/api/memories/${memoryId}/approve`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/memories`] });
-      toast({
-        title: "Memory Approved",
-        description: "The memory has been approved and is now visible to all visitors.",
-      });
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: async (memoryId: string) => {
-      return await apiRequest("DELETE", `/api/memories/${memoryId}/reject`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/memories`] });
-      toast({
-        title: "Memory Rejected",
-        description: "The memory has been removed.",
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (isNative && memorial?.id) {
-      registerToken(memorial.id);
-    }
-  }, [isNative, memorial, registerToken]);
-
-  const filteredMemories = useMemo(() => {
-    let filtered = memories.filter(m => {
-      const matchesSearch = m.authorName.toLowerCase().includes(memorySearchQuery.toLowerCase()) ||
-                           m.caption.toLowerCase().includes(memorySearchQuery.toLowerCase());
-      const matchesStatus = (showApproved && m.isApproved) || (showPending && !m.isApproved);
-      return matchesSearch && matchesStatus;
-    });
-
-    filtered.sort((a, b) => {
-      if (memorySortBy === "newest") {
-        return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
-      } else if (memorySortBy === "oldest") {
-        return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
-      } else if (memorySortBy === "author") {
-        return a.authorName.localeCompare(b.authorName);
-      }
-      return 0;
-    });
-
-    return filtered;
-  }, [memories, memorySearchQuery, memorySortBy, showApproved, showPending]);
-
-  const filteredCondolences = useMemo(() => {
-    let filtered = condolences.filter(c =>
-      c.authorName.toLowerCase().includes(condolenceSearchQuery.toLowerCase()) ||
-      c.message.toLowerCase().includes(condolenceSearchQuery.toLowerCase())
-    );
-
-    filtered.sort((a, b) => {
-      if (condolenceSortBy === "newest") {
-        return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
-      } else if (condolenceSortBy === "oldest") {
-        return new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime();
-      } else if (condolenceSortBy === "author") {
-        return a.authorName.localeCompare(b.authorName);
-      }
-      return 0;
-    });
-
-    return filtered;
-  }, [condolences, condolenceSearchQuery, condolenceSortBy]);
-
-  const pendingMemories = memories.filter(m => !m.isApproved);
 
   if (!memorialId || !memorial) {
     return (
@@ -200,261 +94,373 @@ export default function Home() {
           }}
         />
         {memorialId && !memorial && (
-          <p className="text-muted-foreground">Loading memorial...</p>
+          <p className="text-muted-foreground" data-testid="text-loading">Loading memorial...</p>
         )}
       </div>
     );
   }
 
+  const years = memorial.birthDate && memorial.deathDate
+    ? `${new Date(memorial.birthDate).getFullYear()} - ${new Date(memorial.deathDate).getFullYear()}`
+    : '';
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/40 bg-card/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-serif font-semibold text-foreground tracking-tight relative">
-                <span className="relative inline-block">
-                  <svg 
-                    className="absolute -top-1 left-1/2 -translate-x-1/2" 
-                    width="24" 
-                    height="8" 
-                    viewBox="0 0 24 8" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <ellipse 
-                      cx="12" 
-                      cy="4" 
-                      rx="11" 
-                      ry="3" 
-                      fill="none" 
-                      stroke="#FFD700" 
-                      strokeWidth="1.5" 
-                      opacity="0.9"
+      {/* Hero Section */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/10 to-background" />
+        
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center space-y-6">
+            {/* Memorial Photo */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-accent/30 shadow-2xl">
+                  {memorial.backgroundImage ? (
+                    <img 
+                      src={memorial.backgroundImage} 
+                      alt={memorial.name}
+                      className="w-full h-full object-cover"
+                      data-testid="img-memorial-photo"
                     />
-                    <ellipse 
-                      cx="12" 
-                      cy="4" 
-                      rx="11" 
-                      ry="3" 
-                      fill="#FFD700" 
-                      opacity="0.15"
-                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                      <Heart className="w-16 h-16 text-primary/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+                  <svg width="60" height="15" viewBox="0 0 60 15" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="30" cy="7.5" rx="28" ry="6" fill="none" stroke="#FFD700" strokeWidth="2" opacity="0.8"/>
+                    <ellipse cx="30" cy="7.5" rx="28" ry="6" fill="#FFD700" opacity="0.15"/>
                   </svg>
-                  O
-                </span>pictuary
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5 tracking-wide">Honoring Life · Preserving Legacy</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {memorial.prefaceText && (
-        <div 
-          className="relative py-20 md:py-24 bg-cover bg-center"
-          style={{
-            backgroundImage: memorial.backgroundImage 
-              ? `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)), url(${memorial.backgroundImage})`
-              : 'linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--secondary) / 0.12))'
-          }}
-        >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <blockquote className="text-2xl md:text-3xl font-serif italic text-white drop-shadow-lg leading-relaxed">
-              "{memorial.prefaceText}"
-            </blockquote>
-          </div>
-        </div>
-      )}
-
-      <MemorialHero 
-        name={memorial.name}
-        birthDate={memorial.birthDate}
-        deathDate={memorial.deathDate}
-        onEnterCode={() => setCodeModalOpen(true)}
-        onShare={() => console.log('Share clicked')}
-      />
-
-      <div className="border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-center">
-            <FlowerOrderButton 
-              memorialName={memorial.name}
-              deliveryLocation={memorial.cemeteryName || undefined}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">{" "}
-
-        <MemorialTabs 
-          memoriesContent={
+            {/* Name and Dates */}
             <div>
-              <AdminContentPanel 
-                pendingMemories={pendingMemories}
-                onApprove={(id) => approveMutation.mutate(id)}
-                onReject={(id) => rejectMutation.mutate(id)}
-                onPreview={(memory) => console.log('Preview:', memory)}
-              />
+              <h1 className="text-5xl md:text-6xl font-serif font-bold text-foreground mb-3" data-testid="text-name">
+                {memorial.name}
+              </h1>
+              {years && (
+                <p className="text-2xl text-muted-foreground font-light" data-testid="text-years">
+                  {years}
+                </p>
+              )}
+            </div>
 
-              <Button className="w-full mb-6" data-testid="button-add-memory">
-                <Plus className="w-5 h-5 mr-2" />
-                Share a Memory
-              </Button>
+            {/* Quote/Preface */}
+            {memorial.prefaceText && (
+              <blockquote className="text-xl md:text-2xl font-serif italic text-foreground/90 max-w-3xl mx-auto mt-8 leading-relaxed" data-testid="text-quote">
+                "{memorial.prefaceText}"
+              </blockquote>
+            )}
 
-              <ContentControls 
-                searchQuery={memorySearchQuery}
-                onSearchChange={setMemorySearchQuery}
-                sortBy={memorySortBy}
-                onSortChange={setMemorySortBy}
-                viewMode={memoryViewMode}
-                onViewModeChange={setMemoryViewMode}
-                showApproved={showApproved}
-                showPending={showPending}
-                onApprovedToggle={() => setShowApproved(!showApproved)}
-                onPendingToggle={() => setShowPending(!showPending)}
-                totalCount={memories.length}
-                filteredCount={filteredMemories.length}
-              />
-
-              {memoryViewMode === "timeline" ? (
-                <MemoryTimeline memories={filteredMemories} />
-              ) : (
-                <div className={memoryViewMode === "grid" ? "grid gap-6 md:grid-cols-2" : "space-y-6"}>
-                  {filteredMemories.map((memory) => (
-                    <MemoryCard 
-                      key={memory.id}
-                      authorName={memory.authorName}
-                      caption={memory.caption}
-                      imageUrl={memory.mediaUrl || undefined}
-                      timestamp={new Date(memory.createdAt || "").toLocaleDateString()}
-                      commentCount={0}
-                      isPending={!memory.isApproved}
-                      onComment={() => console.log('Comment clicked')}
-                      onApprove={() => approveMutation.mutate(memory.id)}
-                      onReject={() => rejectMutation.mutate(memory.id)}
-                    />
-                  ))}
+            {/* Quick Stats */}
+            <div className="flex flex-wrap justify-center gap-6 mt-12">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <ImageIcon className="w-5 h-5" />
+                <span data-testid="text-memory-count">{approvedMemories.length} Memories</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MessageSquare className="w-5 h-5" />
+                <span data-testid="text-condolence-count">{condolences.length} Condolences</span>
+              </div>
+              {events.length > 0 && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="w-5 h-5" />
+                  <span data-testid="text-event-count">{events.length} Events</span>
                 </div>
               )}
-              
-              {filteredMemories.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
-                  {memories.length === 0 
-                    ? "No memories shared yet. Be the first to share a memory."
-                    : "No memories match your filters."}
-                </p>
-              )}
             </div>
-          }
-          condolencesContent={
-            <div>
-              <Button className="w-full mb-6" data-testid="button-leave-condolence">
-                <Plus className="w-5 h-5 mr-2" />
-                Leave a Condolence
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              <Button size="lg" onClick={() => setCodeModalOpen(true)} data-testid="button-enter-code">
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Enter Code
               </Button>
-
-              <ContentControls 
-                searchQuery={condolenceSearchQuery}
-                onSearchChange={setCondolenceSearchQuery}
-                sortBy={condolenceSortBy}
-                onSortChange={setCondolenceSortBy}
-                totalCount={condolences.length}
-                filteredCount={filteredCondolences.length}
-              />
-
-              <div className="space-y-4">
-                {filteredCondolences.map((condolence) => (
-                  <CondolenceMessage 
-                    key={condolence.id}
-                    authorName={condolence.authorName}
-                    message={condolence.message}
-                    timestamp={new Date(condolence.createdAt || "").toLocaleDateString()}
-                  />
-                ))}
-              </div>
-              
-              {filteredCondolences.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
-                  {condolences.length === 0 
-                    ? "No condolences yet."
-                    : "No condolences match your search."}
-                </p>
-              )}
+              <Button size="lg" data-testid="button-share">
+                <Share2 className="w-5 h-5 mr-2" />
+                Share Memorial
+              </Button>
+              <Button variant="outline" size="lg" data-testid="button-send-flowers">
+                <Heart className="w-5 h-5 mr-2" />
+                Send Flowers
+              </Button>
             </div>
-          }
-          eventsContent={
-            <div className="grid gap-6 md:grid-cols-2">
-              {events.map((event) => (
-                <LegacyEventCard 
-                  key={event.id}
-                  title={event.title}
-                  date={event.eventDate}
-                  time={event.eventTime || ""}
-                  location={event.location || ""}
-                  attendeeCount={event.attendeeCount || 0}
-                  description={event.description || ""}
-                  isUpcoming={new Date(event.eventDate) > new Date()}
-                  onRSVP={() => console.log('RSVP clicked')}
-                />
-              ))}
-              {events.length === 0 && (
-                <p className="text-muted-foreground">No legacy events scheduled.</p>
-              )}
-            </div>
-          }
-          fundraiserContent={
-            <div className="max-w-2xl mx-auto space-y-8">
-              {firstFundraiser ? (
-                <>
-                  <FundraiserProgress 
-                    title={firstFundraiser.title}
-                    description={firstFundraiser.description || ""}
-                    currentAmount={Number(firstFundraiser.currentAmount)}
-                    goalAmount={Number(firstFundraiser.goalAmount)}
-                    donors={donorsForDisplay}
-                    onDonate={() => setDonationModalOpen(true)}
-                  />
-                  
-                  {griefSupport && (
-                    <GriefSupportPanel 
-                      familyContact={griefSupport.familyContact || undefined}
-                      pastoralContact={griefSupport.pastoralContact || undefined}
-                      customContacts={(griefSupport.customContacts as any) || []}
-                    />
-                  )}
-                </>
-              ) : (
-                <p className="text-center text-muted-foreground">No fundraiser active.</p>
-              )}
-            </div>
-          }
-          mapContent={
-            memorial.cemeteryName ? (
-              <div className="max-w-2xl mx-auto">
-                <CemeteryMap 
-                  cemeteryName={memorial.cemeteryName}
-                  sectionLocation={memorial.cemeteryLocation || ""}
-                  coordinates={memorial.cemeteryCoordinates || undefined}
-                  onGetDirections={() => console.log('Get directions clicked')}
-                />
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground">Cemetery information not available.</p>
-            )
-          }
-          musicContent={
-            playlist ? (
-              <div className="max-w-2xl mx-auto">
-                <MusicPlayer playlist={playlist.tracks} />
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground">No music playlist available.</p>
-            )
-          }
-        />
+          </div>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Tabs defaultValue="memories" className="w-full" data-testid="tabs-main">
+          <TabsList className="grid w-full grid-cols-4 mb-8" data-testid="tabs-list">
+            <TabsTrigger value="memories" data-testid="tab-memories">
+              <ImageIcon className="w-4 h-4 mr-2" />
+              Memories
+            </TabsTrigger>
+            <TabsTrigger value="condolences" data-testid="tab-condolences">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Condolences
+            </TabsTrigger>
+            <TabsTrigger value="events" data-testid="tab-events">
+              <Calendar className="w-4 h-4 mr-2" />
+              Events
+            </TabsTrigger>
+            <TabsTrigger value="support" data-testid="tab-support">
+              <Heart className="w-4 h-4 mr-2" />
+              Support
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Memories Tab */}
+          <TabsContent value="memories" className="space-y-6" data-testid="content-memories">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-serif font-semibold">Cherished Memories</h2>
+              <Button data-testid="button-add-memory">
+                <ImageIcon className="w-4 h-4 mr-2" />
+                Add Memory
+              </Button>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {approvedMemories.map((memory) => (
+                <Card key={memory.id} data-testid={`card-memory-${memory.id}`} className="overflow-hidden hover-elevate">
+                  {memory.mediaUrl && (
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      <img 
+                        src={memory.mediaUrl} 
+                        alt={memory.caption || ''}
+                        className="w-full h-full object-cover"
+                        data-testid={`img-memory-${memory.id}`}
+                      />
+                    </div>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg" data-testid={`text-memory-author-${memory.id}`}>
+                          {memory.authorName}
+                        </CardTitle>
+                        <CardDescription data-testid={`text-memory-date-${memory.id}`}>
+                          {new Date(memory.createdAt || '').toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-foreground/90 leading-relaxed" data-testid={`text-memory-caption-${memory.id}`}>
+                      {memory.caption}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {approvedMemories.length === 0 && (
+              <Card className="p-12 text-center">
+                <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-lg text-muted-foreground">No memories shared yet.</p>
+                <p className="text-sm text-muted-foreground mt-2">Be the first to share a cherished memory.</p>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Condolences Tab */}
+          <TabsContent value="condolences" className="space-y-6" data-testid="content-condolences">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-serif font-semibold">Words of Comfort</h2>
+              <Button data-testid="button-leave-condolence">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Leave Condolence
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {condolences.map((condolence) => (
+                <Card key={condolence.id} data-testid={`card-condolence-${condolence.id}`} className="hover-elevate">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base" data-testid={`text-condolence-author-${condolence.id}`}>
+                          {condolence.authorName}
+                        </CardTitle>
+                        <CardDescription data-testid={`text-condolence-date-${condolence.id}`}>
+                          {new Date(condolence.createdAt || '').toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <Heart className="w-5 h-5 text-accent" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-foreground/90 leading-relaxed" data-testid={`text-condolence-message-${condolence.id}`}>
+                      {condolence.message}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {condolences.length === 0 && (
+              <Card className="p-12 text-center">
+                <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-lg text-muted-foreground">No condolences yet.</p>
+                <p className="text-sm text-muted-foreground mt-2">Share your thoughts and support.</p>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events" className="space-y-6" data-testid="content-events">
+            <h2 className="text-2xl font-serif font-semibold">Memorial Services & Events</h2>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {events.map((event) => {
+                const isUpcoming = new Date(event.eventDate) > new Date();
+                return (
+                  <Card key={event.id} data-testid={`card-event-${event.id}`} className="hover-elevate">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle data-testid={`text-event-title-${event.id}`}>{event.title}</CardTitle>
+                          <CardDescription className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2" data-testid={`text-event-date-${event.id}`}>
+                              <Calendar className="w-4 h-4" />
+                              {new Date(event.eventDate).toLocaleDateString()} {event.eventTime && `at ${event.eventTime}`}
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center gap-2" data-testid={`text-event-location-${event.id}`}>
+                                <MapPin className="w-4 h-4" />
+                                {event.location}
+                              </div>
+                            )}
+                          </CardDescription>
+                        </div>
+                        {isUpcoming && (
+                          <Badge data-testid={`badge-upcoming-${event.id}`}>Upcoming</Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    {event.description && (
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground" data-testid={`text-event-desc-${event.id}`}>
+                          {event.description}
+                        </p>
+                        {isUpcoming && event.attendeeCount !== undefined && (
+                          <p className="text-sm text-muted-foreground mt-3" data-testid={`text-event-attendees-${event.id}`}>
+                            {event.attendeeCount} attending
+                          </p>
+                        )}
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+
+            {events.length === 0 && (
+              <Card className="p-12 text-center">
+                <Calendar className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-lg text-muted-foreground">No events scheduled.</p>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Support Tab */}
+          <TabsContent value="support" className="space-y-6" data-testid="content-support">
+            <h2 className="text-2xl font-serif font-semibold">Support the Family</h2>
+
+            {firstFundraiser && (
+              <Card className="overflow-hidden" data-testid="card-fundraiser">
+                <CardHeader>
+                  <CardTitle data-testid="text-fundraiser-title">{firstFundraiser.title}</CardTitle>
+                  {firstFundraiser.description && (
+                    <CardDescription data-testid="text-fundraiser-desc">{firstFundraiser.description}</CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Progress</span>
+                      <span className="font-semibold" data-testid="text-fundraiser-amount">
+                        ${Number(firstFundraiser.currentAmount).toLocaleString()} of ${Number(firstFundraiser.goalAmount).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-3">
+                      <div 
+                        className="bg-accent h-3 rounded-full transition-all"
+                        style={{ width: `${Math.min((Number(firstFundraiser.currentAmount) / Number(firstFundraiser.goalAmount)) * 100, 100)}%` }}
+                        data-testid="progress-fundraiser"
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    onClick={() => setDonationModalOpen(true)}
+                    data-testid="button-donate"
+                  >
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Make a Donation
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {memorial.cemeteryName && (
+              <Card data-testid="card-cemetery">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Final Resting Place
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground/90" data-testid="text-cemetery-name">{memorial.cemeteryName}</p>
+                  {memorial.cemeteryLocation && (
+                    <p className="text-sm text-muted-foreground mt-1" data-testid="text-cemetery-location">
+                      {memorial.cemeteryLocation}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {playlist && playlist.tracks && playlist.tracks.length > 0 && (
+              <Card data-testid="card-playlist">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Music className="w-5 h-5" />
+                    Memorial Playlist
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {playlist.tracks.slice(0, 5).map((track, idx) => (
+                      <div key={track.id} className="flex items-center gap-3 text-sm" data-testid={`text-song-${idx}`}>
+                        <Music className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium">{track.title}</p>
+                          <p className="text-xs text-muted-foreground">{track.artist} • {track.duration}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <InviteCodeModal 
+        open={codeModalOpen}
+        onOpenChange={setCodeModalOpen}
+        onSubmit={(code) => verifyInviteCodeMutation.mutate(code)}
+      />
 
       {firstFundraiser && (
         <DonationPaymentModal
@@ -463,9 +469,9 @@ export default function Home() {
           fundraiserId={firstFundraiser.id}
           fundraiserTitle={firstFundraiser.title}
           onSuccess={() => {
+            setDonationModalOpen(false);
             queryClient.invalidateQueries({ queryKey: [`/api/fundraisers/${firstFundraiser.id}/donations`] });
             queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/fundraisers`] });
-            setDonationModalOpen(false);
           }}
         />
       )}
