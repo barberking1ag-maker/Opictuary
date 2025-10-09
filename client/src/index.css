@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Opictuary Memorial Theme */
+/* LIGHT MODE - Opictuary Memorial Theme (Rich Backgrounds) */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -14,57 +14,57 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 45 25% 97%;
+  --background: 270 35% 96%;
 
-  --foreground: 280 25% 15%;
+  --foreground: 280 40% 12%;
 
-  --border: 280 12% 85%;
+  --border: 270 20% 82%;
 
-  --card: 45 30% 99%;
+  --card: 270 40% 98%;
 
-  --card-foreground: 280 20% 20%;
+  --card-foreground: 280 35% 15%;
 
-  --card-border: 280 10% 88%;
+  --card-border: 270 20% 88%;
 
-  --sidebar: 280 15% 94%;
+  --sidebar: 270 40% 92%;
 
-  --sidebar-foreground: 280 20% 25%;
+  --sidebar-foreground: 280 40% 18%;
 
-  --sidebar-border: 280 12% 85%;
+  --sidebar-border: 270 20% 82%;
 
-  --sidebar-primary: 280 35% 35%;
+  --sidebar-primary: 280 50% 38%;
 
-  --sidebar-primary-foreground: 45 30% 98%;
+  --sidebar-primary-foreground: 45 35% 98%;
 
-  --sidebar-accent: 280 12% 90%;
+  --sidebar-accent: 270 25% 88%;
 
-  --sidebar-accent-foreground: 280 25% 30%;
+  --sidebar-accent-foreground: 280 40% 22%;
 
-  --sidebar-ring: 280 35% 35%;
+  --sidebar-ring: 280 50% 38%;
 
-  --popover: 45 30% 99%;
+  --popover: 270 40% 98%;
 
-  --popover-foreground: 280 20% 20%;
+  --popover-foreground: 280 35% 15%;
 
-  --popover-border: 280 12% 85%;
+  --popover-border: 270 20% 82%;
 
-  --primary: 280 40% 40%;
+  --primary: 280 55% 42%;
 
-  --primary-foreground: 45 30% 98%;
+  --primary-foreground: 45 35% 98%;
 
-  --secondary: 45 75% 55%;
+  --secondary: 45 80% 58%;
 
-  --secondary-foreground: 280 30% 15%;
+  --secondary-foreground: 280 40% 12%;
 
-  --muted: 280 10% 92%;
+  --muted: 270 25% 90%;
 
-  --muted-foreground: 280 15% 45%;
+  --muted-foreground: 280 20% 42%;
 
-  --accent: 45 85% 60%;
+  --accent: 45 90% 62%;
 
-  --accent-foreground: 280 30% 15%;
+  --accent-foreground: 280 40% 12%;
 
-  --destructive: 0 70% 50%;
+  --destructive: 0 72% 52%;
 
   --destructive-foreground: 0 0% 100%;
 
@@ -132,57 +132,57 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 280 20% 8%;
+  --background: 280 35% 12%;
 
-  --foreground: 45 20% 92%;
+  --foreground: 45 30% 94%;
 
-  --border: 280 15% 18%;
+  --border: 280 25% 22%;
 
-  --card: 280 18% 12%;
+  --card: 280 30% 16%;
 
-  --card-foreground: 45 15% 90%;
+  --card-foreground: 45 25% 92%;
 
-  --card-border: 280 15% 20%;
+  --card-border: 280 25% 24%;
 
-  --sidebar: 280 20% 10%;
+  --sidebar: 280 35% 14%;
 
-  --sidebar-foreground: 45 15% 88%;
+  --sidebar-foreground: 45 25% 90%;
 
-  --sidebar-border: 280 15% 18%;
+  --sidebar-border: 280 25% 22%;
 
-  --sidebar-primary: 280 40% 45%;
+  --sidebar-primary: 280 50% 48%;
 
-  --sidebar-primary-foreground: 45 20% 98%;
+  --sidebar-primary-foreground: 45 30% 98%;
 
-  --sidebar-accent: 280 15% 16%;
+  --sidebar-accent: 280 25% 20%;
 
-  --sidebar-accent-foreground: 45 15% 85%;
+  --sidebar-accent-foreground: 45 25% 88%;
 
-  --sidebar-ring: 280 40% 50%;
+  --sidebar-ring: 280 50% 52%;
 
-  --popover: 280 18% 14%;
+  --popover: 280 30% 18%;
 
-  --popover-foreground: 45 15% 88%;
+  --popover-foreground: 45 25% 90%;
 
-  --popover-border: 280 15% 22%;
+  --popover-border: 280 25% 26%;
 
-  --primary: 280 45% 50%;
+  --primary: 280 55% 52%;
 
-  --primary-foreground: 45 20% 98%;
+  --primary-foreground: 45 30% 98%;
 
-  --secondary: 45 70% 55%;
+  --secondary: 45 75% 58%;
 
-  --secondary-foreground: 280 25% 12%;
+  --secondary-foreground: 280 35% 10%;
 
-  --muted: 280 12% 20%;
+  --muted: 280 20% 24%;
 
-  --muted-foreground: 280 10% 60%;
+  --muted-foreground: 280 15% 65%;
 
-  --accent: 45 80% 58%;
+  --accent: 45 85% 62%;
 
-  --accent-foreground: 280 25% 12%;
+  --accent-foreground: 280 35% 10%;
 
-  --destructive: 0 65% 50%;
+  --destructive: 0 68% 52%;
 
   --destructive-foreground: 0 5% 98%;
 
