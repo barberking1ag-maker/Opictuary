@@ -732,6 +732,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Grief Support routes
+  app.get("/api/memorials/:memorialId/grief-support", async (req, res) => {
+    try {
+      const support = await storage.getGriefSupportByMemorialId(req.params.memorialId);
+      res.json(support || null);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/grief-support", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const canEdit = admins.some(admin => admin.email === userEmail && admin.canEditMemorial);
+      
+      if (!isCreator && !canEdit) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to manage grief support for this memorial" });
+      }
+      
+      const data = insertGriefSupportSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const support = await storage.upsertGriefSupport(data);
+      res.status(201).json(support);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Essential Workers Memorial routes
   app.get("/api/essential-workers", async (req, res) => {
     try {
