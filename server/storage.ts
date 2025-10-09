@@ -103,11 +103,13 @@ export interface IStorage {
 
   // Memorial Admin operations
   getMemorialAdmins(memorialId: string): Promise<MemorialAdmin[]>;
+  getMemorialAdminById(id: string): Promise<MemorialAdmin | undefined>;
   createMemorialAdmin(admin: InsertMemorialAdmin): Promise<MemorialAdmin>;
   deleteMemorialAdmin(id: string): Promise<void>;
 
   // QR Code operations
   getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]>;
+  getQRCodeById(id: string): Promise<QRCode | undefined>;
   generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode>;
   deleteQRCode(id: string): Promise<void>;
 
@@ -265,6 +267,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(memorialAdmins).where(eq(memorialAdmins.memorialId, memorialId)).orderBy(desc(memorialAdmins.createdAt));
   }
 
+  async getMemorialAdminById(id: string): Promise<MemorialAdmin | undefined> {
+    const [admin] = await db.select().from(memorialAdmins).where(eq(memorialAdmins.id, id));
+    return admin || undefined;
+  }
+
   async createMemorialAdmin(admin: InsertMemorialAdmin): Promise<MemorialAdmin> {
     const [created] = await db.insert(memorialAdmins).values(admin).returning();
     return created;
@@ -277,6 +284,11 @@ export class DatabaseStorage implements IStorage {
   // QR Code operations
   async getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]> {
     return await db.select().from(qrCodes).where(eq(qrCodes.memorialId, memorialId)).orderBy(desc(qrCodes.createdAt));
+  }
+
+  async getQRCodeById(id: string): Promise<QRCode | undefined> {
+    const [qrCode] = await db.select().from(qrCodes).where(eq(qrCodes.id, id));
+    return qrCode || undefined;
   }
 
   async generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode> {

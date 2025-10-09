@@ -140,18 +140,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Memorial Admin routes
-  app.get("/api/memorials/:memorialId/admins", async (req, res) => {
+  // Memorial Admin routes (protected)
+  app.get("/api/memorials/:memorialId/admins", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin
       const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view this memorial's admins" });
+      }
+
       res.json(admins);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post("/api/memorials/:memorialId/admins", async (req, res) => {
+  app.post("/api/memorials/:memorialId/admins", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Only the creator can add new admins
+      if (memorial.creatorEmail !== userEmail) {
+        return res.status(403).json({ error: "Forbidden: Only the memorial creator can add admins" });
+      }
+
       const data = insertMemorialAdminSchema.parse({
         ...req.body,
         memorialId: req.params.memorialId,
@@ -166,8 +193,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/memorial-admins/:id", async (req, res) => {
+  app.delete("/api/memorial-admins/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the admin record to find the memorial
+      const adminToDelete = await storage.getMemorialAdminById(req.params.id);
+      
+      if (!adminToDelete) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(adminToDelete.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Only the memorial creator can delete admins
+      if (memorial.creatorEmail !== userEmail) {
+        return res.status(403).json({ error: "Forbidden: Only the memorial creator can remove admins" });
+      }
+      
       await storage.deleteMemorialAdmin(req.params.id);
       res.status(204).send();
     } catch (error: any) {
@@ -175,9 +223,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // QR Code routes
-  app.get("/api/memorials/:memorialId/qr-codes", async (req, res) => {
+  // QR Code routes (protected)
+  app.get("/api/memorials/:memorialId/qr-codes", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin with QR management permission
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isQRAdmin = admins.some(admin => admin.email === userEmail && admin.canManageQR);
+
+      if (!isCreator && !isQRAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view QR codes for this memorial" });
+      }
+
       const qrCodes = await storage.getQRCodesByMemorialId(req.params.memorialId);
       res.json(qrCodes);
     } catch (error: any) {
@@ -185,8 +249,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/memorials/:memorialId/qr-codes/generate", async (req, res) => {
+  app.post("/api/memorials/:memorialId/qr-codes/generate", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin with QR management permission
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isQRAdmin = admins.some(admin => admin.email === userEmail && admin.canManageQR);
+
+      if (!isCreator && !isQRAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to generate QR codes for this memorial" });
+      }
+
       const { purpose, issuedToEmail } = req.body;
       const qrCode = await storage.generateQRCode(
         req.params.memorialId,
@@ -199,8 +279,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/qr-codes/:id", async (req, res) => {
+  app.delete("/api/qr-codes/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the QR code to find the memorial
+      const qrCode = await storage.getQRCodeById(req.params.id);
+      
+      if (!qrCode) {
+        return res.status(404).json({ error: "QR code not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(qrCode.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin with QR management permission
+      const admins = await storage.getMemorialAdmins(qrCode.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isQRAdmin = admins.some(admin => admin.email === userEmail && admin.canManageQR);
+      
+      if (!isCreator && !isQRAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to delete QR codes for this memorial" });
+      }
+      
       await storage.deleteQRCode(req.params.id);
       res.status(204).send();
     } catch (error: any) {
