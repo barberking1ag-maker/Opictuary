@@ -212,7 +212,38 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-2xl font-serif font-semibold text-foreground tracking-tight">Opictuary</h1>
+              <h1 className="text-2xl font-serif font-semibold text-foreground tracking-tight relative">
+                <span className="relative inline-block">
+                  <svg 
+                    className="absolute -top-1 left-1/2 -translate-x-1/2" 
+                    width="24" 
+                    height="8" 
+                    viewBox="0 0 24 8" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <ellipse 
+                      cx="12" 
+                      cy="4" 
+                      rx="11" 
+                      ry="3" 
+                      fill="none" 
+                      stroke="#FFD700" 
+                      strokeWidth="1.5" 
+                      opacity="0.9"
+                    />
+                    <ellipse 
+                      cx="12" 
+                      cy="4" 
+                      rx="11" 
+                      ry="3" 
+                      fill="#FFD700" 
+                      opacity="0.15"
+                    />
+                  </svg>
+                  O
+                </span>pictuary
+              </h1>
               <p className="text-xs text-muted-foreground mt-0.5 tracking-wide">Honoring Life · Preserving Legacy</p>
             </div>
           </div>
