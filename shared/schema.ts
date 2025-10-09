@@ -67,6 +67,12 @@ export const qrCodes = pgTable("qr_codes", {
   issuedToEmail: text("issued_to_email"),
   expiresAt: timestamp("expires_at"),
   status: text("status").notNull().default("active"),
+  // Media attachments visible when QR is scanned
+  title: text("title"),
+  description: text("description"),
+  videoUrl: text("video_url"),
+  imageUrl: text("image_url"),
+  mediaType: text("media_type"), // 'video', 'image', 'message', 'mixed'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -93,11 +99,13 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   recipientName: text("recipient_name").notNull(),
   recipientEmail: text("recipient_email"),
-  eventType: text("event_type").notNull(),
+  eventType: text("event_type").notNull(), // 'birthday', 'graduation', 'wedding', 'anniversary', 'baby_birth', 'holiday', 'custom'
   eventDate: text("event_date"),
   message: text("message").notNull(),
-  mediaUrl: text("media_url"),
+  mediaUrl: text("media_url"), // Video or media URL for the milestone
+  mediaType: text("media_type").default("text"), // 'text', 'video', 'image', 'mixed'
   isSent: boolean("is_sent").default(false),
+  sentAt: timestamp("sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -158,6 +166,7 @@ export const legacyEvents = pgTable("legacy_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
+  eventType: text("event_type").notNull(), // 'candlelight_vigil', 'barbecue', 'block_party', 'memorial_service', 'celebration_of_life', 'custom'
   description: text("description"),
   eventDate: text("event_date").notNull(),
   eventTime: text("event_time"),
