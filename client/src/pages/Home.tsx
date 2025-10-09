@@ -25,9 +25,9 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
 export default function Home() {
-  const [codeModalOpen, setCodeModalOpen] = useState(true);
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
-  const [memorialId, setMemorialId] = useState<string | null>(null);
+  const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
   const { toast } = useToast();
   const { registerToken, isNative } = usePushNotifications();
 
