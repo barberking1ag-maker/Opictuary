@@ -27,6 +27,30 @@ export const memorials = pgTable("memorials", {
   fontFamily: text("font_family"),
   symbol: text("symbol"),
   isPublic: boolean("is_public").default(false),
+  creatorEmail: text("creator_email"),
+  ownershipType: text("ownership_type").default("family_created"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const memorialAdmins = pgTable("memorial_admins", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: text("role").notNull().default("admin"),
+  canManageQR: boolean("can_manage_qr").default(true),
+  canEditMemorial: boolean("can_edit_memorial").default(true),
+  canApproveContent: boolean("can_approve_content").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const qrCodes = pgTable("qr_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  code: text("code").notNull(),
+  purpose: text("purpose").notNull().default("tombstone"),
+  issuedToEmail: text("issued_to_email"),
+  expiresAt: timestamp("expires_at"),
+  status: text("status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -335,6 +359,22 @@ export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   griefSupport: one(griefSupport),
   legacyEvents: many(legacyEvents),
   musicPlaylist: one(musicPlaylists),
+  admins: many(memorialAdmins),
+  qrCodes: many(qrCodes),
+}));
+
+export const memorialAdminsRelations = relations(memorialAdmins, ({ one }) => ({
+  memorial: one(memorials, {
+    fields: [memorialAdmins.memorialId],
+    references: [memorials.id],
+  }),
+}));
+
+export const qrCodesRelations = relations(qrCodes, ({ one }) => ({
+  memorial: one(memorials, {
+    fields: [qrCodes.memorialId],
+    references: [memorials.id],
+  }),
 }));
 
 export const memoriesRelations = relations(memories, ({ one }) => ({
@@ -541,6 +581,16 @@ export const insertPushTokenSchema = createInsertSchema(pushTokens).omit({
   createdAt: true,
 });
 
+export const insertMemorialAdminSchema = createInsertSchema(memorialAdmins).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertQRCodeSchema = createInsertSchema(qrCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -619,3 +669,9 @@ export type PartnerPayout = typeof partnerPayouts.$inferSelect;
 
 export type InsertPushToken = z.infer<typeof insertPushTokenSchema>;
 export type PushToken = typeof pushTokens.$inferSelect;
+
+export type InsertMemorialAdmin = z.infer<typeof insertMemorialAdminSchema>;
+export type MemorialAdmin = typeof memorialAdmins.$inferSelect;
+
+export type InsertQRCode = z.infer<typeof insertQRCodeSchema>;
+export type QRCode = typeof qrCodes.$inferSelect;

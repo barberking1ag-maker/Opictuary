@@ -1,6 +1,8 @@
 import {
   users,
   memorials,
+  memorialAdmins,
+  qrCodes,
   memories,
   condolences,
   scheduledMessages,
@@ -29,6 +31,10 @@ import {
   type InsertUser,
   type Memorial,
   type InsertMemorial,
+  type MemorialAdmin,
+  type InsertMemorialAdmin,
+  type QRCode,
+  type InsertQRCode,
   type Memory,
   type InsertMemory,
   type Condolence,
@@ -80,6 +86,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
+import * as QRCodeGenerator from "qrcode";
 
 export interface IStorage {
   // User operations
@@ -93,6 +100,16 @@ export interface IStorage {
   createMemorial(memorial: InsertMemorial): Promise<Memorial>;
   updateMemorial(id: string, memorial: Partial<InsertMemorial>): Promise<Memorial | undefined>;
   listMemorials(): Promise<Memorial[]>;
+
+  // Memorial Admin operations
+  getMemorialAdmins(memorialId: string): Promise<MemorialAdmin[]>;
+  createMemorialAdmin(admin: InsertMemorialAdmin): Promise<MemorialAdmin>;
+  deleteMemorialAdmin(id: string): Promise<void>;
+
+  // QR Code operations
+  getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]>;
+  generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode>;
+  deleteQRCode(id: string): Promise<void>;
 
   // Memory operations
   getMemoriesByMemorialId(memorialId: string): Promise<Memory[]>;
@@ -236,6 +253,49 @@ export class DatabaseStorage implements IStorage {
 
   async listMemorials(): Promise<Memorial[]> {
     return await db.select().from(memorials).orderBy(desc(memorials.createdAt));
+  }
+
+  // Memorial Admin operations
+  async getMemorialAdmins(memorialId: string): Promise<MemorialAdmin[]> {
+    return await db.select().from(memorialAdmins).where(eq(memorialAdmins.memorialId, memorialId)).orderBy(desc(memorialAdmins.createdAt));
+  }
+
+  async createMemorialAdmin(admin: InsertMemorialAdmin): Promise<MemorialAdmin> {
+    const [created] = await db.insert(memorialAdmins).values(admin).returning();
+    return created;
+  }
+
+  async deleteMemorialAdmin(id: string): Promise<void> {
+    await db.delete(memorialAdmins).where(eq(memorialAdmins.id, id));
+  }
+
+  // QR Code operations
+  async getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]> {
+    return await db.select().from(qrCodes).where(eq(qrCodes.memorialId, memorialId)).orderBy(desc(qrCodes.createdAt));
+  }
+
+  async generateQRCode(memorialId: string, purpose: string, issuedToEmail?: string): Promise<QRCode> {
+    const memorial = await this.getMemorial(memorialId);
+    if (!memorial) {
+      throw new Error("Memorial not found");
+    }
+    
+    const qrCodeData = `https://opictuary.app/memorial/${memorial.inviteCode}`;
+    const qrCodeString = await QRCodeGenerator.toDataURL(qrCodeData);
+    
+    const [created] = await db.insert(qrCodes).values({
+      memorialId,
+      code: qrCodeString,
+      purpose,
+      issuedToEmail,
+      status: "active",
+    }).returning();
+    
+    return created;
+  }
+
+  async deleteQRCode(id: string): Promise<void> {
+    await db.delete(qrCodes).where(eq(qrCodes.id, id));
   }
 
   // Memory operations

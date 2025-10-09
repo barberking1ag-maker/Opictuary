@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 9, 2025 - Creator/Admin System & QR Code Management:**
+- Added creator/admin roles system to distinguish memorial creator from deceased person
+- Implemented role-based access control with granular permissions
+- Added QR code generation and management system for tombstone placement
+- QR codes are issued only to memorial creators/admins for security
+- Support for both family-created and self-written memorial types
+- New data models: memorialAdmins, qrCodes with full permission management
+
 **October 4, 2025 - Mobile App Access Control Enhancement:**
 - Implemented invite code verification flow for both web and mobile platforms
 - Removed hardcoded memorial ID - all memorials now load dynamically based on invite code
@@ -114,7 +122,9 @@ Opictuary is configured as a **native mobile application** using Capacitor + PWA
 - Migration support via `drizzle-kit`
 
 **Data Models:**
-- `memorials` - Core memorial pages with biographical information
+- `memorials` - Core memorial pages with biographical information, creator tracking, and ownership type
+- `memorialAdmins` - Role-based access control with granular permissions (QR management, content approval, memorial editing)
+- `qrCodes` - QR code generation and issuance tracking for tombstone placement
 - `memories` - Photo/video memories with approval workflow
 - `condolences` - Sympathy messages from visitors
 - `fundraisers` - Memorial fundraising campaigns

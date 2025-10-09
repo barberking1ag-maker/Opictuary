@@ -30,6 +30,8 @@ import {
   insertPrisonAccessSessionSchema,
   insertPrisonAuditLogSchema,
   insertPushTokenSchema,
+  insertMemorialAdminSchema,
+  insertQRCodeSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -118,6 +120,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Admin routes
+  app.get("/api/memorials/:memorialId/admins", async (req, res) => {
+    try {
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      res.json(admins);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/admins", async (req, res) => {
+    try {
+      const data = insertMemorialAdminSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const admin = await storage.createMemorialAdmin(data);
+      res.status(201).json(admin);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memorial-admins/:id", async (req, res) => {
+    try {
+      await storage.deleteMemorialAdmin(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // QR Code routes
+  app.get("/api/memorials/:memorialId/qr-codes", async (req, res) => {
+    try {
+      const qrCodes = await storage.getQRCodesByMemorialId(req.params.memorialId);
+      res.json(qrCodes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/qr-codes/generate", async (req, res) => {
+    try {
+      const { purpose, issuedToEmail } = req.body;
+      const qrCode = await storage.generateQRCode(
+        req.params.memorialId,
+        purpose || "tombstone",
+        issuedToEmail
+      );
+      res.status(201).json(qrCode);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/qr-codes/:id", async (req, res) => {
+    try {
+      await storage.deleteQRCode(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
