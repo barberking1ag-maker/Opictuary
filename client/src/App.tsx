@@ -13,8 +13,9 @@ import CustomizationDemo from "@/pages/CustomizationDemo";
 import AdvertiserSubmission from "@/pages/AdvertiserSubmission";
 import PartnerSignup from "@/pages/PartnerSignup";
 import PartnerDashboard from "@/pages/PartnerDashboard";
+import BadgePreview from "@/pages/BadgePreview";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image } from "lucide-react";
 
 function Router() {
   return (
@@ -105,6 +106,12 @@ function Router() {
                   Partner
                 </Button>
               </Link>
+              <Link href="/badge-preview">
+                <Button variant="ghost" size="sm" data-testid="nav-badge-preview">
+                  <Image className="w-4 h-4 mr-1" />
+                  Badge Preview
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -120,6 +127,7 @@ function Router() {
         <Route path="/advertise" component={AdvertiserSubmission} />
         <Route path="/partner-signup" component={PartnerSignup} />
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
+        <Route path="/badge-preview" component={BadgePreview} />
         <Route component={NotFound} />
       </Switch>
     </div>
