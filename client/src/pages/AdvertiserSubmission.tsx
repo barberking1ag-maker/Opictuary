@@ -117,7 +117,7 @@ export default function AdvertiserSubmission() {
             </div>
             <CardTitle className="text-2xl">Advertisement Submitted</CardTitle>
             <CardDescription>
-              Thank you for your submission. Your advertisement will be reviewed and activated soon.
+              Thank you for your submission. Your advertisement is pending review and will be activated once approved.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

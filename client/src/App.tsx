@@ -11,6 +11,7 @@ import EssentialWorkers from "@/pages/EssentialWorkers";
 import SelfObituary from "@/pages/SelfObituary";
 import CustomizationDemo from "@/pages/CustomizationDemo";
 import AdvertiserSubmission from "@/pages/AdvertiserSubmission";
+import AdvertisementAdmin from "@/pages/AdvertisementAdmin";
 import PartnerSignup from "@/pages/PartnerSignup";
 import PartnerDashboard from "@/pages/PartnerDashboard";
 import BadgePreview from "@/pages/BadgePreview";
@@ -114,6 +115,7 @@ function Router() {
         <Route path="/advertise" component={AdvertiserSubmission} />
         <Route path="/advertiser-submission" component={AdvertiserSubmission} />
         <Route path="/advertising" component={AdvertisingOpportunities} />
+        <Route path="/advertisement-admin" component={AdvertisementAdmin} />
         <Route path="/partner-signup" component={PartnerSignup} />
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
         <Route path="/badge-preview" component={BadgePreview} />
