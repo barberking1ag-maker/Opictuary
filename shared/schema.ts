@@ -316,6 +316,7 @@ export const advertisements = pgTable("advertisements", {
   pricing: text("pricing"),
   commissionPercentage: integer("commission_percentage"), // Percentage Opictuary receives from sales made through platform
   referralCode: text("referral_code").unique(), // Unique code for tracking sales through Opictuary
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
   isActive: boolean("is_active").default(true),
   impressions: integer("impressions").default(0),
   clicks: integer("clicks").default(0),
