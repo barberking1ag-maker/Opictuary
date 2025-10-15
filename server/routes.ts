@@ -1000,6 +1000,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advertisement Status Management
+  app.patch("/api/advertisements/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const { status } = req.body;
+      
+      if (!status || !['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status. Must be 'pending', 'approved', or 'rejected'" });
+      }
+
+      const ad = await storage.updateAdvertisementStatus(req.params.id, status);
+      if (!ad) {
+        return res.status(404).json({ error: "Advertisement not found" });
+      }
+
+      res.json(ad);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/advertisements/by-status/:status", async (req, res) => {
+    try {
+      const { status } = req.params;
+      
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status. Must be 'pending', 'approved', or 'rejected'" });
+      }
+
+      const ads = await storage.listAdvertisementsByStatus(status as 'pending' | 'approved' | 'rejected');
+      res.json(ads);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Funeral Home Partner routes
   app.get("/api/funeral-home-partners", async (req, res) => {
     try {
