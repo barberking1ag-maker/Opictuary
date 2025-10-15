@@ -787,6 +787,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(advertisements.id, id));
   }
 
+  async updateAdvertisementStatus(id: string, status: 'pending' | 'approved' | 'rejected'): Promise<Advertisement | undefined> {
+    const [updated] = await db.update(advertisements)
+      .set({ status })
+      .where(eq(advertisements.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async listAdvertisementsByStatus(status?: 'pending' | 'approved' | 'rejected'): Promise<Advertisement[]> {
+    if (status) {
+      return await db.select().from(advertisements)
+        .where(eq(advertisements.status, status))
+        .orderBy(desc(advertisements.createdAt));
+    }
+    return await db.select().from(advertisements)
+      .orderBy(desc(advertisements.createdAt));
+  }
+
   // Advertisement Sales Tracking
   async recordSale(sale: InsertAdvertisementSale): Promise<AdvertisementSale> {
     const [recorded] = await db.insert(advertisementSales).values(sale).returning();
