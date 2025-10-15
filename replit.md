@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 15, 2025 - Advertisement Approval Workflow:**
+- Added status field to advertisements (pending, approved, rejected)
+- All new submissions start as 'pending' and require admin approval
+- Created admin dashboard at /advertisement-admin for managing submissions
+- Three-tab interface: Pending (awaiting review), Approved (active ads), Rejected (declined ads)
+- Status update API endpoints with approve/reject functionality
+- Status badges with icons: Clock (pending), CheckCircle (approved), XCircle (rejected)
+- Advertisers notified of pending review status upon submission
+- Comprehensive approval workflow tested end-to-end
+
 **October 9, 2025 - Advertising Platform Fee System & Sales Tracking:**
 - Implemented comprehensive sales tracking system for advertisements
 - Platform fee model: Opictuary receives percentage of sales made through platform
