@@ -51,7 +51,7 @@ export default function UserProfile() {
   }, [user]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: typeof profileData) => {
+    mutationFn: async (data: { firstName: string; lastName: string }) => {
       const res = await apiRequest("PATCH", "/api/user/profile", data);
       return await res.json();
     },
@@ -404,9 +404,9 @@ export default function UserProfile() {
                   />
                 </div>
 
-                <div className="bg-muted/50 p-4 rounded-md mb-4">
+                <div className="bg-muted/50 p-4 rounded-md border border-border/50">
                   <p className="text-sm text-muted-foreground">
-                    💡 Notification preferences will be saved automatically in a future update. Changes here are currently stored locally only.
+                    <strong>Note:</strong> Notification preferences are stored locally in your browser and will be saved to your account in a future update.
                   </p>
                 </div>
               </CardContent>
