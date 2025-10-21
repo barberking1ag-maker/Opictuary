@@ -20,6 +20,8 @@ import GriefSupport from "@/pages/GriefSupport";
 import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
 import NotFound from "@/pages/not-found";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout } from "lucide-react";
+import { OpictuaryLogo } from "@/components/OpictuaryLogo";
+import { Footer } from "@/components/Footer";
 
 function Router() {
   return (
@@ -28,42 +30,9 @@ function Router() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/">
-              <div className="flex items-center gap-3 hover-elevate px-3 py-2 rounded-md transition-colors cursor-pointer" data-testid="link-home">
-                <h1 className="text-2xl font-serif font-bold text-foreground relative">
-                  <span className="relative inline-block">
-                    <svg 
-                      className="absolute -top-1.5 left-1/2 -translate-x-1/2" 
-                      width="24" 
-                      height="8" 
-                      viewBox="0 0 24 8" 
-                      fill="none" 
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <ellipse 
-                        cx="12" 
-                        cy="4" 
-                        rx="11" 
-                        ry="3" 
-                        fill="none" 
-                        stroke="#FFD700" 
-                        strokeWidth="1.5" 
-                        opacity="0.9"
-                      />
-                      <ellipse 
-                        cx="12" 
-                        cy="4" 
-                        rx="11" 
-                        ry="3" 
-                        fill="#FFD700" 
-                        opacity="0.15"
-                      />
-                    </svg>
-                    O
-                  </span>pictuary
-                </h1>
-                <span className="text-xs text-muted-foreground tracking-wide hidden md:block">
-                  Honoring Life · Preserving Legacy
-                </span>
+              <div className="hover-elevate px-3 py-2 rounded-md transition-colors cursor-pointer" data-testid="link-home">
+                <OpictuaryLogo variant="classic" showTagline={true} className="hidden md:flex" />
+                <OpictuaryLogo variant="classic" showTagline={false} className="flex md:hidden" />
               </div>
             </Link>
             <div className="hidden lg:flex gap-1">
@@ -122,6 +91,8 @@ function Router() {
         <Route path="/design-reference" component={DesignReference} />
         <Route component={NotFound} />
       </Switch>
+
+      <Footer badgeVariant="classic" />
     </div>
   );
 }
