@@ -10,6 +10,31 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**October 21, 2025 - App Badge Integration:**
+- Created reusable badge component system for branding across the platform
+- Built OpictuaryBadge component with two design variants and three sizes
+  - Classic Angel Halo: Traditional design with golden angel halo (elegant, serif typography)
+  - Halo-Inspired Tech: Futuristic design with metallic styling, blue glow effects, and tech elements
+  - Sizes: small (60x80px), medium (90x120px), large (300x400px for marketing)
+- Built OpictuaryLogo component for navigation header
+  - Compact badge with "Opictuary" branding text
+  - Optional tagline: "Honoring Life · Preserving Legacy"
+  - Responsive design (tagline hidden on mobile)
+- Integrated logo into navigation header across all pages
+- Created Footer component with small badge display
+  - Appears on all pages for brand consistency
+  - Contains Quick Links, Services, and Contact sections
+  - Links to: Celebrity Memorials, Essential Workers, Create Memorial, Partner Program, Advertising, App Badges
+- Enhanced /badge-preview page to showcase all badge components
+  - Interactive display of both badge variants
+  - Size comparison (small, medium, large)
+  - Logo component examples with/without taglines
+  - Usage examples and implementation guide
+  - Download buttons for marketing use
+- Badge design uses uploaded image (IMG_0102_1760999703535.jpeg) as background
+- SVG overlay system creates consistent branding across all badge instances
+- Components are fully reusable throughout the codebase
+
 **October 15, 2025 - Advertisement Approval Workflow:**
 - Added status field to advertisements (pending, approved, rejected)
 - All new submissions start as 'pending' and require admin approval
