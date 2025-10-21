@@ -4,6 +4,12 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
+
+// User profile update schema - only allow specific fields
+const updateProfileSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+}).strict(); // Reject any extra fields
 import Stripe from "stripe";
 import { 
   insertMemorialSchema, 
@@ -72,6 +78,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Update user profile
+  app.patch('/api/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate and whitelist only allowed fields
+      const validatedData = updateProfileSchema.parse(req.body);
+      
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        ...validatedData,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Get user's memorials
+  app.get('/api/user/memorials', isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const memorials = await storage.getMemorialsByCreatorEmail(userEmail);
+      res.json(memorials);
+    } catch (error) {
+      console.error("Error fetching user memorials:", error);
+      res.status(500).json({ message: "Failed to fetch memorials" });
     }
   });
 

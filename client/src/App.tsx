@@ -18,10 +18,14 @@ import BadgePreview from "@/pages/BadgePreview";
 import DesignReference from "@/pages/DesignReference";
 import GriefSupport from "@/pages/GriefSupport";
 import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
+import UserProfile from "@/pages/UserProfile";
+import MyMemorials from "@/pages/MyMemorials";
 import NotFound from "@/pages/not-found";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
+import { UserMenu } from "@/components/UserMenu";
+import { Badge } from "@/components/ui/badge";
 
 function Router() {
   return (
@@ -61,9 +65,29 @@ function Router() {
                 </Button>
               </Link>
             </div>
-            <div className="lg:hidden">
+            <div className="flex items-center gap-2">
+              {/* Notifications Bell */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative hidden md:flex"
+                data-testid="button-notifications"
+              >
+                <Bell className="w-5 h-5" />
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  3
+                </Badge>
+              </Button>
+
+              {/* User Menu */}
+              <UserMenu />
+
+              {/* Mobile Create Button */}
               <Link href="/self-obituary">
-                <Button size="sm" data-testid="nav-mobile-create">
+                <Button size="sm" className="lg:hidden" data-testid="nav-mobile-create">
                   <FileText className="w-4 h-4 mr-1.5" />
                   Create
                 </Button>
@@ -89,6 +113,8 @@ function Router() {
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
         <Route path="/badge-preview" component={BadgePreview} />
         <Route path="/design-reference" component={DesignReference} />
+        <Route path="/profile" component={UserProfile} />
+        <Route path="/my-memorials" component={MyMemorials} />
         <Route component={NotFound} />
       </Switch>
 

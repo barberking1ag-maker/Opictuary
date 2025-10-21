@@ -100,6 +100,7 @@ export interface IStorage {
   // Memorial operations
   getMemorial(id: string): Promise<Memorial | undefined>;
   getMemorialByInviteCode(inviteCode: string): Promise<Memorial | undefined>;
+  getMemorialsByCreatorEmail(email: string): Promise<Memorial[]>;
   createMemorial(memorial: InsertMemorial): Promise<Memorial>;
   updateMemorial(id: string, memorial: Partial<InsertMemorial>): Promise<Memorial | undefined>;
   listMemorials(): Promise<Memorial[]>;
@@ -264,6 +265,11 @@ export class DatabaseStorage implements IStorage {
   async getMemorialByInviteCode(inviteCode: string): Promise<Memorial | undefined> {
     const [memorial] = await db.select().from(memorials).where(eq(memorials.inviteCode, inviteCode));
     return memorial || undefined;
+  }
+
+  async getMemorialsByCreatorEmail(email: string): Promise<Memorial[]> {
+    const results = await db.select().from(memorials).where(eq(memorials.creatorEmail, email));
+    return results;
   }
 
   async createMemorial(memorial: InsertMemorial): Promise<Memorial> {
