@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import Home from "@/pages/Home";
+import Landing from "@/pages/Landing";
+import About from "@/pages/About";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
@@ -65,6 +67,11 @@ function Router() {
                   Partners
                 </Button>
               </Link>
+              <Link href="/about">
+                <Button variant="ghost" size="sm" data-testid="nav-about" className="text-sm">
+                  About
+                </Button>
+              </Link>
             </div>
             <div className="flex items-center gap-2">
               {/* Notifications Bell */}
@@ -86,6 +93,13 @@ function Router() {
               {/* User Menu */}
               <UserMenu />
 
+              {/* Mobile About Button */}
+              <Link href="/about">
+                <Button variant="ghost" size="sm" className="lg:hidden" data-testid="nav-mobile-about">
+                  About
+                </Button>
+              </Link>
+
               {/* Mobile Create Button */}
               <Link href="/self-obituary">
                 <Button size="sm" className="lg:hidden" data-testid="nav-mobile-create">
@@ -99,7 +113,9 @@ function Router() {
       </nav>
 
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={Landing} />
+        <Route path="/memorial/:id" component={Home} />
+        <Route path="/about" component={About} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
