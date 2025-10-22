@@ -1,4 +1,4 @@
-import badgeImage from "@assets/IMG_0102_1761117143083.jpeg";
+import badgeImage from "@assets/IMG_0102_1761123544792.jpeg";
 
 interface OpictuaryLogoProps {
   variant?: "classic" | "halo-tech";
@@ -12,7 +12,7 @@ export function OpictuaryLogo({
   className = ""
 }: OpictuaryLogoProps) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex flex-col items-center gap-2 ${className}`}>
       <div className="relative w-12 h-12 rounded-md overflow-hidden shadow-md">
         <img 
           src={badgeImage} 
@@ -26,12 +26,12 @@ export function OpictuaryLogo({
         )}
       </div>
       
-      <div className="flex flex-col">
+      <div className="flex flex-col items-center">
         <h1 className="text-2xl font-serif font-bold text-foreground leading-tight">
           Opictuary
         </h1>
         {showTagline && (
-          <span className="text-xs text-muted-foreground tracking-wide">
+          <span className="text-xs text-muted-foreground tracking-wide text-center">
             Honoring Life · Preserving Legacy
           </span>
         )}
