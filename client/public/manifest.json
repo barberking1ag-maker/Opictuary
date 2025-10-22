@@ -4,8 +4,8 @@
   "description": "Create and share dignified digital memorials for loved ones",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FDFCFB",
-  "theme_color": "#2C1810",
+  "background_color": "#1a0f29",
+  "theme_color": "#1a0f29",
   "orientation": "portrait-primary",
   "icons": [
     {

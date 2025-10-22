@@ -57,6 +57,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          return caches.open(DYNAMIC_CACHE).then((cache) => {
+            cache.put(request, response.clone());
+            return response;
+          });
+        })
+        .catch(() => {
+          return caches.match('/').then((cachedResponse) => {
+            return cachedResponse || caches.match(request);
+          });
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((response) => {
       return (

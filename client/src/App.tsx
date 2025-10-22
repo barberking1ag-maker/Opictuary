@@ -21,6 +21,7 @@ import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
 import UserProfile from "@/pages/UserProfile";
 import MyMemorials from "@/pages/MyMemorials";
 import NotFound from "@/pages/not-found";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
@@ -127,8 +128,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <InstallPrompt />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
