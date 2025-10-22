@@ -29,6 +29,7 @@ export function UserMenu() {
           size="sm" 
           onClick={() => window.location.href = '/api/login'}
           data-testid="button-login"
+          className="hidden sm:flex"
         >
           <LogIn className="w-4 h-4 mr-2" />
           Login
@@ -38,8 +39,8 @@ export function UserMenu() {
           onClick={() => window.location.href = '/api/login'}
           data-testid="button-signup"
         >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Sign Up
+          <UserPlus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Sign Up</span>
         </Button>
       </div>
     );

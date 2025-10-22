@@ -12,7 +12,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-6">
             <div className="flex justify-center mb-8">
-              <OpictuaryLogo variant="classic" showTagline={false} className="scale-125" />
+              <OpictuaryLogo variant="classic" showTagline={false} className="scale-100 sm:scale-125" />
             </div>
             <h1 className="text-4xl sm:text-5xl font-serif font-bold text-foreground" data-testid="text-about-title">
               About Opictuary

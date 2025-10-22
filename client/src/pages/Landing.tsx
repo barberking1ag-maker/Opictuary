@@ -15,7 +15,7 @@ export default function Landing() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
           <div className="text-center space-y-8">
             <div className="flex justify-center mb-8">
-              <OpictuaryLogo variant="classic" showTagline={false} className="scale-150" />
+              <OpictuaryLogo variant="classic" showTagline={false} className="scale-125 sm:scale-150" />
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-foreground tracking-tight" data-testid="text-hero-title">
@@ -29,20 +29,20 @@ export default function Landing() {
               Share their story, preserve their legacy, and find support when you need it most.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-              <Link href="/self-obituary">
-                <Button size="lg" className="min-w-[200px]" data-testid="button-create-memorial">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6 w-full max-w-3xl mx-auto">
+              <Link href="/self-obituary" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:min-w-[200px]" data-testid="button-create-memorial">
                   <Heart className="w-5 h-5 mr-2" />
                   Create a Memorial
                 </Button>
               </Link>
-              <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81">
-                <Button size="lg" variant="outline" className="min-w-[200px]" data-testid="button-view-demo">
+              <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:min-w-[200px]" data-testid="button-view-demo">
                   View Demo Memorial
                 </Button>
               </Link>
-              <Link href="/about">
-                <Button size="lg" variant="ghost" className="min-w-[200px]" data-testid="button-learn-more">
+              <Link href="/about" className="w-full sm:w-auto">
+                <Button size="lg" variant="ghost" className="w-full sm:min-w-[200px]" data-testid="button-learn-more">
                   Learn More
                 </Button>
               </Link>
