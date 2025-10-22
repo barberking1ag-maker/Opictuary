@@ -17,10 +17,17 @@ React 18 with TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS.
 
 **UI/UX Decisions:**
 - **Design Philosophy:** "Dignity in Digital" with a respectful, timeless aesthetic, inspired by Apple Memorials, Instagram, and GoFundMe.
-- **Theming:** Multi-faith support (Christian, Jewish, Islamic, Buddhist, Hindu, Non-religious) with rich purple backgrounds, gold accents, and no white backgrounds.
+- **Theming:** Multi-faith support (Christian, Jewish, Islamic, Buddhist, Hindu, Non-religious) with rich purple backgrounds (#1a0f29), gold accents, and no white backgrounds.
 - **Components:** Utilizes Radix UI primitives for accessibility, shadcn/ui (New York style), and a custom component library.
 - **Typography:** Crimson Text (serif) for headings, Inter (sans-serif) for body text.
-- **PWA & Mobile:** Progressive Web App with offline support, Capacitor integration for native iOS/Android features.
+- **PWA & Mobile:** Production-ready Progressive Web App with:
+  - Smart install prompts with 7-day cooldown
+  - Offline support with navigation fallback for deep links
+  - Service worker caching for static and dynamic assets
+  - Standalone mode for app-like experience
+  - Purple theme colors matching brand
+  - Works on iOS and Android devices
+  - Capacitor integration available for future native features
 
 **Key Components:**
 A library of over 30 reusable components covering navigation, memorial displays, fundraising, legacy features, special memorials, and admin functions (e.g., UserMenu, MemorialHero, FundraiserProgress, CelebrityMemorialCard, AdminContentPanel).
@@ -61,7 +68,13 @@ Over 20 tables covering all core features, fundraising, legacy features, special
 Features invite code system for private memorials, optional public settings, role-based admin permissions, and verified QR code issuance.
 
 **Security Patterns:**
-Strict Zod validation on API endpoints, whitelisted fields for updates, session-based authentication, protected routes with authentication middleware, and explicit user permission for destructive operations.
+- Strict Zod validation on API endpoints
+- Whitelisted fields for profile updates
+- Session-based authentication with PostgreSQL storage
+- CSRF protection via sameSite: 'lax' cookies
+- Protected routes with authentication middleware
+- Lazy-loaded Stripe to prevent boot failures
+- Auto-creating session tables for deployment safety
 
 ### Authentication & Authorization
 
