@@ -1,4 +1,4 @@
-import badgeImage from "@assets/IMG_0102_1760999703535.jpeg";
+import badgeImage from "@assets/IMG_0102_1761117143083.jpeg";
 
 interface OpictuaryLogoProps {
   variant?: "classic" | "halo-tech";
