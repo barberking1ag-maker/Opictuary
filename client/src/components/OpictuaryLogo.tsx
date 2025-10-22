@@ -27,9 +27,42 @@ export function OpictuaryLogo({
       </div>
       
       <div className="flex flex-col items-center">
-        <h1 className="text-2xl font-serif font-bold text-foreground leading-tight">
-          Opictuary
-        </h1>
+        <div className="relative">
+          <h1 className="text-2xl font-serif font-bold text-foreground leading-tight">
+            Opictuary
+          </h1>
+          {/* Halo over the O */}
+          <svg 
+            className="absolute pointer-events-none"
+            style={{
+              top: '-8px',
+              left: '0px',
+              width: '24px',
+              height: '24px'
+            }}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <ellipse 
+              cx="12" 
+              cy="12" 
+              rx="11" 
+              ry="4" 
+              fill="none" 
+              stroke="#FFD700" 
+              strokeWidth="1.5" 
+              opacity="0.95"
+            />
+            <ellipse 
+              cx="12" 
+              cy="12" 
+              rx="11" 
+              ry="4" 
+              fill="#FFD700" 
+              opacity="0.2"
+            />
+          </svg>
+        </div>
         {showTagline && (
           <span className="text-xs text-muted-foreground tracking-wide text-center">
             Honoring Life · Preserving Legacy
