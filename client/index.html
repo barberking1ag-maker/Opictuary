@@ -13,7 +13,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script defer data-domain="replit.app" src="https://plausible.io/js/script.js"></script>
+    <script>
+      // Dynamically load Plausible Analytics with the correct domain
+      (function() {
+        var domain = window.location.hostname;
+        // Skip analytics on localhost
+        if (domain !== 'localhost' && domain !== '127.0.0.1') {
+          var script = document.createElement('script');
+          script.defer = true;
+          script.setAttribute('data-domain', domain);
+          script.src = 'https://plausible.io/js/script.js';
+          document.head.appendChild(script);
+        }
+      })();
+    </script>
     <title>Opictuary - Digital Memorial Platform</title>
   </head>
   <body>
