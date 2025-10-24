@@ -40,6 +40,7 @@ import {
   insertPushTokenSchema,
   insertMemorialAdminSchema,
   insertQRCodeSchema,
+  insertPageViewSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -1480,6 +1481,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertPushTokenSchema.parse(req.body);
       const pushToken = await storage.createPushToken(data);
       res.json(pushToken);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Analytics - Page View Tracking (no auth required - works for all visitors)
+  app.post("/api/analytics/pageview", async (req, res) => {
+    try {
+      const pageViewData = {
+        path: req.body.path,
+        userId: req.user?.sub || null, // Optional - works for anonymous users too
+        sessionId: req.sessionID || null,
+        userAgent: req.headers['user-agent'] || null,
+      };
+      
+      const validated = insertPageViewSchema.parse(pageViewData);
+      await storage.trackPageView(validated);
+      res.json({ success: true });
     } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });

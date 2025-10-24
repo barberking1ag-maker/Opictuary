@@ -28,6 +28,7 @@ import {
   prisonAccessSessions,
   prisonAuditLogs,
   pushTokens,
+  pageViews,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -87,6 +88,8 @@ import {
   type InsertPrisonAuditLog,
   type PushToken,
   type InsertPushToken,
+  type PageView,
+  type InsertPageView,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -232,6 +235,9 @@ export interface IStorage {
   // Push Token operations
   createPushToken(token: InsertPushToken): Promise<PushToken>;
   getPushTokensByMemorialId(memorialId: string): Promise<PushToken[]>;
+
+  // Analytics operations
+  trackPageView(pageView: InsertPageView): Promise<PageView>;
 
   // Admin Analytics
   getAdminStats(): Promise<any>;
@@ -962,6 +968,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(pushTokens)
       .where(eq(pushTokens.memorialId, memorialId))
       .orderBy(desc(pushTokens.createdAt));
+  }
+
+  // Analytics operations
+  async trackPageView(pageView: InsertPageView): Promise<PageView> {
+    const [created] = await db.insert(pageViews).values(pageView).returning();
+    return created;
   }
 
   // Admin Analytics
