@@ -23,6 +23,7 @@ import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
 import UserProfile from "@/pages/UserProfile";
 import MyMemorials from "@/pages/MyMemorials";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Privacy from "@/pages/Privacy";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -140,6 +141,7 @@ function Router() {
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/privacy" component={Privacy} />
         <Route component={NotFound} />
       </Switch>
 

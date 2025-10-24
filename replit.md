@@ -33,7 +33,7 @@ React 18 with TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS.
 A library of over 30 reusable components covering navigation, memorial displays, fundraising, legacy features, special memorials, and admin functions (e.g., UserMenu, MemorialHero, FundraiserProgress, CelebrityMemorialCard, AdminContentPanel).
 
 **Pages Implemented:**
-17 distinct pages covering core functionalities like Home, UserProfile, MyMemorials, CelebrityMemorials, GriefSupport, AdvertisingOpportunities, PartnerSignup, PrisonAccessRequest, and various admin and demo pages.
+18+ distinct pages covering core functionalities like Home, UserProfile, MyMemorials, CelebrityMemorials, GriefSupport, AdvertisingOpportunities, PartnerSignup, PrisonAccessRequest, AdminDashboard, Privacy, and various admin and demo pages.
 
 ### Backend Architecture
 
@@ -95,6 +95,45 @@ Inmate request, relationship verification, Stripe payment, time-limited access t
 **Security Features:**
 Multi-step identity verification, time-limited tokens, session monitoring, and comprehensive audit logs.
 
+## Analytics & Monitoring
+
+**Admin Dashboard:**
+- Real-time platform statistics at `/admin` route (admin users only)
+- Metrics: users, memorials, memories, donations, revenue, page views
+- Top pages tracking
+
+**Analytics Integration:**
+- **Google Analytics 4**: Tracks page views and user interactions (requires VITE_GA_MEASUREMENT_ID secret)
+- **Plausible Analytics**: Privacy-focused analytics automatically enabled on production domain
+- **Database Analytics**: Custom page_views and custom_events tables for internal tracking
+
+**Access Control:**
+- Admin dashboard protected with isAdmin middleware
+- Admin menu item visible only to admin users
+- Set `isAdmin: true` in users table to grant admin access
+
+## Mobile App Publishing
+
+**Android/Google Play Store:**
+- Production build ready with Capacitor
+- App ID: `com.opictuary.app`
+- Build instructions in `PLAY_STORE_GUIDE.md`
+- Requires Google Play Developer account ($25 one-time fee)
+- Review timeline: 1-7 days
+
+**iOS/App Store:**
+- Capacitor iOS platform integrated
+- Requires Apple Developer account ($99/year)
+- TestFlight for beta testing
+- App Store Connect for submission
+
+**Required Materials:**
+- App screenshots (2-8 images)
+- Feature graphic (1024x500)
+- Privacy policy (available at `/privacy`)
+- Content rating questionnaire
+- Store listing descriptions
+
 ## External Dependencies
 
 1.  **Stripe**: Payment processing.
@@ -107,4 +146,6 @@ Multi-step identity verification, time-limited tokens, session monitoring, and c
 8.  **`react-day-picker`**: Calendar component.
 9.  **`vaul`**: Drawer component.
 10. **Capacitor**: Native mobile app features for iOS and Android.
-11. **ConnectNetwork/GTL, ViaPath Technologies, Securus Technologies**: Integrations for the prison access system.
+11. **Google Analytics**: Usage analytics and tracking.
+12. **Plausible Analytics**: Privacy-focused web analytics.
+13. **ConnectNetwork/GTL, ViaPath Technologies, Securus Technologies**: Integrations for the prison access system.
