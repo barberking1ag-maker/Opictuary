@@ -92,7 +92,7 @@ export default function AdminDashboard() {
               Platform analytics and insights
             </p>
           </div>
-          <OpictuaryLogo variant="minimal" showTagline={false} />
+          <OpictuaryLogo variant="classic" showTagline={false} />
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
