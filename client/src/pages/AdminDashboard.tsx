@@ -113,9 +113,11 @@ export default function AdminDashboard() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-users">{stats.users.total}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-users">
+                    {stats.users.total.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-new-users-week">
-                    +{stats.users.newThisWeek} this week
+                    +{stats.users.newThisWeek.toLocaleString()} this week
                   </p>
                 </CardContent>
               </Card>
@@ -127,9 +129,11 @@ export default function AdminDashboard() {
                   <Heart className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-memorials">{stats.memorials.total}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-memorials">
+                    {stats.memorials.total.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-public-memorials">
-                    {stats.memorials.public} public, {stats.memorials.private} private
+                    {stats.memorials.public.toLocaleString()} public, {stats.memorials.private.toLocaleString()} private
                   </p>
                 </CardContent>
               </Card>
@@ -141,11 +145,11 @@ export default function AdminDashboard() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-raised">
-                    ${parseFloat(stats.fundraisers.totalRaised.toString()).toLocaleString()}
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-raised">
+                    ${parseFloat(stats.fundraisers.totalRaised.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-active-fundraisers">
-                    {stats.fundraisers.active} active fundraisers
+                    {stats.fundraisers.active.toLocaleString()} active fundraisers
                   </p>
                 </CardContent>
               </Card>
@@ -157,9 +161,11 @@ export default function AdminDashboard() {
                   <Eye className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-views">{stats.pageViews.total}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-views">
+                    {stats.pageViews.total.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-views-today">
-                    {stats.pageViews.today} today
+                    {stats.pageViews.today.toLocaleString()} today
                   </p>
                 </CardContent>
               </Card>
@@ -175,15 +181,21 @@ export default function AdminDashboard() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Today</span>
-                    <span className="text-lg font-semibold" data-testid="text-users-today">{stats.users.newToday}</span>
+                    <span className="text-lg font-semibold tabular-nums" data-testid="text-users-today">
+                      {stats.users.newToday.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">This Week</span>
-                    <span className="text-lg font-semibold" data-testid="text-users-week">{stats.users.newThisWeek}</span>
+                    <span className="text-lg font-semibold tabular-nums" data-testid="text-users-week">
+                      {stats.users.newThisWeek.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">This Month</span>
-                    <span className="text-lg font-semibold" data-testid="text-users-month">{stats.users.newThisMonth}</span>
+                    <span className="text-lg font-semibold tabular-nums" data-testid="text-users-month">
+                      {stats.users.newThisMonth.toLocaleString()}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -198,9 +210,11 @@ export default function AdminDashboard() {
                     <p className="text-sm text-muted-foreground">No page view data yet</p>
                   ) : (
                     stats.topPages.map((page, index) => (
-                      <div key={index} className="flex items-center justify-between" data-testid={`item-page-${index}`}>
-                        <span className="text-sm text-muted-foreground truncate max-w-[200px]">{page.path}</span>
-                        <span className="text-lg font-semibold">{page.views}</span>
+                      <div key={index} className="flex items-center justify-between gap-2" data-testid={`item-page-${index}`}>
+                        <span className="text-sm text-muted-foreground truncate flex-1">{page.path}</span>
+                        <span className="text-lg font-semibold tabular-nums flex-shrink-0">
+                          {page.views.toLocaleString()}
+                        </span>
                       </div>
                     ))
                   )}
@@ -219,9 +233,11 @@ export default function AdminDashboard() {
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-memories">{stats.memories.total}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-memories">
+                    {stats.memories.total.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-memories-status">
-                    {stats.memories.approved} approved, {stats.memories.pending} pending
+                    {stats.memories.approved.toLocaleString()} approved, {stats.memories.pending.toLocaleString()} pending
                   </p>
                 </CardContent>
               </Card>
@@ -233,7 +249,9 @@ export default function AdminDashboard() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-memorials-week">{stats.memorials.createdThisWeek}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-memorials-week">
+                    {stats.memorials.createdThisWeek.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground">New memorials this week</p>
                 </CardContent>
               </Card>
@@ -245,7 +263,9 @@ export default function AdminDashboard() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-engagement-week">{stats.memories.createdThisWeek}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-engagement-week">
+                    {stats.memories.createdThisWeek.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground">Memories added this week</p>
                 </CardContent>
               </Card>
@@ -262,9 +282,11 @@ export default function AdminDashboard() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-donations-count">{stats.donations.total}</div>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-donations-count">
+                    {stats.donations.total.toLocaleString()}
+                  </div>
                   <p className="text-xs text-muted-foreground" data-testid="text-donations-week">
-                    {stats.donations.thisWeek} this week
+                    {stats.donations.thisWeek.toLocaleString()} this week
                   </p>
                 </CardContent>
               </Card>
@@ -276,8 +298,8 @@ export default function AdminDashboard() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-donations-amount">
-                    ${parseFloat(stats.donations.totalAmount.toString()).toLocaleString()}
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-donations-amount">
+                    ${parseFloat(stats.donations.totalAmount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-muted-foreground">All-time donations</p>
                 </CardContent>
@@ -290,8 +312,8 @@ export default function AdminDashboard() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-average-donation">
-                    ${parseFloat(stats.donations.averageDonation.toString()).toFixed(2)}
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-average-donation">
+                    ${parseFloat(stats.donations.averageDonation.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-muted-foreground">Per donation</p>
                 </CardContent>
@@ -304,8 +326,8 @@ export default function AdminDashboard() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-average-goal">
-                    ${parseFloat(stats.fundraisers.averageGoal.toString()).toLocaleString()}
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-average-goal">
+                    ${parseFloat(stats.fundraisers.averageGoal.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <p className="text-xs text-muted-foreground">Per fundraiser</p>
                 </CardContent>
