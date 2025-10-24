@@ -1,18 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Privacy() {
-  const lastUpdated = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-heading font-bold mb-2">Privacy Policy</h1>
-          <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
+          <p className="text-muted-foreground">Last updated: October 24, 2025</p>
         </div>
 
         <div className="space-y-6">
@@ -146,9 +140,13 @@ export default function Privacy() {
                 If you have questions about this privacy policy or our data practices, please contact us:
               </p>
               <ul className="mt-3 space-y-2">
-                <li><strong>Platform</strong>: Through the contact form on our website</li>
+                <li><strong>Email</strong>: privacy@opictuary.com</li>
+                <li><strong>Support</strong>: Through the contact form on our website</li>
                 <li><strong>Location</strong>: United States</li>
               </ul>
+              <p className="mt-3 text-sm">
+                We will respond to privacy-related inquiries within 30 days.
+              </p>
             </CardContent>
           </Card>
         </div>
