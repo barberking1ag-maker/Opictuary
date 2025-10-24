@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -394,6 +395,29 @@ export const partnerPayouts = pgTable("partner_payouts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Analytics tracking tables
+export const pageViews = pgTable("page_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  path: text("path").notNull(),
+  userId: varchar("user_id"),
+  sessionId: text("session_id"),
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventName: text("event_name").notNull(),
+  eventCategory: text("event_category"),
+  eventLabel: text("event_label"),
+  eventValue: integer("event_value"),
+  userId: varchar("user_id"),
+  sessionId: text("session_id"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   memories: many(memories),
@@ -643,6 +667,16 @@ export const insertQRCodeSchema = createInsertSchema(qrCodes).omit({
   createdAt: true,
 });
 
+export const insertPageViewSchema = createInsertSchema(pageViews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
@@ -731,3 +765,9 @@ export type MemorialAdmin = typeof memorialAdmins.$inferSelect;
 
 export type InsertQRCode = z.infer<typeof insertQRCodeSchema>;
 export type QRCode = typeof qrCodes.$inferSelect;
+
+export type InsertPageView = z.infer<typeof insertPageViewSchema>;
+export type PageView = typeof pageViews.$inferSelect;
+
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
