@@ -1492,9 +1492,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics - Page View Tracking (no auth required - works for all visitors)
   app.post("/api/analytics/pageview", async (req, res) => {
     try {
+      const user = req.user as any;
       const pageViewData = {
         path: req.body.path,
-        userId: req.user?.sub || null, // Optional - works for anonymous users too
+        userId: user?.claims?.sub || null, // Optional - works for anonymous users too
         sessionId: req.sessionID || null,
         userAgent: req.headers['user-agent'] || null,
       };

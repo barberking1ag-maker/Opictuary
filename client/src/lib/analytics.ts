@@ -34,7 +34,21 @@ export const initGA = () => {
 };
 
 // Track page views - useful for single-page applications
-export const trackPageView = (url: string) => {
+export const trackPageView = async (url: string) => {
+  // Track in database (works for all users)
+  try {
+    await fetch('/api/analytics/pageview', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ path: url }),
+    });
+  } catch (error) {
+    console.error('Failed to track page view:', error);
+  }
+  
+  // Also track with Google Analytics if configured
   if (typeof window === 'undefined' || !window.gtag) return;
   
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
