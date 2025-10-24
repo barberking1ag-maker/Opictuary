@@ -22,6 +22,7 @@ import GriefSupport from "@/pages/GriefSupport";
 import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
 import UserProfile from "@/pages/UserProfile";
 import MyMemorials from "@/pages/MyMemorials";
+import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -29,8 +30,14 @@ import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
+import { initGA } from "./lib/analytics";
+import { useAnalytics } from "./hooks/use-analytics";
 
 function Router() {
+  // From blueprint: javascript_google_analytics - Track page views when routes change
+  useAnalytics();
+  
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
@@ -132,6 +139,7 @@ function Router() {
         <Route path="/design-reference" component={DesignReference} />
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route component={NotFound} />
       </Switch>
 
@@ -141,6 +149,15 @@ function Router() {
 }
 
 function App() {
+  // From blueprint: javascript_google_analytics - Initialize Google Analytics when app loads
+  useEffect(() => {
+    if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
+      console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
+    } else {
+      initGA();
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
