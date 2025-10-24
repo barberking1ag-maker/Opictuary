@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Heart, LogOut, LogIn, UserPlus } from "lucide-react";
+import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3 } from "lucide-react";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -96,6 +96,17 @@ export function UserMenu() {
             <span>Settings</span>
           </DropdownMenuItem>
         </Link>
+        {user?.isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <Link href="/admin">
+              <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-admin">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </DropdownMenuItem>
+            </Link>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="cursor-pointer text-destructive focus:text-destructive" 
