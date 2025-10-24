@@ -232,6 +232,9 @@ export interface IStorage {
   // Push Token operations
   createPushToken(token: InsertPushToken): Promise<PushToken>;
   getPushTokensByMemorialId(memorialId: string): Promise<PushToken[]>;
+
+  // Admin Analytics
+  getAdminStats(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -959,6 +962,141 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(pushTokens)
       .where(eq(pushTokens.memorialId, memorialId))
       .orderBy(desc(pushTokens.createdAt));
+  }
+
+  // Admin Analytics
+  async getAdminStats(): Promise<any> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Users stats
+    const [totalUsers] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
+    const [newUsersToday] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
+      .where(sql`${users.createdAt} >= ${today}`);
+    const [newUsersWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
+      .where(sql`${users.createdAt} >= ${weekAgo}`);
+    const [newUsersMonth] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
+      .where(sql`${users.createdAt} >= ${monthAgo}`);
+
+    // Memorials stats
+    const [totalMemorials] = await db.select({ count: sql<number>`count(*)::int` }).from(memorials);
+    const [publicMemorials] = await db.select({ count: sql<number>`count(*)::int` }).from(memorials)
+      .where(eq(memorials.isPublic, true));
+    const [privateMemorials] = await db.select({ count: sql<number>`count(*)::int` }).from(memorials)
+      .where(eq(memorials.isPublic, false));
+    const [memorialsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(memorials)
+      .where(sql`${memorials.createdAt} >= ${weekAgo}`);
+
+    // Memories stats
+    const [totalMemories] = await db.select({ count: sql<number>`count(*)::int` }).from(memories);
+    const [approvedMemories] = await db.select({ count: sql<number>`count(*)::int` }).from(memories)
+      .where(eq(memories.isApproved, true));
+    const [pendingMemories] = await db.select({ count: sql<number>`count(*)::int` }).from(memories)
+      .where(eq(memories.isApproved, false));
+    const [memoriesWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(memories)
+      .where(sql`${memories.createdAt} >= ${weekAgo}`);
+
+    // Fundraisers stats
+    const [totalFundraisers] = await db.select({ count: sql<number>`count(*)::int` }).from(fundraisers);
+    const [activeFundraisers] = await db.select({ count: sql<number>`count(*)::int` }).from(fundraisers)
+      .where(sql`${fundraisers.currentAmount} < ${fundraisers.goalAmount}`);
+    const [totalRaised] = await db.select({ 
+      total: sql<number>`COALESCE(sum(${fundraisers.currentAmount})::numeric, 0)` 
+    }).from(fundraisers);
+    const [avgGoal] = await db.select({ 
+      avg: sql<number>`COALESCE(avg(${fundraisers.goalAmount})::numeric, 0)` 
+    }).from(fundraisers);
+
+    // Donations stats
+    const [totalDonations] = await db.select({ count: sql<number>`count(*)::int` }).from(donations);
+    const [totalAmount] = await db.select({ 
+      total: sql<number>`COALESCE(sum(${donations.amount})::numeric, 0)` 
+    }).from(donations);
+    const [avgDonation] = await db.select({ 
+      avg: sql<number>`COALESCE(avg(${donations.amount})::numeric, 0)` 
+    }).from(donations);
+    const [donationsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(donations)
+      .where(sql`${donations.createdAt} >= ${weekAgo}`);
+
+    // Page views stats (using raw SQL since pageViews table might not be in schema types yet)
+    let pageViewsStats = {
+      total: 0,
+      today: 0,
+      thisWeek: 0,
+      thisMonth: 0,
+    };
+    
+    try {
+      const totalViews = await db.execute(sql`SELECT COUNT(*)::int as count FROM page_views`);
+      const viewsToday = await db.execute(sql`SELECT COUNT(*)::int as count FROM page_views WHERE created_at >= ${today}`);
+      const viewsWeek = await db.execute(sql`SELECT COUNT(*)::int as count FROM page_views WHERE created_at >= ${weekAgo}`);
+      const viewsMonth = await db.execute(sql`SELECT COUNT(*)::int as count FROM page_views WHERE created_at >= ${monthAgo}`);
+      
+      pageViewsStats = {
+        total: (totalViews.rows[0] as any)?.count || 0,
+        today: (viewsToday.rows[0] as any)?.count || 0,
+        thisWeek: (viewsWeek.rows[0] as any)?.count || 0,
+        thisMonth: (viewsMonth.rows[0] as any)?.count || 0,
+      };
+    } catch (error) {
+      console.log("Page views table not yet populated");
+    }
+
+    // Top pages
+    let topPages: Array<{ path: string; views: number }> = [];
+    try {
+      const topPagesResult = await db.execute(sql`
+        SELECT path, COUNT(*)::int as views 
+        FROM page_views 
+        WHERE created_at >= ${weekAgo}
+        GROUP BY path 
+        ORDER BY views DESC 
+        LIMIT 5
+      `);
+      topPages = topPagesResult.rows.map((row: any) => ({
+        path: row.path,
+        views: row.views,
+      }));
+    } catch (error) {
+      console.log("Page views table not yet populated");
+    }
+
+    return {
+      users: {
+        total: totalUsers.count || 0,
+        newToday: newUsersToday.count || 0,
+        newThisWeek: newUsersWeek.count || 0,
+        newThisMonth: newUsersMonth.count || 0,
+      },
+      memorials: {
+        total: totalMemorials.count || 0,
+        public: publicMemorials.count || 0,
+        private: privateMemorials.count || 0,
+        createdThisWeek: memorialsWeek.count || 0,
+      },
+      memories: {
+        total: totalMemories.count || 0,
+        approved: approvedMemories.count || 0,
+        pending: pendingMemories.count || 0,
+        createdThisWeek: memoriesWeek.count || 0,
+      },
+      fundraisers: {
+        total: totalFundraisers.count || 0,
+        active: activeFundraisers.count || 0,
+        totalRaised: totalRaised.total || 0,
+        averageGoal: avgGoal.avg || 0,
+      },
+      donations: {
+        total: totalDonations.count || 0,
+        totalAmount: totalAmount.total || 0,
+        averageDonation: avgDonation.avg || 0,
+        thisWeek: donationsWeek.count || 0,
+      },
+      pageViews: pageViewsStats,
+      topPages,
+    };
   }
 }
 
