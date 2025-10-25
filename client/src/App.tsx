@@ -23,6 +23,7 @@ import AdvertisingOpportunities from "@/pages/AdvertisingOpportunities";
 import UserProfile from "@/pages/UserProfile";
 import MyMemorials from "@/pages/MyMemorials";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminScreenshots from "@/pages/AdminScreenshots";
 import Privacy from "@/pages/Privacy";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -141,6 +142,7 @@ function Router() {
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/screenshots" component={AdminScreenshots} />
         <Route path="/privacy" component={Privacy} />
         <Route component={NotFound} />
       </Switch>

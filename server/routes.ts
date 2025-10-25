@@ -1522,6 +1522,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate Play Store Screenshots (Admin only)
+  app.post("/api/admin/generate-screenshots", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      console.log('🎬 Starting Play Store screenshot generation...');
+      
+      // Import the screenshot generation function
+      const { generateScreenshots } = await import('../scripts/generate-screenshots.js');
+      
+      const pdfPath = await generateScreenshots();
+      
+      res.json({ 
+        success: true, 
+        message: 'Screenshots generated successfully',
+        path: pdfPath
+      });
+    } catch (error: any) {
+      console.error("Error generating screenshots:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Download generated screenshots PDF (Admin only)
+  app.get("/api/admin/download-screenshots", isAuthenticated, isAdmin, (req, res) => {
+    try {
+      const path = require('path');
+      const pdfPath = path.join(process.cwd(), 'play-store-screenshots', 'opictuary-play-store-screenshots.pdf');
+      
+      if (!require('fs').existsSync(pdfPath)) {
+        return res.status(404).json({ error: 'Screenshots PDF not found. Please generate it first.' });
+      }
+
+      res.download(pdfPath, 'opictuary-play-store-screenshots.pdf');
+    } catch (error: any) {
+      console.error("Error downloading screenshots:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

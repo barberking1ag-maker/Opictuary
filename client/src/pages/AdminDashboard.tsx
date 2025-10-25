@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
+import { Link } from "wouter";
 
 interface DashboardStats {
   users: {
@@ -92,7 +94,15 @@ export default function AdminDashboard() {
               Platform analytics and insights
             </p>
           </div>
-          <OpictuaryLogo variant="classic" showTagline={false} />
+          <div className="flex items-center gap-4">
+            <Link href="/admin/screenshots">
+              <Button variant="outline" data-testid="button-screenshots">
+                <Image className="w-4 h-4 mr-2" />
+                Play Store Screenshots
+              </Button>
+            </Link>
+            <OpictuaryLogo variant="classic" showTagline={false} />
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
