@@ -1527,15 +1527,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('🎬 Starting Play Store screenshot generation...');
       
-      // Import the screenshot generation function
-      const { generateScreenshots } = await import('../scripts/generate-screenshots.js');
+      // Import the screenshot generation function (using API-based version for reliability)
+      const { generateScreenshots } = await import('../scripts/generate-screenshots-api');
       
       const pdfPath = await generateScreenshots();
       
       res.json({ 
         success: true, 
         message: 'Screenshots generated successfully',
-        path: pdfPath
+        path: pdfPath,
+        count: 8
       });
     } catch (error: any) {
       console.error("Error generating screenshots:", error);

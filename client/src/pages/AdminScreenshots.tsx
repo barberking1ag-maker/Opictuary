@@ -116,7 +116,7 @@ export default function AdminScreenshots() {
             {isGenerating && (
               <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4">
                 <p className="text-sm text-foreground">
-                  <strong>Please wait...</strong> Puppeteer is capturing screenshots from your live site.
+                  <strong>Please wait...</strong> Capturing screenshots from your live site using professional screenshot API.
                   This takes 30-60 seconds to complete.
                 </p>
               </div>
