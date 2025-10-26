@@ -37,6 +37,9 @@ interface DashboardStats {
     averageDonation: number;
     thisWeek: number;
   };
+  platformRevenue: {
+    total: number;
+  };
   pageViews: {
     total: number;
     today: number;
@@ -284,6 +287,25 @@ export default function AdminDashboard() {
 
           {/* Revenue Tab */}
           <TabsContent value="revenue" className="space-y-6">
+            {/* Platform Revenue Highlight */}
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5" data-testid="card-platform-revenue-highlight">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-medium">Platform Revenue</CardTitle>
+                  <CardDescription>Total fees from fundraiser donations (3% default)</CardDescription>
+                </div>
+                <DollarSign className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold tabular-nums text-primary" data-testid="text-platform-revenue">
+                  ${parseFloat(stats.platformRevenue.total.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  From {stats.donations.total.toLocaleString()} donations totaling ${parseFloat(stats.donations.totalAmount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Total Donations */}
               <Card data-testid="card-total-donations">

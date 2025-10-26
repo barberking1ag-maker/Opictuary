@@ -118,6 +118,7 @@ export const fundraisers = pgTable("fundraisers", {
   goalAmount: decimal("goal_amount", { precision: 10, scale: 2 }).notNull(),
   currentAmount: decimal("current_amount", { precision: 10, scale: 2 }).default("0"),
   charityName: text("charity_name"),
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull().default("3.00"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -126,6 +127,7 @@ export const donations = pgTable("donations", {
   fundraiserId: varchar("fundraiser_id").notNull().references(() => fundraisers.id, { onDelete: "cascade" }),
   donorName: text("donor_name").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   isAnonymous: boolean("is_anonymous").default(false),
   stripePaymentId: text("stripe_payment_id"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -538,7 +540,16 @@ export const insertFundraiserSchema = createInsertSchema(fundraisers).omit({
   id: true,
   createdAt: true,
   currentAmount: true,
-});
+}).refine(
+  (data) => {
+    const fee = Number(data.platformFeePercentage || 3);
+    return fee >= 2.5 && fee <= 5;
+  },
+  {
+    message: "Platform fee must be between 2.5% and 5%",
+    path: ["platformFeePercentage"],
+  }
+);
 
 export const insertDonationSchema = createInsertSchema(donations).omit({
   id: true,

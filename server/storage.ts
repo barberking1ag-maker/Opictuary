@@ -432,7 +432,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDonation(donation: InsertDonation): Promise<Donation> {
-    const [created] = await db.insert(donations).values(donation).returning();
+    // Get fundraiser to retrieve platform fee percentage
+    const fundraiser = await this.getFundraiser(donation.fundraiserId);
+    if (!fundraiser) {
+      throw new Error("Fundraiser not found");
+    }
+
+    // Calculate platform fee amount
+    const donationAmount = Number(donation.amount);
+    const platformFeePercentage = Number(fundraiser.platformFeePercentage);
+    const platformFeeAmount = (donationAmount * platformFeePercentage / 100).toFixed(2);
+
+    // Insert donation with calculated platform fee
+    const [created] = await db.insert(donations).values({
+      ...donation,
+      platformFeeAmount,
+    }).returning();
     
     // Update fundraiser current amount - cast to numeric to ensure proper addition
     await db.execute(sql`
@@ -1032,6 +1047,11 @@ export class DatabaseStorage implements IStorage {
     const [donationsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(donations)
       .where(sql`${donations.createdAt} >= ${weekAgo}`);
 
+    // Platform Revenue - Total platform fees from fundraiser donations
+    const [platformRevenue] = await db.select({ 
+      total: sql<number>`COALESCE(sum(${donations.platformFeeAmount})::numeric, 0)` 
+    }).from(donations);
+
     // Page views stats (using raw SQL since pageViews table might not be in schema types yet)
     let pageViewsStats = {
       total: 0,
@@ -1105,6 +1125,9 @@ export class DatabaseStorage implements IStorage {
         totalAmount: totalAmount.total || 0,
         averageDonation: avgDonation.avg || 0,
         thisWeek: donationsWeek.count || 0,
+      },
+      platformRevenue: {
+        total: platformRevenue.total || 0,
       },
       pageViews: pageViewsStats,
       topPages,
