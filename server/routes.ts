@@ -321,6 +321,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simplified QR code generation endpoint
+  app.post("/api/memorials/:memorialId/qr-codes", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin with QR management permission
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isQRAdmin = admins.some(admin => admin.email === userEmail && admin.canManageQR);
+
+      if (!isCreator && !isQRAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to generate QR codes for this memorial" });
+      }
+
+      const { purpose = "tombstone_upload" } = req.body;
+      const qrCode = await storage.generateQRCode(req.params.memorialId, purpose, userEmail);
+      res.status(201).json(qrCode);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/memorials/:memorialId/qr-codes/generate", isAuthenticated, async (req: any, res) => {
     try {
       const userEmail = req.user.claims.email;

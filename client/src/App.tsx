@@ -27,6 +27,7 @@ import AdminScreenshots from "@/pages/AdminScreenshots";
 import Privacy from "@/pages/Privacy";
 import SupportHub from "@/pages/SupportHub";
 import MemorialUpload from "@/pages/MemorialUpload";
+import ManageMemorial from "@/pages/ManageMemorial";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -149,6 +150,7 @@ function Router() {
         <Route path="/design-reference" component={DesignReference} />
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
+        <Route path="/memorials/:id/manage" component={ManageMemorial} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/screenshots" component={AdminScreenshots} />
         <Route path="/privacy" component={Privacy} />
