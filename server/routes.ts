@@ -618,11 +618,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/memorials/:memorialId/scheduled-messages", isAuthenticated, async (req: any, res) => {
+    console.log('[CREATE SCHEDULED MESSAGE] Route hit:', req.params.memorialId);
+    console.log('[CREATE SCHEDULED MESSAGE] Request body:', JSON.stringify(req.body, null, 2));
+    
     try {
       const userEmail = req.user.claims.email;
+      console.log('[CREATE SCHEDULED MESSAGE] User email:', userEmail);
+      
       const memorial = await storage.getMemorial(req.params.memorialId);
+      console.log('[CREATE SCHEDULED MESSAGE] Memorial found:', memorial ? 'yes' : 'no');
       
       if (!memorial) {
+        console.log('[CREATE SCHEDULED MESSAGE] Memorial not found');
         return res.status(404).json({ error: "Memorial not found" });
       }
 
@@ -630,21 +637,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const admins = await storage.getMemorialAdmins(req.params.memorialId);
       const isCreator = memorial.creatorEmail === userEmail;
       const isAdmin = admins.some(admin => admin.email === userEmail);
+      console.log('[CREATE SCHEDULED MESSAGE] Authorization check - isCreator:', isCreator, 'isAdmin:', isAdmin);
 
       if (!isCreator && !isAdmin) {
+        console.log('[CREATE SCHEDULED MESSAGE] Authorization failed');
         return res.status(403).json({ error: "Forbidden: You do not have permission to create scheduled messages for this memorial" });
       }
 
-      const data = insertScheduledMessageSchema.parse({
+      // Clean up empty strings to undefined for optional fields
+      const cleanedBody = {
         ...req.body,
+        recipientEmail: req.body.recipientEmail || undefined,
+        eventDate: req.body.eventDate || undefined,
+        mediaUrl: req.body.mediaUrl || undefined,
+        mediaType: req.body.mediaType || undefined,
+      };
+      console.log('[CREATE SCHEDULED MESSAGE] Cleaned body:', JSON.stringify(cleanedBody, null, 2));
+
+      const dataToValidate = {
+        ...cleanedBody,
         memorialId: req.params.memorialId,
-      });
+      };
+      console.log('[CREATE SCHEDULED MESSAGE] Data to validate:', JSON.stringify(dataToValidate, null, 2));
+
+      const data = insertScheduledMessageSchema.parse(dataToValidate);
+      console.log('[CREATE SCHEDULED MESSAGE] Validation passed');
+      
       const message = await storage.createScheduledMessage(data);
+      console.log('[CREATE SCHEDULED MESSAGE] Message created:', message.id);
+      
       res.status(201).json(message);
     } catch (error: any) {
       if (error instanceof ZodError) {
+        console.error('[CREATE SCHEDULED MESSAGE] Validation error:', JSON.stringify(error.errors, null, 2));
+        console.error('[CREATE SCHEDULED MESSAGE] Received body:', JSON.stringify(req.body, null, 2));
         return res.status(400).json({ error: error.errors });
       }
+      console.error('[CREATE SCHEDULED MESSAGE] Server error:', error.message);
       res.status(500).json({ error: error.message });
     }
   });

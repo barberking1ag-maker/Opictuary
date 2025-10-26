@@ -76,27 +76,23 @@ export default function ManageMemorial() {
 
   const createMutation = useMutation({
     mutationFn: (data: ScheduledMessageFormData) =>
-      apiRequest(`/api/memorials/${id}/scheduled-messages`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+      apiRequest("POST", `/api/memorials/${id}/scheduled-messages`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/memorials", id, "scheduled-messages"] });
       toast({ title: "Success", description: "Scheduled message created!" });
       setIsMessageDialogOpen(false);
       form.reset();
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create message.", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Create mutation error:', error);
+      const errorMessage = error?.message || "Failed to create message.";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: (data: ScheduledMessageFormData) =>
-      apiRequest(`/api/scheduled-messages/${editingMessage?.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest("PATCH", `/api/scheduled-messages/${editingMessage?.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/memorials", id, "scheduled-messages"] });
       toast({ title: "Success", description: "Message updated!" });
@@ -108,7 +104,7 @@ export default function ManageMemorial() {
 
   const deleteMutation = useMutation({
     mutationFn: (messageId: string) =>
-      apiRequest(`/api/scheduled-messages/${messageId}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/scheduled-messages/${messageId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/memorials", id, "scheduled-messages"] });
       toast({ title: "Success", description: "Message deleted." });
@@ -130,6 +126,10 @@ export default function ManageMemorial() {
   };
 
   const handleSubmit = (data: ScheduledMessageFormData) => {
+    console.log('[FRONTEND] Form submitted with data:', JSON.stringify(data, null, 2));
+    console.log('[FRONTEND] Memorial ID:', id);
+    console.log('[FRONTEND] Editing message:', editingMessage ? 'yes' : 'no');
+    
     if (editingMessage) {
       updateMutation.mutate(data);
     } else {
