@@ -122,14 +122,21 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   recipientName: text("recipient_name").notNull(),
   recipientEmail: text("recipient_email"),
-  eventType: text("event_type").notNull(), // 'birthday', 'graduation', 'wedding', 'anniversary', 'baby_birth', 'holiday', 'custom'
+  eventType: text("event_type").notNull(), // 'birthday', 'graduation', 'wedding', 'anniversary', 'baby_birth', 'holiday', 'mother_day', 'father_day', 'christmas', 'new_year', 'custom'
+  customEventName: text("custom_event_name"), // For custom event types
   eventDate: text("event_date"),
+  sendTime: text("send_time").default("09:00"), // Time of day to send (HH:MM format)
   message: text("message").notNull(),
   mediaUrl: text("media_url"), // Video or media URL for the milestone
   mediaType: text("media_type").default("text"), // 'text', 'video', 'image', 'mixed'
+  attachmentUrls: text("attachment_urls").array(), // Multiple media attachments
+  isRecurring: boolean("is_recurring").default(false),
+  recurrenceInterval: text("recurrence_interval"), // 'yearly', 'monthly', 'custom'
+  status: text("status").default("pending"), // 'draft', 'pending', 'sent', 'failed'
   isSent: boolean("is_sent").default(false),
   sentAt: timestamp("sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const fundraisers = pgTable("fundraisers", {
@@ -700,7 +707,16 @@ export const insertCondolenceSchema = createInsertSchema(condolences).omit({
 export const insertScheduledMessageSchema = createInsertSchema(scheduledMessages).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
   isSent: true,
+  sentAt: true,
+}).extend({
+  customEventName: z.string().optional(),
+  sendTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (use HH:MM)").optional(),
+  attachmentUrls: z.array(z.string().url()).optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceInterval: z.enum(['yearly', 'monthly', 'custom']).optional(),
+  status: z.enum(['draft', 'pending', 'sent', 'failed']).optional(),
 });
 
 export const insertFundraiserSchema = createInsertSchema(fundraisers).omit({
