@@ -34,6 +34,9 @@ import {
   pushTokens,
   pageViews,
   analyticsEvents,
+  supportArticles,
+  supportRequests,
+  griefResources,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -105,6 +108,12 @@ import {
   type InsertPageView,
   type AnalyticsEvent,
   type InsertAnalyticsEvent,
+  type SupportArticle,
+  type InsertSupportArticle,
+  type SupportRequest,
+  type InsertSupportRequest,
+  type GriefResource,
+  type InsertGriefResource,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -274,6 +283,29 @@ export interface IStorage {
 
   // Admin Analytics
   getAdminStats(): Promise<any>;
+
+  // Support Article operations
+  getSupportArticles(category?: string): Promise<SupportArticle[]>;
+  getSupportArticle(id: string): Promise<SupportArticle | undefined>;
+  createSupportArticle(article: InsertSupportArticle): Promise<SupportArticle>;
+  updateSupportArticle(id: string, article: Partial<InsertSupportArticle>): Promise<SupportArticle | undefined>;
+  deleteSupportArticle(id: string): Promise<void>;
+  incrementArticleView(id: string): Promise<void>;
+  incrementArticleHelpful(id: string): Promise<void>;
+
+  // Support Request operations
+  getSupportRequests(status?: string): Promise<SupportRequest[]>;
+  getSupportRequest(id: string): Promise<SupportRequest | undefined>;
+  createSupportRequest(request: InsertSupportRequest): Promise<SupportRequest>;
+  updateSupportRequest(id: string, request: Partial<InsertSupportRequest>): Promise<SupportRequest | undefined>;
+  resolveSupportRequest(id: string, resolution: string): Promise<SupportRequest | undefined>;
+
+  // Grief Resource operations
+  getGriefResources(category?: string): Promise<GriefResource[]>;
+  getGriefResource(id: string): Promise<GriefResource | undefined>;
+  createGriefResource(resource: InsertGriefResource): Promise<GriefResource>;
+  updateGriefResource(id: string, resource: Partial<InsertGriefResource>): Promise<GriefResource | undefined>;
+  deleteGriefResource(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1345,6 +1377,107 @@ export class DatabaseStorage implements IStorage {
       analytics: analyticsStats,
       topMemorials,
     };
+  }
+
+  // Support Article operations
+  async getSupportArticles(category?: string): Promise<SupportArticle[]> {
+    const conditions = [eq(supportArticles.isPublished, true)];
+    if (category) {
+      conditions.push(eq(supportArticles.category, category));
+    }
+    const results = await db.select().from(supportArticles).where(and(...conditions)).orderBy(supportArticles.sortOrder, supportArticles.createdAt);
+    return results;
+  }
+
+  async getSupportArticle(id: string): Promise<SupportArticle | undefined> {
+    const [article] = await db.select().from(supportArticles).where(eq(supportArticles.id, id));
+    return article || undefined;
+  }
+
+  async createSupportArticle(article: InsertSupportArticle): Promise<SupportArticle> {
+    const [created] = await db.insert(supportArticles).values(article).returning();
+    return created;
+  }
+
+  async updateSupportArticle(id: string, article: Partial<InsertSupportArticle>): Promise<SupportArticle | undefined> {
+    const [updated] = await db.update(supportArticles).set({ ...article, updatedAt: new Date() }).where(eq(supportArticles.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteSupportArticle(id: string): Promise<void> {
+    await db.delete(supportArticles).where(eq(supportArticles.id, id));
+  }
+
+  async incrementArticleView(id: string): Promise<void> {
+    await db.update(supportArticles).set({ viewCount: sql`${supportArticles.viewCount} + 1` }).where(eq(supportArticles.id, id));
+  }
+
+  async incrementArticleHelpful(id: string): Promise<void> {
+    await db.update(supportArticles).set({ helpfulCount: sql`${supportArticles.helpfulCount} + 1` }).where(eq(supportArticles.id, id));
+  }
+
+  // Support Request operations
+  async getSupportRequests(status?: string): Promise<SupportRequest[]> {
+    let query = db.select().from(supportRequests);
+    if (status) {
+      query = query.where(eq(supportRequests.status, status)) as any;
+    }
+    const results = await query.orderBy(desc(supportRequests.createdAt));
+    return results;
+  }
+
+  async getSupportRequest(id: string): Promise<SupportRequest | undefined> {
+    const [request] = await db.select().from(supportRequests).where(eq(supportRequests.id, id));
+    return request || undefined;
+  }
+
+  async createSupportRequest(request: InsertSupportRequest): Promise<SupportRequest> {
+    const [created] = await db.insert(supportRequests).values(request).returning();
+    return created;
+  }
+
+  async updateSupportRequest(id: string, request: Partial<InsertSupportRequest>): Promise<SupportRequest | undefined> {
+    const [updated] = await db.update(supportRequests).set({ ...request, updatedAt: new Date() }).where(eq(supportRequests.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async resolveSupportRequest(id: string, resolution: string): Promise<SupportRequest | undefined> {
+    const [updated] = await db.update(supportRequests).set({ 
+      status: 'resolved', 
+      resolution, 
+      resolvedAt: new Date(),
+      updatedAt: new Date()
+    }).where(eq(supportRequests.id, id)).returning();
+    return updated || undefined;
+  }
+
+  // Grief Resource operations
+  async getGriefResources(category?: string): Promise<GriefResource[]> {
+    const conditions = [eq(griefResources.isVerified, true)];
+    if (category) {
+      conditions.push(eq(griefResources.category, category));
+    }
+    const results = await db.select().from(griefResources).where(and(...conditions)).orderBy(desc(griefResources.isEmergency), desc(griefResources.sortOrder));
+    return results;
+  }
+
+  async getGriefResource(id: string): Promise<GriefResource | undefined> {
+    const [resource] = await db.select().from(griefResources).where(eq(griefResources.id, id));
+    return resource || undefined;
+  }
+
+  async createGriefResource(resource: InsertGriefResource): Promise<GriefResource> {
+    const [created] = await db.insert(griefResources).values(resource).returning();
+    return created;
+  }
+
+  async updateGriefResource(id: string, resource: Partial<InsertGriefResource>): Promise<GriefResource | undefined> {
+    const [updated] = await db.update(griefResources).set(resource).where(eq(griefResources.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteGriefResource(id: string): Promise<void> {
+    await db.delete(griefResources).where(eq(griefResources.id, id));
   }
 }
 
