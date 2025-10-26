@@ -47,6 +47,15 @@ const scheduledMessageSchema = z.object({
   isRecurring: z.boolean().optional(),
   recurrenceInterval: z.enum(['yearly', 'monthly', 'custom']).optional(),
   status: z.enum(['draft', 'pending', 'sent', 'failed']).optional(),
+}).refine((data) => {
+  // If isRecurring is true, recurrenceInterval must be set
+  if (data.isRecurring && !data.recurrenceInterval) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please select a recurrence frequency",
+  path: ["recurrenceInterval"],
 });
 
 type ScheduledMessageFormData = z.infer<typeof scheduledMessageSchema>;
@@ -67,7 +76,7 @@ export default function ManageMemorial() {
     enabled: !!id,
   });
 
-  const { data: scheduledMessages = [] } = useQuery({
+  const { data: scheduledMessages = [] } = useQuery<any[]>({
     queryKey: ["/api/memorials", id, "scheduled-messages"],
     enabled: !!id,
   });
@@ -436,17 +445,17 @@ export default function ManageMemorial() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-purple-900 border-purple-700">
-                              <SelectItem value="birthday">🎂 Birthday</SelectItem>
-                              <SelectItem value="graduation">🎓 Graduation</SelectItem>
-                              <SelectItem value="wedding">💍 Wedding</SelectItem>
-                              <SelectItem value="anniversary">💕 Anniversary</SelectItem>
-                              <SelectItem value="baby_birth">👶 Baby Birth</SelectItem>
-                              <SelectItem value="mother_day">🌸 Mother's Day</SelectItem>
-                              <SelectItem value="father_day">👔 Father's Day</SelectItem>
-                              <SelectItem value="christmas">🎄 Christmas</SelectItem>
-                              <SelectItem value="new_year">🎆 New Year</SelectItem>
-                              <SelectItem value="holiday">🎉 Holiday</SelectItem>
-                              <SelectItem value="custom">✨ Custom Event</SelectItem>
+                              <SelectItem value="birthday">Birthday</SelectItem>
+                              <SelectItem value="graduation">Graduation</SelectItem>
+                              <SelectItem value="wedding">Wedding</SelectItem>
+                              <SelectItem value="anniversary">Anniversary</SelectItem>
+                              <SelectItem value="baby_birth">Baby Birth</SelectItem>
+                              <SelectItem value="mother_day">Mother's Day</SelectItem>
+                              <SelectItem value="father_day">Father's Day</SelectItem>
+                              <SelectItem value="christmas">Christmas</SelectItem>
+                              <SelectItem value="new_year">New Year</SelectItem>
+                              <SelectItem value="holiday">Holiday</SelectItem>
+                              <SelectItem value="custom">Custom Event</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

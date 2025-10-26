@@ -15,7 +15,7 @@ export const messageTemplates: MessageTemplate[] = [
     name: "Birthday Wishes",
     eventType: "birthday",
     description: "Heartfelt birthday message from a loved one",
-    message: "Happy Birthday, my dear! 🎂\n\nEven though I can't be there in person, I want you to know that I'm celebrating with you in spirit. I hope this year brings you joy, success, and all the happiness you deserve.\n\nRemember that you are loved beyond measure and that I'm always watching over you.\n\nWith all my love,\n[Your Name]"
+    message: "Happy Birthday, my dear!\n\nEven though I can't be there in person, I want you to know that I'm celebrating with you in spirit. I hope this year brings you joy, success, and all the happiness you deserve.\n\nRemember that you are loved beyond measure and that I'm always watching over you.\n\nWith all my love,\n[Your Name]"
   },
   {
     id: "birthday-2",
@@ -31,7 +31,7 @@ export const messageTemplates: MessageTemplate[] = [
     name: "Graduation Celebration",
     eventType: "graduation",
     description: "Proud message for graduation day",
-    message: "Congratulations on your graduation! 🎓\n\nI am bursting with pride for all your hard work and dedication. This is just the beginning of an amazing journey.\n\nAs you step into this new chapter, remember that you have the strength and intelligence to achieve anything you set your mind to.\n\nI'll always be cheering you on from above.\n\nWith immense pride and love,\n[Your Name]"
+    message: "Congratulations on your graduation!\n\nI am bursting with pride for all your hard work and dedication. This is just the beginning of an amazing journey.\n\nAs you step into this new chapter, remember that you have the strength and intelligence to achieve anything you set your mind to.\n\nI'll always be cheering you on from above.\n\nWith immense pride and love,\n[Your Name]"
   },
   {
     id: "graduation-2",
@@ -63,7 +63,7 @@ export const messageTemplates: MessageTemplate[] = [
     name: "Anniversary Wishes",
     eventType: "anniversary",
     description: "Celebrating years of love",
-    message: "Happy Anniversary! 💕\n\nSeeing the love you and your partner share brings me such joy. Another year together is another year of beautiful memories.\n\nMay you continue to grow stronger together and create countless more moments of happiness.\n\nI'm so proud of the life you've built together.\n\nWith all my love,\n[Your Name]"
+    message: "Happy Anniversary!\n\nSeeing the love you and your partner share brings me such joy. Another year together is another year of beautiful memories.\n\nMay you continue to grow stronger together and create countless more moments of happiness.\n\nI'm so proud of the life you've built together.\n\nWith all my love,\n[Your Name]"
   },
   
   // Baby Birth Templates
@@ -72,14 +72,14 @@ export const messageTemplates: MessageTemplate[] = [
     name: "New Baby Congratulations",
     eventType: "baby_birth",
     description: "Welcoming a new baby",
-    message: "Congratulations on your beautiful baby! 👶\n\nWhat an incredible blessing! I wish I could hold this precious little one in my arms, but I'll be watching over them from above.\n\nMay parenthood bring you immeasurable joy, and may your baby grow up healthy, happy, and surrounded by love.\n\nWelcome to the world, little one!\n\nWith all my love,\n[Your Name]"
+    message: "Congratulations on your beautiful baby!\n\nWhat an incredible blessing! I wish I could hold this precious little one in my arms, but I'll be watching over them from above.\n\nMay parenthood bring you immeasurable joy, and may your baby grow up healthy, happy, and surrounded by love.\n\nWelcome to the world, little one!\n\nWith all my love,\n[Your Name]"
   },
   {
     id: "baby-2",
     name: "First Birthday",
     eventType: "baby_birth",
     description: "Baby's first birthday message",
-    message: "Happy First Birthday to your precious little one! 🎂\n\nIt's amazing how fast time flies! This first year has been filled with so many firsts and wonderful memories.\n\nI may not be there to see your child blow out their first candle, but I'm celebrating with you in spirit.\n\nMay this beautiful child continue to grow and bring you endless joy.\n\nAll my love!"
+    message: "Happy First Birthday to your precious little one!\n\nIt's amazing how fast time flies! This first year has been filled with so many firsts and wonderful memories.\n\nI may not be there to see your child blow out their first candle, but I'm celebrating with you in spirit.\n\nMay this beautiful child continue to grow and bring you endless joy.\n\nAll my love!"
   },
   
   // Holiday Templates
@@ -88,28 +88,28 @@ export const messageTemplates: MessageTemplate[] = [
     name: "Mother's Day Love",
     eventType: "mother_day",
     description: "Honoring mothers on Mother's Day",
-    message: "Happy Mother's Day! 💐\n\nToday is a day to celebrate you and all the love you give. Being a mother is the most important job in the world, and you're doing an amazing job.\n\nThank you for your strength, your kindness, and your unconditional love. You mean the world to me.\n\nWith all my appreciation and love,\n[Your Name]"
+    message: "Happy Mother's Day!\n\nToday is a day to celebrate you and all the love you give. Being a mother is the most important job in the world, and you're doing an amazing job.\n\nThank you for your strength, your kindness, and your unconditional love. You mean the world to me.\n\nWith all my appreciation and love,\n[Your Name]"
   },
   {
     id: "father-day",
     name: "Father's Day Appreciation",
     eventType: "father_day",
     description: "Celebrating fathers",
-    message: "Happy Father's Day! 🎖️\n\nYou are an incredible father, and I'm so grateful for everything you do. Your love, guidance, and support mean more than words can express.\n\nThank you for being such a wonderful role model and for all the sacrifices you make.\n\nI love you and appreciate you more than you know!\n\nWith all my love,\n[Your Name]"
+    message: "Happy Father's Day!\n\nYou are an incredible father, and I'm so grateful for everything you do. Your love, guidance, and support mean more than words can express.\n\nThank you for being such a wonderful role model and for all the sacrifices you make.\n\nI love you and appreciate you more than you know!\n\nWith all my love,\n[Your Name]"
   },
   {
     id: "christmas",
     name: "Christmas Blessings",
     eventType: "christmas",
     description: "Christmas holiday message",
-    message: "Merry Christmas! 🎄\n\nThe holiday season is a time for family, love, and reflection. Though I can't be with you in person this Christmas, I'm with you in spirit.\n\nMay your holiday be filled with warmth, joy, and the magic of the season. Cherish the time with loved ones and create beautiful memories.\n\nWishing you peace and happiness this Christmas and always.\n\nWith all my love,\n[Your Name]"
+    message: "Merry Christmas!\n\nThe holiday season is a time for family, love, and reflection. Though I can't be with you in person this Christmas, I'm with you in spirit.\n\nMay your holiday be filled with warmth, joy, and the magic of the season. Cherish the time with loved ones and create beautiful memories.\n\nWishing you peace and happiness this Christmas and always.\n\nWith all my love,\n[Your Name]"
   },
   {
     id: "new-year",
     name: "New Year Message",
     eventType: "new_year",
     description: "New Year's wishes",
-    message: "Happy New Year! 🎆\n\nAs you step into this new year, I want you to know how much I believe in you. This year holds so much promise and potential.\n\nMay you find success in all your endeavors, experience joy in the little things, and grow in ways you never imagined.\n\nHere's to new beginnings and wonderful adventures ahead!\n\nWith all my love,\n[Your Name]"
+    message: "Happy New Year!\n\nAs you step into this new year, I want you to know how much I believe in you. This year holds so much promise and potential.\n\nMay you find success in all your endeavors, experience joy in the little things, and grow in ways you never imagined.\n\nHere's to new beginnings and wonderful adventures ahead!\n\nWith all my love,\n[Your Name]"
   },
   
   // Custom/General Templates
