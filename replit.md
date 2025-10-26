@@ -2,7 +2,7 @@
 
 ## Overview
 
-Opictuary is a digital memorial platform dedicated to creating, sharing, and preserving memories of deceased loved ones. It integrates traditional memorial practices with modern functionalities like photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. The platform emphasizes dignified design, multi-faith customization, and privacy through invite-only access. Its business vision includes personal memorials and B2B partnerships with funeral homes and correctional facilities, generating revenue from advertisements, partnerships, and prison access services.
+Opictuary is a digital memorial platform dedicated to creating, sharing, and preserving memories of deceased loved ones. It integrates traditional memorial practices with modern functionalities like photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. The platform emphasizes dignified design, multi-faith customization, and privacy through invite-only access. Its business vision includes personal memorials and B2B partnerships with funeral homes and correctional facilities, generating revenue from platform fees on fundraisers, advertisements, partnerships, and prison access services.
 
 ## User Preferences
 
@@ -94,6 +94,30 @@ Inmate request, relationship verification, Stripe payment, time-limited access t
 
 **Security Features:**
 Multi-step identity verification, time-limited tokens, session monitoring, and comprehensive audit logs.
+
+## Revenue Model
+
+**Platform Fees:**
+The platform generates revenue through configurable platform fees on fundraisers and donations.
+
+**Fundraiser Platform Fees:**
+- Configurable fee range: 2.5% - 5.0% per fundraiser
+- Default fee: 3% for standard memorial fundraisers
+- Celebrity memorials: 5% platform fee
+- Fee percentage stored at fundraiser creation time
+- Validated to ensure fees remain within the 2.5-5% range
+
+**Fee Calculation:**
+- Platform fee automatically calculated on each donation
+- Formula: `platformFeeAmount = donationAmount × platformFeePercentage / 100`
+- Fee amount stored with each donation for audit trail
+- Donation amounts update fundraiser progress immediately
+
+**Admin Revenue Tracking:**
+- Admin dashboard displays total platform revenue
+- Revenue calculated as sum of all platformFeeAmount values across all donations
+- Real-time updates as new donations are processed
+- Historical fee tracking for financial reporting
 
 ## Analytics & Monitoring
 
