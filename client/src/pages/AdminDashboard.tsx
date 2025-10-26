@@ -72,6 +72,8 @@ interface DashboardStats {
     resolvedRequests: number;
     requestsThisWeek: number;
     totalArticleViews: number;
+    partnerRequests: number;
+    partnerPendingRequests: number;
   };
 }
 
@@ -348,6 +350,24 @@ export default function AdminDashboard() {
                           ? ((stats.support.resolvedRequests / stats.support.totalRequests) * 100).toFixed(1)
                           : 0}%
                       </span>
+                    </div>
+                    <div className="border-t border-border pt-4 mt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">Partner Requests</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Total Partner Tickets</span>
+                        <span className="text-lg font-semibold tabular-nums" data-testid="text-partner-requests">
+                          {stats.support.partnerRequests.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-sm text-muted-foreground">Partner Pending</span>
+                        <span className="text-lg font-semibold tabular-nums text-orange-500" data-testid="text-partner-pending">
+                          {stats.support.partnerPendingRequests.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

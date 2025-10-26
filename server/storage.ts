@@ -1347,6 +1347,8 @@ export class DatabaseStorage implements IStorage {
       resolvedRequests: 0,
       requestsThisWeek: 0,
       totalArticleViews: 0,
+      partnerRequests: 0,
+      partnerPendingRequests: 0,
     };
 
     try {
@@ -1359,6 +1361,10 @@ export class DatabaseStorage implements IStorage {
         .where(eq(supportRequests.status, 'resolved'));
       const [requestsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
         .where(sql`${supportRequests.createdAt} >= ${weekAgo}`);
+      const [partnerRequests] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
+        .where(eq(supportRequests.isPartnerRequest, true));
+      const [partnerPending] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
+        .where(and(eq(supportRequests.isPartnerRequest, true), eq(supportRequests.status, 'open')));
       const [totalViews] = await db.select({ 
         total: sql<number>`COALESCE(sum(${supportArticles.viewCount})::numeric, 0)` 
       }).from(supportArticles);
@@ -1371,6 +1377,8 @@ export class DatabaseStorage implements IStorage {
         resolvedRequests: resolvedRequests.count || 0,
         requestsThisWeek: requestsWeek.count || 0,
         totalArticleViews: totalViews.total || 0,
+        partnerRequests: partnerRequests.count || 0,
+        partnerPendingRequests: partnerPending.count || 0,
       };
     } catch (error) {
       console.log("Support tables not yet populated");

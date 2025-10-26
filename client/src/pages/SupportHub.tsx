@@ -376,19 +376,32 @@ function PartnerSupportSection() {
     email: "",
     phone: "",
     description: "",
+    partnerType: "",
+    partnerAccountId: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const isPartnerCategory = formData.category === "Partner Support" || 
+                            formData.category === "Flower Shop" || 
+                            formData.category === "Prison Access";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        ...formData,
+        isPartnerRequest: isPartnerCategory,
+        partnerType: isPartnerCategory ? formData.partnerType : undefined,
+        partnerAccountId: isPartnerCategory ? formData.partnerAccountId : undefined,
+      };
+
       const response = await fetch("/api/support/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -398,7 +411,9 @@ function PartnerSupportSection() {
 
       toast({
         title: "Support Request Submitted",
-        description: "We'll get back to you within 24-48 hours.",
+        description: isPartnerCategory 
+          ? "We'll get back to you within 12-24 hours."
+          : "We'll get back to you within 24-48 hours.",
       });
 
       setFormData({
@@ -408,6 +423,8 @@ function PartnerSupportSection() {
         email: "",
         phone: "",
         description: "",
+        partnerType: "",
+        partnerAccountId: "",
       });
     } catch (error: any) {
       toast({
@@ -649,6 +666,52 @@ function PartnerSupportSection() {
                 className="bg-purple-950/50 border-purple-700/50 text-purple-100 placeholder:text-purple-400"
               />
             </div>
+
+            {isPartnerCategory && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="partnerType" className="text-purple-100">
+                    Partner Type *
+                  </Label>
+                  <Select
+                    value={formData.partnerType}
+                    onValueChange={(value) => setFormData({ ...formData, partnerType: value })}
+                    required={isPartnerCategory}
+                  >
+                    <SelectTrigger
+                      id="partnerType"
+                      data-testid="select-partner-type"
+                      className="bg-purple-950/50 border-purple-700/50 text-purple-100"
+                    >
+                      <SelectValue placeholder="Select partner type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="funeral_home">Funeral Home</SelectItem>
+                      <SelectItem value="flower_shop">Flower Shop</SelectItem>
+                      <SelectItem value="correctional_facility">Correctional Facility</SelectItem>
+                      <SelectItem value="other">Other Partner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="partnerAccountId" className="text-purple-100">
+                    Partner Account ID (Optional)
+                  </Label>
+                  <Input
+                    id="partnerAccountId"
+                    data-testid="input-partner-account-id"
+                    placeholder="Your partner account number"
+                    value={formData.partnerAccountId}
+                    onChange={(e) => setFormData({ ...formData, partnerAccountId: e.target.value })}
+                    className="bg-purple-950/50 border-purple-700/50 text-purple-100 placeholder:text-purple-400"
+                  />
+                  <p className="text-xs text-purple-400">
+                    If you have a partner account ID, please provide it for faster service
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="description" className="text-purple-100">

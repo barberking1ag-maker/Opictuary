@@ -609,6 +609,9 @@ export const supportRequests = pgTable("support_requests", {
   name: text("name").notNull(),
   phone: text("phone"),
   memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "set null" }),
+  isPartnerRequest: boolean("is_partner_request").default(false),
+  partnerType: text("partner_type"), // "funeral_home", "flower_shop", "correctional_facility", null for non-partner
+  partnerAccountId: text("partner_account_id"), // Links to partner's account for tracking
   resolution: text("resolution"),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow(),
