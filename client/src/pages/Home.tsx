@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2 } from "lucide-react";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
+import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -17,6 +18,7 @@ export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
   const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
+  const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
 
   const verifyInviteCodeMutation = useMutation({
@@ -78,6 +80,89 @@ export default function Home() {
     queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
     enabled: !!firstFundraiser?.id,
   });
+
+  // Track memorial view when page loads
+  useEffect(() => {
+    if (memorial) {
+      trackPageView(`/memorial/${memorial.id}`);
+      trackEvent('memorial_view', 'memorial', memorial.name, undefined, {
+        memorialId: memorial.id,
+        memorialName: memorial.name,
+      });
+    }
+  }, [memorial]);
+
+  // Check if memorial is saved in localStorage
+  useEffect(() => {
+    if (memorialId) {
+      const savedMemorials = JSON.parse(localStorage.getItem('savedMemorials') || '[]');
+      setIsSaved(savedMemorials.includes(memorialId));
+    }
+  }, [memorialId]);
+
+  const handleShare = async () => {
+    trackEvent('memorial_share', 'memorial', memorial?.name, undefined, {
+      memorialId: memorial?.id,
+      memorialName: memorial?.name,
+    });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Memorial for ${memorial?.name}`,
+          text: `Remember ${memorial?.name} - ${years}`,
+          url: window.location.href,
+        });
+        toast({
+          title: "Memorial Shared",
+          description: "Thank you for sharing this memorial.",
+        });
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy link
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Memorial link copied to clipboard.",
+      });
+    }
+  };
+
+  const handleSave = () => {
+    if (!memorialId) return;
+
+    const savedMemorials = JSON.parse(localStorage.getItem('savedMemorials') || '[]');
+    
+    if (isSaved) {
+      // Remove from saved
+      const updated = savedMemorials.filter((id: string) => id !== memorialId);
+      localStorage.setItem('savedMemorials', JSON.stringify(updated));
+      setIsSaved(false);
+      toast({
+        title: "Memorial Removed",
+        description: "Memorial removed from your saved list.",
+      });
+      trackEvent('memorial_unsave', 'memorial', memorial?.name, undefined, {
+        memorialId: memorial?.id,
+        memorialName: memorial?.name,
+      });
+    } else {
+      // Add to saved
+      const updated = [...savedMemorials, memorialId];
+      localStorage.setItem('savedMemorials', JSON.stringify(updated));
+      setIsSaved(true);
+      toast({
+        title: "Memorial Saved",
+        description: "Memorial added to your saved list.",
+      });
+      trackEvent('memorial_save', 'memorial', memorial?.name, undefined, {
+        memorialId: memorial?.id,
+        memorialName: memorial?.name,
+      });
+    }
+  };
 
   if (!memorialId || !memorial) {
     return (
@@ -181,9 +266,18 @@ export default function Home() {
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Enter Code
               </Button>
-              <Button size="lg" data-testid="button-share">
+              <Button size="lg" onClick={handleShare} data-testid="button-share">
                 <Share2 className="w-5 h-5 mr-2" />
                 Share Memorial
+              </Button>
+              <Button 
+                size="lg" 
+                variant={isSaved ? "default" : "outline"}
+                onClick={handleSave} 
+                data-testid="button-save"
+              >
+                <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                {isSaved ? 'Saved' : 'Save Memorial'}
               </Button>
               <Button variant="outline" size="lg" data-testid="button-send-flowers">
                 <Heart className="w-5 h-5 mr-2" />

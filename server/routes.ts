@@ -41,6 +41,7 @@ import {
   insertMemorialAdminSchema,
   insertQRCodeSchema,
   insertPageViewSchema,
+  insertAnalyticsEventSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -1502,6 +1503,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validated = insertPageViewSchema.parse(pageViewData);
       await storage.trackPageView(validated);
+      res.json({ success: true });
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Analytics - Event Tracking (no auth required - works for all visitors)
+  app.post("/api/analytics/event", async (req, res) => {
+    try {
+      const user = req.user as any;
+      const eventData = {
+        eventName: req.body.eventName,
+        eventCategory: req.body.eventCategory || null,
+        eventLabel: req.body.eventLabel || null,
+        eventValue: req.body.eventValue || null,
+        userId: user?.claims?.sub || null,
+        sessionId: req.sessionID || null,
+        metadata: req.body.metadata || null,
+      };
+      
+      const validated = insertAnalyticsEventSchema.parse(eventData);
+      await storage.trackEvent(validated);
       res.json({ success: true });
     } catch (error: any) {
       if (error instanceof ZodError) {

@@ -60,12 +60,33 @@ export const trackPageView = async (url: string) => {
 };
 
 // Track events
-export const trackEvent = (
+export const trackEvent = async (
   action: string, 
   category?: string, 
   label?: string, 
-  value?: number
+  value?: number,
+  metadata?: Record<string, any>
 ) => {
+  // Track in database (works for all users)
+  try {
+    await fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        eventName: action,
+        eventCategory: category,
+        eventLabel: label,
+        eventValue: value,
+        metadata,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to track event:', error);
+  }
+  
+  // Also track with Google Analytics if configured
   if (typeof window === 'undefined' || !window.gtag) return;
   
   window.gtag('event', action, {

@@ -29,6 +29,7 @@ import {
   prisonAuditLogs,
   pushTokens,
   pageViews,
+  analyticsEvents,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -90,6 +91,8 @@ import {
   type InsertPushToken,
   type PageView,
   type InsertPageView,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -238,6 +241,7 @@ export interface IStorage {
 
   // Analytics operations
   trackPageView(pageView: InsertPageView): Promise<PageView>;
+  trackEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
 
   // Admin Analytics
   getAdminStats(): Promise<any>;
@@ -988,6 +992,11 @@ export class DatabaseStorage implements IStorage {
   // Analytics operations
   async trackPageView(pageView: InsertPageView): Promise<PageView> {
     const [created] = await db.insert(pageViews).values(pageView).returning();
+    return created;
+  }
+
+  async trackEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const [created] = await db.insert(analyticsEvents).values(event).returning();
     return created;
   }
 
