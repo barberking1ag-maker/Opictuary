@@ -77,6 +77,11 @@ function Router() {
                   Partners
                 </Button>
               </Link>
+              <Link href="/support">
+                <Button variant="ghost" size="sm" data-testid="nav-support" className="text-sm">
+                  Support
+                </Button>
+              </Link>
               <Link href="/about">
                 <Button variant="ghost" size="sm" data-testid="nav-about" className="text-sm">
                   About

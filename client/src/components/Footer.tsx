@@ -59,6 +59,13 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
+                <Link href="/support">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-support">
+                    Support Hub
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/advertising">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-advertising">
                     Advertising Opportunities
@@ -73,10 +80,11 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <span className="hover:text-foreground transition-colors cursor-pointer">QR Memorial Codes</span>
-              </li>
-              <li>
-                <span className="hover:text-foreground transition-colors cursor-pointer">Grief Support</span>
+                <Link href="/privacy">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-privacy">
+                    Privacy Policy
+                  </span>
+                </Link>
               </li>
             </ul>
           </div>
