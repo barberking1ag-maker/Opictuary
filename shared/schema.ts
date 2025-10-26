@@ -69,7 +69,11 @@ export const memorials = pgTable("memorials", {
   creatorEmail: text("creator_email"),
   ownershipType: text("ownership_type").default("family_created"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_memorials_creator_email").on(table.creatorEmail),
+  index("idx_memorials_created_at").on(table.createdAt),
+  index("idx_memorials_is_public").on(table.isPublic),
+]);
 
 export const memorialAdmins = pgTable("memorial_admins", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -80,7 +84,10 @@ export const memorialAdmins = pgTable("memorial_admins", {
   canEditMemorial: boolean("can_edit_memorial").default(true),
   canApproveContent: boolean("can_approve_content").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_memorial_admins_memorial_id").on(table.memorialId),
+  index("idx_memorial_admins_email").on(table.email),
+]);
 
 export const qrCodes = pgTable("qr_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -97,7 +104,10 @@ export const qrCodes = pgTable("qr_codes", {
   imageUrl: text("image_url"),
   mediaType: text("media_type"), // 'video', 'image', 'message', 'mixed'
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_qr_codes_memorial_id").on(table.memorialId),
+  index("idx_qr_codes_status").on(table.status),
+]);
 
 export const memories = pgTable("memories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -107,7 +117,10 @@ export const memories = pgTable("memories", {
   mediaUrl: text("media_url"),
   isApproved: boolean("is_approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_memories_memorial_id").on(table.memorialId),
+  index("idx_memories_is_approved").on(table.isApproved),
+]);
 
 export const condolences = pgTable("condolences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -115,7 +128,9 @@ export const condolences = pgTable("condolences", {
   authorName: text("author_name").notNull(),
   message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_condolences_memorial_id").on(table.memorialId),
+]);
 
 export const scheduledMessages = pgTable("scheduled_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -137,7 +152,11 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   sentAt: timestamp("sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_scheduled_messages_memorial_id").on(table.memorialId),
+  index("idx_scheduled_messages_status").on(table.status),
+  index("idx_scheduled_messages_event_date").on(table.eventDate),
+]);
 
 export const fundraisers = pgTable("fundraisers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -149,7 +168,9 @@ export const fundraisers = pgTable("fundraisers", {
   charityName: text("charity_name"),
   platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull().default("3.00"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_fundraisers_memorial_id").on(table.memorialId),
+]);
 
 export const donations = pgTable("donations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -160,7 +181,10 @@ export const donations = pgTable("donations", {
   isAnonymous: boolean("is_anonymous").default(false),
   stripePaymentId: text("stripe_payment_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_donations_fundraiser_id").on(table.fundraiserId),
+  index("idx_donations_created_at").on(table.createdAt),
+]);
 
 export const celebrityMemorials = pgTable("celebrity_memorials", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -184,7 +208,10 @@ export const celebrityDonations = pgTable("celebrity_donations", {
   platformAmount: decimal("platform_amount", { precision: 10, scale: 2 }).notNull(),
   stripePaymentId: text("stripe_payment_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_celebrity_donations_memorial_id").on(table.celebrityMemorialId),
+  index("idx_celebrity_donations_created_at").on(table.createdAt),
+]);
 
 export const griefSupport = pgTable("grief_support", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -205,7 +232,9 @@ export const legacyEvents = pgTable("legacy_events", {
   location: text("location"),
   attendeeCount: integer("attendee_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_legacy_events_memorial_id").on(table.memorialId),
+]);
 
 export const musicPlaylists = pgTable("music_playlists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -231,7 +260,11 @@ export const essentialWorkersMemorials = pgTable("essential_workers_memorials", 
   symbol: text("symbol"),
   isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_essential_workers_category").on(table.category),
+  index("idx_essential_workers_is_public").on(table.isPublic),
+  index("idx_essential_workers_created_at").on(table.createdAt),
+]);
 
 // Self-Written Obituaries & Final Words
 export const selfWrittenObituaries = pgTable("self_written_obituaries", {
@@ -267,7 +300,10 @@ export const prisonFacilities = pgTable("prison_facilities", {
   contactPhone: text("contact_phone"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_prison_facilities_is_active").on(table.isActive),
+  index("idx_prison_facilities_state").on(table.state),
+]);
 
 export const prisonAccessRequests = pgTable("prison_access_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -285,7 +321,12 @@ export const prisonAccessRequests = pgTable("prison_access_requests", {
   adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_prison_access_memorial_id").on(table.memorialId),
+  index("idx_prison_access_status").on(table.status),
+  index("idx_prison_access_facility_id").on(table.facilityId),
+  index("idx_prison_access_created_at").on(table.createdAt),
+]);
 
 export const prisonVerifications = pgTable("prison_verifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -296,7 +337,9 @@ export const prisonVerifications = pgTable("prison_verifications", {
   status: text("status").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_prison_verifications_request_id").on(table.requestId),
+]);
 
 export const prisonPayments = pgTable("prison_payments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -309,7 +352,10 @@ export const prisonPayments = pgTable("prison_payments", {
   status: text("status").notNull().default("pending"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_prison_payments_request_id").on(table.requestId),
+  index("idx_prison_payments_status").on(table.status),
+]);
 
 export const prisonAccessSessions = pgTable("prison_access_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -320,7 +366,11 @@ export const prisonAccessSessions = pgTable("prison_access_sessions", {
   isActive: boolean("is_active").default(true),
   lastAccessedAt: timestamp("last_accessed_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_prison_sessions_request_id").on(table.requestId),
+  index("idx_prison_sessions_memorial_id").on(table.memorialId),
+  index("idx_prison_sessions_expires_at").on(table.expiresAt),
+]);
 
 export const prisonAuditLogs = pgTable("prison_audit_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -357,7 +407,12 @@ export const advertisements = pgTable("advertisements", {
   totalPlatformFees: decimal("total_platform_fees", { precision: 10, scale: 2 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
-});
+}, (table) => [
+  index("idx_advertisements_category").on(table.category),
+  index("idx_advertisements_status").on(table.status),
+  index("idx_advertisements_is_active").on(table.isActive),
+  index("idx_advertisements_created_at").on(table.createdAt),
+]);
 
 // Advertisement Sales Tracking
 export const advertisementSales = pgTable("advertisement_sales", {
@@ -370,7 +425,10 @@ export const advertisementSales = pgTable("advertisement_sales", {
   customerEmail: text("customer_email"),
   orderReference: text("order_reference"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_advertisement_sales_ad_id").on(table.advertisementId),
+  index("idx_advertisement_sales_created_at").on(table.createdAt),
+]);
 
 // Funeral Home Partnership System
 export const funeralHomePartners = pgTable("funeral_home_partners", {
@@ -390,7 +448,10 @@ export const funeralHomePartners = pgTable("funeral_home_partners", {
   bankRoutingNumber: text("bank_routing_number"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_funeral_partners_is_active").on(table.isActive),
+  index("idx_funeral_partners_state").on(table.state),
+]);
 
 export const partnerReferrals = pgTable("partner_referrals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -398,7 +459,10 @@ export const partnerReferrals = pgTable("partner_referrals", {
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   referralCode: text("referral_code").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_partner_referrals_partner_id").on(table.partnerId),
+  index("idx_partner_referrals_memorial_id").on(table.memorialId),
+]);
 
 export const partnerCommissions = pgTable("partner_commissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -410,7 +474,10 @@ export const partnerCommissions = pgTable("partner_commissions", {
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_partner_commissions_partner_id").on(table.partnerId),
+  index("idx_partner_commissions_status").on(table.status),
+]);
 
 export const partnerPayouts = pgTable("partner_payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -424,7 +491,10 @@ export const partnerPayouts = pgTable("partner_payouts", {
   transactionId: text("transaction_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_partner_payouts_partner_id").on(table.partnerId),
+  index("idx_partner_payouts_status").on(table.status),
+]);
 
 // Flower Shop Partnership System
 export const flowerShopPartners = pgTable("flower_shop_partners", {
@@ -448,7 +518,11 @@ export const flowerShopPartners = pgTable("flower_shop_partners", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_flower_shops_city").on(table.city),
+  index("idx_flower_shops_state").on(table.state),
+  index("idx_flower_shops_is_active").on(table.isActive),
+]);
 
 export const flowerOrders = pgTable("flower_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -470,7 +544,12 @@ export const flowerOrders = pgTable("flower_orders", {
   externalOrderId: text("external_order_id"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_flower_orders_shop_id").on(table.shopId),
+  index("idx_flower_orders_memorial_id").on(table.memorialId),
+  index("idx_flower_orders_status").on(table.status),
+  index("idx_flower_orders_created_at").on(table.createdAt),
+]);
 
 export const flowerCommissions = pgTable("flower_commissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -482,7 +561,10 @@ export const flowerCommissions = pgTable("flower_commissions", {
   status: text("status").notNull().default("pending"),
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_flower_commissions_shop_id").on(table.shopId),
+  index("idx_flower_commissions_status").on(table.status),
+]);
 
 export const flowerPayouts = pgTable("flower_payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -496,7 +578,10 @@ export const flowerPayouts = pgTable("flower_payouts", {
   transactionId: text("transaction_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_flower_payouts_shop_id").on(table.shopId),
+  index("idx_flower_payouts_status").on(table.status),
+]);
 
 // Analytics tracking tables
 export const pageViews = pgTable("page_views", {
@@ -507,7 +592,11 @@ export const pageViews = pgTable("page_views", {
   userAgent: text("user_agent"),
   referrer: text("referrer"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_page_views_path").on(table.path),
+  index("idx_page_views_user_id").on(table.userId),
+  index("idx_page_views_created_at").on(table.createdAt),
+]);
 
 export const analyticsEvents = pgTable("analytics_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -519,7 +608,12 @@ export const analyticsEvents = pgTable("analytics_events", {
   sessionId: text("session_id"),
   metadata: json("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_analytics_events_name").on(table.eventName),
+  index("idx_analytics_events_category").on(table.eventCategory),
+  index("idx_analytics_events_user_id").on(table.userId),
+  index("idx_analytics_events_created_at").on(table.createdAt),
+]);
 
 // Relations
 export const memorialsRelations = relations(memorials, ({ many, one }) => ({
