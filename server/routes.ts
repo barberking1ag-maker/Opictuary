@@ -1639,6 +1639,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create flower order
   app.post("/api/flower-orders", async (req, res) => {
     try {
+      // Validate shopId is present
+      if (!req.body.shopId) {
+        return res.status(400).json({ error: "Shop ID is required" });
+      }
+
       // Get shop info for commission rate
       const shop = await storage.getFlowerShopPartner(req.body.shopId);
       if (!shop) {
