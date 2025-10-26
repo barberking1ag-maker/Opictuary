@@ -338,12 +338,9 @@ export default function ManageMemorial() {
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-purple-100 mb-2">Why Create Scheduled Messages?</h3>
                       <p className="text-sm text-purple-300 leading-relaxed">
-                        Opictuary allows you to leave messages for the future milestones you might miss. 
-                        Whether facing a terminal illness at a young age, or simply wanting to ensure your voice 
-                        reaches your loved ones at important moments, you can create video or text messages for 
-                        your children, spouse, or family members. Be there for their graduations, weddings, 
-                        birthdays, and other special occasions - even when you cannot be there in person. 
-                        Your love and guidance will live on through these heartfelt messages.
+                        Leave messages for your loved ones to be delivered on future occasions like birthdays, 
+                        graduations, weddings, and anniversaries. Your words will reach them at the moments that 
+                        matter most.
                       </p>
                     </div>
                   </div>
