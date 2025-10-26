@@ -29,12 +29,23 @@ export default function UserProfile() {
     phone: "",
   });
 
+  // Fetch user settings from database
+  const { data: userSettings } = useQuery({
+    queryKey: ["/api/user/settings"],
+    enabled: isAuthenticated,
+  });
+
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
     pushNotifications: true,
     memorialUpdates: true,
     donationReceipts: true,
-    scheduledMessages: true,
+    scheduledMessageReminders: true,
+  });
+
+  const [privacySettings, setPrivacySettings] = useState({
+    shareActivityWithCreators: true,
+    publicProfile: true,
   });
 
   // Initialize form data from user object when it loads
@@ -44,14 +55,31 @@ export default function UserProfile() {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
-        bio: "",
-        phone: "",
+        bio: user.bio || "",
+        phone: user.phone || "",
       });
     }
   }, [user]);
 
+  // Initialize settings from database when they load
+  useEffect(() => {
+    if (userSettings) {
+      setNotificationSettings({
+        emailNotifications: userSettings.emailNotifications ?? true,
+        pushNotifications: userSettings.pushNotifications ?? true,
+        memorialUpdates: userSettings.memorialUpdates ?? true,
+        donationReceipts: userSettings.donationReceipts ?? true,
+        scheduledMessageReminders: userSettings.scheduledMessageReminders ?? true,
+      });
+      setPrivacySettings({
+        shareActivityWithCreators: userSettings.shareActivityWithCreators ?? true,
+        publicProfile: userSettings.publicProfile ?? true,
+      });
+    }
+  }, [userSettings]);
+
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { firstName: string; lastName: string }) => {
+    mutationFn: async (data: { firstName?: string; lastName?: string; bio?: string; phone?: string }) => {
       const res = await apiRequest("PATCH", "/api/user/profile", data);
       return await res.json();
     },
@@ -71,13 +99,45 @@ export default function UserProfile() {
     },
   });
 
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/user/settings", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/settings"] });
+      toast({
+        title: "Settings Updated",
+        description: "Your settings have been saved successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update your settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Only send fields that the API accepts
     updateProfileMutation.mutate({
       firstName: profileData.firstName,
       lastName: profileData.lastName,
+      bio: profileData.bio,
+      phone: profileData.phone,
     });
+  };
+
+  const handleNotificationSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettingsMutation.mutate(notificationSettings);
+  };
+
+  const handlePrivacySettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettingsMutation.mutate(privacySettings);
   };
 
   if (isLoading) {
@@ -318,97 +378,101 @@ export default function UserProfile() {
                   Control how and when you receive notifications
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="email-notifications">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive updates via email
-                    </p>
+              <CardContent>
+                <form onSubmit={handleNotificationSettingsSubmit} className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive updates via email
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-notifications"
+                      checked={notificationSettings.emailNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
+                      }
+                      data-testid="switch-email-notifications"
+                    />
                   </div>
-                  <Switch
-                    id="email-notifications"
-                    checked={notificationSettings.emailNotifications}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
-                    }
-                    data-testid="switch-email-notifications"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="push-notifications">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive push notifications on your device
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-notifications">Push Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive push notifications on your device
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-notifications"
+                      checked={notificationSettings.pushNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({ ...notificationSettings, pushNotifications: checked })
+                      }
+                      data-testid="switch-push-notifications"
+                    />
                   </div>
-                  <Switch
-                    id="push-notifications"
-                    checked={notificationSettings.pushNotifications}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({ ...notificationSettings, pushNotifications: checked })
-                    }
-                    data-testid="switch-push-notifications"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="memorial-updates">Memorial Updates</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Notifications for memorials you're following
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="memorial-updates">Memorial Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Notifications for memorials you're following
+                      </p>
+                    </div>
+                    <Switch
+                      id="memorial-updates"
+                      checked={notificationSettings.memorialUpdates}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({ ...notificationSettings, memorialUpdates: checked })
+                      }
+                      data-testid="switch-memorial-updates"
+                    />
                   </div>
-                  <Switch
-                    id="memorial-updates"
-                    checked={notificationSettings.memorialUpdates}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({ ...notificationSettings, memorialUpdates: checked })
-                    }
-                    data-testid="switch-memorial-updates"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="donation-receipts">Donation Receipts</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Email receipts for donations made
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="donation-receipts">Donation Receipts</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Email receipts for donations made
+                      </p>
+                    </div>
+                    <Switch
+                      id="donation-receipts"
+                      checked={notificationSettings.donationReceipts}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({ ...notificationSettings, donationReceipts: checked })
+                      }
+                      data-testid="switch-donation-receipts"
+                    />
                   </div>
-                  <Switch
-                    id="donation-receipts"
-                    checked={notificationSettings.donationReceipts}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({ ...notificationSettings, donationReceipts: checked })
-                    }
-                    data-testid="switch-donation-receipts"
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="scheduled-messages">Scheduled Message Reminders</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Reminders before milestone messages are sent
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="scheduled-messages">Scheduled Message Reminders</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Reminders before milestone messages are sent
+                      </p>
+                    </div>
+                    <Switch
+                      id="scheduled-messages"
+                      checked={notificationSettings.scheduledMessageReminders}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({ ...notificationSettings, scheduledMessageReminders: checked })
+                      }
+                      data-testid="switch-scheduled-messages"
+                    />
                   </div>
-                  <Switch
-                    id="scheduled-messages"
-                    checked={notificationSettings.scheduledMessages}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings({ ...notificationSettings, scheduledMessages: checked })
-                    }
-                    data-testid="switch-scheduled-messages"
-                  />
-                </div>
 
-                <div className="bg-muted/50 p-4 rounded-md border border-border/50">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Note:</strong> Notification preferences are stored locally in your browser and will be saved to your account in a future update.
-                  </p>
-                </div>
+                  <Button 
+                    type="submit" 
+                    disabled={updateSettingsMutation.isPending}
+                    data-testid="button-save-notifications"
+                  >
+                    {updateSettingsMutation.isPending ? "Saving..." : "Save Notification Settings"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>
@@ -436,31 +500,53 @@ export default function UserProfile() {
                   </Button>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Data Sharing</h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Share activity with memorial creators</p>
-                      <p className="text-sm text-muted-foreground">
-                        Allow memorial creators to see your visits and contributions
-                      </p>
+                <form onSubmit={handlePrivacySettingsSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Data Sharing</h3>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Share activity with memorial creators</p>
+                        <p className="text-sm text-muted-foreground">
+                          Allow memorial creators to see your visits and contributions
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={privacySettings.shareActivityWithCreators}
+                        onCheckedChange={(checked) => 
+                          setPrivacySettings({ ...privacySettings, shareActivityWithCreators: checked })
+                        }
+                        data-testid="switch-share-activity" 
+                      />
                     </div>
-                    <Switch data-testid="switch-share-activity" />
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Public Profile</h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Make profile visible to others</p>
-                      <p className="text-sm text-muted-foreground">
-                        Show your name and profile picture on public memorials
-                      </p>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Public Profile</h3>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Make profile visible to others</p>
+                        <p className="text-sm text-muted-foreground">
+                          Show your name and profile picture on public memorials
+                        </p>
+                      </div>
+                      <Switch 
+                        checked={privacySettings.publicProfile}
+                        onCheckedChange={(checked) => 
+                          setPrivacySettings({ ...privacySettings, publicProfile: checked })
+                        }
+                        data-testid="switch-public-profile" 
+                      />
                     </div>
-                    <Switch data-testid="switch-public-profile" />
                   </div>
-                </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={updateSettingsMutation.isPending}
+                    data-testid="button-save-privacy"
+                  >
+                    {updateSettingsMutation.isPending ? "Saving..." : "Save Privacy Settings"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>
