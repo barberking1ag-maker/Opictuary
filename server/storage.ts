@@ -1338,6 +1338,44 @@ export class DatabaseStorage implements IStorage {
       console.log("Analytics events table not yet populated");
     }
 
+    // Support statistics
+    let supportStats = {
+      totalArticles: 0,
+      totalResources: 0,
+      totalRequests: 0,
+      pendingRequests: 0,
+      resolvedRequests: 0,
+      requestsThisWeek: 0,
+      totalArticleViews: 0,
+    };
+
+    try {
+      const [totalArticles] = await db.select({ count: sql<number>`count(*)::int` }).from(supportArticles);
+      const [totalResources] = await db.select({ count: sql<number>`count(*)::int` }).from(griefResources);
+      const [totalRequests] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests);
+      const [pendingRequests] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
+        .where(eq(supportRequests.status, 'open'));
+      const [resolvedRequests] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
+        .where(eq(supportRequests.status, 'resolved'));
+      const [requestsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(supportRequests)
+        .where(sql`${supportRequests.createdAt} >= ${weekAgo}`);
+      const [totalViews] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${supportArticles.viewCount})::numeric, 0)` 
+      }).from(supportArticles);
+
+      supportStats = {
+        totalArticles: totalArticles.count || 0,
+        totalResources: totalResources.count || 0,
+        totalRequests: totalRequests.count || 0,
+        pendingRequests: pendingRequests.count || 0,
+        resolvedRequests: resolvedRequests.count || 0,
+        requestsThisWeek: requestsWeek.count || 0,
+        totalArticleViews: totalViews.total || 0,
+      };
+    } catch (error) {
+      console.log("Support tables not yet populated");
+    }
+
     return {
       users: {
         total: totalUsers.count || 0,
@@ -1376,6 +1414,7 @@ export class DatabaseStorage implements IStorage {
       topPages,
       analytics: analyticsStats,
       topMemorials,
+      support: supportStats,
     };
   }
 

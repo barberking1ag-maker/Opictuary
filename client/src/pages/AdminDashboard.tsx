@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark } from "lucide-react";
+import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark, HeadphonesIcon, BookOpen, LifeBuoy } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Link } from "wouter";
 
@@ -64,6 +64,15 @@ interface DashboardStats {
     shares: number;
     saves: number;
   }>;
+  support: {
+    totalArticles: number;
+    totalResources: number;
+    totalRequests: number;
+    pendingRequests: number;
+    resolvedRequests: number;
+    requestsThisWeek: number;
+    totalArticleViews: number;
+  };
 }
 
 export default function AdminDashboard() {
@@ -247,6 +256,125 @@ export default function AdminDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Support System Metrics */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <HeadphonesIcon className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-semibold">Support System</h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card data-testid="card-support-articles">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Help Articles</CardTitle>
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tabular-nums" data-testid="text-total-articles">
+                      {stats.support.totalArticles.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground" data-testid="text-article-views">
+                      {stats.support.totalArticleViews.toLocaleString()} total views
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-grief-resources">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Grief Resources</CardTitle>
+                    <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tabular-nums" data-testid="text-total-resources">
+                      {stats.support.totalResources.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Available resources</p>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-support-requests">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Support Tickets</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tabular-nums" data-testid="text-total-requests">
+                      {stats.support.totalRequests.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground" data-testid="text-pending-requests">
+                      {stats.support.pendingRequests.toLocaleString()} pending
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-requests-week">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Recent Tickets</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tabular-nums" data-testid="text-requests-week">
+                      {stats.support.requestsThisWeek.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Submitted this week</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card data-testid="card-ticket-status">
+                  <CardHeader>
+                    <CardTitle>Ticket Status</CardTitle>
+                    <CardDescription>Support request breakdown</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending</span>
+                      <span className="text-lg font-semibold tabular-nums text-orange-500" data-testid="text-pending-count">
+                        {stats.support.pendingRequests.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Resolved</span>
+                      <span className="text-lg font-semibold tabular-nums text-green-500" data-testid="text-resolved-count">
+                        {stats.support.resolvedRequests.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Resolution Rate</span>
+                      <span className="text-lg font-semibold tabular-nums" data-testid="text-resolution-rate">
+                        {stats.support.totalRequests > 0 
+                          ? ((stats.support.resolvedRequests / stats.support.totalRequests) * 100).toFixed(1)
+                          : 0}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-support-actions">
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Manage support resources</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Link href="/support">
+                      <Button variant="outline" className="w-full justify-start" data-testid="button-view-support-hub">
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        View Support Hub
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full justify-start" disabled data-testid="button-manage-tickets">
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Manage Tickets (Coming Soon)
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" disabled data-testid="button-manage-articles">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Manage Articles (Coming Soon)
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
