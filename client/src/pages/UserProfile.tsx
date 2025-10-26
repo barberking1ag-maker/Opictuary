@@ -63,17 +63,18 @@ export default function UserProfile() {
 
   // Initialize settings from database when they load
   useEffect(() => {
-    if (userSettings) {
+    if (userSettings && typeof userSettings === 'object') {
+      const settings = userSettings as any;
       setNotificationSettings({
-        emailNotifications: userSettings.emailNotifications ?? true,
-        pushNotifications: userSettings.pushNotifications ?? true,
-        memorialUpdates: userSettings.memorialUpdates ?? true,
-        donationReceipts: userSettings.donationReceipts ?? true,
-        scheduledMessageReminders: userSettings.scheduledMessageReminders ?? true,
+        emailNotifications: settings.emailNotifications ?? true,
+        pushNotifications: settings.pushNotifications ?? true,
+        memorialUpdates: settings.memorialUpdates ?? true,
+        donationReceipts: settings.donationReceipts ?? true,
+        scheduledMessageReminders: settings.scheduledMessageReminders ?? true,
       });
       setPrivacySettings({
-        shareActivityWithCreators: userSettings.shareActivityWithCreators ?? true,
-        publicProfile: userSettings.publicProfile ?? true,
+        shareActivityWithCreators: settings.shareActivityWithCreators ?? true,
+        publicProfile: settings.publicProfile ?? true,
       });
     }
   }, [userSettings]);
