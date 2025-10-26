@@ -10,6 +10,7 @@ import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, 
 import { useToast } from "@/hooks/use-toast";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
+import FlowerOrderButton from "@/components/FlowerOrderButton";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -279,10 +280,10 @@ export default function Home() {
                 <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
                 {isSaved ? 'Saved' : 'Save Memorial'}
               </Button>
-              <Button variant="outline" size="lg" data-testid="button-send-flowers">
-                <Heart className="w-5 h-5 mr-2" />
-                Send Flowers
-              </Button>
+              <FlowerOrderButton 
+                memorialId={memorialId || undefined}
+                memorialName={memorial.name}
+              />
             </div>
           </div>
         </div>
