@@ -397,6 +397,78 @@ export const partnerPayouts = pgTable("partner_payouts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Flower Shop Partnership System
+export const flowerShopPartners = pgTable("flower_shop_partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessName: text("business_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  websiteUrl: text("website_url"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull().default("20.00"),
+  specialties: text("specialties").array().default(sql`ARRAY[]::text[]`),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+  bankAccountName: text("bank_account_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankRoutingNumber: text("bank_routing_number"),
+  isActive: boolean("is_active").default(true),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const flowerOrders = pgTable("flower_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shopId: varchar("shop_id").notNull().references(() => flowerShopPartners.id, { onDelete: "cascade" }),
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "set null" }),
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email"),
+  customerPhone: text("customer_phone"),
+  recipientName: text("recipient_name").notNull(),
+  deliveryAddress: text("delivery_address").notNull(),
+  deliveryDate: text("delivery_date"),
+  deliveryTime: text("delivery_time"),
+  arrangementType: text("arrangement_type"),
+  specialInstructions: text("special_instructions"),
+  orderAmount: decimal("order_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"),
+  orderMethod: text("order_method").notNull().default("referral"),
+  externalOrderId: text("external_order_id"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const flowerCommissions = pgTable("flower_commissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shopId: varchar("shop_id").notNull().references(() => flowerShopPartners.id, { onDelete: "cascade" }),
+  orderId: varchar("order_id").notNull().references(() => flowerOrders.id, { onDelete: "cascade" }),
+  orderAmount: decimal("order_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const flowerPayouts = pgTable("flower_payouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shopId: varchar("shop_id").notNull().references(() => flowerShopPartners.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  status: text("status").notNull().default("pending"),
+  paidAt: timestamp("paid_at"),
+  paymentMethod: text("payment_method"),
+  transactionId: text("transaction_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Analytics tracking tables
 export const pageViews = pgTable("page_views", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -663,6 +735,26 @@ export const insertPartnerPayoutSchema = createInsertSchema(partnerPayouts).omit
   createdAt: true,
 });
 
+export const insertFlowerShopPartnerSchema = createInsertSchema(flowerShopPartners).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFlowerOrderSchema = createInsertSchema(flowerOrders).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFlowerCommissionSchema = createInsertSchema(flowerCommissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFlowerPayoutSchema = createInsertSchema(flowerPayouts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertPushTokenSchema = createInsertSchema(pushTokens).omit({
   id: true,
   createdAt: true,
@@ -767,6 +859,18 @@ export type PartnerCommission = typeof partnerCommissions.$inferSelect;
 
 export type InsertPartnerPayout = z.infer<typeof insertPartnerPayoutSchema>;
 export type PartnerPayout = typeof partnerPayouts.$inferSelect;
+
+export type InsertFlowerShopPartner = z.infer<typeof insertFlowerShopPartnerSchema>;
+export type FlowerShopPartner = typeof flowerShopPartners.$inferSelect;
+
+export type InsertFlowerOrder = z.infer<typeof insertFlowerOrderSchema>;
+export type FlowerOrder = typeof flowerOrders.$inferSelect;
+
+export type InsertFlowerCommission = z.infer<typeof insertFlowerCommissionSchema>;
+export type FlowerCommission = typeof flowerCommissions.$inferSelect;
+
+export type InsertFlowerPayout = z.infer<typeof insertFlowerPayoutSchema>;
+export type FlowerPayout = typeof flowerPayouts.$inferSelect;
 
 export type InsertPushToken = z.infer<typeof insertPushTokenSchema>;
 export type PushToken = typeof pushTokens.$inferSelect;

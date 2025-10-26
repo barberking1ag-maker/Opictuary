@@ -31,6 +31,10 @@ import {
   insertPartnerReferralSchema,
   insertPartnerCommissionSchema,
   insertPartnerPayoutSchema,
+  insertFlowerShopPartnerSchema,
+  insertFlowerOrderSchema,
+  insertFlowerCommissionSchema,
+  insertFlowerPayoutSchema,
   insertPrisonFacilitySchema,
   insertPrisonAccessRequestSchema,
   insertPrisonVerificationSchema,
@@ -1583,6 +1587,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.download(pdfPath, 'opictuary-play-store-screenshots.pdf');
     } catch (error: any) {
       console.error("Error downloading screenshots:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Flower Shop Partnership Routes
+  // List flower shops (with optional filters)
+  app.get("/api/flower-shops", async (req, res) => {
+    try {
+      const { city, state } = req.query;
+      const partners = await storage.listFlowerShopPartners(
+        city as string | undefined,
+        state as string | undefined
+      );
+      res.json(partners);
+    } catch (error: any) {
+      console.error("Error fetching flower shops:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get specific flower shop
+  app.get("/api/flower-shops/:id", async (req, res) => {
+    try {
+      const partner = await storage.getFlowerShopPartner(req.params.id);
+      if (!partner) {
+        return res.status(404).json({ error: "Flower shop not found" });
+      }
+      res.json(partner);
+    } catch (error: any) {
+      console.error("Error fetching flower shop:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Register new flower shop partner
+  app.post("/api/flower-shops/register", async (req, res) => {
+    try {
+      const validated = insertFlowerShopPartnerSchema.parse(req.body);
+      const partner = await storage.createFlowerShopPartner(validated);
+      res.status(201).json(partner);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating flower shop:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create flower order
+  app.post("/api/flower-orders", async (req, res) => {
+    try {
+      // Get shop info for commission rate
+      const shop = await storage.getFlowerShopPartner(req.body.shopId);
+      if (!shop) {
+        return res.status(404).json({ error: "Flower shop not found" });
+      }
+
+      // Calculate commission (keep as decimal strings)
+      const orderAmount = parseFloat(req.body.orderAmount || "0");
+      const commissionRate = parseFloat(shop.commissionRate.toString());
+      const commissionAmount = (orderAmount * commissionRate) / 100;
+
+      const orderData = {
+        ...req.body,
+        orderAmount: req.body.orderAmount,
+        commissionAmount: commissionAmount.toFixed(2),
+      };
+
+      const validated = insertFlowerOrderSchema.parse(orderData);
+      const order = await storage.createFlowerOrder(validated);
+
+      // Create commission record
+      await storage.createFlowerCommission({
+        shopId: order.shopId,
+        orderId: order.id,
+        orderAmount: order.orderAmount,
+        commissionAmount: order.commissionAmount,
+        commissionRate: shop.commissionRate,
+        status: "pending",
+      });
+
+      res.status(201).json(order);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating flower order:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get flower orders by memorial
+  app.get("/api/memorials/:memorialId/flower-orders", async (req, res) => {
+    try {
+      const orders = await storage.getFlowerOrdersByMemorialId(req.params.memorialId);
+      res.json(orders);
+    } catch (error: any) {
+      console.error("Error fetching flower orders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get all flower orders for a shop
+  app.get("/api/admin/flower-shops/:shopId/orders", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const orders = await storage.getFlowerOrdersByShopId(req.params.shopId);
+      res.json(orders);
+    } catch (error: any) {
+      console.error("Error fetching shop orders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get flower shop commissions
+  app.get("/api/admin/flower-shops/:shopId/commissions", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const commissions = await storage.getFlowerCommissionsByShopId(req.params.shopId);
+      res.json(commissions);
+    } catch (error: any) {
+      console.error("Error fetching shop commissions:", error);
       res.status(500).json({ error: error.message });
     }
   });

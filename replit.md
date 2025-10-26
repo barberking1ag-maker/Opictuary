@@ -41,7 +41,7 @@ A library of over 30 reusable components covering navigation, memorial displays,
 Express.js with Node.js and TypeScript, designed as a RESTful API.
 
 **API Endpoints:**
-74 endpoints across 13 feature areas including:
+80+ endpoints across 14 feature areas including:
 - **Authentication & User Management:** User profile and memorial retrieval.
 - **Memorials:** CRUD operations for memorials, invite code validation.
 - **QR Code System:** Generation and management of QR codes.
@@ -53,8 +53,10 @@ Express.js with Node.js and TypeScript, designed as a RESTful API.
 - **Self-Obituary:** Creation and scheduled publication.
 - **Advertisement Platform:** Submission, approval, sales tracking, and analytics.
 - **Funeral Home Partners:** Partner registration, referral tracking, commissions.
+- **Flower Shop Partners:** Shop registration, order tracking, commission management (20% commission model).
 - **Prison Access System:** Facility registration, access requests, identity verification, payments, session management, and audit logs.
 - **Push Notifications:** Token registration.
+- **Analytics:** Memorial view/share/save tracking, page views, event tracking.
 
 ### Data Storage
 
@@ -62,7 +64,7 @@ Express.js with Node.js and TypeScript, designed as a RESTful API.
 PostgreSQL (Neon serverless) with Drizzle ORM for type-safe queries.
 
 **Database Tables:**
-Over 20 tables covering all core features, fundraising, legacy features, special memorials, business systems (advertisements, partnerships), prison access, and infrastructure (users, sessions, push tokens).
+Over 25 tables covering all core features, fundraising, legacy features, special memorials, business systems (advertisements, partnerships, flower shops), prison access, analytics tracking, and infrastructure (users, sessions, push tokens).
 
 **Privacy & Access Control:**
 Features invite code system for private memorials, optional public settings, role-based admin permissions, and verified QR code issuance.
@@ -94,6 +96,43 @@ Inmate request, relationship verification, Stripe payment, time-limited access t
 
 **Security Features:**
 Multi-step identity verification, time-limited tokens, session monitoring, and comprehensive audit logs.
+
+### Flower Shop Partnership System
+
+**Purpose:**
+Connects memorial visitors with local florists for sympathy flower delivery, generating revenue through commission-based partnerships.
+
+**Business Model:**
+- 20% commission on all flower orders placed through the platform
+- Direct partnerships with local florist shops
+- Order tracking and commission management
+- Automated commission calculations and payout tracking
+
+**Features:**
+- Partner registration system for flower shops
+- Location-based florist search (by city/state)
+- Comprehensive order form with delivery details
+- Commission tracking per shop and per order
+- Admin dashboard for managing partnerships and payouts
+- Integration with memorial pages via "Send Flowers" button
+
+**Workflow:**
+1. User clicks "Send Flowers" on memorial page
+2. System displays nearby partner florists
+3. User selects florist and completes order form
+4. Order details sent to florist with customer contact info
+5. Platform records order and calculates 20% commission
+6. Florist contacts customer to arrange payment and delivery
+7. Admin tracks commissions and processes payouts to partners
+
+**Database Structure:**
+- `flower_shop_partners`: Partner florist business information
+- `flower_orders`: Order tracking with memorial linkage
+- `flower_commissions`: Commission calculations and status
+- `flower_payouts`: Partner payout management
+
+**Revenue Potential:**
+Based on industry averages for sympathy arrangements ($75-150 per order), 20% commission generates $15-30 per transaction. With scale, this creates a sustainable B2B revenue stream alongside platform fees.
 
 ## Revenue Model
 

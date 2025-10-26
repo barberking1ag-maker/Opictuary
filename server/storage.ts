@@ -21,6 +21,10 @@ import {
   partnerReferrals,
   partnerCommissions,
   partnerPayouts,
+  flowerShopPartners,
+  flowerOrders,
+  flowerCommissions,
+  flowerPayouts,
   prisonFacilities,
   prisonAccessRequests,
   prisonVerifications,
@@ -75,6 +79,14 @@ import {
   type InsertPartnerCommission,
   type PartnerPayout,
   type InsertPartnerPayout,
+  type FlowerShopPartner,
+  type InsertFlowerShopPartner,
+  type FlowerOrder,
+  type InsertFlowerOrder,
+  type FlowerCommission,
+  type InsertFlowerCommission,
+  type FlowerPayout,
+  type InsertFlowerPayout,
   type PrisonFacility,
   type InsertPrisonFacility,
   type PrisonAccessRequest,
@@ -217,6 +229,23 @@ export interface IStorage {
   createPartnerPayout(payout: InsertPartnerPayout): Promise<PartnerPayout>;
   getPartnerPayoutsByPartnerId(partnerId: string): Promise<PartnerPayout[]>;
   updatePartnerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<PartnerPayout | undefined>;
+
+  // Flower Shop Partnership operations
+  listFlowerShopPartners(city?: string, state?: string): Promise<FlowerShopPartner[]>;
+  getFlowerShopPartner(id: string): Promise<FlowerShopPartner | undefined>;
+  createFlowerShopPartner(partner: InsertFlowerShopPartner): Promise<FlowerShopPartner>;
+  updateFlowerShopPartner(id: string, partner: Partial<InsertFlowerShopPartner>): Promise<FlowerShopPartner | undefined>;
+  createFlowerOrder(order: InsertFlowerOrder): Promise<FlowerOrder>;
+  getFlowerOrder(id: string): Promise<FlowerOrder | undefined>;
+  getFlowerOrdersByShopId(shopId: string): Promise<FlowerOrder[]>;
+  getFlowerOrdersByMemorialId(memorialId: string): Promise<FlowerOrder[]>;
+  updateFlowerOrderStatus(id: string, status: string, completedAt?: Date): Promise<FlowerOrder | undefined>;
+  createFlowerCommission(commission: InsertFlowerCommission): Promise<FlowerCommission>;
+  getFlowerCommissionsByShopId(shopId: string): Promise<FlowerCommission[]>;
+  updateFlowerCommissionStatus(id: string, status: string, approvedAt?: Date): Promise<FlowerCommission | undefined>;
+  createFlowerPayout(payout: InsertFlowerPayout): Promise<FlowerPayout>;
+  getFlowerPayoutsByShopId(shopId: string): Promise<FlowerPayout[]>;
+  updateFlowerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<FlowerPayout | undefined>;
 
   // Prison Access System operations
   listPrisonFacilities(): Promise<PrisonFacility[]>;
@@ -973,6 +1002,123 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(partnerPayouts)
       .set(updateData)
       .where(eq(partnerPayouts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Flower Shop Partnership operations
+  async listFlowerShopPartners(city?: string, state?: string): Promise<FlowerShopPartner[]> {
+    const conditions = [eq(flowerShopPartners.isActive, true)];
+    
+    if (city) {
+      conditions.push(eq(flowerShopPartners.city, city));
+    }
+    if (state) {
+      conditions.push(eq(flowerShopPartners.state, state));
+    }
+
+    return await db.select().from(flowerShopPartners)
+      .where(and(...conditions))
+      .orderBy(desc(flowerShopPartners.rating));
+  }
+
+  async getFlowerShopPartner(id: string): Promise<FlowerShopPartner | undefined> {
+    const [partner] = await db.select().from(flowerShopPartners).where(eq(flowerShopPartners.id, id));
+    return partner || undefined;
+  }
+
+  async createFlowerShopPartner(partner: InsertFlowerShopPartner): Promise<FlowerShopPartner> {
+    const [created] = await db.insert(flowerShopPartners).values(partner).returning();
+    return created;
+  }
+
+  async updateFlowerShopPartner(id: string, partner: Partial<InsertFlowerShopPartner>): Promise<FlowerShopPartner | undefined> {
+    const [updated] = await db.update(flowerShopPartners)
+      .set(partner)
+      .where(eq(flowerShopPartners.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createFlowerOrder(order: InsertFlowerOrder): Promise<FlowerOrder> {
+    const [created] = await db.insert(flowerOrders).values(order).returning();
+    return created;
+  }
+
+  async getFlowerOrder(id: string): Promise<FlowerOrder | undefined> {
+    const [order] = await db.select().from(flowerOrders).where(eq(flowerOrders.id, id));
+    return order || undefined;
+  }
+
+  async getFlowerOrdersByShopId(shopId: string): Promise<FlowerOrder[]> {
+    return await db.select().from(flowerOrders)
+      .where(eq(flowerOrders.shopId, shopId))
+      .orderBy(desc(flowerOrders.createdAt));
+  }
+
+  async getFlowerOrdersByMemorialId(memorialId: string): Promise<FlowerOrder[]> {
+    return await db.select().from(flowerOrders)
+      .where(eq(flowerOrders.memorialId, memorialId))
+      .orderBy(desc(flowerOrders.createdAt));
+  }
+
+  async updateFlowerOrderStatus(id: string, status: string, completedAt?: Date): Promise<FlowerOrder | undefined> {
+    const updateData: any = { status };
+    if (completedAt) {
+      updateData.completedAt = completedAt;
+    }
+
+    const [updated] = await db.update(flowerOrders)
+      .set(updateData)
+      .where(eq(flowerOrders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createFlowerCommission(commission: InsertFlowerCommission): Promise<FlowerCommission> {
+    const [created] = await db.insert(flowerCommissions).values(commission).returning();
+    return created;
+  }
+
+  async getFlowerCommissionsByShopId(shopId: string): Promise<FlowerCommission[]> {
+    return await db.select().from(flowerCommissions)
+      .where(eq(flowerCommissions.shopId, shopId))
+      .orderBy(desc(flowerCommissions.createdAt));
+  }
+
+  async updateFlowerCommissionStatus(id: string, status: string, approvedAt?: Date): Promise<FlowerCommission | undefined> {
+    const updateData: any = { status };
+    if (approvedAt) {
+      updateData.approvedAt = approvedAt;
+    }
+
+    const [updated] = await db.update(flowerCommissions)
+      .set(updateData)
+      .where(eq(flowerCommissions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async createFlowerPayout(payout: InsertFlowerPayout): Promise<FlowerPayout> {
+    const [created] = await db.insert(flowerPayouts).values(payout).returning();
+    return created;
+  }
+
+  async getFlowerPayoutsByShopId(shopId: string): Promise<FlowerPayout[]> {
+    return await db.select().from(flowerPayouts)
+      .where(eq(flowerPayouts.shopId, shopId))
+      .orderBy(desc(flowerPayouts.createdAt));
+  }
+
+  async updateFlowerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<FlowerPayout | undefined> {
+    const updateData: any = { status };
+    if (paidAt) {
+      updateData.paidAt = paidAt;
+    }
+
+    const [updated] = await db.update(flowerPayouts)
+      .set(updateData)
+      .where(eq(flowerPayouts.id, id))
       .returning();
     return updated || undefined;
   }
