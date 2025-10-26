@@ -119,7 +119,7 @@ import {
   type InsertGriefResource,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, count } from "drizzle-orm";
 import * as QRCodeGenerator from "qrcode";
 
 export interface IStorage {
@@ -137,7 +137,8 @@ export interface IStorage {
   getMemorialsByCreatorEmail(email: string): Promise<Memorial[]>;
   createMemorial(memorial: InsertMemorial): Promise<Memorial>;
   updateMemorial(id: string, memorial: Partial<InsertMemorial>): Promise<Memorial | undefined>;
-  listMemorials(): Promise<Memorial[]>;
+  listMemorials(limit?: number, offset?: number): Promise<Memorial[]>;
+  getMemorialsCount(): Promise<number>;
 
   // Memorial Admin operations
   getMemorialAdmins(memorialId: string): Promise<MemorialAdmin[]>;
@@ -184,11 +185,13 @@ export interface IStorage {
   createFundraiser(fundraiser: InsertFundraiser): Promise<Fundraiser>;
   
   // Donation operations
-  getDonationsByFundraiserId(fundraiserId: string): Promise<Donation[]>;
+  getDonationsByFundraiserId(fundraiserId: string, limit?: number, offset?: number): Promise<Donation[]>;
+  getDonationsByFundraiserIdCount(fundraiserId: string): Promise<number>;
   createDonation(donation: InsertDonation): Promise<Donation>;
 
   // Celebrity Memorial operations
-  listCelebrityMemorials(): Promise<CelebrityMemorial[]>;
+  listCelebrityMemorials(limit?: number, offset?: number): Promise<CelebrityMemorial[]>;
+  getCelebrityMemorialsCount(): Promise<number>;
   getCelebrityMemorial(id: string): Promise<CelebrityMemorial | undefined>;
   createCelebrityMemorial(memorial: InsertCelebrityMemorial): Promise<CelebrityMemorial>;
   createCelebrityDonation(donation: InsertCelebrityDonation): Promise<CelebrityDonation>;
@@ -206,7 +209,8 @@ export interface IStorage {
   upsertMusicPlaylist(playlist: InsertMusicPlaylist): Promise<MusicPlaylist>;
 
   // Essential Workers Memorial operations
-  listEssentialWorkersMemorials(category?: string): Promise<EssentialWorkerMemorial[]>;
+  listEssentialWorkersMemorials(category?: string, limit?: number, offset?: number): Promise<EssentialWorkerMemorial[]>;
+  getEssentialWorkersMemorialsCount(category?: string): Promise<number>;
   getEssentialWorkerMemorial(id: string): Promise<EssentialWorkerMemorial | undefined>;
   createEssentialWorkerMemorial(memorial: InsertEssentialWorkerMemorial): Promise<EssentialWorkerMemorial>;
   updateEssentialWorkerMemorial(id: string, memorial: Partial<InsertEssentialWorkerMemorial>): Promise<EssentialWorkerMemorial | undefined>;
@@ -219,7 +223,8 @@ export interface IStorage {
   activateSelfWrittenObituary(id: string): Promise<SelfWrittenObituary | undefined>;
 
   // Advertisement operations
-  listAdvertisements(category?: string): Promise<Advertisement[]>;
+  listAdvertisements(category?: string, limit?: number, offset?: number): Promise<Advertisement[]>;
+  getAdvertisementsCount(category?: string): Promise<number>;
   getAdvertisement(id: string): Promise<Advertisement | undefined>;
   createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
   updateAdvertisement(id: string, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
@@ -233,7 +238,8 @@ export interface IStorage {
   getSalesByReferralCode(referralCode: string): Promise<AdvertisementSale[]>;
 
   // Funeral Home Partner operations
-  listFuneralHomePartners(isActive?: boolean): Promise<FuneralHomePartner[]>;
+  listFuneralHomePartners(isActive?: boolean, limit?: number, offset?: number): Promise<FuneralHomePartner[]>;
+  getFuneralHomePartnersCount(isActive?: boolean): Promise<number>;
   getFuneralHomePartner(id: string): Promise<FuneralHomePartner | undefined>;
   getFuneralHomePartnerByReferralCode(referralCode: string): Promise<FuneralHomePartner | undefined>;
   createFuneralHomePartner(partner: InsertFuneralHomePartner): Promise<FuneralHomePartner>;
@@ -249,7 +255,8 @@ export interface IStorage {
   updatePartnerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<PartnerPayout | undefined>;
 
   // Flower Shop Partnership operations
-  listFlowerShopPartners(city?: string, state?: string): Promise<FlowerShopPartner[]>;
+  listFlowerShopPartners(city?: string, state?: string, limit?: number, offset?: number): Promise<FlowerShopPartner[]>;
+  getFlowerShopPartnersCount(city?: string, state?: string): Promise<number>;
   getFlowerShopPartner(id: string): Promise<FlowerShopPartner | undefined>;
   createFlowerShopPartner(partner: InsertFlowerShopPartner): Promise<FlowerShopPartner>;
   updateFlowerShopPartner(id: string, partner: Partial<InsertFlowerShopPartner>): Promise<FlowerShopPartner | undefined>;
@@ -266,10 +273,12 @@ export interface IStorage {
   updateFlowerPayoutStatus(id: string, status: string, paidAt?: Date): Promise<FlowerPayout | undefined>;
 
   // Prison Access System operations
-  listPrisonFacilities(): Promise<PrisonFacility[]>;
+  listPrisonFacilities(limit?: number, offset?: number): Promise<PrisonFacility[]>;
+  getPrisonFacilitiesCount(): Promise<number>;
   createPrisonFacility(facility: InsertPrisonFacility): Promise<PrisonFacility>;
   createPrisonAccessRequest(request: InsertPrisonAccessRequest): Promise<PrisonAccessRequest>;
-  listPrisonAccessRequests(status?: string, memorialId?: string): Promise<PrisonAccessRequest[]>;
+  listPrisonAccessRequests(status?: string, memorialId?: string, limit?: number, offset?: number): Promise<PrisonAccessRequest[]>;
+  getPrisonAccessRequestsCount(status?: string, memorialId?: string): Promise<number>;
   getPrisonAccessRequest(id: string): Promise<PrisonAccessRequest | undefined>;
   updatePrisonAccessRequestStatus(id: string, status: string, adminNotes?: string): Promise<PrisonAccessRequest | undefined>;
   createPrisonVerification(verification: InsertPrisonVerification): Promise<PrisonVerification>;
@@ -418,8 +427,14 @@ export class DatabaseStorage implements IStorage {
     return updated || undefined;
   }
 
-  async listMemorials(): Promise<Memorial[]> {
-    return await db.select().from(memorials).orderBy(desc(memorials.createdAt));
+  async listMemorials(limit: number = 50, offset: number = 0): Promise<Memorial[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(memorials).orderBy(desc(memorials.createdAt)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getMemorialsCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(memorials);
+    return result.count;
   }
 
   // Memorial Admin operations
@@ -574,8 +589,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Donation operations
-  async getDonationsByFundraiserId(fundraiserId: string): Promise<Donation[]> {
-    return await db.select().from(donations).where(eq(donations.fundraiserId, fundraiserId)).orderBy(desc(donations.createdAt));
+  async getDonationsByFundraiserId(fundraiserId: string, limit: number = 50, offset: number = 0): Promise<Donation[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(donations).where(eq(donations.fundraiserId, fundraiserId)).orderBy(desc(donations.createdAt)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getDonationsByFundraiserIdCount(fundraiserId: string): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(donations).where(eq(donations.fundraiserId, fundraiserId));
+    return result.count;
   }
 
   async createDonation(donation: InsertDonation): Promise<Donation> {
@@ -607,8 +628,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Celebrity Memorial operations
-  async listCelebrityMemorials(): Promise<CelebrityMemorial[]> {
-    return await db.select().from(celebrityMemorials).orderBy(desc(celebrityMemorials.createdAt));
+  async listCelebrityMemorials(limit: number = 50, offset: number = 0): Promise<CelebrityMemorial[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(celebrityMemorials).orderBy(desc(celebrityMemorials.createdAt)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getCelebrityMemorialsCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(celebrityMemorials);
+    return result.count;
   }
 
   async getCelebrityMemorial(id: string): Promise<CelebrityMemorial | undefined> {
@@ -700,8 +727,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Prison Access System operations
-  async listPrisonFacilities(): Promise<PrisonFacility[]> {
-    return await db.select().from(prisonFacilities).where(eq(prisonFacilities.isActive, true));
+  async listPrisonFacilities(limit: number = 50, offset: number = 0): Promise<PrisonFacility[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(prisonFacilities).where(eq(prisonFacilities.isActive, true)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getPrisonFacilitiesCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(prisonFacilities).where(eq(prisonFacilities.isActive, true));
+    return result.count;
   }
 
   async createPrisonFacility(facility: InsertPrisonFacility): Promise<PrisonFacility> {
@@ -714,7 +747,8 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async listPrisonAccessRequests(status?: string, memorialId?: string): Promise<PrisonAccessRequest[]> {
+  async listPrisonAccessRequests(status?: string, memorialId?: string, limit: number = 50, offset: number = 0): Promise<PrisonAccessRequest[]> {
+    const effectiveLimit = Math.min(limit, 200);
     let query = db.select().from(prisonAccessRequests);
     
     const conditions = [];
@@ -729,7 +763,25 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    return await query.orderBy(desc(prisonAccessRequests.createdAt));
+    return await query.orderBy(desc(prisonAccessRequests.createdAt)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getPrisonAccessRequestsCount(status?: string, memorialId?: string): Promise<number> {
+    const conditions = [];
+    if (status) {
+      conditions.push(eq(prisonAccessRequests.status, status));
+    }
+    if (memorialId) {
+      conditions.push(eq(prisonAccessRequests.memorialId, memorialId));
+    }
+
+    let query = db.select({ count: count() }).from(prisonAccessRequests);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const [result] = await query;
+    return result.count;
   }
 
   async getPrisonAccessRequest(id: string): Promise<PrisonAccessRequest | undefined> {
@@ -837,7 +889,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Essential Workers Memorial operations
-  async listEssentialWorkersMemorials(category?: string): Promise<EssentialWorkerMemorial[]> {
+  async listEssentialWorkersMemorials(category?: string, limit: number = 50, offset: number = 0): Promise<EssentialWorkerMemorial[]> {
+    const effectiveLimit = Math.min(limit, 200);
     const conditions = [eq(essentialWorkersMemorials.isPublic, true)];
     
     if (category && category.trim() !== "") {
@@ -848,7 +901,23 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(essentialWorkersMemorials)
       .where(and(...conditions))
-      .orderBy(desc(essentialWorkersMemorials.createdAt));
+      .orderBy(desc(essentialWorkersMemorials.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+
+  async getEssentialWorkersMemorialsCount(category?: string): Promise<number> {
+    const conditions = [eq(essentialWorkersMemorials.isPublic, true)];
+    
+    if (category && category.trim() !== "") {
+      conditions.push(eq(essentialWorkersMemorials.category, category));
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(essentialWorkersMemorials)
+      .where(and(...conditions));
+    return result.count;
   }
 
   async getEssentialWorkerMemorial(id: string): Promise<EssentialWorkerMemorial | undefined> {
@@ -913,7 +982,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Advertisement operations
-  async listAdvertisements(category?: string): Promise<Advertisement[]> {
+  async listAdvertisements(category?: string, limit: number = 50, offset: number = 0): Promise<Advertisement[]> {
+    const effectiveLimit = Math.min(limit, 200);
     const conditions = [eq(advertisements.isActive, true)];
     
     if (category && category.trim() !== "") {
@@ -924,10 +994,26 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(advertisements)
       .where(and(...conditions))
-      .orderBy(desc(advertisements.createdAt));
+      .orderBy(desc(advertisements.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
 
     const now = new Date();
     return ads.filter(ad => !ad.expiresAt || new Date(ad.expiresAt) > now);
+  }
+
+  async getAdvertisementsCount(category?: string): Promise<number> {
+    const conditions = [eq(advertisements.isActive, true)];
+    
+    if (category && category.trim() !== "") {
+      conditions.push(eq(advertisements.category, category));
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(advertisements)
+      .where(and(...conditions));
+    return result.count;
   }
 
   async getAdvertisement(id: string): Promise<Advertisement | undefined> {
@@ -1015,7 +1101,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Funeral Home Partner operations
-  async listFuneralHomePartners(isActive?: boolean): Promise<FuneralHomePartner[]> {
+  async listFuneralHomePartners(isActive?: boolean, limit: number = 50, offset: number = 0): Promise<FuneralHomePartner[]> {
+    const effectiveLimit = Math.min(limit, 200);
     const conditions = [];
     if (isActive !== undefined) {
       conditions.push(eq(funeralHomePartners.isActive, isActive));
@@ -1025,7 +1112,21 @@ export class DatabaseStorage implements IStorage {
       ? db.select().from(funeralHomePartners).where(and(...conditions))
       : db.select().from(funeralHomePartners);
 
-    return await query.orderBy(desc(funeralHomePartners.createdAt));
+    return await query.orderBy(desc(funeralHomePartners.createdAt)).limit(effectiveLimit).offset(offset);
+  }
+
+  async getFuneralHomePartnersCount(isActive?: boolean): Promise<number> {
+    const conditions = [];
+    if (isActive !== undefined) {
+      conditions.push(eq(funeralHomePartners.isActive, isActive));
+    }
+
+    const query = conditions.length > 0
+      ? db.select({ count: count() }).from(funeralHomePartners).where(and(...conditions))
+      : db.select({ count: count() }).from(funeralHomePartners);
+
+    const [result] = await query;
+    return result.count;
   }
 
   async getFuneralHomePartner(id: string): Promise<FuneralHomePartner | undefined> {
@@ -1121,7 +1222,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Flower Shop Partnership operations
-  async listFlowerShopPartners(city?: string, state?: string): Promise<FlowerShopPartner[]> {
+  async listFlowerShopPartners(city?: string, state?: string, limit: number = 50, offset: number = 0): Promise<FlowerShopPartner[]> {
+    const effectiveLimit = Math.min(limit, 200);
     const conditions = [eq(flowerShopPartners.isActive, true)];
     
     if (city) {
@@ -1133,7 +1235,24 @@ export class DatabaseStorage implements IStorage {
 
     return await db.select().from(flowerShopPartners)
       .where(and(...conditions))
-      .orderBy(desc(flowerShopPartners.rating));
+      .orderBy(desc(flowerShopPartners.rating))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+
+  async getFlowerShopPartnersCount(city?: string, state?: string): Promise<number> {
+    const conditions = [eq(flowerShopPartners.isActive, true)];
+    
+    if (city) {
+      conditions.push(eq(flowerShopPartners.city, city));
+    }
+    if (state) {
+      conditions.push(eq(flowerShopPartners.state, state));
+    }
+
+    const [result] = await db.select({ count: count() }).from(flowerShopPartners)
+      .where(and(...conditions));
+    return result.count;
   }
 
   async getFlowerShopPartner(id: string): Promise<FlowerShopPartner | undefined> {

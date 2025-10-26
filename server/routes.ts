@@ -189,8 +189,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Memorial routes
   app.get("/api/memorials", async (req, res) => {
     try {
-      const memorials = await storage.listMemorials();
-      res.json(memorials);
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200); // Cap at 200
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
+      const memorials = await storage.listMemorials(limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getMemorialsCount();
+        res.json({
+          data: memorials,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + memorials.length < total
+          }
+        });
+      } else {
+        // Legacy array response for backward compatibility
+        res.json(memorials);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -852,8 +888,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Donation routes
   app.get("/api/fundraisers/:fundraiserId/donations", async (req, res) => {
     try {
-      const donations = await storage.getDonationsByFundraiserId(req.params.fundraiserId);
-      res.json(donations);
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
+      const donations = await storage.getDonationsByFundraiserId(req.params.fundraiserId, limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getDonationsByFundraiserIdCount(req.params.fundraiserId);
+        res.json({
+          data: donations,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + donations.length < total
+          }
+        });
+      } else {
+        res.json(donations);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -922,8 +993,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Celebrity Memorial routes
   app.get("/api/celebrity-memorials", async (req, res) => {
     try {
-      const memorials = await storage.listCelebrityMemorials();
-      res.json(memorials);
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
+      const memorials = await storage.listCelebrityMemorials(limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getCelebrityMemorialsCount();
+        res.json({
+          data: memorials,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + memorials.length < total
+          }
+        });
+      } else {
+        res.json(memorials);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1067,9 +1173,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Essential Workers Memorial routes
   app.get("/api/essential-workers", async (req, res) => {
     try {
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
       const { category } = req.query;
-      const memorials = await storage.listEssentialWorkersMemorials(category as string);
-      res.json(memorials);
+      const memorials = await storage.listEssentialWorkersMemorials(category as string, limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getEssentialWorkersMemorialsCount(category as string);
+        res.json({
+          data: memorials,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + memorials.length < total
+          }
+        });
+      } else {
+        res.json(memorials);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1179,9 +1320,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Advertisement routes
   app.get("/api/advertisements", async (req, res) => {
     try {
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
       const { category } = req.query;
-      const ads = await storage.listAdvertisements(category as string);
-      res.json(ads);
+      const ads = await storage.listAdvertisements(category as string, limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getAdvertisementsCount(category as string);
+        res.json({
+          data: ads,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + ads.length < total
+          }
+        });
+      } else {
+        res.json(ads);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1354,9 +1530,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Funeral Home Partner routes
   app.get("/api/funeral-home-partners", async (req, res) => {
     try {
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
       const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
-      const partners = await storage.listFuneralHomePartners(isActive);
-      res.json(partners);
+      const partners = await storage.listFuneralHomePartners(isActive, limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getFuneralHomePartnersCount(isActive);
+        res.json({
+          data: partners,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + partners.length < total
+          }
+        });
+      } else {
+        res.json(partners);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1467,8 +1678,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Prison Facilities
   app.get("/api/prison-facilities", async (req, res) => {
     try {
-      const facilities = await storage.listPrisonFacilities();
-      res.json(facilities);
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
+      const facilities = await storage.listPrisonFacilities(limit, offset);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getPrisonFacilitiesCount();
+        res.json({
+          data: facilities,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + facilities.length < total
+          }
+        });
+      } else {
+        res.json(facilities);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1514,12 +1760,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/prison-access-requests", async (req, res) => {
     try {
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
       const { status, memorialId } = req.query;
       const requests = await storage.listPrisonAccessRequests(
         status as string,
-        memorialId as string
+        memorialId as string,
+        limit,
+        offset
       );
-      res.json(requests);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getPrisonAccessRequestsCount(
+          status as string,
+          memorialId as string
+        );
+        res.json({
+          data: requests,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + requests.length < total
+          }
+        });
+      } else {
+        res.json(requests);
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -1856,12 +2142,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // List flower shops (with optional filters)
   app.get("/api/flower-shops", async (req, res) => {
     try {
+      // Parse and validate pagination parameters
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+      
       const { city, state } = req.query;
       const partners = await storage.listFlowerShopPartners(
         city as string | undefined,
-        state as string | undefined
+        state as string | undefined,
+        limit,
+        offset
       );
-      res.json(partners);
+      
+      // Backward compatible: return array by default, object with pagination if requested
+      if (req.query.paginated === 'true') {
+        const total = await storage.getFlowerShopPartnersCount(
+          city as string | undefined,
+          state as string | undefined
+        );
+        res.json({
+          data: partners,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + partners.length < total
+          }
+        });
+      } else {
+        res.json(partners);
+      }
     } catch (error: any) {
       console.error("Error fetching flower shops:", error);
       res.status(500).json({ error: error.message });
