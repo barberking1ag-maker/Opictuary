@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar } from "lucide-react";
+import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar, Info } from "lucide-react";
 import { QRCodeManager } from "@/components/QRCodeManager";
 import { ScheduledMessageCard } from "@/components/ScheduledMessageCard";
 import { useAuth } from "@/hooks/useAuth";
@@ -326,6 +326,30 @@ export default function ManageMemorial() {
                 </Button>
               </div>
 
+              {/* Explanatory Card */}
+              <Card className="bg-gradient-to-r from-purple-900/40 to-purple-800/40 border-gold-500/30">
+                <CardContent className="py-4">
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center">
+                        <Info className="w-5 h-5 text-gold-400" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-purple-100 mb-2">Why Create Scheduled Messages?</h3>
+                      <p className="text-sm text-purple-300 leading-relaxed">
+                        Opictuary allows you to leave messages for the future milestones you might miss. 
+                        Whether facing a terminal illness at a young age, or simply wanting to ensure your voice 
+                        reaches your loved ones at important moments, you can create video or text messages for 
+                        your children, spouse, or family members. Be there for their graduations, weddings, 
+                        birthdays, and other special occasions - even when you cannot be there in person. 
+                        Your love and guidance will live on through these heartfelt messages.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {scheduledMessages.length === 0 ? (
                 <Card className="bg-purple-900/50 border-purple-700/50">
                   <CardContent className="py-16 text-center">
@@ -361,6 +385,29 @@ export default function ManageMemorial() {
                     Schedule a heartfelt message to be sent to loved ones on special dates
                   </DialogDescription>
                 </DialogHeader>
+
+                {/* Explanatory Section - Only show when creating new */}
+                {!editingMessage && (
+                  <div className="bg-gradient-to-r from-purple-950/60 to-purple-800/40 border border-gold-500/20 rounded-lg p-4 mb-4">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center">
+                          <Info className="w-4 h-4 text-gold-400" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-purple-100 mb-1">Leave Your Legacy</h4>
+                        <p className="text-xs text-purple-300 leading-relaxed">
+                          Create messages that will be delivered at future milestones. Whether facing a terminal 
+                          illness or simply planning ahead, you can be there for your children's graduations, 
+                          your daughter's wedding, your son's first job, or any special occasion. Your voice, 
+                          love, and guidance will reach them when they need it most.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                     
