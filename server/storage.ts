@@ -404,8 +404,19 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Memorial not found");
     }
     
-    const qrCodeData = `https://opictuary.app/memorial/${memorial.inviteCode}`;
-    const qrCodeString = await QRCodeGenerator.toDataURL(qrCodeData);
+    // Generate QR code URL based on purpose
+    let qrCodeData: string;
+    if (purpose === "upload" || purpose === "tombstone_upload") {
+      qrCodeData = `https://opictuary.app/memorial/${memorial.inviteCode}/upload`;
+    } else {
+      qrCodeData = `https://opictuary.app/memorial/${memorial.inviteCode}`;
+    }
+    
+    const qrCodeString = await QRCodeGenerator.toDataURL(qrCodeData, {
+      errorCorrectionLevel: 'H',
+      margin: 2,
+      width: 512,
+    });
     
     const [created] = await db.insert(qrCodes).values({
       memorialId,
