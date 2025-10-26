@@ -166,8 +166,10 @@ export interface IStorage {
 
   // Scheduled Message operations
   getScheduledMessagesByMemorialId(memorialId: string): Promise<ScheduledMessage[]>;
+  getScheduledMessage(id: string): Promise<ScheduledMessage | undefined>;
   createScheduledMessage(message: InsertScheduledMessage): Promise<ScheduledMessage>;
   updateScheduledMessage(id: string, message: Partial<InsertScheduledMessage>): Promise<ScheduledMessage | undefined>;
+  deleteScheduledMessage(id: string): Promise<void>;
 
   // Fundraiser operations
   getFundraisersByMemorialId(memorialId: string): Promise<Fundraiser[]>;
@@ -497,6 +499,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(scheduledMessages).where(eq(scheduledMessages.memorialId, memorialId)).orderBy(desc(scheduledMessages.createdAt));
   }
 
+  async getScheduledMessage(id: string): Promise<ScheduledMessage | undefined> {
+    const [message] = await db.select().from(scheduledMessages).where(eq(scheduledMessages.id, id));
+    return message || undefined;
+  }
+
   async createScheduledMessage(message: InsertScheduledMessage): Promise<ScheduledMessage> {
     const [created] = await db.insert(scheduledMessages).values(message).returning();
     return created;
@@ -505,6 +512,10 @@ export class DatabaseStorage implements IStorage {
   async updateScheduledMessage(id: string, message: Partial<InsertScheduledMessage>): Promise<ScheduledMessage | undefined> {
     const [updated] = await db.update(scheduledMessages).set(message).where(eq(scheduledMessages.id, id)).returning();
     return updated || undefined;
+  }
+
+  async deleteScheduledMessage(id: string): Promise<void> {
+    await db.delete(scheduledMessages).where(eq(scheduledMessages.id, id));
   }
 
   // Fundraiser operations

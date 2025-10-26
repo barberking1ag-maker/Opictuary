@@ -592,8 +592,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Scheduled Messages routes
-  app.get("/api/memorials/:memorialId/scheduled-messages", async (req, res) => {
+  app.get("/api/memorials/:memorialId/scheduled-messages", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view scheduled messages for this memorial" });
+      }
+
       const messages = await storage.getScheduledMessagesByMemorialId(req.params.memorialId);
       res.json(messages);
     } catch (error: any) {
@@ -601,8 +617,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/memorials/:memorialId/scheduled-messages", async (req, res) => {
+  app.post("/api/memorials/:memorialId/scheduled-messages", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to create scheduled messages for this memorial" });
+      }
+
       const data = insertScheduledMessageSchema.parse({
         ...req.body,
         memorialId: req.params.memorialId,
@@ -613,6 +645,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/scheduled-messages/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the scheduled message to find the memorial
+      const message = await storage.getScheduledMessage(req.params.id);
+      
+      if (!message) {
+        return res.status(404).json({ error: "Scheduled message not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(message.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(message.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to update scheduled messages for this memorial" });
+      }
+      
+      // Validate and parse request body (partial update)
+      const validatedData = insertScheduledMessageSchema.partial().parse(req.body);
+      
+      const updated = await storage.updateScheduledMessage(req.params.id, validatedData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Scheduled message not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/scheduled-messages/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the scheduled message to find the memorial
+      const message = await storage.getScheduledMessage(req.params.id);
+      
+      if (!message) {
+        return res.status(404).json({ error: "Scheduled message not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(message.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(message.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to delete scheduled messages for this memorial" });
+      }
+      
+      await storage.deleteScheduledMessage(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
