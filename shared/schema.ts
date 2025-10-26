@@ -167,6 +167,15 @@ export const fundraisers = pgTable("fundraisers", {
   currentAmount: decimal("current_amount", { precision: 10, scale: 2 }).default("0"),
   charityName: text("charity_name"),
   platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).notNull().default("3.00"),
+  // Expense breakdown - what the money will be used for
+  expenseBreakdown: jsonb("expense_breakdown").$type<{
+    burialCosts?: number;
+    funeralService?: number;
+    headstone?: number;
+    flowers?: number;
+    other?: number;
+    otherDescription?: string;
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_fundraisers_memorial_id").on(table.memorialId),
@@ -704,6 +713,61 @@ export const pushTokensRelations = relations(pushTokens, ({ one }) => ({
   }),
 }));
 
+// Memorial Events - balloon releases, picnics, after-services, etc.
+export const memorialEvents = pgTable("memorial_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // 'balloon_release', 'memorial_picnic', 'memorial_barbecue', 'after_service', 'celebration_of_life', 'anniversary_gathering', 'custom'
+  title: text("title").notNull(),
+  description: text("description"),
+  eventDate: timestamp("event_date").notNull(),
+  eventTime: text("event_time"), // HH:MM format
+  location: text("location"),
+  address: text("address"),
+  coordinates: json("coordinates").$type<{ lat: number; lng: number }>(),
+  organizer: text("organizer"), // Name of person organizing
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  isPublic: boolean("is_public").default(true),
+  sendReminders: boolean("send_reminders").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_events_memorial_id").on(table.memorialId),
+  index("idx_memorial_events_event_date").on(table.eventDate),
+  index("idx_memorial_events_event_type").on(table.eventType),
+]);
+
+// Memorial Event RSVPs - track who is attending
+export const memorialEventRsvps = pgTable("memorial_event_rsvps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => memorialEvents.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  attendeeCount: integer("attendee_count").default(1),
+  response: text("response").notNull(), // 'attending', 'not_attending', 'maybe'
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_event_rsvps_event_id").on(table.eventId),
+]);
+
+export const memorialEventsRelations = relations(memorialEvents, ({ one, many }) => ({
+  memorial: one(memorials, {
+    fields: [memorialEvents.memorialId],
+    references: [memorials.id],
+  }),
+  rsvps: many(memorialEventRsvps),
+}));
+
+export const memorialEventRsvpsRelations = relations(memorialEventRsvps, ({ one }) => ({
+  event: one(memorialEvents, {
+    fields: [memorialEventRsvps.eventId],
+    references: [memorialEvents.id],
+  }),
+}));
+
 // Support System Tables
 export const supportArticles = pgTable("support_articles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1006,6 +1070,17 @@ export const insertGriefResourceSchema = createInsertSchema(griefResources).omit
   createdAt: true,
 });
 
+export const insertMemorialEventSchema = createInsertSchema(memorialEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemorialEventRsvpSchema = createInsertSchema(memorialEventRsvps).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
@@ -1124,3 +1199,9 @@ export type SupportRequest = typeof supportRequests.$inferSelect;
 
 export type InsertGriefResource = z.infer<typeof insertGriefResourceSchema>;
 export type GriefResource = typeof griefResources.$inferSelect;
+
+export type InsertMemorialEvent = z.infer<typeof insertMemorialEventSchema>;
+export type MemorialEvent = typeof memorialEvents.$inferSelect;
+
+export type InsertMemorialEventRsvp = z.infer<typeof insertMemorialEventRsvpSchema>;
+export type MemorialEventRsvp = typeof memorialEventRsvps.$inferSelect;

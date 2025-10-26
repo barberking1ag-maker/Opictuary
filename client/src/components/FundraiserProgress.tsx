@@ -2,7 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DollarSign } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { DollarSign, Receipt } from "lucide-react";
 
 interface Donor {
   name: string;
@@ -11,12 +12,22 @@ interface Donor {
   timestamp: string;
 }
 
+interface ExpenseBreakdown {
+  burialCosts?: number;
+  funeralService?: number;
+  headstone?: number;
+  flowers?: number;
+  other?: number;
+  otherDescription?: string;
+}
+
 interface FundraiserProgressProps {
   title: string;
   description: string;
   currentAmount: number;
   goalAmount: number;
   donors: Donor[];
+  expenseBreakdown?: ExpenseBreakdown;
   onDonate?: () => void;
 }
 
@@ -26,9 +37,18 @@ export default function FundraiserProgress({
   currentAmount,
   goalAmount,
   donors,
+  expenseBreakdown,
   onDonate
 }: FundraiserProgressProps) {
   const progress = (currentAmount / goalAmount) * 100;
+
+  const expenseItems = expenseBreakdown ? [
+    { label: 'Burial Costs', amount: expenseBreakdown.burialCosts },
+    { label: 'Funeral Service', amount: expenseBreakdown.funeralService },
+    { label: 'Headstone', amount: expenseBreakdown.headstone },
+    { label: 'Flowers', amount: expenseBreakdown.flowers },
+    { label: expenseBreakdown.otherDescription || 'Other', amount: expenseBreakdown.other },
+  ].filter(item => item.amount && item.amount > 0) : [];
 
   return (
     <Card className="overflow-hidden shadow-sm" data-testid="card-fundraiser">
@@ -51,6 +71,25 @@ export default function FundraiserProgress({
           </div>
           <Progress value={progress} className="h-3" data-testid="progress-fundraiser" />
         </div>
+
+        {expenseItems.length > 0 && (
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border" data-testid="expense-breakdown">
+            <div className="flex items-center gap-2 mb-3">
+              <Receipt className="w-4 h-4 text-muted-foreground" />
+              <h4 className="font-semibold text-foreground text-sm">Where Your Donation Goes</h4>
+            </div>
+            <div className="space-y-2">
+              {expenseItems.map((item, index) => (
+                <div key={index} className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground" data-testid={`expense-label-${index}`}>{item.label}</span>
+                  <span className="font-medium text-foreground" data-testid={`expense-amount-${index}`}>
+                    ${item.amount?.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <Button 
           variant="default"

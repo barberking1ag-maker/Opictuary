@@ -38,6 +38,8 @@ import {
   supportArticles,
   supportRequests,
   griefResources,
+  memorialEvents,
+  memorialEventRsvps,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -117,6 +119,10 @@ import {
   type InsertSupportRequest,
   type GriefResource,
   type InsertGriefResource,
+  type MemorialEvent,
+  type InsertMemorialEvent,
+  type MemorialEventRsvp,
+  type InsertMemorialEventRsvp,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -324,6 +330,20 @@ export interface IStorage {
   createGriefResource(resource: InsertGriefResource): Promise<GriefResource>;
   updateGriefResource(id: string, resource: Partial<InsertGriefResource>): Promise<GriefResource | undefined>;
   deleteGriefResource(id: string): Promise<void>;
+
+  // Memorial Events operations
+  listMemorialEvents(memorialId?: string, limit?: number, offset?: number): Promise<MemorialEvent[]>;
+  getMemorialEventsCount(memorialId?: string): Promise<number>;
+  getMemorialEvent(id: string): Promise<MemorialEvent | undefined>;
+  createMemorialEvent(event: InsertMemorialEvent): Promise<MemorialEvent>;
+  updateMemorialEvent(id: string, event: Partial<InsertMemorialEvent>): Promise<MemorialEvent | undefined>;
+  deleteMemorialEvent(id: string): Promise<void>;
+  
+  // Memorial Event RSVP operations
+  listEventRsvps(eventId: string): Promise<MemorialEventRsvp[]>;
+  createEventRsvp(rsvp: InsertMemorialEventRsvp): Promise<MemorialEventRsvp>;
+  updateEventRsvp(id: string, rsvp: Partial<InsertMemorialEventRsvp>): Promise<MemorialEventRsvp | undefined>;
+  deleteEventRsvp(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1726,6 +1746,76 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGriefResource(id: string): Promise<void> {
     await db.delete(griefResources).where(eq(griefResources.id, id));
+  }
+
+  // Memorial Events operations
+  async listMemorialEvents(memorialId?: string, limit: number = 50, offset: number = 0): Promise<MemorialEvent[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    
+    if (memorialId) {
+      return await db.select().from(memorialEvents)
+        .where(eq(memorialEvents.memorialId, memorialId))
+        .orderBy(desc(memorialEvents.eventDate))
+        .limit(effectiveLimit)
+        .offset(offset);
+    }
+    
+    return await db.select().from(memorialEvents)
+      .orderBy(desc(memorialEvents.eventDate))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+
+  async getMemorialEventsCount(memorialId?: string): Promise<number> {
+    if (memorialId) {
+      const [result] = await db.select({ count: count() })
+        .from(memorialEvents)
+        .where(eq(memorialEvents.memorialId, memorialId));
+      return result.count;
+    }
+    
+    const [result] = await db.select({ count: count() }).from(memorialEvents);
+    return result.count;
+  }
+
+  async getMemorialEvent(id: string): Promise<MemorialEvent | undefined> {
+    const [event] = await db.select().from(memorialEvents).where(eq(memorialEvents.id, id));
+    return event || undefined;
+  }
+
+  async createMemorialEvent(event: InsertMemorialEvent): Promise<MemorialEvent> {
+    const [created] = await db.insert(memorialEvents).values(event).returning();
+    return created;
+  }
+
+  async updateMemorialEvent(id: string, event: Partial<InsertMemorialEvent>): Promise<MemorialEvent | undefined> {
+    const [updated] = await db.update(memorialEvents).set(event).where(eq(memorialEvents.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMemorialEvent(id: string): Promise<void> {
+    await db.delete(memorialEvents).where(eq(memorialEvents.id, id));
+  }
+
+  // Memorial Event RSVP operations
+  async listEventRsvps(eventId: string): Promise<MemorialEventRsvp[]> {
+    return await db.select().from(memorialEventRsvps)
+      .where(eq(memorialEventRsvps.eventId, eventId))
+      .orderBy(desc(memorialEventRsvps.createdAt));
+  }
+
+  async createEventRsvp(rsvp: InsertMemorialEventRsvp): Promise<MemorialEventRsvp> {
+    const [created] = await db.insert(memorialEventRsvps).values(rsvp).returning();
+    return created;
+  }
+
+  async updateEventRsvp(id: string, rsvp: Partial<InsertMemorialEventRsvp>): Promise<MemorialEventRsvp | undefined> {
+    const [updated] = await db.update(memorialEventRsvps).set(rsvp).where(eq(memorialEventRsvps.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteEventRsvp(id: string): Promise<void> {
+    await db.delete(memorialEventRsvps).where(eq(memorialEventRsvps.id, id));
   }
 }
 
