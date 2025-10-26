@@ -581,6 +581,70 @@ export const pushTokensRelations = relations(pushTokens, ({ one }) => ({
   }),
 }));
 
+// Support System Tables
+export const supportArticles = pgTable("support_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull(), // "help_center", "grief_support", "technical", "partner"
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  tags: text("tags").array(),
+  isPublished: boolean("is_published").default(true),
+  viewCount: integer("view_count").default(0),
+  helpfulCount: integer("helpful_count").default(0),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const supportRequests = pgTable("support_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  category: text("category").notNull(), // "technical", "grief", "partner", "general"
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  status: text("status").default("open"), // "open", "in_progress", "resolved", "closed"
+  priority: text("priority").default("normal"), // "low", "normal", "high", "urgent"
+  assignedTo: varchar("assigned_to").references(() => users.id, { onDelete: "set null" }),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "set null" }),
+  resolution: text("resolution"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const griefResources = pgTable("grief_resources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  resourceType: text("resource_type").notNull(), // "hotline", "article", "video", "counselor", "support_group"
+  category: text("category").notNull(), // "crisis", "bereavement", "child_loss", "suicide", "military", "general"
+  url: text("url"),
+  phoneNumber: text("phone_number"),
+  availability: text("availability"), // "24/7", "Business Hours", etc.
+  isVerified: boolean("is_verified").default(true),
+  isEmergency: boolean("is_emergency").default(false),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const supportRequestsRelations = relations(supportRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [supportRequests.userId],
+    references: [users.id],
+  }),
+  memorial: one(memorials, {
+    fields: [supportRequests.memorialId],
+    references: [memorials.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [supportRequests.assignedTo],
+    references: [users.id],
+  }),
+}));
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -780,6 +844,27 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
   createdAt: true,
 });
 
+export const insertSupportArticleSchema = createInsertSchema(supportArticles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  helpfulCount: true,
+});
+
+export const insertSupportRequestSchema = createInsertSchema(supportRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  priority: true,
+});
+
+export const insertGriefResourceSchema = createInsertSchema(griefResources).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
@@ -886,3 +971,12 @@ export type PageView = typeof pageViews.$inferSelect;
 
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+export type InsertSupportArticle = z.infer<typeof insertSupportArticleSchema>;
+export type SupportArticle = typeof supportArticles.$inferSelect;
+
+export type InsertSupportRequest = z.infer<typeof insertSupportRequestSchema>;
+export type SupportRequest = typeof supportRequests.$inferSelect;
+
+export type InsertGriefResource = z.infer<typeof insertGriefResourceSchema>;
+export type GriefResource = typeof griefResources.$inferSelect;
