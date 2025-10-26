@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar } from "lucide-react";
 import { QRCodeManager } from "@/components/QRCodeManager";
 import { ScheduledMessageCard } from "@/components/ScheduledMessageCard";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,7 +21,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { messageTemplates, getTemplatesByEventType, getTemplateById } from "@/lib/messageTemplates";
 
 interface Memorial {
   id: string;
@@ -33,11 +37,16 @@ interface Memorial {
 const scheduledMessageSchema = z.object({
   recipientName: z.string().min(1, "Recipient name is required"),
   recipientEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
-  eventType: z.enum(["birthday", "graduation", "wedding", "anniversary", "baby_birth", "holiday", "custom"]),
+  eventType: z.enum(["birthday", "graduation", "wedding", "anniversary", "baby_birth", "holiday", "mother_day", "father_day", "christmas", "new_year", "custom"]),
+  customEventName: z.string().optional(),
   eventDate: z.string().min(1, "Event date is required"),
+  sendTime: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters"),
   mediaUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   mediaType: z.enum(["text", "video", "image", "mixed"]).optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceInterval: z.enum(['yearly', 'monthly', 'custom']).optional(),
+  status: z.enum(['draft', 'pending', 'sent', 'failed']).optional(),
 });
 
 type ScheduledMessageFormData = z.infer<typeof scheduledMessageSchema>;
@@ -50,6 +59,8 @@ export default function ManageMemorial() {
   
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [editingMessage, setEditingMessage] = useState<any | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [showTemplateSection, setShowTemplateSection] = useState(true);
 
   const { data: memorial, isLoading } = useQuery<Memorial>({
     queryKey: ["/api/memorials", id],
@@ -67,12 +78,31 @@ export default function ManageMemorial() {
       recipientName: "",
       recipientEmail: "",
       eventType: "birthday",
+      customEventName: "",
       eventDate: "",
+      sendTime: "09:00",
       message: "",
       mediaUrl: "",
       mediaType: "text",
+      isRecurring: false,
+      recurrenceInterval: undefined,
+      status: "pending",
     },
   });
+
+  // Watch the eventType and isRecurring fields for conditional rendering
+  const watchEventType = form.watch("eventType");
+  const watchIsRecurring = form.watch("isRecurring");
+
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    const template = getTemplateById(templateId);
+    if (template) {
+      setSelectedTemplate(templateId);
+      form.setValue("message", template.message);
+      setShowTemplateSection(false);
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: (data: ScheduledMessageFormData) =>
@@ -113,15 +143,30 @@ export default function ManageMemorial() {
 
   const handleEdit = (message: any) => {
     setEditingMessage(message);
+    setShowTemplateSection(false);
+    setSelectedTemplate("");
     form.reset({
       recipientName: message.recipientName,
       recipientEmail: message.recipientEmail || "",
       eventType: message.eventType,
+      customEventName: message.customEventName || "",
       eventDate: message.eventDate || "",
+      sendTime: message.sendTime || "09:00",
       message: message.message,
       mediaUrl: message.mediaUrl || "",
       mediaType: message.mediaType || "text",
+      isRecurring: message.isRecurring || false,
+      recurrenceInterval: message.recurrenceInterval || undefined,
+      status: message.status || "pending",
     });
+    setIsMessageDialogOpen(true);
+  };
+
+  const handleOpenCreateDialog = () => {
+    setEditingMessage(null);
+    setShowTemplateSection(true);
+    setSelectedTemplate("");
+    form.reset();
     setIsMessageDialogOpen(true);
   };
 
@@ -264,11 +309,7 @@ export default function ManageMemorial() {
                   </p>
                 </div>
                 <Button
-                  onClick={() => {
-                    setEditingMessage(null);
-                    form.reset();
-                    setIsMessageDialogOpen(true);
-                  }}
+                  onClick={handleOpenCreateDialog}
                   data-testid="button-create-scheduled-message"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -301,90 +342,262 @@ export default function ManageMemorial() {
             </div>
 
             <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
-              <DialogContent className="bg-purple-900 border-purple-700 text-purple-100 max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="bg-purple-900 border-purple-700 text-purple-100 max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-purple-100">
+                  <DialogTitle className="text-purple-100 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-gold-400" />
                     {editingMessage ? "Edit Scheduled Message" : "Create Scheduled Message"}
                   </DialogTitle>
                   <DialogDescription className="text-purple-300">
-                    Schedule a message to be sent to a loved one on a special date
+                    Schedule a heartfelt message to be sent to loved ones on special dates
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                    <FormField control={form.control} name="recipientName" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Recipient Name *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="John Doe" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-recipient-name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="recipientEmail" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Recipient Email (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" placeholder="john@example.com" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-recipient-email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="eventType" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Event Type *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                    
+                    {/* Template Selection - Only show when creating new */}
+                    {!editingMessage && showTemplateSection && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-purple-100 text-base">Start with a Template (Optional)</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowTemplateSection(false)}
+                            className="text-purple-300"
+                          >
+                            Skip Templates
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto p-1">
+                          {getTemplatesByEventType(watchEventType).map((template) => (
+                            <Card
+                              key={template.id}
+                              className={`cursor-pointer border-purple-700/50 hover-elevate ${
+                                selectedTemplate === template.id ? 'bg-purple-800/50 border-gold-500/50' : 'bg-purple-950/30'
+                              }`}
+                              onClick={() => handleTemplateSelect(template.id)}
+                              data-testid={`card-template-${template.id}`}
+                            >
+                              <CardContent className="p-4">
+                                <h4 className="font-semibold text-purple-100 mb-1">{template.name}</h4>
+                                <p className="text-xs text-purple-300 line-clamp-2">{template.description}</p>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recipient Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-purple-100 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gold-400" />
+                        Recipient Information
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="recipientName" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Recipient Name *</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="John Doe" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-recipient-name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="recipientEmail" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Recipient Email</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="email" placeholder="john@example.com" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-recipient-email" />
+                            </FormControl>
+                            <FormDescription className="text-xs text-purple-400">
+                              Optional - for email delivery
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </div>
+
+                    <Separator className="bg-purple-700/30" />
+
+                    {/* Event Details */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-purple-100">Event Details</h3>
+                      <FormField control={form.control} name="eventType" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-purple-100">Event Type *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="select-event-type">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-purple-900 border-purple-700">
+                              <SelectItem value="birthday">🎂 Birthday</SelectItem>
+                              <SelectItem value="graduation">🎓 Graduation</SelectItem>
+                              <SelectItem value="wedding">💍 Wedding</SelectItem>
+                              <SelectItem value="anniversary">💕 Anniversary</SelectItem>
+                              <SelectItem value="baby_birth">👶 Baby Birth</SelectItem>
+                              <SelectItem value="mother_day">🌸 Mother's Day</SelectItem>
+                              <SelectItem value="father_day">👔 Father's Day</SelectItem>
+                              <SelectItem value="christmas">🎄 Christmas</SelectItem>
+                              <SelectItem value="new_year">🎆 New Year</SelectItem>
+                              <SelectItem value="holiday">🎉 Holiday</SelectItem>
+                              <SelectItem value="custom">✨ Custom Event</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      {/* Custom Event Name - shown when custom is selected */}
+                      {watchEventType === 'custom' && (
+                        <FormField control={form.control} name="customEventName" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Custom Event Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="e.g., First Day of College" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-custom-event-name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="eventDate" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Event Date *</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="date" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-event-date" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="sendTime" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Send Time</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="time" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-send-time" />
+                            </FormControl>
+                            <FormDescription className="text-xs text-purple-400">
+                              Time of day to deliver the message
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+
+                      {/* Recurring Message Option */}
+                      <FormField control={form.control} name="isRecurring" render={({ field }) => (
+                        <FormItem className="flex items-center justify-between gap-4 p-4 rounded-lg bg-purple-950/30 border border-purple-700/30">
+                          <div className="flex-1">
+                            <FormLabel className="text-purple-100 font-semibold flex items-center gap-2">
+                              <Repeat className="w-4 h-4 text-gold-400" />
+                              Recurring Message
+                            </FormLabel>
+                            <FormDescription className="text-xs text-purple-400 mt-1">
+                              Send this message annually on the same date
+                            </FormDescription>
+                          </div>
                           <FormControl>
-                            <SelectTrigger className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="select-event-type">
-                              <SelectValue />
-                            </SelectTrigger>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              data-testid="switch-recurring"
+                            />
                           </FormControl>
-                          <SelectContent className="bg-purple-900 border-purple-700">
-                            <SelectItem value="birthday">Birthday</SelectItem>
-                            <SelectItem value="graduation">Graduation</SelectItem>
-                            <SelectItem value="wedding">Wedding</SelectItem>
-                            <SelectItem value="anniversary">Anniversary</SelectItem>
-                            <SelectItem value="baby_birth">Baby Birth</SelectItem>
-                            <SelectItem value="holiday">Holiday</SelectItem>
-                            <SelectItem value="custom">Custom Event</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="eventDate" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Event Date *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-event-date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="message" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Message *</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} rows={6} placeholder="Your heartfelt message..." className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-message-text" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="mediaUrl" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-purple-100">Media URL (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://example.com/video.mp4" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-media-url-message" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <DialogFooter>
+                        </FormItem>
+                      )} />
+
+                      {watchIsRecurring && (
+                        <FormField control={form.control} name="recurrenceInterval" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-purple-100">Recurrence Frequency</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="select-recurrence">
+                                  <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-purple-900 border-purple-700">
+                                <SelectItem value="yearly">Yearly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+                    </div>
+
+                    <Separator className="bg-purple-700/30" />
+
+                    {/* Message Content */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-purple-100">Message Content</h3>
+                      <FormField control={form.control} name="message" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-purple-100">Your Message *</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} rows={8} placeholder="Write your heartfelt message here..." className="bg-purple-950/50 border-purple-700/50 text-purple-100 resize-none" data-testid="input-message-text" />
+                          </FormControl>
+                          <FormDescription className="text-xs text-purple-400">
+                            {field.value?.length || 0} characters
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="mediaUrl" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-purple-100">Media URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://example.com/video.mp4" className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="input-media-url-message" />
+                          </FormControl>
+                          <FormDescription className="text-xs text-purple-400">
+                            Optional - Add a video or image to your message
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <Separator className="bg-purple-700/30" />
+
+                    {/* Advanced Settings */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-purple-100">Advanced Settings</h3>
+                      <FormField control={form.control} name="status" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-purple-100">Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-purple-950/50 border-purple-700/50 text-purple-100" data-testid="select-status">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-purple-900 border-purple-700">
+                              <SelectItem value="draft">📝 Draft (Save without scheduling)</SelectItem>
+                              <SelectItem value="pending">⏰ Pending (Schedule for delivery)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription className="text-xs text-purple-400">
+                            Drafts won't be sent until you change status to Pending
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <DialogFooter className="gap-2">
                       <Button type="button" variant="outline" onClick={() => setIsMessageDialogOpen(false)} data-testid="button-cancel-message">
                         Cancel
                       </Button>
                       <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-save-message">
-                        {editingMessage ? "Update" : "Create"} Message
+                        {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingMessage ? "Update Message" : "Create Message"}
                       </Button>
                     </DialogFooter>
                   </form>
