@@ -22,7 +22,29 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  phone: varchar("phone"),
+  bio: text("bio"),
+  timezone: varchar("timezone").default("America/New_York"),
+  language: varchar("language", { length: 10 }).default("en"),
   isAdmin: boolean("is_admin").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User settings table for notification and privacy preferences
+export const userSettings = pgTable("user_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  // Notification preferences
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  memorialUpdates: boolean("memorial_updates").default(true),
+  donationReceipts: boolean("donation_receipts").default(true),
+  scheduledMessageReminders: boolean("scheduled_message_reminders").default(true),
+  // Privacy preferences
+  shareActivityWithCreators: boolean("share_activity_with_creators").default(true),
+  publicProfile: boolean("public_profile").default(true),
+  // Other settings
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -654,6 +676,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertMemorialSchema = createInsertSchema(memorials).omit({
   id: true,
   createdAt: true,
@@ -872,6 +900,9 @@ export const insertGriefResourceSchema = createInsertSchema(griefResources).omit
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+export type UserSettings = typeof userSettings.$inferSelect;
 
 export type InsertMemorial = z.infer<typeof insertMemorialSchema>;
 export type Memorial = typeof memorials.$inferSelect;
