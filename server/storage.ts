@@ -1,5 +1,6 @@
 import {
   users,
+  userSettings,
   memorials,
   memorialAdmins,
   qrCodes,
@@ -40,6 +41,8 @@ import {
   type User,
   type InsertUser,
   type UpsertUser,
+  type UserSettings,
+  type InsertUserSettings,
   type Memorial,
   type InsertMemorial,
   type MemorialAdmin,
@@ -123,6 +126,10 @@ export interface IStorage {
   // User operations (Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // User Settings operations
+  getUserSettings(userId: string): Promise<UserSettings | undefined>;
+  upsertUserSettings(settings: InsertUserSettings): Promise<UserSettings>;
 
   // Memorial operations
   getMemorial(id: string): Promise<Memorial | undefined>;
@@ -350,6 +357,39 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  // User Settings operations
+  async getUserSettings(userId: string): Promise<UserSettings | undefined> {
+    const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return settings || undefined;
+  }
+
+  async upsertUserSettings(settingsData: InsertUserSettings): Promise<UserSettings> {
+    const [existingSettings] = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, settingsData.userId));
+
+    if (existingSettings) {
+      // Update existing settings
+      const [settings] = await db
+        .update(userSettings)
+        .set({
+          ...settingsData,
+          updatedAt: new Date(),
+        })
+        .where(eq(userSettings.userId, settingsData.userId))
+        .returning();
+      return settings;
+    }
+
+    // Insert new settings
+    const [settings] = await db
+      .insert(userSettings)
+      .values(settingsData)
+      .returning();
+    return settings;
   }
 
   // Memorial operations
