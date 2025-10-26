@@ -5,10 +5,14 @@ import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
 
-// User profile update schema - only allow specific fields
+// User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+  timezone: z.string().optional(),
+  language: z.string().optional(),
 }).strict(); // Reject any extra fields
 import Stripe from "stripe";
 import { 
@@ -49,6 +53,7 @@ import {
   insertSupportArticleSchema,
   insertSupportRequestSchema,
   insertGriefResourceSchema,
+  insertUserSettingsSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -117,6 +122,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Get user settings
+  app.get('/api/user/settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let settings = await storage.getUserSettings(userId);
+      
+      // If settings don't exist, create default settings
+      if (!settings) {
+        settings = await storage.upsertUserSettings({
+          userId,
+          emailNotifications: true,
+          pushNotifications: true,
+          memorialUpdates: true,
+          donationReceipts: true,
+          scheduledMessageReminders: true,
+          shareActivityWithCreators: true,
+          publicProfile: true,
+        });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching user settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  // Update user settings
+  app.patch('/api/user/settings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate settings data
+      const validatedData = insertUserSettingsSchema.parse({
+        userId,
+        ...req.body,
+      });
+      
+      const updatedSettings = await storage.upsertUserSettings(validatedData);
+      res.json(updatedSettings);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid settings data", errors: error.errors });
+      }
+      console.error("Error updating settings:", error);
+      res.status(500).json({ message: "Failed to update settings" });
     }
   });
 
