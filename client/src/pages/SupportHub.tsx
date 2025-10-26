@@ -112,9 +112,9 @@ export default function SupportHub() {
               <Heart className="w-4 h-4" />
               Grief Support
             </TabsTrigger>
-            <TabsTrigger value="technical-support" className="gap-2" data-testid="tab-technical-support">
-              <HeadphonesIcon className="w-4 h-4" />
-              Contact Support
+            <TabsTrigger value="partner-support" className="gap-2" data-testid="tab-partner-support">
+              <Building className="w-4 h-4" />
+              Partner Support
             </TabsTrigger>
           </TabsList>
 
@@ -131,8 +131,8 @@ export default function SupportHub() {
             <GriefSupportSection resources={griefResources} />
           </TabsContent>
 
-          <TabsContent value="technical-support" className="space-y-6">
-            <TechnicalSupportSection />
+          <TabsContent value="partner-support" className="space-y-6">
+            <PartnerSupportSection />
           </TabsContent>
         </Tabs>
       </div>
@@ -368,7 +368,7 @@ function ResourceCard({ resource }: { resource: GriefResource }) {
   );
 }
 
-function TechnicalSupportSection() {
+function PartnerSupportSection() {
   const [formData, setFormData] = useState({
     category: "",
     subject: "",
@@ -421,39 +421,140 @@ function TechnicalSupportSection() {
   };
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      <Card className="p-6 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-general-support">
-        <Users className="w-8 h-8 text-[#d4af37] mb-4" />
-        <h3 className="text-lg font-semibold text-purple-100 mb-2">General Support</h3>
-        <p className="text-purple-200 text-sm mb-4">
-          Questions about creating memorials, managing content, or platform features.
-        </p>
-        <Badge variant="secondary" className="bg-purple-800/50">
-          Response: 24-48 hours
-        </Badge>
-      </Card>
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="p-6 bg-purple-900/20 border-purple-700/30">
+          <div className="flex items-center gap-3 mb-4">
+            <Building className="w-8 h-8 text-[#d4af37]" />
+            <h2 className="text-2xl font-serif text-[#d4af37]">Partner Support</h2>
+          </div>
+          <p className="text-purple-200 mb-6">
+            Dedicated support for our business partners including funeral homes, flower shops, 
+            and correctional facilities. We're committed to helping you serve families with excellence.
+          </p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Building className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">Funeral Home Partners</h3>
+                <p className="text-sm text-purple-200">
+                  Integration support, referral tracking, commission management, and training resources
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Flower2 className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">Flower Shop Partners</h3>
+                <p className="text-sm text-purple-200">
+                  Order management, commission tracking, listing optimization, and delivery coordination
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">Correctional Facilities</h3>
+                <p className="text-sm text-purple-200">
+                  Access system setup, verification processes, payment management, and audit support
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
 
-      <Card className="p-6 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-partner-support">
-        <Building className="w-8 h-8 text-[#d4af37] mb-4" />
-        <h3 className="text-lg font-semibold text-purple-100 mb-2">Partner Support</h3>
-        <p className="text-purple-200 text-sm mb-4">
-          Support for funeral homes, flower shops, and business partnerships.
-        </p>
-        <Badge variant="secondary" className="bg-purple-800/50">
-          Response: 12-24 hours
-        </Badge>
-      </Card>
+        <Card className="p-6 bg-purple-900/20 border-purple-700/30">
+          <div className="flex items-center gap-3 mb-4">
+            <HeadphonesIcon className="w-8 h-8 text-[#d4af37]" />
+            <h2 className="text-2xl font-serif text-[#d4af37]">Technical Support</h2>
+          </div>
+          <p className="text-purple-200 mb-6">
+            Get help with platform issues, technical questions, and account management.
+          </p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">General Support</h3>
+                <p className="text-sm text-purple-200">
+                  Memorial creation, content management, privacy settings, and platform features
+                </p>
+                <Badge variant="secondary" className="bg-purple-800/50 mt-2">
+                  Response: 24-48 hours
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">Technical Issues</h3>
+                <p className="text-sm text-purple-200">
+                  Platform bugs, errors, payment problems, or account access issues
+                </p>
+                <Badge variant="secondary" className="bg-purple-800/50 mt-2">
+                  Priority Response
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Building className="w-5 h-5 text-[#d4af37] mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-purple-100 mb-1">Partnership Inquiries</h3>
+                <p className="text-sm text-purple-200">
+                  Questions about becoming a partner, commission rates, or service integration
+                </p>
+                <Badge variant="secondary" className="bg-purple-800/50 mt-2">
+                  Response: 12-24 hours
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-      <Card className="p-6 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-technical-issues">
-        <HeadphonesIcon className="w-8 h-8 text-[#d4af37] mb-4" />
-        <h3 className="text-lg font-semibold text-purple-100 mb-2">Technical Issues</h3>
-        <p className="text-purple-200 text-sm mb-4">
-          Problems with the platform, bugs, errors, or payment processing.
-        </p>
-        <Badge variant="secondary" className="bg-purple-800/50">
-          Priority Response
-        </Badge>
-      </Card>
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="p-4 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-funeral-partner-resources">
+          <Building className="w-6 h-6 text-[#d4af37] mb-3" />
+          <h3 className="font-semibold text-purple-100 mb-2">Funeral Home Resources</h3>
+          <p className="text-sm text-purple-200 mb-3">
+            Access partner portal, training materials, and integration guides
+          </p>
+          <Link href="/partner-signup">
+            <Button variant="outline" size="sm" className="w-full" data-testid="button-partner-portal">
+              Partner Portal
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
+          </Link>
+        </Card>
+
+        <Card className="p-4 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-flower-partner-resources">
+          <Flower2 className="w-6 h-6 text-[#d4af37] mb-3" />
+          <h3 className="font-semibold text-purple-100 mb-2">Flower Shop Resources</h3>
+          <p className="text-sm text-purple-200 mb-3">
+            Manage orders, track commissions, and optimize your listing
+          </p>
+          <Link href="/flower-partners">
+            <Button variant="outline" size="sm" className="w-full" data-testid="button-flower-portal">
+              Shop Dashboard
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
+          </Link>
+        </Card>
+
+        <Card className="p-4 bg-purple-900/20 border-purple-700/30 hover-elevate" data-testid="card-prison-partner-resources">
+          <Users className="w-6 h-6 text-[#d4af37] mb-3" />
+          <h3 className="font-semibold text-purple-100 mb-2">Facility Access</h3>
+          <p className="text-sm text-purple-200 mb-3">
+            Manage facility access, verification, and session monitoring
+          </p>
+          <Link href="/prison-access">
+            <Button variant="outline" size="sm" className="w-full" data-testid="button-facility-portal">
+              Facility Portal
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
+          </Link>
+        </Card>
+      </div>
 
       <Card className="md:col-span-3 p-8 bg-purple-900/20 border-purple-700/30">
         <h2 className="text-2xl font-serif text-[#d4af37] mb-6">Submit a Support Request</h2>
