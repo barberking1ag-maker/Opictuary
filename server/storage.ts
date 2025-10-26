@@ -341,6 +341,7 @@ export interface IStorage {
   
   // Memorial Event RSVP operations
   listEventRsvps(eventId: string): Promise<MemorialEventRsvp[]>;
+  getEventRsvp(id: string): Promise<MemorialEventRsvp | undefined>;
   createEventRsvp(rsvp: InsertMemorialEventRsvp): Promise<MemorialEventRsvp>;
   updateEventRsvp(id: string, rsvp: Partial<InsertMemorialEventRsvp>): Promise<MemorialEventRsvp | undefined>;
   deleteEventRsvp(id: string): Promise<void>;
@@ -1802,6 +1803,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(memorialEventRsvps)
       .where(eq(memorialEventRsvps.eventId, eventId))
       .orderBy(desc(memorialEventRsvps.createdAt));
+  }
+
+  async getEventRsvp(id: string): Promise<MemorialEventRsvp | undefined> {
+    const [rsvp] = await db.select().from(memorialEventRsvps).where(eq(memorialEventRsvps.id, id));
+    return rsvp || undefined;
   }
 
   async createEventRsvp(rsvp: InsertMemorialEventRsvp): Promise<MemorialEventRsvp> {

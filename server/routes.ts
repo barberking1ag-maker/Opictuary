@@ -54,6 +54,8 @@ import {
   insertSupportRequestSchema,
   insertGriefResourceSchema,
   insertUserSettingsSchema,
+  insertMemorialEventSchema,
+  insertMemorialEventRsvpSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -2533,6 +2535,276 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error deleting grief resource:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Events routes
+  // List memorial events (with optional memorial filter and pagination)
+  app.get("/api/memorial-events", async (req, res) => {
+    try {
+      const memorialId = req.query.memorialId as string | undefined;
+      const paginated = req.query.paginated === 'true';
+      
+      // Validate pagination parameters
+      const rawLimit = Number(req.query.limit);
+      const rawOffset = Number(req.query.offset);
+      const limit = !isNaN(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 200) : 50;
+      const offset = !isNaN(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
+      if (paginated) {
+        const [events, total] = await Promise.all([
+          storage.listMemorialEvents(memorialId, limit, offset),
+          storage.getMemorialEventsCount(memorialId)
+        ]);
+        res.json({
+          data: events,
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + limit < total
+          }
+        });
+      } else {
+        const events = await storage.listMemorialEvents(memorialId, limit, offset);
+        res.json(events);
+      }
+    } catch (error: any) {
+      console.error("Error listing memorial events:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a specific memorial event
+  app.get("/api/memorial-events/:id", async (req, res) => {
+    try {
+      const event = await storage.getMemorialEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Memorial event not found" });
+      }
+      res.json(event);
+    } catch (error: any) {
+      console.error("Error getting memorial event:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create a memorial event (authenticated users only)
+  app.post("/api/memorial-events", isAuthenticated, async (req: any, res) => {
+    try {
+      const validated = insertMemorialEventSchema.parse(req.body);
+      const userEmail = req.user.claims.email;
+      
+      // Check if user is the creator or an admin of the memorial
+      const memorial = await storage.getMemorial(validated.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(validated.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to create events for this memorial" });
+      }
+      
+      const event = await storage.createMemorialEvent(validated);
+      res.status(201).json(event);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating memorial event:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update a memorial event (authenticated users only)
+  app.patch("/api/memorial-events/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      // Validate partial update data
+      const validated = insertMemorialEventSchema.partial().parse(req.body);
+      const userEmail = req.user.claims.email;
+      
+      // Get the event and verify authorization
+      const event = await storage.getMemorialEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Memorial event not found" });
+      }
+      
+      const memorial = await storage.getMemorial(event.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(event.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to update this event" });
+      }
+      
+      // Strip immutable fields to prevent privilege escalation
+      const { memorialId, ...safeUpdate } = validated;
+      
+      const updated = await storage.updateMemorialEvent(req.params.id, safeUpdate);
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error updating memorial event:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete a memorial event (authenticated users only)
+  app.delete("/api/memorial-events/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the event and verify authorization
+      const event = await storage.getMemorialEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Memorial event not found" });
+      }
+      
+      const memorial = await storage.getMemorial(event.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(event.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to delete this event" });
+      }
+      
+      await storage.deleteMemorialEvent(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting memorial event:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Event RSVP routes
+  // List RSVPs for a memorial event
+  app.get("/api/memorial-events/:eventId/rsvps", async (req, res) => {
+    try {
+      const rsvps = await storage.listEventRsvps(req.params.eventId);
+      res.json(rsvps);
+    } catch (error: any) {
+      console.error("Error listing event RSVPs:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create an RSVP for a memorial event
+  app.post("/api/memorial-events/:eventId/rsvps", async (req, res) => {
+    try {
+      const validated = insertMemorialEventRsvpSchema.parse({
+        ...req.body,
+        eventId: req.params.eventId
+      });
+      const rsvp = await storage.createEventRsvp(validated);
+      res.status(201).json(rsvp);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating event RSVP:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update an RSVP
+  app.patch("/api/event-rsvps/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      // Validate partial update data
+      const validated = insertMemorialEventRsvpSchema.partial().parse(req.body);
+      const userEmail = req.user.claims.email;
+      
+      // Get the RSVP and verify authorization
+      const rsvp = await storage.getEventRsvp(req.params.id);
+      if (!rsvp) {
+        return res.status(404).json({ error: "RSVP not found" });
+      }
+      
+      // User can update RSVP if they created it OR are admin of the memorial
+      const event = await storage.getMemorialEvent(rsvp.eventId);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      const memorial = await storage.getMemorial(event.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(event.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      const isRsvpOwner = rsvp.email === userEmail;
+      
+      if (!isCreator && !isAdmin && !isRsvpOwner) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to update this RSVP" });
+      }
+      
+      // Strip immutable fields to prevent privilege escalation
+      const { eventId, email, ...safeUpdate } = validated;
+      
+      const updated = await storage.updateEventRsvp(req.params.id, safeUpdate);
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error updating event RSVP:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete an RSVP
+  app.delete("/api/event-rsvps/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get the RSVP and verify authorization
+      const rsvp = await storage.getEventRsvp(req.params.id);
+      if (!rsvp) {
+        return res.status(404).json({ error: "RSVP not found" });
+      }
+      
+      // User can delete RSVP if they created it OR are admin of the memorial
+      const event = await storage.getMemorialEvent(rsvp.eventId);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      const memorial = await storage.getMemorial(event.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      const admins = await storage.getMemorialAdmins(event.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      const isRsvpOwner = rsvp.email === userEmail;
+      
+      if (!isCreator && !isAdmin && !isRsvpOwner) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to delete this RSVP" });
+      }
+      
+      await storage.deleteEventRsvp(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting event RSVP:", error);
       res.status(500).json({ error: error.message });
     }
   });
