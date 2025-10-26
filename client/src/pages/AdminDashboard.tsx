@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark, HeadphonesIcon, BookOpen, LifeBuoy } from "lucide-react";
+import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark, HeadphonesIcon, BookOpen, LifeBuoy, Building } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Link } from "wouter";
 
