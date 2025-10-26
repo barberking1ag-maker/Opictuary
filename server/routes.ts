@@ -46,6 +46,9 @@ import {
   insertQRCodeSchema,
   insertPageViewSchema,
   insertAnalyticsEventSchema,
+  insertSupportArticleSchema,
+  insertSupportRequestSchema,
+  insertGriefResourceSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -1713,6 +1716,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(commissions);
     } catch (error: any) {
       console.error("Error fetching shop commissions:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==================== Support System ====================
+
+  // Get all support articles (optionally filtered by category)
+  app.get("/api/support/articles", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const articles = await storage.getSupportArticles(category);
+      res.json(articles);
+    } catch (error: any) {
+      console.error("Error fetching support articles:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a single support article
+  app.get("/api/support/articles/:id", async (req, res) => {
+    try {
+      const article = await storage.getSupportArticle(req.params.id);
+      if (!article) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      
+      // Increment view count
+      await storage.incrementArticleView(req.params.id);
+      
+      res.json(article);
+    } catch (error: any) {
+      console.error("Error fetching support article:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mark article as helpful
+  app.post("/api/support/articles/:id/helpful", async (req, res) => {
+    try {
+      await storage.incrementArticleHelpful(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error marking article as helpful:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get all grief resources (optionally filtered by category)
+  app.get("/api/support/grief-resources", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const resources = await storage.getGriefResources(category);
+      res.json(resources);
+    } catch (error: any) {
+      console.error("Error fetching grief resources:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get a single grief resource
+  app.get("/api/support/grief-resources/:id", async (req, res) => {
+    try {
+      const resource = await storage.getGriefResource(req.params.id);
+      if (!resource) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+      res.json(resource);
+    } catch (error: any) {
+      console.error("Error fetching grief resource:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Submit a support request
+  app.post("/api/support/requests", async (req, res) => {
+    try {
+      const validated = insertSupportRequestSchema.parse(req.body);
+      const request = await storage.createSupportRequest(validated);
+      res.status(201).json(request);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating support request:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get all support requests (optionally filtered by status)
+  app.get("/api/admin/support/requests", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const requests = await storage.getSupportRequests(status);
+      res.json(requests);
+    } catch (error: any) {
+      console.error("Error fetching support requests:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Get a single support request
+  app.get("/api/admin/support/requests/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const request = await storage.getSupportRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      console.error("Error fetching support request:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Update support request status
+  app.patch("/api/admin/support/requests/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const updateData: any = {};
+      if (req.body.status !== undefined) updateData.status = req.body.status;
+      if (req.body.resolution !== undefined) updateData.resolution = req.body.resolution;
+      if (req.body.priority !== undefined) updateData.priority = req.body.priority;
+      if (req.body.assignedTo !== undefined) updateData.assignedTo = req.body.assignedTo;
+      
+      const updated = await storage.updateSupportRequest(req.params.id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating support request:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Resolve support request
+  app.post("/api/admin/support/requests/:id/resolve", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { resolution } = req.body;
+      if (!resolution) {
+        return res.status(400).json({ error: "Resolution text is required" });
+      }
+      
+      const updated = await storage.resolveSupportRequest(req.params.id, resolution);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error resolving support request:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Create support article
+  app.post("/api/admin/support/articles", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validated = insertSupportArticleSchema.parse(req.body);
+      const article = await storage.createSupportArticle(validated);
+      res.status(201).json(article);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating support article:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Update support article
+  app.patch("/api/admin/support/articles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateSupportArticle(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating support article:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Delete support article
+  app.delete("/api/admin/support/articles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSupportArticle(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting support article:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Create grief resource
+  app.post("/api/admin/support/grief-resources", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validated = insertGriefResourceSchema.parse(req.body);
+      const resource = await storage.createGriefResource(validated);
+      res.status(201).json(resource);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating grief resource:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Update grief resource
+  app.patch("/api/admin/support/grief-resources/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const updated = await storage.updateGriefResource(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error updating grief resource:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin: Delete grief resource
+  app.delete("/api/admin/support/grief-resources/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteGriefResource(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting grief resource:", error);
       res.status(500).json({ error: error.message });
     }
   });
