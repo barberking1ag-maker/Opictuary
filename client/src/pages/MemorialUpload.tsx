@@ -25,8 +25,7 @@ export default function MemorialUpload() {
   
   const [uploaderName, setUploaderName] = useState("");
   const [message, setMessage] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mediaUrl, setMediaUrl] = useState("");
 
   // Get memorial by invite code
   const { data: memorial, isLoading } = useQuery<Memorial>({
@@ -35,16 +34,18 @@ export default function MemorialUpload() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const response = await fetch(`/api/memorials/${memorial?.id}/memories`, {
+    mutationFn: async (data: any) => {
+      const response = await fetch(`/api/qr-codes/${code}/upload`, {
         method: "POST",
-        body: data,
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
       
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Upload failed");
+        const error = await response.json().catch(() => ({ error: "Upload failed" }));
+        throw new Error(error.error || "Upload failed");
       }
       
       return await response.json();
@@ -58,8 +59,7 @@ export default function MemorialUpload() {
       // Reset form
       setUploaderName("");
       setMessage("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
+      setMediaUrl("");
       
       // Navigate to memorial view after a brief delay
       setTimeout(() => {
@@ -75,17 +75,6 @@ export default function MemorialUpload() {
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -98,22 +87,20 @@ export default function MemorialUpload() {
       return;
     }
 
-    if (!selectedFile) {
+    if (!message.trim() && !mediaUrl.trim()) {
       toast({
-        title: "File Required",
-        description: "Please select a photo or video to upload.",
+        title: "Content Required",
+        description: "Please enter a message or provide a media URL.",
         variant: "destructive",
       });
       return;
     }
 
-    const formData = new FormData();
-    formData.append("type", selectedFile.type.startsWith("video") ? "video" : "photo");
-    formData.append("caption", message);
-    formData.append("submitterName", uploaderName);
-    formData.append("file", selectedFile);
-
-    uploadMutation.mutate(formData);
+    uploadMutation.mutate({
+      authorName: uploaderName,
+      caption: message || "Shared via QR code",
+      mediaUrl: mediaUrl || undefined,
+    });
   };
 
   if (isLoading) {
@@ -215,60 +202,28 @@ export default function MemorialUpload() {
                 />
               </div>
 
-              {/* File Upload */}
+              {/* Media URL */}
               <div className="space-y-2">
-                <Label htmlFor="file" className="text-purple-100">
-                  Photo or Video *
+                <Label htmlFor="mediaUrl" className="text-purple-100">
+                  Photo or Video URL (Optional)
                 </Label>
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="file"
-                    data-testid="input-file"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleFileChange}
-                    required
-                    className="bg-purple-950/50 border-purple-700/50 text-purple-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gold-500 file:text-purple-950 hover:file:bg-gold-600"
-                  />
-                </div>
+                <Input
+                  id="mediaUrl"
+                  data-testid="input-media-url"
+                  placeholder="https://example.com/photo.jpg"
+                  value={mediaUrl}
+                  onChange={(e) => setMediaUrl(e.target.value)}
+                  className="bg-purple-950/50 border-purple-700/50 text-purple-100 placeholder:text-purple-400"
+                />
                 <p className="text-xs text-purple-400">
-                  Accepted formats: JPG, PNG, GIF, MP4, MOV (max 50MB)
+                  Paste a link to your photo or video (hosted on Imgur, Google Photos, etc.)
                 </p>
               </div>
-
-              {/* Preview */}
-              {previewUrl && selectedFile && (
-                <div className="space-y-2">
-                  <Label className="text-purple-100">Preview</Label>
-                  <div className="rounded-lg overflow-hidden border border-purple-700/50 bg-purple-950/50">
-                    {selectedFile.type.startsWith("image") ? (
-                      <div className="flex items-center justify-center p-4">
-                        <ImageIcon className="w-6 h-6 text-gold-400 mr-2" />
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="max-h-48 rounded-md"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center p-8">
-                        <Video className="w-12 h-12 text-gold-400 mr-3" />
-                        <div>
-                          <p className="text-purple-100 font-medium">{selectedFile.name}</p>
-                          <p className="text-sm text-purple-400">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Message */}
               <div className="space-y-2">
                 <Label htmlFor="message" className="text-purple-100">
-                  Message (Optional)
+                  Message *
                 </Label>
                 <Textarea
                   id="message"

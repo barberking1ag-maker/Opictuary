@@ -481,6 +481,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public QR Code upload endpoint (no authentication required)
+  app.post("/api/qr-codes/:code/upload", async (req, res) => {
+    try {
+      // Validate QR code exists and is for upload purpose
+      const qrCode = await storage.getQRCodeByCode(req.params.code);
+      
+      if (!qrCode) {
+        return res.status(404).json({ error: "Invalid QR code" });
+      }
+
+      if (qrCode.purpose !== "tombstone_upload") {
+        return res.status(403).json({ error: "This QR code is not for uploading media" });
+      }
+
+      // Validate the memorial exists
+      const memorial = await storage.getMemorial(qrCode.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Create memory with auto-approval for QR code uploads
+      const data = insertMemorySchema.parse({
+        ...req.body,
+        memorialId: qrCode.memorialId,
+        isApproved: true, // Auto-approve QR code uploads
+      });
+      
+      const memory = await storage.createMemory(data);
+      res.status(201).json(memory);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Memory routes
   app.get("/api/memorials/:memorialId/memories", async (req, res) => {
     try {

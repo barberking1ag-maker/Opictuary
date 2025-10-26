@@ -115,15 +115,17 @@ export default function MyMemorials() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1" asChild>
-                      <a href={`/?code=${memorial.inviteCode}`} target="_blank" rel="noopener noreferrer">
+                      <a href={`/?code=${memorial.inviteCode}`} target="_blank" rel="noopener noreferrer" data-testid={`button-view-${memorial.id}`}>
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View
                       </a>
                     </Button>
-                    <Button variant="default" className="flex-1">
-                      <Users className="w-4 h-4 mr-2" />
-                      Manage
-                    </Button>
+                    <Link href={`/memorials/${memorial.id}/manage`}>
+                      <Button variant="default" className="flex-1" data-testid={`button-manage-${memorial.id}`}>
+                        <Users className="w-4 h-4 mr-2" />
+                        Manage
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
