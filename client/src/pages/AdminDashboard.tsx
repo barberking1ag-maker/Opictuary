@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image } from "lucide-react";
+import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Link } from "wouter";
 
@@ -49,6 +49,20 @@ interface DashboardStats {
   topPages: Array<{
     path: string;
     views: number;
+  }>;
+  analytics: {
+    totalViews: number;
+    totalShares: number;
+    totalSaves: number;
+    viewsThisWeek: number;
+    sharesThisWeek: number;
+    savesThisWeek: number;
+  };
+  topMemorials: Array<{
+    memorialId: string;
+    views: number;
+    shares: number;
+    saves: number;
   }>;
 }
 
@@ -238,6 +252,58 @@ export default function AdminDashboard() {
 
           {/* Engagement Tab */}
           <TabsContent value="engagement" className="space-y-6">
+            {/* Memorial Analytics */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* Memorial Views */}
+              <Card data-testid="card-memorial-views">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Memorial Views</CardTitle>
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-views">
+                    {stats.analytics.totalViews.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-views-week">
+                    {stats.analytics.viewsThisWeek.toLocaleString()} this week
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Memorial Shares */}
+              <Card data-testid="card-memorial-shares">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Memorial Shares</CardTitle>
+                  <Share2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-shares">
+                    {stats.analytics.totalShares.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-shares-week">
+                    {stats.analytics.sharesThisWeek.toLocaleString()} this week
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Memorial Saves */}
+              <Card data-testid="card-memorial-saves">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Memorial Saves</CardTitle>
+                  <Bookmark className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold tabular-nums" data-testid="text-total-saves">
+                    {stats.analytics.totalSaves.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground" data-testid="text-saves-week">
+                    {stats.analytics.savesThisWeek.toLocaleString()} this week
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Memories & Activity */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* Memories */}
               <Card data-testid="card-memories">
@@ -283,6 +349,51 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Top Memorials by Engagement */}
+            <Card data-testid="card-top-memorials">
+              <CardHeader>
+                <CardTitle>Top Memorials</CardTitle>
+                <CardDescription>Most engaged memorials this week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {stats.topMemorials.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No memorial engagement data yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {stats.topMemorials.map((memorial, index) => (
+                      <div key={memorial.memorialId} className="flex items-center justify-between gap-4" data-testid={`item-memorial-${index}`}>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" data-testid={`text-memorial-id-${index}`}>
+                            Memorial {memorial.memorialId.slice(0, 8)}...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="flex items-center gap-1" title="Views">
+                            <Eye className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm tabular-nums" data-testid={`text-memorial-views-${index}`}>
+                              {memorial.views.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1" title="Shares">
+                            <Share2 className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm tabular-nums" data-testid={`text-memorial-shares-${index}`}>
+                              {memorial.shares.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1" title="Saves">
+                            <Bookmark className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm tabular-nums" data-testid={`text-memorial-saves-${index}`}>
+                              {memorial.saves.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Revenue Tab */}

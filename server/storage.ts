@@ -1104,6 +1104,62 @@ export class DatabaseStorage implements IStorage {
       console.log("Page views table not yet populated");
     }
 
+    // Analytics Events stats
+    let analyticsStats = {
+      totalViews: 0,
+      totalShares: 0,
+      totalSaves: 0,
+      viewsThisWeek: 0,
+      sharesThisWeek: 0,
+      savesThisWeek: 0,
+    };
+
+    try {
+      const viewEvents = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_view'`);
+      const shareEvents = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_share'`);
+      const saveEvents = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_save'`);
+      
+      const viewEventsWeek = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_view' AND created_at >= ${weekAgo}`);
+      const shareEventsWeek = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_share' AND created_at >= ${weekAgo}`);
+      const saveEventsWeek = await db.execute(sql`SELECT COUNT(*)::int as count FROM analytics_events WHERE event_type = 'memorial_save' AND created_at >= ${weekAgo}`);
+
+      analyticsStats = {
+        totalViews: (viewEvents.rows[0] as any)?.count || 0,
+        totalShares: (shareEvents.rows[0] as any)?.count || 0,
+        totalSaves: (saveEvents.rows[0] as any)?.count || 0,
+        viewsThisWeek: (viewEventsWeek.rows[0] as any)?.count || 0,
+        sharesThisWeek: (shareEventsWeek.rows[0] as any)?.count || 0,
+        savesThisWeek: (saveEventsWeek.rows[0] as any)?.count || 0,
+      };
+    } catch (error) {
+      console.log("Analytics events table not yet populated");
+    }
+
+    // Top memorials by engagement
+    let topMemorials: Array<{ memorialId: string; views: number; shares: number; saves: number }> = [];
+    try {
+      const topMemorialsResult = await db.execute(sql`
+        SELECT 
+          memorial_id,
+          COUNT(CASE WHEN event_type = 'memorial_view' THEN 1 END)::int as views,
+          COUNT(CASE WHEN event_type = 'memorial_share' THEN 1 END)::int as shares,
+          COUNT(CASE WHEN event_type = 'memorial_save' THEN 1 END)::int as saves
+        FROM analytics_events 
+        WHERE memorial_id IS NOT NULL AND created_at >= ${weekAgo}
+        GROUP BY memorial_id 
+        ORDER BY views DESC 
+        LIMIT 10
+      `);
+      topMemorials = topMemorialsResult.rows.map((row: any) => ({
+        memorialId: row.memorial_id,
+        views: row.views || 0,
+        shares: row.shares || 0,
+        saves: row.saves || 0,
+      }));
+    } catch (error) {
+      console.log("Analytics events table not yet populated");
+    }
+
     return {
       users: {
         total: totalUsers.count || 0,
@@ -1140,6 +1196,8 @@ export class DatabaseStorage implements IStorage {
       },
       pageViews: pageViewsStats,
       topPages,
+      analytics: analyticsStats,
+      topMemorials,
     };
   }
 }
