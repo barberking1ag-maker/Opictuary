@@ -338,8 +338,8 @@ export default function ManageMemorial() {
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-purple-100 mb-2">Create Future Messages for Loved Ones</h3>
                       <p className="text-sm text-purple-300 leading-relaxed">
-                        Write messages now that will be delivered to your loved ones on future dates you choose - 
-                        birthdays, graduations, weddings, anniversaries, or any special occasion.
+                        Write heartfelt messages today that will be automatically delivered to your loved ones on 
+                        future occasions like birthdays, graduations, weddings, and anniversaries.
                       </p>
                     </div>
                   </div>
