@@ -336,11 +336,10 @@ export default function ManageMemorial() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-purple-100 mb-2">Why Create Scheduled Messages?</h3>
+                      <h3 className="text-base font-semibold text-purple-100 mb-2">Create Future Messages for Loved Ones</h3>
                       <p className="text-sm text-purple-300 leading-relaxed">
-                        Leave messages for your loved ones to be delivered on future occasions like birthdays, 
-                        graduations, weddings, and anniversaries. Your words will reach them at the moments that 
-                        matter most.
+                        Write messages now that will be delivered to your loved ones on future dates you choose - 
+                        birthdays, graduations, weddings, anniversaries, or any special occasion.
                       </p>
                     </div>
                   </div>
