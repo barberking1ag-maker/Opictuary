@@ -4,3 +4,10 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Android signing keys - DO NOT COMMIT THESE
+android/key.properties
+android/*.jks
+android/*.keystore
+*.jks
+*.keystore
