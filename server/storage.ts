@@ -307,6 +307,7 @@ export interface IStorage {
 
   // Admin Analytics
   getAdminStats(): Promise<any>;
+  getRecentUsers(days: number): Promise<User[]>;
 
   // Support Article operations
   getSupportArticles(category?: string): Promise<SupportArticle[]>;
@@ -1734,6 +1735,17 @@ export class DatabaseStorage implements IStorage {
         flowerShops: flowerShopStats,
       },
     };
+  }
+
+  async getRecentUsers(days: number): Promise<User[]> {
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - days);
+    
+    const recentUsers = await db.select().from(users)
+      .where(sql`${users.createdAt} >= ${daysAgo}`)
+      .orderBy(desc(users.createdAt));
+    
+    return recentUsers;
   }
 
   // Support Article operations

@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark, HeadphonesIcon, BookOpen, LifeBuoy, Building } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Users, Heart, DollarSign, TrendingUp, Calendar, MessageSquare, Shield, Eye, Image, Share2, Bookmark, HeadphonesIcon, BookOpen, LifeBuoy, Building, Bell, UserPlus, X } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Link } from "wouter";
+import type { User } from "@shared/schema";
 
 interface DashboardStats {
   users: {
@@ -98,8 +101,15 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const [dismissedNotification, setDismissedNotification] = useState(false);
+  
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['/api/admin/stats'],
+  });
+
+  // Fetch recent users (last 7 days)
+  const { data: recentUsers = [] } = useQuery<User[]>({
+    queryKey: ['/api/admin/recent-users'],
   });
 
   if (isLoading) {
@@ -152,6 +162,63 @@ export default function AdminDashboard() {
             <OpictuaryLogo variant="classic" showTagline={false} />
           </div>
         </div>
+
+        {/* New User Notification */}
+        {recentUsers.length > 0 && !dismissedNotification && (
+          <Alert className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 via-primary/5 to-background" data-testid="alert-new-users">
+            <div className="flex items-start gap-4">
+              <div className="bg-primary/20 p-2 rounded-full flex-shrink-0">
+                <Bell className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <AlertTitle className="text-lg font-semibold flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-primary" />
+                  New User{recentUsers.length > 1 ? 's' : ''} Registered!
+                </AlertTitle>
+                <AlertDescription className="mt-2">
+                  <p className="text-muted-foreground mb-3">
+                    {recentUsers.length} new user{recentUsers.length > 1 ? 's have' : ' has'} joined Opictuary in the last 7 days:
+                  </p>
+                  <div className="space-y-2">
+                    {recentUsers.map((user) => (
+                      <Card key={user.id} className="bg-card/50" data-testid={`card-new-user-${user.id}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-foreground" data-testid={`text-user-name-${user.id}`}>
+                                {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
+                              </p>
+                              <p className="text-sm text-muted-foreground" data-testid={`text-user-email-${user.id}`}>
+                                {user.email}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-medium text-primary" data-testid={`text-user-date-${user.id}`}>
+                                {new Date(user.createdAt || '').toLocaleDateString()}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(user.createdAt || '').toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDismissedNotification(true)}
+                className="flex-shrink-0"
+                data-testid="button-dismiss-notification"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-3" data-testid="tabs-admin">

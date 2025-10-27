@@ -2101,6 +2101,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get recent users (Admin only)
+  app.get("/api/admin/recent-users", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getRecentUsers(7); // Last 7 days
+      res.json(users);
+    } catch (error: any) {
+      console.error("Error fetching recent users:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Generate Play Store Screenshots (Admin only)
   app.post("/api/admin/generate-screenshots", isAuthenticated, isAdmin, async (req, res) => {
     try {
