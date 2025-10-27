@@ -75,6 +75,26 @@ interface DashboardStats {
     partnerRequests: number;
     partnerPendingRequests: number;
   };
+  partners: {
+    funeralHomes: {
+      total: number;
+      active: number;
+      newThisWeek: number;
+      newThisMonth: number;
+      totalReferrals: number;
+      totalCommissions: number;
+      pendingPayouts: number;
+    };
+    flowerShops: {
+      total: number;
+      active: number;
+      newThisWeek: number;
+      newThisMonth: number;
+      totalOrders: number;
+      totalCommissions: number;
+      pendingPayouts: number;
+    };
+  };
 }
 
 export default function AdminDashboard() {
@@ -394,6 +414,142 @@ export default function AdminDashboard() {
                     </Button>
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+
+            {/* Business Partners Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Building className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-semibold">Business Partners</h2>
+              </div>
+              
+              {/* Funeral Home Partners */}
+              <div>
+                <h3 className="text-md font-medium mb-3 text-foreground">Funeral Home Partners</h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card data-testid="card-funeral-homes-total">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Partners</CardTitle>
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-funeral-homes-total">
+                        {stats.partners.funeralHomes.total.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-funeral-homes-active">
+                        {stats.partners.funeralHomes.active.toLocaleString()} active
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-funeral-homes-new">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">New Partners</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-funeral-homes-week">
+                        {stats.partners.funeralHomes.newThisWeek.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-funeral-homes-month">
+                        {stats.partners.funeralHomes.newThisMonth.toLocaleString()} this month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-funeral-referrals">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Referrals</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-total-referrals">
+                        {stats.partners.funeralHomes.totalReferrals.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Memorials created</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-funeral-commissions">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Commissions</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-funeral-commissions">
+                        ${parseFloat(stats.partners.funeralHomes.totalCommissions.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-funeral-pending-payouts">
+                        ${parseFloat(stats.partners.funeralHomes.pendingPayouts.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pending
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Flower Shop Partners */}
+              <div>
+                <h3 className="text-md font-medium mb-3 text-foreground">Flower Shop Partners</h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card data-testid="card-flower-shops-total">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Partners</CardTitle>
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-flower-shops-total">
+                        {stats.partners.flowerShops.total.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-flower-shops-active">
+                        {stats.partners.flowerShops.active.toLocaleString()} active
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-flower-shops-new">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">New Partners</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-flower-shops-week">
+                        {stats.partners.flowerShops.newThisWeek.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-flower-shops-month">
+                        {stats.partners.flowerShops.newThisMonth.toLocaleString()} this month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-flower-orders">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                      <Heart className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-total-flower-orders">
+                        {stats.partners.flowerShops.totalOrders.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Flower deliveries</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card data-testid="card-flower-commissions">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Commissions (20%)</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold tabular-nums" data-testid="text-flower-commissions">
+                        ${parseFloat(stats.partners.flowerShops.totalCommissions.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                      <p className="text-xs text-muted-foreground" data-testid="text-flower-pending-payouts">
+                        ${parseFloat(stats.partners.flowerShops.pendingPayouts.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pending
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </TabsContent>

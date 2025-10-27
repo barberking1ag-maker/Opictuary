@@ -1606,6 +1606,90 @@ export class DatabaseStorage implements IStorage {
       console.log("Support tables not yet populated");
     }
 
+    // Partner stats - Funeral Homes
+    let funeralHomeStats = {
+      total: 0,
+      active: 0,
+      newThisWeek: 0,
+      newThisMonth: 0,
+      totalReferrals: 0,
+      totalCommissions: 0,
+      pendingPayouts: 0,
+    };
+
+    try {
+      const [totalFuneralHomes] = await db.select({ count: sql<number>`count(*)::int` }).from(funeralHomePartners);
+      const [activeFuneralHomes] = await db.select({ count: sql<number>`count(*)::int` }).from(funeralHomePartners)
+        .where(eq(funeralHomePartners.isActive, true));
+      const [newFuneralHomesWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(funeralHomePartners)
+        .where(sql`${funeralHomePartners.createdAt} >= ${weekAgo}`);
+      const [newFuneralHomesMonth] = await db.select({ count: sql<number>`count(*)::int` }).from(funeralHomePartners)
+        .where(sql`${funeralHomePartners.createdAt} >= ${monthAgo}`);
+      
+      const [totalReferrals] = await db.select({ count: sql<number>`count(*)::int` }).from(partnerReferrals);
+      const [totalCommissions] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${partnerCommissions.commissionAmount})::numeric, 0)` 
+      }).from(partnerCommissions);
+      const [pendingPayouts] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${partnerPayouts.amount})::numeric, 0)` 
+      }).from(partnerPayouts)
+        .where(eq(partnerPayouts.status, 'pending'));
+
+      funeralHomeStats = {
+        total: totalFuneralHomes.count || 0,
+        active: activeFuneralHomes.count || 0,
+        newThisWeek: newFuneralHomesWeek.count || 0,
+        newThisMonth: newFuneralHomesMonth.count || 0,
+        totalReferrals: totalReferrals.count || 0,
+        totalCommissions: totalCommissions.total || 0,
+        pendingPayouts: pendingPayouts.total || 0,
+      };
+    } catch (error) {
+      console.log("Funeral home partner tables not yet populated");
+    }
+
+    // Partner stats - Flower Shops
+    let flowerShopStats = {
+      total: 0,
+      active: 0,
+      newThisWeek: 0,
+      newThisMonth: 0,
+      totalOrders: 0,
+      totalCommissions: 0,
+      pendingPayouts: 0,
+    };
+
+    try {
+      const [totalFlowerShops] = await db.select({ count: sql<number>`count(*)::int` }).from(flowerShopPartners);
+      const [activeFlowerShops] = await db.select({ count: sql<number>`count(*)::int` }).from(flowerShopPartners)
+        .where(eq(flowerShopPartners.isActive, true));
+      const [newFlowerShopsWeek] = await db.select({ count: sql<number>`count(*)::int` }).from(flowerShopPartners)
+        .where(sql`${flowerShopPartners.createdAt} >= ${weekAgo}`);
+      const [newFlowerShopsMonth] = await db.select({ count: sql<number>`count(*)::int` }).from(flowerShopPartners)
+        .where(sql`${flowerShopPartners.createdAt} >= ${monthAgo}`);
+      
+      const [totalOrders] = await db.select({ count: sql<number>`count(*)::int` }).from(flowerOrders);
+      const [totalCommissions] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${flowerCommissions.commissionAmount})::numeric, 0)` 
+      }).from(flowerCommissions);
+      const [pendingPayouts] = await db.select({ 
+        total: sql<number>`COALESCE(sum(${flowerPayouts.amount})::numeric, 0)` 
+      }).from(flowerPayouts)
+        .where(eq(flowerPayouts.status, 'pending'));
+
+      flowerShopStats = {
+        total: totalFlowerShops.count || 0,
+        active: activeFlowerShops.count || 0,
+        newThisWeek: newFlowerShopsWeek.count || 0,
+        newThisMonth: newFlowerShopsMonth.count || 0,
+        totalOrders: totalOrders.count || 0,
+        totalCommissions: totalCommissions.total || 0,
+        pendingPayouts: pendingPayouts.total || 0,
+      };
+    } catch (error) {
+      console.log("Flower shop partner tables not yet populated");
+    }
+
     return {
       users: {
         total: totalUsers.count || 0,
@@ -1645,6 +1729,10 @@ export class DatabaseStorage implements IStorage {
       analytics: analyticsStats,
       topMemorials,
       support: supportStats,
+      partners: {
+        funeralHomes: funeralHomeStats,
+        flowerShops: flowerShopStats,
+      },
     };
   }
 
