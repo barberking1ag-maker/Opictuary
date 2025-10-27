@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark } from "lucide-react";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
@@ -21,6 +22,7 @@ export default function Home() {
   const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   const verifyInviteCodeMutation = useMutation({
     mutationFn: async (inviteCode: string) => {
@@ -288,6 +290,96 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Engagement Call-to-Action Card */}
+      {!isAuthenticated && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-8">
+          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20 shadow-lg" data-testid="card-engagement-cta">
+            <CardContent className="p-8">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="bg-primary/20 p-3 rounded-full">
+                    <Heart className="w-8 h-8 text-primary" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-foreground">
+                  Keep Their Memory Alive
+                </h3>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  Create your free account to save memorials, share with loved ones, and preserve precious memories forever.
+                </p>
+                <div className="flex flex-wrap justify-center gap-4 pt-4">
+                  <Button 
+                    size="lg" 
+                    onClick={() => window.location.href = '/api/login'}
+                    data-testid="button-cta-signup"
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <UserPlus className="w-5 h-5 mr-2" />
+                    Create Free Account
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={handleShare}
+                    data-testid="button-cta-share"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Share This Memorial
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={handleSave}
+                    data-testid="button-cta-save"
+                  >
+                    <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                    {isSaved ? 'Saved' : 'Save Memorial'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Engagement Reminder for Logged-in Users */}
+      {isAuthenticated && !isSaved && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-8">
+          <Card className="bg-gradient-to-br from-accent/10 via-accent/5 to-background border-2 border-accent/20" data-testid="card-save-reminder">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-center sm:text-left">
+                  <div className="bg-accent/20 p-2 rounded-full flex-shrink-0">
+                    <Bookmark className="w-5 h-5 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Remember this memorial</p>
+                    <p className="text-sm text-muted-foreground">Save it to easily find and share later</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleSave}
+                    data-testid="button-reminder-save"
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    Save Memorial
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleShare}
+                    data-testid="button-reminder-share"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
