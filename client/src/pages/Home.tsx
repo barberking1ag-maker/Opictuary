@@ -13,6 +13,9 @@ import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
 import { PhotoGallery } from "@/components/PhotoGallery";
+import { MemorialEngagement } from "@/components/MemorialEngagement";
+import { LiveStreamViewer } from "@/components/LiveStreamViewer";
+import { ShareObituaryButton } from "@/components/ShareObituaryButton";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -132,6 +135,15 @@ export default function Home() {
         description: "Memorial link copied to clipboard.",
       });
     }
+  };
+
+  const handleLoginRequired = () => {
+    toast({
+      title: "Login Required",
+      description: "Please log in to interact with this memorial.",
+      variant: "default",
+    });
+    window.location.href = "/api/auth/login";
   };
 
   const handleSave = () => {
@@ -274,6 +286,10 @@ export default function Home() {
                 <Share2 className="w-5 h-5 mr-2" />
                 Share Memorial
               </Button>
+              <ShareObituaryButton 
+                memorialId={memorialId!}
+                deceasedName={memorial.name}
+              />
               <Button 
                 size="lg" 
                 variant={isSaved ? "default" : "outline"}
@@ -651,6 +667,44 @@ export default function Home() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Live Stream Section */}
+        <div className="mt-12">
+          <LiveStreamViewer
+            memorialId={memorialId!}
+            currentUser={
+              user
+                ? {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                  }
+                : undefined
+            }
+          />
+        </div>
+
+        {/* Social Engagement Section */}
+        <div className="mt-12">
+          <h2 className="text-3xl font-serif font-bold text-foreground mb-6">
+            Engage with this Memorial
+          </h2>
+          <MemorialEngagement
+            memorialId={memorialId!}
+            currentUser={
+              user
+                ? {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                  }
+                : undefined
+            }
+            onLoginRequired={handleLoginRequired}
+          />
+        </div>
       </div>
 
       <InviteCodeModal 
