@@ -126,10 +126,80 @@ export const condolences = pgTable("condolences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
   message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_condolences_memorial_id").on(table.memorialId),
+]);
+
+// Memorial Likes - track who liked a memorial
+export const memorialLikes = pgTable("memorial_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userName: text("user_name").notNull(), // For non-logged in users
+  userEmail: text("user_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_likes_memorial_id").on(table.memorialId),
+  index("idx_memorial_likes_user_id").on(table.userId),
+]);
+
+// Memorial Comments - threaded comments on memorials
+export const memorialComments = pgTable("memorial_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  comment: text("comment").notNull(),
+  parentCommentId: varchar("parent_comment_id"), // For threaded replies
+  isApproved: boolean("is_approved").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_comments_memorial_id").on(table.memorialId),
+  index("idx_memorial_comments_user_id").on(table.userId),
+  index("idx_memorial_comments_parent_id").on(table.parentCommentId),
+]);
+
+// Memorial Live Streams - for virtual attendance
+export const memorialLiveStreams = pgTable("memorial_live_streams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  streamUrl: text("stream_url").notNull(), // YouTube, Zoom, or other streaming URL
+  streamType: text("stream_type").notNull(), // 'youtube', 'zoom', 'facebook', 'custom'
+  scheduledStartTime: timestamp("scheduled_start_time").notNull(),
+  scheduledEndTime: timestamp("scheduled_end_time"),
+  isLive: boolean("is_live").default(false),
+  viewerCount: integer("viewer_count").default(0),
+  recordingUrl: text("recording_url"), // For post-event viewing
+  isPublic: boolean("is_public").default(true),
+  requiresPassword: boolean("requires_password").default(false),
+  password: text("password"), // Optional password for private streams
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_live_streams_memorial_id").on(table.memorialId),
+  index("idx_memorial_live_streams_start_time").on(table.scheduledStartTime),
+]);
+
+// Memorial Live Stream Viewers - track who joined virtual attendance
+export const memorialLiveStreamViewers = pgTable("memorial_live_stream_viewers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  streamId: varchar("stream_id").notNull().references(() => memorialLiveStreams.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  viewerName: text("viewer_name").notNull(),
+  viewerEmail: text("viewer_email"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  durationMinutes: integer("duration_minutes"),
+}, (table) => [
+  index("idx_memorial_live_stream_viewers_stream_id").on(table.streamId),
+  index("idx_memorial_live_stream_viewers_user_id").on(table.userId),
 ]);
 
 export const scheduledMessages = pgTable("scheduled_messages", {
@@ -862,6 +932,28 @@ export const insertCondolenceSchema = createInsertSchema(condolences).omit({
   createdAt: true,
 });
 
+export const insertMemorialLikeSchema = createInsertSchema(memorialLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemorialCommentSchema = createInsertSchema(memorialComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemorialLiveStreamSchema = createInsertSchema(memorialLiveStreams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemorialLiveStreamViewerSchema = createInsertSchema(memorialLiveStreamViewers).omit({
+  id: true,
+  joinedAt: true,
+});
+
 export const insertScheduledMessageSchema = createInsertSchema(scheduledMessages).omit({
   id: true,
   createdAt: true,
@@ -1097,6 +1189,18 @@ export type Memory = typeof memories.$inferSelect;
 
 export type InsertCondolence = z.infer<typeof insertCondolenceSchema>;
 export type Condolence = typeof condolences.$inferSelect;
+
+export type InsertMemorialLike = z.infer<typeof insertMemorialLikeSchema>;
+export type MemorialLike = typeof memorialLikes.$inferSelect;
+
+export type InsertMemorialComment = z.infer<typeof insertMemorialCommentSchema>;
+export type MemorialComment = typeof memorialComments.$inferSelect;
+
+export type InsertMemorialLiveStream = z.infer<typeof insertMemorialLiveStreamSchema>;
+export type MemorialLiveStream = typeof memorialLiveStreams.$inferSelect;
+
+export type InsertMemorialLiveStreamViewer = z.infer<typeof insertMemorialLiveStreamViewerSchema>;
+export type MemorialLiveStreamViewer = typeof memorialLiveStreamViewers.$inferSelect;
 
 export type InsertScheduledMessage = z.infer<typeof insertScheduledMessageSchema>;
 export type ScheduledMessage = typeof scheduledMessages.$inferSelect;
