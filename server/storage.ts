@@ -6,6 +6,10 @@ import {
   qrCodes,
   memories,
   condolences,
+  memorialLikes,
+  memorialComments,
+  memorialLiveStreams,
+  memorialLiveStreamViewers,
   scheduledMessages,
   fundraisers,
   donations,
@@ -55,6 +59,14 @@ import {
   type InsertMemory,
   type Condolence,
   type InsertCondolence,
+  type MemorialLike,
+  type InsertMemorialLike,
+  type MemorialComment,
+  type InsertMemorialComment,
+  type MemorialLiveStream,
+  type InsertMemorialLiveStream,
+  type MemorialLiveStreamViewer,
+  type InsertMemorialLiveStreamViewer,
   type ScheduledMessage,
   type InsertScheduledMessage,
   type Fundraiser,
@@ -177,6 +189,29 @@ export interface IStorage {
   // Condolence operations
   getCondolencesByMemorialId(memorialId: string): Promise<Condolence[]>;
   createCondolence(condolence: InsertCondolence): Promise<Condolence>;
+
+  // Memorial Like operations
+  getMemorialLikes(memorialId: string): Promise<MemorialLike[]>;
+  createMemorialLike(like: InsertMemorialLike): Promise<MemorialLike>;
+  deleteMemorialLike(memorialId: string, userId?: string, userEmail?: string): Promise<void>;
+  getMemorialLikesCount(memorialId: string): Promise<number>;
+
+  // Memorial Comment operations
+  getMemorialComments(memorialId: string): Promise<MemorialComment[]>;
+  createMemorialComment(comment: InsertMemorialComment): Promise<MemorialComment>;
+  deleteMemorialComment(id: string): Promise<void>;
+
+  // Memorial Live Stream operations
+  getMemorialLiveStreams(memorialId: string): Promise<MemorialLiveStream[]>;
+  getMemorialLiveStream(id: string): Promise<MemorialLiveStream | undefined>;
+  createMemorialLiveStream(stream: InsertMemorialLiveStream): Promise<MemorialLiveStream>;
+  updateMemorialLiveStream(id: string, stream: Partial<InsertMemorialLiveStream>): Promise<MemorialLiveStream | undefined>;
+  deleteMemorialLiveStream(id: string): Promise<void>;
+
+  // Memorial Live Stream Viewer operations
+  getLiveStreamViewers(streamId: string): Promise<MemorialLiveStreamViewer[]>;
+  createLiveStreamViewer(viewer: InsertMemorialLiveStreamViewer): Promise<MemorialLiveStreamViewer>;
+  updateLiveStreamViewer(id: string, leftAt: Date, durationMinutes: number): Promise<void>;
 
   // Scheduled Message operations
   getScheduledMessagesByMemorialId(memorialId: string): Promise<ScheduledMessage[]>;
@@ -569,6 +604,83 @@ export class DatabaseStorage implements IStorage {
   async createCondolence(condolence: InsertCondolence): Promise<Condolence> {
     const [created] = await db.insert(condolences).values(condolence).returning();
     return created;
+  }
+
+  // Memorial Like operations
+  async getMemorialLikes(memorialId: string): Promise<MemorialLike[]> {
+    return await db.select().from(memorialLikes).where(eq(memorialLikes.memorialId, memorialId)).orderBy(desc(memorialLikes.createdAt));
+  }
+
+  async createMemorialLike(like: InsertMemorialLike): Promise<MemorialLike> {
+    const [created] = await db.insert(memorialLikes).values(like).returning();
+    return created;
+  }
+
+  async deleteMemorialLike(memorialId: string, userId?: string, userEmail?: string): Promise<void> {
+    const conditions = [eq(memorialLikes.memorialId, memorialId)];
+    if (userId) {
+      conditions.push(eq(memorialLikes.userId, userId));
+    } else if (userEmail) {
+      conditions.push(eq(memorialLikes.userEmail, userEmail));
+    }
+    await db.delete(memorialLikes).where(and(...conditions));
+  }
+
+  async getMemorialLikesCount(memorialId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(memorialLikes).where(eq(memorialLikes.memorialId, memorialId));
+    return result[0]?.count || 0;
+  }
+
+  // Memorial Comment operations
+  async getMemorialComments(memorialId: string): Promise<MemorialComment[]> {
+    return await db.select().from(memorialComments).where(eq(memorialComments.memorialId, memorialId)).orderBy(desc(memorialComments.createdAt));
+  }
+
+  async createMemorialComment(comment: InsertMemorialComment): Promise<MemorialComment> {
+    const [created] = await db.insert(memorialComments).values(comment).returning();
+    return created;
+  }
+
+  async deleteMemorialComment(id: string): Promise<void> {
+    await db.delete(memorialComments).where(eq(memorialComments.id, id));
+  }
+
+  // Memorial Live Stream operations
+  async getMemorialLiveStreams(memorialId: string): Promise<MemorialLiveStream[]> {
+    return await db.select().from(memorialLiveStreams).where(eq(memorialLiveStreams.memorialId, memorialId)).orderBy(desc(memorialLiveStreams.scheduledStartTime));
+  }
+
+  async getMemorialLiveStream(id: string): Promise<MemorialLiveStream | undefined> {
+    const [stream] = await db.select().from(memorialLiveStreams).where(eq(memorialLiveStreams.id, id));
+    return stream || undefined;
+  }
+
+  async createMemorialLiveStream(stream: InsertMemorialLiveStream): Promise<MemorialLiveStream> {
+    const [created] = await db.insert(memorialLiveStreams).values(stream).returning();
+    return created;
+  }
+
+  async updateMemorialLiveStream(id: string, stream: Partial<InsertMemorialLiveStream>): Promise<MemorialLiveStream | undefined> {
+    const [updated] = await db.update(memorialLiveStreams).set(stream).where(eq(memorialLiveStreams.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMemorialLiveStream(id: string): Promise<void> {
+    await db.delete(memorialLiveStreams).where(eq(memorialLiveStreams.id, id));
+  }
+
+  // Memorial Live Stream Viewer operations
+  async getLiveStreamViewers(streamId: string): Promise<MemorialLiveStreamViewer[]> {
+    return await db.select().from(memorialLiveStreamViewers).where(eq(memorialLiveStreamViewers.streamId, streamId)).orderBy(desc(memorialLiveStreamViewers.joinedAt));
+  }
+
+  async createLiveStreamViewer(viewer: InsertMemorialLiveStreamViewer): Promise<MemorialLiveStreamViewer> {
+    const [created] = await db.insert(memorialLiveStreamViewers).values(viewer).returning();
+    return created;
+  }
+
+  async updateLiveStreamViewer(id: string, leftAt: Date, durationMinutes: number): Promise<void> {
+    await db.update(memorialLiveStreamViewers).set({ leftAt, durationMinutes }).where(eq(memorialLiveStreamViewers.id, id));
   }
 
   // Scheduled Message operations
