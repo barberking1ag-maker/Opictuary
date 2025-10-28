@@ -19,6 +19,10 @@ import {
   insertMemorialSchema, 
   insertMemorySchema, 
   insertCondolenceSchema,
+  insertMemorialLikeSchema,
+  insertMemorialCommentSchema,
+  insertMemorialLiveStreamSchema,
+  insertMemorialLiveStreamViewerSchema,
   insertScheduledMessageSchema,
   insertFundraiserSchema,
   insertDonationSchema,
@@ -679,6 +683,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Like routes
+  app.get("/api/memorials/:memorialId/likes", async (req, res) => {
+    try {
+      const likes = await storage.getMemorialLikes(req.params.memorialId);
+      res.json(likes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memorials/:memorialId/likes/count", async (req, res) => {
+    try {
+      const count = await storage.getMemorialLikesCount(req.params.memorialId);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/likes", async (req, res) => {
+    try {
+      const data = insertMemorialLikeSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const like = await storage.createMemorialLike(data);
+      res.status(201).json(like);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memorials/:memorialId/likes", async (req, res) => {
+    try {
+      await storage.deleteMemorialLike(
+        req.params.memorialId,
+        req.body.userId,
+        req.body.userEmail
+      );
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Comment routes
+  app.get("/api/memorials/:memorialId/comments", async (req, res) => {
+    try {
+      const comments = await storage.getMemorialComments(req.params.memorialId);
+      res.json(comments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/comments", async (req, res) => {
+    try {
+      const data = insertMemorialCommentSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const comment = await storage.createMemorialComment(data);
+      res.status(201).json(comment);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memorials/:memorialId/comments/:commentId", async (req, res) => {
+    try {
+      await storage.deleteMemorialComment(req.params.commentId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Live Stream routes
+  app.get("/api/memorials/:memorialId/live-streams", async (req, res) => {
+    try {
+      const streams = await storage.getMemorialLiveStreams(req.params.memorialId);
+      res.json(streams);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/live-streams/:streamId", async (req, res) => {
+    try {
+      const stream = await storage.getMemorialLiveStream(req.params.streamId);
+      if (!stream) {
+        return res.status(404).json({ error: "Live stream not found" });
+      }
+      res.json(stream);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/live-streams", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to create live streams for this memorial" });
+      }
+
+      const data = insertMemorialLiveStreamSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const stream = await storage.createMemorialLiveStream(data);
+      res.status(201).json(stream);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/live-streams/:streamId", isAuthenticated, async (req: any, res) => {
+    try {
+      const stream = await storage.getMemorialLiveStream(req.params.streamId);
+      if (!stream) {
+        return res.status(404).json({ error: "Live stream not found" });
+      }
+
+      const memorial = await storage.getMemorial(stream.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(stream.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const data = insertMemorialLiveStreamSchema.partial().parse(req.body);
+      const updated = await storage.updateMemorialLiveStream(req.params.streamId, data);
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/live-streams/:streamId", isAuthenticated, async (req: any, res) => {
+    try {
+      const stream = await storage.getMemorialLiveStream(req.params.streamId);
+      if (!stream) {
+        return res.status(404).json({ error: "Live stream not found" });
+      }
+
+      const memorial = await storage.getMemorial(stream.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(stream.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteMemorialLiveStream(req.params.streamId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Live Stream Viewer routes
+  app.get("/api/live-streams/:streamId/viewers", async (req, res) => {
+    try {
+      const viewers = await storage.getLiveStreamViewers(req.params.streamId);
+      res.json(viewers);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/live-streams/:streamId/viewers", async (req, res) => {
+    try {
+      const data = insertMemorialLiveStreamViewerSchema.parse({
+        ...req.body,
+        streamId: req.params.streamId,
+      });
+      const viewer = await storage.createLiveStreamViewer(data);
+      res.status(201).json(viewer);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/live-stream-viewers/:viewerId/leave", async (req, res) => {
+    try {
+      const { leftAt, durationMinutes } = req.body;
+      await storage.updateLiveStreamViewer(req.params.viewerId, new Date(leftAt), durationMinutes);
+      res.status(204).send();
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
