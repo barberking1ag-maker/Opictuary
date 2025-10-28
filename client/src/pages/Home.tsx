@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -384,10 +385,14 @@ export default function Home() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Tabs defaultValue="memories" className="w-full" data-testid="tabs-main">
-          <TabsList className="grid w-full grid-cols-4 mb-8" data-testid="tabs-list">
+          <TabsList className="grid w-full grid-cols-5 mb-8" data-testid="tabs-list">
             <TabsTrigger value="memories" data-testid="tab-memories">
               <ImageIcon className="w-4 h-4 mr-2" />
               Memories
+            </TabsTrigger>
+            <TabsTrigger value="photos" data-testid="tab-photos">
+              <ImageIcon className="w-4 h-4 mr-2" />
+              Photos
             </TabsTrigger>
             <TabsTrigger value="condolences" data-testid="tab-condolences">
               <MessageSquare className="w-4 h-4 mr-2" />
@@ -454,6 +459,11 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground mt-2">Be the first to share a cherished memory.</p>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Photos Tab */}
+          <TabsContent value="photos" className="space-y-6" data-testid="content-photos">
+            <PhotoGallery memories={approvedMemories} />
           </TabsContent>
 
           {/* Condolences Tab */}

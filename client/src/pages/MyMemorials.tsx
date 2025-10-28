@@ -58,7 +58,7 @@ export default function MyMemorials() {
               Memorials you've created and manage
             </p>
           </div>
-          <Link href="/self-obituary">
+          <Link href="/create-memorial">
             <Button data-testid="button-create-memorial">
               <Plus className="w-4 h-4 mr-2" />
               Create Memorial
@@ -74,7 +74,7 @@ export default function MyMemorials() {
               <p className="text-muted-foreground mb-6">
                 You haven't created any memorials yet. Start by creating your first memorial.
               </p>
-              <Link href="/self-obituary">
+              <Link href="/create-memorial">
                 <Button data-testid="button-create-first-memorial">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Memorial

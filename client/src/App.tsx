@@ -11,6 +11,7 @@ import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
 import SelfObituary from "@/pages/SelfObituary";
+import CreateMemorial from "@/pages/CreateMemorial";
 import CustomizationDemo from "@/pages/CustomizationDemo";
 import AdvertiserSubmission from "@/pages/AdvertiserSubmission";
 import AdvertisementAdmin from "@/pages/AdvertisementAdmin";
@@ -67,8 +68,8 @@ function Router() {
                   Essential Workers
                 </Button>
               </Link>
-              <Link href="/self-obituary">
-                <Button variant="ghost" size="sm" data-testid="nav-self-obituary" className="text-sm">
+              <Link href="/create-memorial">
+                <Button variant="ghost" size="sm" data-testid="nav-create-memorial" className="text-sm">
                   <FileText className="w-4 h-4 mr-1.5" />
                   Create Memorial
                 </Button>
@@ -118,7 +119,7 @@ function Router() {
               </Link>
 
               {/* Mobile Create Button */}
-              <Link href="/self-obituary">
+              <Link href="/create-memorial">
                 <Button size="sm" className="lg:hidden" data-testid="nav-mobile-create">
                   <FileText className="w-4 h-4 mr-1.5" />
                   Create
@@ -138,6 +139,7 @@ function Router() {
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
         <Route path="/self-obituary" component={SelfObituary} />
+        <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
         <Route path="/customization" component={CustomizationDemo} />
         <Route path="/advertise" component={AdvertiserSubmission} />
