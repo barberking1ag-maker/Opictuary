@@ -99,13 +99,10 @@ export function MemorialEngagement({
         ? `${currentUser.firstName} ${currentUser.lastName}`
         : currentUser.email;
 
-      return apiRequest(`/api/memorials/${memorialId}/likes`, {
-        method: "POST",
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userEmail: currentUser.email,
-          userName,
-        }),
+      return apiRequest("POST", `/api/memorials/${memorialId}/likes`, {
+        userId: currentUser.id,
+        userEmail: currentUser.email,
+        userName,
       });
     },
     onSuccess: () => {
@@ -139,12 +136,9 @@ export function MemorialEngagement({
         throw new Error("Login required");
       }
 
-      return apiRequest(`/api/memorials/${memorialId}/likes`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userEmail: currentUser.email,
-        }),
+      return apiRequest("DELETE", `/api/memorials/${memorialId}/likes`, {
+        userId: currentUser.id,
+        userEmail: currentUser.email,
       });
     },
     onSuccess: () => {
@@ -182,14 +176,11 @@ export function MemorialEngagement({
         ? `${currentUser.firstName} ${currentUser.lastName}`
         : currentUser.email;
 
-      return apiRequest(`/api/memorials/${memorialId}/comments`, {
-        method: "POST",
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userEmail: currentUser.email,
-          userName,
-          content,
-        }),
+      return apiRequest("POST", `/api/memorials/${memorialId}/comments`, {
+        userId: currentUser.id,
+        userEmail: currentUser.email,
+        userName,
+        content,
       });
     },
     onSuccess: () => {
@@ -220,10 +211,7 @@ export function MemorialEngagement({
       senderEmail?: string;
       message: string;
     }) => {
-      return apiRequest(`/api/memorials/${memorialId}/condolences`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/memorials/${memorialId}/condolences`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

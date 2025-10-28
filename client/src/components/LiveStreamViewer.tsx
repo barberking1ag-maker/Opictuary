@@ -68,16 +68,13 @@ export function LiveStreamViewer({
         ? `${currentUser.firstName} ${currentUser.lastName}`
         : currentUser?.email || "Anonymous Viewer";
 
-      const response = await apiRequest(`/api/live-streams/${streamId}/viewers`, {
-        method: "POST",
-        body: JSON.stringify({
-          userId: currentUser?.id,
-          userEmail: currentUser?.email,
-          userName,
-        }),
+      const response = await apiRequest("POST", `/api/live-streams/${streamId}/viewers`, {
+        userId: currentUser?.id,
+        userEmail: currentUser?.email,
+        userName,
       });
 
-      return response;
+      return await response.json();
     },
     onSuccess: (data) => {
       setViewerSessionId(data.id);
@@ -105,12 +102,9 @@ export function LiveStreamViewer({
         (leftAt.getTime() - joinTimeRef.current.getTime()) / 60000
       );
 
-      await apiRequest(`/api/live-stream-viewers/${viewerSessionId}/leave`, {
-        method: "PUT",
-        body: JSON.stringify({
-          leftAt: leftAt.toISOString(),
-          durationMinutes,
-        }),
+      await apiRequest("PUT", `/api/live-stream-viewers/${viewerSessionId}/leave`, {
+        leftAt: leftAt.toISOString(),
+        durationMinutes,
       });
     },
     onSuccess: () => {

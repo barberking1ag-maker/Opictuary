@@ -673,12 +673,12 @@ export default function Home() {
           <LiveStreamViewer
             memorialId={memorialId!}
             currentUser={
-              user
+              user && user.email
                 ? {
                     id: user.id,
                     email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
+                    firstName: user.firstName || undefined,
+                    lastName: user.lastName || undefined,
                   }
                 : undefined
             }
@@ -693,12 +693,12 @@ export default function Home() {
           <MemorialEngagement
             memorialId={memorialId!}
             currentUser={
-              user
+              user && user.email
                 ? {
                     id: user.id,
                     email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
+                    firstName: user.firstName || undefined,
+                    lastName: user.lastName || undefined,
                   }
                 : undefined
             }
