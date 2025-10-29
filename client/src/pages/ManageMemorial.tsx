@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar, Info } from "lucide-react";
+import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar, Info, BookOpen } from "lucide-react";
 import { QRCodeManager } from "@/components/QRCodeManager";
 import { ScheduledMessageCard } from "@/components/ScheduledMessageCard";
 import { useAuth } from "@/hooks/useAuth";
@@ -272,6 +272,10 @@ export default function ManageMemorial() {
               <QrCodeIcon className="w-4 h-4 mr-2" />
               QR Codes
             </TabsTrigger>
+            <TabsTrigger value="funeral-program" data-testid="tab-funeral-program">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Funeral Program
+            </TabsTrigger>
             <TabsTrigger value="settings" data-testid="tab-settings">
               <Settings className="w-4 h-4 mr-2" />
               Settings
@@ -292,6 +296,48 @@ export default function ManageMemorial() {
               memorialName={memorialName}
               inviteCode={memorial.inviteCode}
             />
+          </TabsContent>
+
+          <TabsContent value="funeral-program" className="mt-6">
+            <Card className="bg-purple-900/50 border-purple-700/50">
+              <CardHeader>
+                <CardTitle className="text-purple-100">Digital Funeral Program</CardTitle>
+                <CardDescription className="text-purple-300">
+                  Create a beautiful digital program for attendees to follow during the service
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-purple-200">
+                  Design a comprehensive funeral program that includes:
+                </p>
+                <ul className="list-disc list-inside text-purple-300 space-y-2 ml-4">
+                  <li>Service date, time, and location details</li>
+                  <li>Order of service with hymns, readings, and eulogies</li>
+                  <li>Family information and acknowledgments</li>
+                  <li>Reception details for after the service</li>
+                </ul>
+                <p className="text-purple-300 text-sm">
+                  Attendees can view the program on their phones or desktop during the service, making it easy to follow along without printing physical copies.
+                </p>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={() => navigate(`/memorials/${memorial.id}/program-edit`)}
+                    data-testid="button-edit-program"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Create/Edit Program
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/memorial/${memorial.id}/program`)}
+                    data-testid="button-preview-program"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Preview Program
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="settings" className="mt-6">

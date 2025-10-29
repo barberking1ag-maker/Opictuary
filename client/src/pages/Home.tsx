@@ -2,12 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
+import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation, FuneralProgram } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus } from "lucide-react";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
@@ -82,6 +82,12 @@ export default function Home() {
   const { data: playlist } = useQuery<MusicPlaylist>({
     queryKey: [`/api/memorials/${memorialId}/playlist`],
     enabled: !!memorialId,
+  });
+
+  const { data: funeralProgram } = useQuery<FuneralProgram>({
+    queryKey: [`/api/memorials/${memorialId}/funeral-program`],
+    enabled: !!memorialId,
+    retry: false,
   });
 
   const approvedMemories = memories.filter(m => m.isApproved);
@@ -300,6 +306,17 @@ export default function Home() {
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Enter Code
               </Button>
+              {funeralProgram && (
+                <Button 
+                  size="lg" 
+                  className="bg-gold/95 backdrop-blur-md text-foreground border border-gold/20 hover-elevate active-elevate-2 shadow-lg"
+                  onClick={() => window.location.href = `/memorial/${memorialId}/program`}
+                  data-testid="button-view-program"
+                >
+                  <FileText className="w-5 h-5 mr-2" />
+                  View Program
+                </Button>
+              )}
               <Button 
                 size="lg" 
                 variant="outline"
