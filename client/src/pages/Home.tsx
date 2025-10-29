@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Memorial, Memory, Condolence, Fundraiser, LegacyEvent, MusicPlaylist, GriefSupport, Donation } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,10 +24,11 @@ import { trackPageView, trackEvent } from "@/lib/analytics";
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
 export default function Home() {
+  const params = useParams<{ id: string }>();
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
+  const [memorialId, setMemorialId] = useState<string | null>(params.id || null);
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
@@ -89,6 +91,15 @@ export default function Home() {
     queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
     enabled: !!firstFundraiser?.id,
   });
+
+  // Check for ?code= parameter in URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code) {
+      verifyInviteCodeMutation.mutate(code);
+    }
+  }, []);
 
   // Track memorial view when page loads
   useEffect(() => {

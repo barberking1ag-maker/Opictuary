@@ -115,7 +115,7 @@ export default function MyMemorials() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1" asChild>
-                      <a href={`/?code=${memorial.inviteCode}`} target="_blank" rel="noopener noreferrer" data-testid={`button-view-${memorial.id}`}>
+                      <a href={`/memorial/${memorial.id}`} target="_blank" rel="noopener noreferrer" data-testid={`button-view-${memorial.id}`}>
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View
                       </a>
