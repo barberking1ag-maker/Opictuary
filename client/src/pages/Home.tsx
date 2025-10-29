@@ -220,69 +220,58 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/10 to-background" />
+      {/* Hero Section with Background Image */}
+      <div className="relative h-[500px] w-full overflow-hidden">
+        {/* Background Image or Gradient */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: memorial.backgroundImage 
+              ? `url(${memorial.backgroundImage})` 
+              : 'linear-gradient(135deg, hsl(280, 65%, 25%) 0%, hsl(280, 50%, 15%) 100%)'
+          }}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
         
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center space-y-6">
-            {/* Memorial Photo */}
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-accent/30 shadow-2xl">
-                  {memorial.backgroundImage ? (
-                    <img 
-                      src={memorial.backgroundImage} 
-                      alt={memorial.name}
-                      className="w-full h-full object-cover"
-                      data-testid="img-memorial-photo"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                      <Heart className="w-16 h-16 text-primary/40" />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                  <svg width="60" height="15" viewBox="0 0 60 15" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="30" cy="7.5" rx="28" ry="6" fill="none" stroke="#FFD700" strokeWidth="2" opacity="0.8"/>
-                    <ellipse cx="30" cy="7.5" rx="28" ry="6" fill="#FFD700" opacity="0.15"/>
-                  </svg>
-                </div>
-              </div>
+        {/* Hero Content */}
+        <div className="relative h-full flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-4">
+              <p className="text-sm text-white/90 tracking-wide">In Loving Memory</p>
             </div>
-
-            {/* Name and Dates */}
-            <div>
-              <h1 className="text-5xl md:text-6xl font-serif font-bold text-foreground mb-3" data-testid="text-name">
-                {memorial.name}
-              </h1>
-              {years && (
-                <p className="text-2xl text-muted-foreground font-light" data-testid="text-years">
-                  {years}
-                </p>
-              )}
-            </div>
+            
+            {/* Name */}
+            <h1 className="text-5xl md:text-7xl font-serif font-semibold text-white mb-4 tracking-tight" data-testid="text-name">
+              {memorial.name}
+            </h1>
+            
+            {/* Dates */}
+            {years && (
+              <p className="text-xl md:text-2xl text-white/90 font-light" data-testid="text-years">
+                {years}
+              </p>
+            )}
 
             {/* Quote/Preface */}
             {memorial.prefaceText && (
-              <blockquote className="text-xl md:text-2xl font-serif italic text-foreground/90 max-w-3xl mx-auto mt-8 leading-relaxed" data-testid="text-quote">
+              <blockquote className="text-lg md:text-xl font-serif italic text-white/95 max-w-3xl mx-auto mt-6 leading-relaxed" data-testid="text-quote">
                 "{memorial.prefaceText}"
               </blockquote>
             )}
 
             {/* Quick Stats */}
             <div className="flex flex-wrap justify-center gap-6 mt-12">
-              <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex items-center gap-2 text-white/80">
                 <ImageIcon className="w-5 h-5" />
                 <span data-testid="text-memory-count">{approvedMemories.length} Memories</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex items-center gap-2 text-white/80">
                 <MessageSquare className="w-5 h-5" />
                 <span data-testid="text-condolence-count">{condolences.length} Condolences</span>
               </div>
               {events.length > 0 && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-white/80">
                   <Calendar className="w-5 h-5" />
                   <span data-testid="text-event-count">{events.length} Events</span>
                 </div>
@@ -291,11 +280,22 @@ export default function Home() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap justify-center gap-4 mt-8">
-              <Button size="lg" onClick={() => setCodeModalOpen(true)} data-testid="button-enter-code">
+              <Button 
+                size="lg" 
+                className="bg-white/95 backdrop-blur-md text-foreground border border-white/20 hover-elevate active-elevate-2 shadow-lg"
+                onClick={() => setCodeModalOpen(true)} 
+                data-testid="button-enter-code"
+              >
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Enter Code
               </Button>
-              <Button size="lg" onClick={handleShare} data-testid="button-share">
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="bg-white/15 backdrop-blur-md text-white border-white/40 hover-elevate active-elevate-2"
+                onClick={handleShare} 
+                data-testid="button-share"
+              >
                 <Share2 className="w-5 h-5 mr-2" />
                 Share Memorial
               </Button>
@@ -305,7 +305,8 @@ export default function Home() {
               />
               <Button 
                 size="lg" 
-                variant={isSaved ? "default" : "outline"}
+                variant="outline"
+                className="bg-white/15 backdrop-blur-md text-white border-white/40 hover-elevate active-elevate-2"
                 onClick={handleSave} 
                 data-testid="button-save"
               >
