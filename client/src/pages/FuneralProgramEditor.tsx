@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -49,15 +49,19 @@ export default function FuneralProgramEditor() {
     enabled: !!existingProgram?.id,
   });
 
-  // Initialize program data
-  useState(() => {
+  // Initialize program data when loaded
+  useEffect(() => {
     if (existingProgram) {
       setProgramData(existingProgram);
     }
+  }, [existingProgram]);
+
+  // Initialize items when loaded
+  useEffect(() => {
     if (existingItems) {
       setItems(existingItems);
     }
-  });
+  }, [existingItems]);
 
   // Create/Update program mutation
   const saveProgramMutation = useMutation({
@@ -91,13 +95,21 @@ export default function FuneralProgramEditor() {
         ));
       }
       
-      // Create new items
-      const promises = items.map((item, index) => 
-        apiRequest("POST", `/api/funeral-programs/${programId}/items`, {
-          ...item,
+      // Create new items - strip generated fields before POSTing
+      const promises = items.map((item, index) => {
+        // Only include fields that belong in the insert schema
+        const cleanItem = {
+          programId,
+          itemType: item.itemType,
+          title: item.title,
+          performedBy: item.performedBy || null,
+          duration: item.duration || null,
+          content: item.content || null,
+          description: item.description || null,
           orderIndex: index,
-        })
-      );
+        };
+        return apiRequest("POST", `/api/funeral-programs/${programId}/items`, cleanItem);
+      });
       return await Promise.all(promises);
     },
     onSuccess: () => {
