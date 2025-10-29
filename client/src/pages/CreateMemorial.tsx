@@ -120,7 +120,7 @@ export default function CreateMemorial() {
             Create a Memorial
           </h1>
           <p className="text-muted-foreground text-lg">
-            Honor the memory of a loved one with a beautiful digital memorial
+            Create a memorial for a loved one or start one for yourself—preserving precious memories with dignity and compassion
           </p>
         </div>
 
