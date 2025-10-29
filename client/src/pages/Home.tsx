@@ -238,68 +238,80 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Background Image */}
-      <div className="relative h-[500px] w-full overflow-hidden">
+      <div className="relative h-[600px] md:h-[700px] w-full overflow-hidden">
         {/* Background Image or Gradient */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: memorial.backgroundImage 
               ? `url(${memorial.backgroundImage})` 
-              : 'linear-gradient(135deg, hsl(280, 65%, 25%) 0%, hsl(280, 50%, 15%) 100%)'
+              : 'linear-gradient(135deg, hsl(280, 70%, 30%) 0%, hsl(280, 60%, 20%) 50%, hsl(280, 70%, 15%) 100%)'
           }}
         />
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        {/* Enhanced dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
         
         {/* Hero Content */}
         <div className="relative h-full flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-4">
-              <p className="text-sm text-white/90 tracking-wide">In Loving Memory</p>
+          <div className="max-w-5xl mx-auto space-y-8">
+            <div className="inline-block px-6 py-2 bg-white/15 backdrop-blur-lg rounded-full border border-white/30 shadow-xl mb-6 hover-elevate">
+              <p className="text-sm md:text-base text-white/95 tracking-widest font-medium uppercase">In Loving Memory</p>
             </div>
             
-            {/* Name */}
-            <h1 className="text-5xl md:text-7xl font-serif font-semibold text-white mb-4 tracking-tight" data-testid="text-name">
+            {/* Name with enhanced styling */}
+            <h1 className="text-6xl md:text-8xl font-serif font-bold text-white mb-6 tracking-tight drop-shadow-2xl" data-testid="text-name" style={{textShadow: '0 4px 12px rgba(0,0,0,0.4)'}}>
               {memorial.name}
             </h1>
             
-            {/* Dates */}
+            {/* Dates with better styling */}
             {years && (
-              <p className="text-xl md:text-2xl text-white/90 font-light" data-testid="text-years">
-                {years}
-              </p>
+              <div className="inline-flex items-center gap-3 px-8 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                <Calendar className="w-5 h-5 text-white/90" />
+                <p className="text-xl md:text-2xl text-white/95 font-light tracking-wide" data-testid="text-years">
+                  {years}
+                </p>
+              </div>
             )}
 
-            {/* Quote/Preface */}
+            {/* Quote/Preface with better typography */}
             {memorial.prefaceText && (
-              <blockquote className="text-lg md:text-xl font-serif italic text-white/95 max-w-3xl mx-auto mt-6 leading-relaxed" data-testid="text-quote">
+              <blockquote className="text-xl md:text-2xl font-serif italic text-white/95 max-w-4xl mx-auto mt-8 leading-relaxed px-6 py-4 border-l-4 border-[hsl(45,80%,60%)]" data-testid="text-quote" style={{textShadow: '0 2px 8px rgba(0,0,0,0.3)'}}>
                 "{memorial.prefaceText}"
               </blockquote>
             )}
 
-            {/* Quick Stats */}
-            <div className="flex flex-wrap justify-center gap-6 mt-12">
-              <div className="flex items-center gap-2 text-white/80">
-                <ImageIcon className="w-5 h-5" />
-                <span data-testid="text-memory-count">{approvedMemories.length} Memories</span>
+            {/* Quick Stats with improved design */}
+            <div className="flex flex-wrap justify-center gap-8 mt-16 pt-8 border-t border-white/20">
+              <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
+                <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <span className="font-semibold text-lg" data-testid="text-memory-count">{approvedMemories.length}</span>
+                <span className="text-sm text-white/70">Memories</span>
               </div>
-              <div className="flex items-center gap-2 text-white/80">
-                <MessageSquare className="w-5 h-5" />
-                <span data-testid="text-condolence-count">{condolences.length} Condolences</span>
+              <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
+                <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <span className="font-semibold text-lg" data-testid="text-condolence-count">{condolences.length}</span>
+                <span className="text-sm text-white/70">Condolences</span>
               </div>
               {events.length > 0 && (
-                <div className="flex items-center gap-2 text-white/80">
-                  <Calendar className="w-5 h-5" />
-                  <span data-testid="text-event-count">{events.length} Events</span>
+                <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
+                  <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <span className="font-semibold text-lg" data-testid="text-event-count">{events.length}</span>
+                  <span className="text-sm text-white/70">Events</span>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap justify-center gap-4 mt-8">
+            {/* Action Buttons with improved layout */}
+            <div className="flex flex-wrap justify-center gap-4 mt-12 pt-4">
               <Button 
                 size="lg" 
-                className="bg-white/95 backdrop-blur-md text-foreground border border-white/20 hover-elevate active-elevate-2 shadow-lg"
+                className="bg-white hover:bg-white/95 text-foreground border-none shadow-2xl font-medium min-w-[160px]"
                 onClick={() => setCodeModalOpen(true)} 
                 data-testid="button-enter-code"
               >
@@ -309,7 +321,7 @@ export default function Home() {
               {funeralProgram && (
                 <Button 
                   size="lg" 
-                  className="bg-gold/95 backdrop-blur-md text-foreground border border-gold/20 hover-elevate active-elevate-2 shadow-lg"
+                  className="bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none shadow-2xl font-medium min-w-[160px]"
                   onClick={() => window.location.href = `/memorial/${memorialId}/program`}
                   data-testid="button-view-program"
                 >
@@ -320,12 +332,12 @@ export default function Home() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="bg-white/15 backdrop-blur-md text-white border-white/40 hover-elevate active-elevate-2"
+                className="bg-white/10 backdrop-blur-md text-white border-white/50 hover-elevate active-elevate-2 shadow-lg font-medium min-w-[160px]"
                 onClick={handleShare} 
                 data-testid="button-share"
               >
                 <Share2 className="w-5 h-5 mr-2" />
-                Share Memorial
+                Share
               </Button>
               <ShareObituaryButton 
                 memorialId={memorialId!}
@@ -334,12 +346,12 @@ export default function Home() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="bg-white/15 backdrop-blur-md text-white border-white/40 hover-elevate active-elevate-2"
+                className="bg-white/10 backdrop-blur-md text-white border-white/50 hover-elevate active-elevate-2 shadow-lg font-medium min-w-[160px]"
                 onClick={handleSave} 
                 data-testid="button-save"
               >
                 <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                {isSaved ? 'Saved' : 'Save Memorial'}
+                {isSaved ? 'Saved' : 'Save'}
               </Button>
               <FlowerOrderButton 
                 memorialId={memorialId || undefined}
@@ -440,69 +452,112 @@ export default function Home() {
         </div>
       )}
 
+      {/* Biography Section */}
+      {memorial.biography && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="bg-gradient-to-br from-card/50 to-card/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-border/50 shadow-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-1 w-12 bg-gradient-to-r from-primary to-accent rounded-full" />
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Life Story</h2>
+            </div>
+            <div className="prose prose-lg max-w-none" data-testid="text-biography">
+              <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap text-lg">
+                {memorial.biography}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <Tabs defaultValue="memories" className="w-full" data-testid="tabs-main">
-          <TabsList className="grid w-full grid-cols-5 mb-8" data-testid="tabs-list">
-            <TabsTrigger value="memories" data-testid="tab-memories">
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Memories
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-12 bg-muted/30 p-2 rounded-xl h-auto" data-testid="tabs-list">
+            <TabsTrigger 
+              value="memories" 
+              data-testid="tab-memories"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <ImageIcon className="w-5 h-5" />
+              <span className="font-medium">Memories</span>
             </TabsTrigger>
-            <TabsTrigger value="photos" data-testid="tab-photos">
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Photos
+            <TabsTrigger 
+              value="photos" 
+              data-testid="tab-photos"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <ImageIcon className="w-5 h-5" />
+              <span className="font-medium">Photos</span>
             </TabsTrigger>
-            <TabsTrigger value="condolences" data-testid="tab-condolences">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Condolences
+            <TabsTrigger 
+              value="condolences" 
+              data-testid="tab-condolences"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="font-medium">Condolences</span>
             </TabsTrigger>
-            <TabsTrigger value="events" data-testid="tab-events">
-              <Calendar className="w-4 h-4 mr-2" />
-              Events
+            <TabsTrigger 
+              value="events" 
+              data-testid="tab-events"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <Calendar className="w-5 h-5" />
+              <span className="font-medium">Events</span>
             </TabsTrigger>
-            <TabsTrigger value="support" data-testid="tab-support">
-              <Heart className="w-4 h-4 mr-2" />
-              Support
+            <TabsTrigger 
+              value="support" 
+              data-testid="tab-support"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <Heart className="w-5 h-5" />
+              <span className="font-medium">Support</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Memories Tab */}
-          <TabsContent value="memories" className="space-y-6" data-testid="content-memories">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-serif font-semibold">Cherished Memories</h2>
-              <Button data-testid="button-add-memory">
-                <ImageIcon className="w-4 h-4 mr-2" />
+          <TabsContent value="memories" className="space-y-8" data-testid="content-memories">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Cherished Memories</h2>
+                <p className="text-muted-foreground">Precious moments shared with {memorial.name}</p>
+              </div>
+              <Button size="lg" data-testid="button-add-memory" className="shadow-md">
+                <ImageIcon className="w-5 h-5 mr-2" />
                 Add Memory
               </Button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {approvedMemories.map((memory) => (
-                <Card key={memory.id} data-testid={`card-memory-${memory.id}`} className="overflow-hidden hover-elevate">
+                <Card key={memory.id} data-testid={`card-memory-${memory.id}`} className="overflow-hidden hover-elevate border-border/50 shadow-lg group">
                   {memory.mediaUrl && (
-                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                    <div className="aspect-video w-full overflow-hidden bg-muted relative">
                       <img 
                         src={memory.mediaUrl} 
                         alt={memory.caption || ''}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         data-testid={`img-memory-${memory.id}`}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   )}
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg" data-testid={`text-memory-author-${memory.id}`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg font-semibold truncate" data-testid={`text-memory-author-${memory.id}`}>
                           {memory.authorName}
                         </CardTitle>
-                        <CardDescription data-testid={`text-memory-date-${memory.id}`}>
-                          {new Date(memory.createdAt || '').toLocaleDateString()}
+                        <CardDescription className="flex items-center gap-2 mt-1" data-testid={`text-memory-date-${memory.id}`}>
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(memory.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </CardDescription>
                       </div>
+                      <Heart className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-foreground/90 leading-relaxed" data-testid={`text-memory-caption-${memory.id}`}>
+                    <p className="text-foreground/90 leading-relaxed line-clamp-4" data-testid={`text-memory-caption-${memory.id}`}>
                       {memory.caption}
                     </p>
                   </CardContent>
@@ -511,10 +566,20 @@ export default function Home() {
             </div>
 
             {approvedMemories.length === 0 && (
-              <Card className="p-12 text-center">
-                <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-lg text-muted-foreground">No memories shared yet.</p>
-                <p className="text-sm text-muted-foreground mt-2">Be the first to share a cherished memory.</p>
+              <Card className="border-2 border-dashed border-border/50 bg-muted/20">
+                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="bg-muted/50 rounded-full p-6 mb-6">
+                    <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No memories shared yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md">
+                    Be the first to share a cherished memory and keep their spirit alive.
+                  </p>
+                  <Button size="lg" data-testid="button-add-first-memory">
+                    <ImageIcon className="w-5 h-5 mr-2" />
+                    Share First Memory
+                  </Button>
+                </CardContent>
               </Card>
             )}
           </TabsContent>
@@ -525,33 +590,39 @@ export default function Home() {
           </TabsContent>
 
           {/* Condolences Tab */}
-          <TabsContent value="condolences" className="space-y-6" data-testid="content-condolences">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-serif font-semibold">Words of Comfort</h2>
-              <Button data-testid="button-leave-condolence">
-                <MessageSquare className="w-4 h-4 mr-2" />
+          <TabsContent value="condolences" className="space-y-8" data-testid="content-condolences">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Words of Comfort</h2>
+                <p className="text-muted-foreground">Messages of love and support</p>
+              </div>
+              <Button size="lg" data-testid="button-leave-condolence" className="shadow-md">
+                <MessageSquare className="w-5 h-5 mr-2" />
                 Leave Condolence
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {condolences.map((condolence) => (
-                <Card key={condolence.id} data-testid={`card-condolence-${condolence.id}`} className="hover-elevate">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base" data-testid={`text-condolence-author-${condolence.id}`}>
+                <Card key={condolence.id} data-testid={`card-condolence-${condolence.id}`} className="hover-elevate border-border/50 shadow-md">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-foreground mb-1" data-testid={`text-condolence-author-${condolence.id}`}>
                           {condolence.authorName}
                         </CardTitle>
-                        <CardDescription data-testid={`text-condolence-date-${condolence.id}`}>
-                          {new Date(condolence.createdAt || '').toLocaleDateString()}
+                        <CardDescription className="flex items-center gap-2" data-testid={`text-condolence-date-${condolence.id}`}>
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(condolence.createdAt || '').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                         </CardDescription>
                       </div>
-                      <Heart className="w-5 h-5 text-accent" />
+                      <div className="bg-accent/10 rounded-full p-2">
+                        <Heart className="w-5 h-5 text-accent" />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-foreground/90 leading-relaxed" data-testid={`text-condolence-message-${condolence.id}`}>
+                    <p className="text-foreground/90 leading-relaxed text-base" data-testid={`text-condolence-message-${condolence.id}`}>
                       {condolence.message}
                     </p>
                   </CardContent>
@@ -560,54 +631,77 @@ export default function Home() {
             </div>
 
             {condolences.length === 0 && (
-              <Card className="p-12 text-center">
-                <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-lg text-muted-foreground">No condolences yet.</p>
-                <p className="text-sm text-muted-foreground mt-2">Share your thoughts and support.</p>
+              <Card className="border-2 border-dashed border-border/50 bg-muted/20">
+                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="bg-muted/50 rounded-full p-6 mb-6">
+                    <MessageSquare className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No condolences yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md">
+                    Share your thoughts and support for the family during this difficult time.
+                  </p>
+                  <Button size="lg" data-testid="button-leave-first-condolence">
+                    <MessageSquare className="w-5 h-5 mr-2" />
+                    Leave First Condolence
+                  </Button>
+                </CardContent>
               </Card>
             )}
           </TabsContent>
 
           {/* Events Tab */}
-          <TabsContent value="events" className="space-y-6" data-testid="content-events">
-            <h2 className="text-2xl font-serif font-semibold">Memorial Services & Events</h2>
+          <TabsContent value="events" className="space-y-8" data-testid="content-events">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Memorial Services & Events</h2>
+              <p className="text-muted-foreground">Upcoming and past events honoring {memorial.name}</p>
+            </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {events.map((event) => {
                 const isUpcoming = new Date(event.eventDate) > new Date();
                 return (
-                  <Card key={event.id} data-testid={`card-event-${event.id}`} className="hover-elevate">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle data-testid={`text-event-title-${event.id}`}>{event.title}</CardTitle>
-                          <CardDescription className="mt-2 space-y-1">
-                            <div className="flex items-center gap-2" data-testid={`text-event-date-${event.id}`}>
-                              <Calendar className="w-4 h-4" />
-                              {new Date(event.eventDate).toLocaleDateString()} {event.eventTime && `at ${event.eventTime}`}
-                            </div>
-                            {event.location && (
-                              <div className="flex items-center gap-2" data-testid={`text-event-location-${event.id}`}>
-                                <MapPin className="w-4 h-4" />
-                                {event.location}
-                              </div>
-                            )}
-                          </CardDescription>
-                        </div>
+                  <Card key={event.id} data-testid={`card-event-${event.id}`} className="hover-elevate border-border/50 shadow-lg">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <CardTitle className="text-xl font-bold flex-1" data-testid={`text-event-title-${event.id}`}>
+                          {event.title}
+                        </CardTitle>
                         {isUpcoming && (
-                          <Badge data-testid={`badge-upcoming-${event.id}`}>Upcoming</Badge>
+                          <Badge className="bg-primary text-primary-foreground" data-testid={`badge-upcoming-${event.id}`}>
+                            Upcoming
+                          </Badge>
                         )}
                       </div>
+                      <CardDescription className="space-y-2">
+                        <div className="flex items-center gap-2 text-foreground/80" data-testid={`text-event-date-${event.id}`}>
+                          <div className="bg-muted rounded-full p-1.5">
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <span className="font-medium">
+                            {new Date(event.eventDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            {event.eventTime && ` at ${event.eventTime}`}
+                          </span>
+                        </div>
+                        {event.location && (
+                          <div className="flex items-center gap-2 text-foreground/80" data-testid={`text-event-location-${event.id}`}>
+                            <div className="bg-muted rounded-full p-1.5">
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <span>{event.location}</span>
+                          </div>
+                        )}
+                      </CardDescription>
                     </CardHeader>
                     {event.description && (
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground" data-testid={`text-event-desc-${event.id}`}>
+                      <CardContent className="pt-0">
+                        <p className="text-foreground/90 leading-relaxed mb-3" data-testid={`text-event-desc-${event.id}`}>
                           {event.description}
                         </p>
                         {isUpcoming && event.attendeeCount !== undefined && (
-                          <p className="text-sm text-muted-foreground mt-3" data-testid={`text-event-attendees-${event.id}`}>
-                            {event.attendeeCount} attending
-                          </p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground pt-3 border-t" data-testid={`text-event-attendees-${event.id}`}>
+                            <Heart className="w-4 h-4" />
+                            <span className="font-medium">{event.attendeeCount} attending</span>
+                          </div>
                         )}
                       </CardContent>
                     )}
@@ -617,48 +711,68 @@ export default function Home() {
             </div>
 
             {events.length === 0 && (
-              <Card className="p-12 text-center">
-                <Calendar className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-lg text-muted-foreground">No events scheduled.</p>
+              <Card className="border-2 border-dashed border-border/50 bg-muted/20">
+                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="bg-muted/50 rounded-full p-6 mb-6">
+                    <Calendar className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No events scheduled</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Memorial services and celebration of life events will appear here.
+                  </p>
+                </CardContent>
               </Card>
             )}
           </TabsContent>
 
           {/* Support Tab */}
-          <TabsContent value="support" className="space-y-6" data-testid="content-support">
-            <h2 className="text-2xl font-serif font-semibold">Support the Family</h2>
+          <TabsContent value="support" className="space-y-8" data-testid="content-support">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Support the Family</h2>
+              <p className="text-muted-foreground">Help honor {memorial.name}'s memory</p>
+            </div>
 
             {firstFundraiser && (
-              <Card className="overflow-hidden" data-testid="card-fundraiser">
-                <CardHeader>
-                  <CardTitle data-testid="text-fundraiser-title">{firstFundraiser.title}</CardTitle>
-                  {firstFundraiser.description && (
-                    <CardDescription data-testid="text-fundraiser-desc">{firstFundraiser.description}</CardDescription>
-                  )}
+              <Card className="overflow-hidden border-border/50 shadow-xl bg-gradient-to-br from-card to-card/50" data-testid="card-fundraiser">
+                <CardHeader className="pb-6">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="bg-primary/10 rounded-full p-3">
+                      <DollarSign className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-2xl mb-2" data-testid="text-fundraiser-title">{firstFundraiser.title}</CardTitle>
+                      {firstFundraiser.description && (
+                        <CardDescription className="text-base" data-testid="text-fundraiser-desc">{firstFundraiser.description}</CardDescription>
+                      )}
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-semibold" data-testid="text-fundraiser-amount">
-                        ${Number(firstFundraiser.currentAmount).toLocaleString()} of ${Number(firstFundraiser.goalAmount).toLocaleString()}
+                <CardContent className="space-y-6">
+                  <div className="bg-muted/30 rounded-xl p-6">
+                    <div className="flex justify-between items-baseline mb-3">
+                      <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Progress</span>
+                      <span className="text-2xl font-bold text-foreground" data-testid="text-fundraiser-amount">
+                        ${Number(firstFundraiser.currentAmount).toLocaleString()}
                       </span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-3">
+                    <div className="w-full bg-muted rounded-full h-4 overflow-hidden mb-2">
                       <div 
-                        className="bg-accent h-3 rounded-full transition-all"
+                        className="bg-gradient-to-r from-primary to-accent h-4 rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${Math.min((Number(firstFundraiser.currentAmount) / Number(firstFundraiser.goalAmount)) * 100, 100)}%` }}
                         data-testid="progress-fundraiser"
                       />
                     </div>
+                    <p className="text-sm text-muted-foreground text-right">
+                      of ${Number(firstFundraiser.goalAmount).toLocaleString()} goal
+                    </p>
                   </div>
                   <Button 
-                    className="w-full" 
+                    className="w-full shadow-lg" 
                     size="lg" 
                     onClick={() => setDonationModalOpen(true)}
                     data-testid="button-donate"
                   >
-                    <DollarSign className="w-5 h-5 mr-2" />
+                    <Heart className="w-5 h-5 mr-2" />
                     Make a Donation
                   </Button>
                 </CardContent>
@@ -711,7 +825,7 @@ export default function Home() {
         </Tabs>
 
         {/* Live Stream Section */}
-        <div className="mt-12">
+        <div className="mt-16 pt-16 border-t border-border/30">
           <LiveStreamViewer
             memorialId={memorialId!}
             currentUser={
@@ -728,10 +842,13 @@ export default function Home() {
         </div>
 
         {/* Social Engagement Section */}
-        <div className="mt-12">
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-6">
-            Engage with this Memorial
-          </h2>
+        <div className="mt-16 pt-16 border-t border-border/30">
+          <div className="mb-8">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
+              Engage with this Memorial
+            </h2>
+            <p className="text-muted-foreground">Share your connection and keep their memory alive</p>
+          </div>
           <MemorialEngagement
             memorialId={memorialId!}
             currentUser={
@@ -749,7 +866,7 @@ export default function Home() {
         </div>
 
         {/* Merchandise Services Section */}
-        <div className="mt-16">
+        <div className="mt-16 pt-16 border-t border-border/30">
           <MerchandiseServices 
             memorialName={memorial.name}
             memorialId={memorialId!}
