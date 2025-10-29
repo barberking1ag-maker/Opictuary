@@ -19,6 +19,7 @@ import { LiveStreamViewer } from "@/components/LiveStreamViewer";
 import { ShareObituaryButton } from "@/components/ShareObituaryButton";
 import { SaveMemorialDialog } from "@/components/SaveMemorialDialog";
 import { MerchandiseServices } from "@/components/MerchandiseServices";
+import { FutureMessagesSection } from "@/components/FutureMessagesSection";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -870,6 +871,15 @@ export default function Home() {
           <MerchandiseServices 
             memorialName={memorial.name}
             memorialId={memorialId!}
+          />
+        </div>
+
+        {/* Future Messages Section */}
+        <div className="mt-16 pt-16 border-t border-border/30">
+          <FutureMessagesSection 
+            memorialId={memorialId!}
+            memorialName={memorial.name}
+            canCreate={isAuthenticated && (memorial.creatorEmail === user?.email)}
           />
         </div>
       </div>
