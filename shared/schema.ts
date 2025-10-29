@@ -122,6 +122,34 @@ export const memories = pgTable("memories", {
   index("idx_memories_is_approved").on(table.isApproved),
 ]);
 
+// Memory Comments - comments on individual photos/videos
+export const memoryComments = pgTable("memory_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memoryId: varchar("memory_id").notNull().references(() => memories.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  comment: text("comment").notNull(),
+  isApproved: boolean("is_approved").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_memory_comments_memory_id").on(table.memoryId),
+  index("idx_memory_comments_user_id").on(table.userId),
+]);
+
+// Memory Condolences - condolences on individual photos/videos
+export const memoryCondolences = pgTable("memory_condolences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memoryId: varchar("memory_id").notNull().references(() => memories.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_memory_condolences_memory_id").on(table.memoryId),
+  index("idx_memory_condolences_user_id").on(table.userId),
+]);
+
 export const condolences = pgTable("condolences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
@@ -942,6 +970,16 @@ export const insertMemorySchema = createInsertSchema(memories).omit({
   createdAt: true,
 });
 
+export const insertMemoryCommentSchema = createInsertSchema(memoryComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemoryCondolenceSchema = createInsertSchema(memoryCondolences).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertCondolenceSchema = createInsertSchema(condolences).omit({
   id: true,
   createdAt: true,
@@ -1206,6 +1244,12 @@ export type Memorial = typeof memorials.$inferSelect;
 
 export type InsertMemory = z.infer<typeof insertMemorySchema>;
 export type Memory = typeof memories.$inferSelect;
+
+export type InsertMemoryComment = z.infer<typeof insertMemoryCommentSchema>;
+export type MemoryComment = typeof memoryComments.$inferSelect;
+
+export type InsertMemoryCondolence = z.infer<typeof insertMemoryCondolenceSchema>;
+export type MemoryCondolence = typeof memoryCondolences.$inferSelect;
 
 export type InsertCondolence = z.infer<typeof insertCondolenceSchema>;
 export type Condolence = typeof condolences.$inferSelect;
