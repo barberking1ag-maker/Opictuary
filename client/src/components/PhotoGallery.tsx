@@ -78,6 +78,7 @@ export function PhotoGallery({ memories }: PhotoGalleryProps) {
         description: "Your condolence has been expressed with sympathy.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedPhoto?.id, "condolences"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedPhoto?.id, "condolences", "count"] });
     },
     onError: (error: any) => {
       toast({

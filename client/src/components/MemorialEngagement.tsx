@@ -167,6 +167,9 @@ export function MemorialEngagement({
       });
     },
     onError: (error: any) => {
+      // Clear the comment text on error to prevent confusion
+      setCommentText("");
+      
       if (error.message !== "Login required") {
         // Show the actual API error message if available
         const errorMessage = error.message || "Failed to post comment.";

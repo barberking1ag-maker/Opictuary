@@ -4,11 +4,20 @@
  */
 
 const VULGAR_WORDS = [
-  // Strong profanity only
-  'fuck', 'shit', 'bitch', 'bastard', 
-  'piss', 'dick', 'cock', 'pussy', 'cunt', 'whore', 'slut',
+  // Strong profanity only (including common variants)
+  'fuck', 'fucking', 'fucked', 'fucker', 'fucks',
+  'shit', 'shitting', 'shitty', 'shits',
+  'bitch', 'bitching', 'bitches',
+  'bastard', 'bastards',
+  'piss', 'pissed', 'pissing',
+  'dick', 'dicks',
+  'cock', 'cocks',
+  'pussy', 'pussies',
+  'cunt', 'cunts',
+  'whore', 'whores',
+  'slut', 'sluts', 'slutty',
   // Variants with common letter substitutions
-  'f**k', 'sh*t', 'b*tch', 'fck', 'fuk',
+  'f**k', 'sh*t', 'b*tch', 'fck', 'fuk', 'fking',
   // Truly offensive slurs and terms  
   'retard', 'retarded',
   // Direct attacks
