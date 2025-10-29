@@ -30,6 +30,8 @@ import SupportHub from "@/pages/SupportHub";
 import MemorialUpload from "@/pages/MemorialUpload";
 import ManageMemorial from "@/pages/ManageMemorial";
 import ObituaryPage from "@/pages/ObituaryPage";
+import FuneralProgramEditor from "@/pages/FuneralProgramEditor";
+import FuneralProgramViewer from "@/pages/FuneralProgramViewer";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -155,6 +157,8 @@ function Router() {
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
         <Route path="/memorials/:id/manage" component={ManageMemorial} />
+        <Route path="/memorials/:id/program-edit" component={FuneralProgramEditor} />
+        <Route path="/memorial/:id/program" component={FuneralProgramViewer} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/screenshots" component={AdminScreenshots} />
         <Route path="/privacy" component={Privacy} />
