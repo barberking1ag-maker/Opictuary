@@ -24,6 +24,7 @@ const createMemorialSchema = z.object({
   biography: z.string().min(10, "Please write at least a brief biography"),
   epitaph: z.string().optional(),
   prefaceText: z.string().optional(),
+  backgroundImage: z.string().url("Please enter a valid image URL").optional().or(z.literal("")),
   religion: z.string().optional(),
   cemeteryName: z.string().optional(),
   cemeteryLocation: z.string().optional(),
@@ -48,6 +49,7 @@ export default function CreateMemorial() {
       biography: "",
       epitaph: "",
       prefaceText: "",
+      backgroundImage: "",
       religion: "",
       cemeteryName: "",
       cemeteryLocation: "",
@@ -203,6 +205,27 @@ export default function CreateMemorial() {
                         )}
                       />
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="backgroundImage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Memorial Photo</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="https://example.com/photo.jpg" 
+                              {...field} 
+                              data-testid="input-background-image" 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Add a photo URL of your loved one to display as the memorial background
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
