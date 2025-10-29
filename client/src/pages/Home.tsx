@@ -16,6 +16,8 @@ import { PhotoGallery } from "@/components/PhotoGallery";
 import { MemorialEngagement } from "@/components/MemorialEngagement";
 import { LiveStreamViewer } from "@/components/LiveStreamViewer";
 import { ShareObituaryButton } from "@/components/ShareObituaryButton";
+import { SaveMemorialDialog } from "@/components/SaveMemorialDialog";
+import { MerchandiseServices } from "@/components/MerchandiseServices";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -23,8 +25,8 @@ const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 export default function Home() {
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [memorialId, setMemorialId] = useState<string | null>(DEMO_MEMORIAL_ID);
-  const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
@@ -99,13 +101,14 @@ export default function Home() {
     }
   }, [memorial]);
 
-  // Check if memorial is saved in localStorage
-  useEffect(() => {
-    if (memorialId) {
-      const savedMemorials = JSON.parse(localStorage.getItem('savedMemorials') || '[]');
-      setIsSaved(savedMemorials.includes(memorialId));
-    }
-  }, [memorialId]);
+  // Check if memorial is saved (database-backed)
+  const { data: savedMemorial } = useQuery({
+    queryKey: [`/api/saved-memorials/${memorialId}`],
+    enabled: !!memorialId && isAuthenticated,
+    retry: false,
+  });
+
+  const isSaved = !!savedMemorial;
 
   const handleShare = async () => {
     trackEvent('memorial_share', 'memorial', memorial?.name, undefined, {
@@ -146,16 +149,13 @@ export default function Home() {
     window.location.href = "/api/auth/login";
   };
 
-  const handleSave = () => {
-    if (!memorialId) return;
-
-    const savedMemorials = JSON.parse(localStorage.getItem('savedMemorials') || '[]');
-    
-    if (isSaved) {
-      // Remove from saved
-      const updated = savedMemorials.filter((id: string) => id !== memorialId);
-      localStorage.setItem('savedMemorials', JSON.stringify(updated));
-      setIsSaved(false);
+  const unsaveMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/saved-memorials/${memorialId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/saved-memorials/${memorialId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-memorials"] });
       toast({
         title: "Memorial Removed",
         description: "Memorial removed from your saved list.",
@@ -164,16 +164,29 @@ export default function Home() {
         memorialId: memorial?.id,
         memorialName: memorial?.name,
       });
-    } else {
-      // Add to saved
-      const updated = [...savedMemorials, memorialId];
-      localStorage.setItem('savedMemorials', JSON.stringify(updated));
-      setIsSaved(true);
+    },
+  });
+
+  const handleSave = () => {
+    if (!memorialId) return;
+    
+    if (!isAuthenticated) {
       toast({
-        title: "Memorial Saved",
-        description: "Memorial added to your saved list.",
+        title: "Login Required",
+        description: "Please log in to save memorials.",
+        variant: "default",
       });
-      trackEvent('memorial_save', 'memorial', memorial?.name, undefined, {
+      window.location.href = "/api/auth/login";
+      return;
+    }
+
+    if (isSaved) {
+      // Unsave the memorial
+      unsaveMutation.mutate();
+    } else {
+      // Open save dialog to choose relationship category
+      setSaveDialogOpen(true);
+      trackEvent('memorial_save_initiated', 'memorial', memorial?.name, undefined, {
         memorialId: memorial?.id,
         memorialName: memorial?.name,
       });
@@ -705,6 +718,14 @@ export default function Home() {
             onLoginRequired={handleLoginRequired}
           />
         </div>
+
+        {/* Merchandise Services Section */}
+        <div className="mt-16">
+          <MerchandiseServices 
+            memorialName={memorial.name}
+            memorialId={memorialId!}
+          />
+        </div>
       </div>
 
       <InviteCodeModal 
@@ -726,6 +747,13 @@ export default function Home() {
           }}
         />
       )}
+
+      <SaveMemorialDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        memorialId={memorialId!}
+        memorialName={memorial.name}
+      />
     </div>
   );
 }

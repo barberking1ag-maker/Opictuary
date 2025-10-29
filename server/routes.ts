@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
+import { moderateContent } from "./contentModeration";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -21,6 +22,7 @@ import {
   insertCondolenceSchema,
   insertMemorialLikeSchema,
   insertMemorialCommentSchema,
+  insertSavedMemorialSchema,
   insertMemorialLiveStreamSchema,
   insertMemorialLiveStreamViewerSchema,
   insertScheduledMessageSchema,
@@ -630,6 +632,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         memorialId: req.params.memorialId,
       });
+      
+      // Content moderation
+      const moderated = moderateContent(data.caption);
+      if (!moderated.isClean) {
+        return res.status(400).json({ 
+          error: "Your caption contains inappropriate language. Please revise and try again.",
+          vulgarLanguageDetected: true,
+        });
+      }
+      
       const memory = await storage.createMemory(data);
       res.status(201).json(memory);
     } catch (error: any) {
@@ -677,6 +689,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         memorialId: req.params.memorialId,
       });
+      
+      // Content moderation
+      const moderated = moderateContent(data.message);
+      if (!moderated.isClean) {
+        return res.status(400).json({ 
+          error: "Your message contains inappropriate language. Please revise and try again.",
+          vulgarLanguageDetected: true,
+        });
+      }
+      
       const condolence = await storage.createCondolence(data);
       res.status(201).json(condolence);
     } catch (error: any) {
@@ -751,6 +773,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         memorialId: req.params.memorialId,
       });
+      
+      // Content moderation
+      const moderated = moderateContent(data.comment);
+      if (!moderated.isClean) {
+        return res.status(400).json({ 
+          error: "Your comment contains inappropriate language. Please revise and try again.",
+          vulgarLanguageDetected: true,
+        });
+      }
+      
       const comment = await storage.createMemorialComment(data);
       res.status(201).json(comment);
     } catch (error: any) {
@@ -765,6 +797,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.deleteMemorialComment(req.params.commentId);
       res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Saved Memorial routes
+  app.get("/api/saved-memorials", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const savedMemorials = await storage.getSavedMemorials(userId);
+      res.json(savedMemorials);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/saved-memorials/:memorialId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const savedMemorial = await storage.getSavedMemorial(userId, req.params.memorialId);
+      if (!savedMemorial) {
+        return res.status(404).json({ error: "Saved memorial not found" });
+      }
+      res.json(savedMemorial);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/saved-memorials", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = insertSavedMemorialSchema.parse({
+        ...req.body,
+        userId,
+      });
+      const savedMemorial = await storage.createSavedMemorial(data);
+      res.status(201).json(savedMemorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/saved-memorials/:memorialId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteSavedMemorial(userId, req.params.memorialId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/saved-memorials/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const updated = await storage.updateSavedMemorial(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Saved memorial not found" });
+      }
+      res.json(updated);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

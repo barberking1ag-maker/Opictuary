@@ -8,6 +8,7 @@ import {
   condolences,
   memorialLikes,
   memorialComments,
+  savedMemorials,
   memorialLiveStreams,
   memorialLiveStreamViewers,
   scheduledMessages,
@@ -63,6 +64,8 @@ import {
   type InsertMemorialLike,
   type MemorialComment,
   type InsertMemorialComment,
+  type SavedMemorial,
+  type InsertSavedMemorial,
   type MemorialLiveStream,
   type InsertMemorialLiveStream,
   type MemorialLiveStreamViewer,
@@ -200,6 +203,13 @@ export interface IStorage {
   getMemorialComments(memorialId: string): Promise<MemorialComment[]>;
   createMemorialComment(comment: InsertMemorialComment): Promise<MemorialComment>;
   deleteMemorialComment(id: string): Promise<void>;
+
+  // Saved Memorial operations
+  getSavedMemorials(userId: string): Promise<SavedMemorial[]>;
+  getSavedMemorial(userId: string, memorialId: string): Promise<SavedMemorial | undefined>;
+  createSavedMemorial(savedMemorial: InsertSavedMemorial): Promise<SavedMemorial>;
+  deleteSavedMemorial(userId: string, memorialId: string): Promise<void>;
+  updateSavedMemorial(id: string, data: Partial<InsertSavedMemorial>): Promise<SavedMemorial | undefined>;
 
   // Memorial Live Stream operations
   getMemorialLiveStreams(memorialId: string): Promise<MemorialLiveStream[]>;
@@ -643,6 +653,35 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMemorialComment(id: string): Promise<void> {
     await db.delete(memorialComments).where(eq(memorialComments.id, id));
+  }
+
+  // Saved Memorial operations
+  async getSavedMemorials(userId: string): Promise<SavedMemorial[]> {
+    return await db.select().from(savedMemorials).where(eq(savedMemorials.userId, userId)).orderBy(desc(savedMemorials.createdAt));
+  }
+
+  async getSavedMemorial(userId: string, memorialId: string): Promise<SavedMemorial | undefined> {
+    const [saved] = await db.select().from(savedMemorials)
+      .where(and(eq(savedMemorials.userId, userId), eq(savedMemorials.memorialId, memorialId)));
+    return saved;
+  }
+
+  async createSavedMemorial(savedMemorial: InsertSavedMemorial): Promise<SavedMemorial> {
+    const [created] = await db.insert(savedMemorials).values(savedMemorial).returning();
+    return created;
+  }
+
+  async deleteSavedMemorial(userId: string, memorialId: string): Promise<void> {
+    await db.delete(savedMemorials)
+      .where(and(eq(savedMemorials.userId, userId), eq(savedMemorials.memorialId, memorialId)));
+  }
+
+  async updateSavedMemorial(id: string, data: Partial<InsertSavedMemorial>): Promise<SavedMemorial | undefined> {
+    const [updated] = await db.update(savedMemorials)
+      .set(data)
+      .where(eq(savedMemorials.id, id))
+      .returning();
+    return updated;
   }
 
   // Memorial Live Stream operations

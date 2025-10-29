@@ -164,6 +164,21 @@ export const memorialComments = pgTable("memorial_comments", {
   index("idx_memorial_comments_parent_id").on(table.parentCommentId),
 ]);
 
+// Saved Memorials - users can save memorials with relationship categories
+export const savedMemorials = pgTable("saved_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  relationshipCategory: text("relationship_category").notNull(), // 'family', 'friend', 'colleague', 'police_officer', 'firefighter', 'military', 'teacher', 'mentor', 'neighbor', 'acquaintance', 'other'
+  customCategory: text("custom_category"), // For 'other' category
+  notes: text("notes"), // Optional personal notes about the relationship
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_saved_memorials_user_id").on(table.userId),
+  index("idx_saved_memorials_memorial_id").on(table.memorialId),
+  index("idx_saved_memorials_relationship").on(table.relationshipCategory),
+]);
+
 // Memorial Live Streams - for virtual attendance
 export const memorialLiveStreams = pgTable("memorial_live_streams", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -943,6 +958,11 @@ export const insertMemorialCommentSchema = createInsertSchema(memorialComments).
   updatedAt: true,
 });
 
+export const insertSavedMemorialSchema = createInsertSchema(savedMemorials).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertMemorialLiveStreamSchema = createInsertSchema(memorialLiveStreams).omit({
   id: true,
   createdAt: true,
@@ -1195,6 +1215,9 @@ export type MemorialLike = typeof memorialLikes.$inferSelect;
 
 export type InsertMemorialComment = z.infer<typeof insertMemorialCommentSchema>;
 export type MemorialComment = typeof memorialComments.$inferSelect;
+
+export type InsertSavedMemorial = z.infer<typeof insertSavedMemorialSchema>;
+export type SavedMemorial = typeof savedMemorials.$inferSelect;
 
 export type InsertMemorialLiveStream = z.infer<typeof insertMemorialLiveStreamSchema>;
 export type MemorialLiveStream = typeof memorialLiveStreams.$inferSelect;
