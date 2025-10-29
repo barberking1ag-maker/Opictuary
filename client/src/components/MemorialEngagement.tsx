@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
+import type { MemorialLike, MemorialComment, Condolence } from "@shared/schema";
 
 interface MemorialEngagementProps {
   memorialId: string;
@@ -19,34 +20,6 @@ interface MemorialEngagementProps {
     lastName?: string;
   };
   onLoginRequired: () => void;
-}
-
-interface Like {
-  id: string;
-  memorialId: string;
-  userId?: string;
-  userEmail?: string;
-  userName?: string;
-  createdAt: Date;
-}
-
-interface Comment {
-  id: string;
-  memorialId: string;
-  userId?: string;
-  userEmail?: string;
-  userName?: string;
-  content: string;
-  createdAt: Date;
-}
-
-interface Condolence {
-  id: string;
-  memorialId: string;
-  senderName: string;
-  senderEmail?: string;
-  message: string;
-  createdAt: Date;
 }
 
 export function MemorialEngagement({
@@ -61,7 +34,7 @@ export function MemorialEngagement({
   const [condolenceEmail, setCondolenceEmail] = useState("");
 
   // Fetch likes
-  const { data: likes = [] } = useQuery<Like[]>({
+  const { data: likes = [] } = useQuery<MemorialLike[]>({
     queryKey: ["/api/memorials", memorialId, "likes"],
   });
 
@@ -71,7 +44,7 @@ export function MemorialEngagement({
   });
 
   // Fetch comments
-  const { data: comments = [] } = useQuery<Comment[]>({
+  const { data: comments = [] } = useQuery<MemorialComment[]>({
     queryKey: ["/api/memorials", memorialId, "comments"],
   });
 
@@ -102,7 +75,7 @@ export function MemorialEngagement({
       return apiRequest("POST", `/api/memorials/${memorialId}/likes`, {
         userId: currentUser.id,
         userEmail: currentUser.email,
-        userName,
+        userName: userName,
       });
     },
     onSuccess: () => {
@@ -178,9 +151,9 @@ export function MemorialEngagement({
 
       return apiRequest("POST", `/api/memorials/${memorialId}/comments`, {
         userId: currentUser.id,
-        userEmail: currentUser.email,
-        userName,
-        content,
+        authorEmail: currentUser.email,
+        authorName: userName,
+        comment: content,
       });
     },
     onSuccess: () => {
@@ -207,8 +180,8 @@ export function MemorialEngagement({
   // Condolence mutation
   const condolenceMutation = useMutation({
     mutationFn: async (data: {
-      senderName: string;
-      senderEmail?: string;
+      authorName: string;
+      authorEmail?: string;
       message: string;
     }) => {
       return apiRequest("POST", `/api/memorials/${memorialId}/condolences`, data);
@@ -258,13 +231,14 @@ export function MemorialEngagement({
     }
 
     condolenceMutation.mutate({
-      senderName: condolenceName,
-      senderEmail: condolenceEmail || undefined,
+      authorName: condolenceName,
+      authorEmail: condolenceEmail || undefined,
       message: condolenceText,
     });
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string | null) => {
+    if (!name) return "AN";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -344,13 +318,13 @@ export function MemorialEngagement({
                   <div className="flex gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/20">
-                        {getInitials(comment.userName || "Anonymous")}
+                        {getInitials(comment.authorName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm" data-testid={`text-comment-author-${comment.id}`}>
-                          {comment.userName || "Anonymous"}
+                          {comment.authorName || "Anonymous"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(comment.createdAt), {
@@ -359,7 +333,7 @@ export function MemorialEngagement({
                         </p>
                       </div>
                       <p className="text-sm text-foreground/90" data-testid={`text-comment-content-${comment.id}`}>
-                        {comment.content}
+                        {comment.comment}
                       </p>
                     </div>
                   </div>
@@ -443,13 +417,13 @@ export function MemorialEngagement({
                   <div className="flex gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/20">
-                        {getInitials(condolence.senderName)}
+                        {getInitials(condolence.authorName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm" data-testid={`text-condolence-sender-${condolence.id}`}>
-                          {condolence.senderName}
+                          {condolence.authorName}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(condolence.createdAt), {

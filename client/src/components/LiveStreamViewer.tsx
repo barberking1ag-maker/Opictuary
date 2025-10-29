@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow, isPast, isFuture } from "date-fns";
+import type { MemorialLiveStream, MemorialLiveStreamViewer } from "@shared/schema";
 
 interface LiveStreamViewerProps {
   memorialId: string;
@@ -19,45 +20,20 @@ interface LiveStreamViewerProps {
   };
 }
 
-interface LiveStream {
-  id: string;
-  memorialId: string;
-  title: string;
-  description?: string;
-  streamUrl: string;
-  scheduledStartTime: Date;
-  scheduledEndTime?: Date;
-  isActive: boolean;
-  platform?: string;
-  maxViewers?: number;
-  createdAt: Date;
-}
-
-interface Viewer {
-  id: string;
-  streamId: string;
-  userId?: string;
-  userEmail?: string;
-  userName?: string;
-  joinedAt: Date;
-  leftAt?: Date;
-  durationMinutes?: number;
-}
-
 export function LiveStreamViewer({
   memorialId,
   currentUser,
 }: LiveStreamViewerProps) {
   const { toast } = useToast();
-  const [selectedStream, setSelectedStream] = useState<LiveStream | null>(null);
+  const [selectedStream, setSelectedStream] = useState<MemorialLiveStream | null>(null);
   const [viewerSessionId, setViewerSessionId] = useState<string | null>(null);
   const joinTimeRef = useRef<Date | null>(null);
 
-  const { data: streams = [] } = useQuery<LiveStream[]>({
+  const { data: streams = [] } = useQuery<MemorialLiveStream[]>({
     queryKey: ["/api/memorials", memorialId, "live-streams"],
   });
 
-  const { data: viewers = [] } = useQuery<Viewer[]>({
+  const { data: viewers = [] } = useQuery<MemorialLiveStreamViewer[]>({
     queryKey: ["/api/live-streams", selectedStream?.id, "viewers"],
     enabled: !!selectedStream,
   });
@@ -129,7 +105,7 @@ export function LiveStreamViewer({
     (s) => !s.isActive && isPast(new Date(s.scheduledStartTime))
   );
 
-  const getStreamStatus = (stream: LiveStream) => {
+  const getStreamStatus = (stream: MemorialLiveStream) => {
     if (stream.isActive) {
       return { label: "Live Now", variant: "destructive" as const };
     }
@@ -139,7 +115,7 @@ export function LiveStreamViewer({
     return { label: "Ended", variant: "outline" as const };
   };
 
-  const handleJoinStream = (stream: LiveStream) => {
+  const handleJoinStream = (stream: MemorialLiveStream) => {
     setSelectedStream(stream);
     if (stream.isActive) {
       joinStreamMutation.mutate(stream.id);
@@ -151,7 +127,8 @@ export function LiveStreamViewer({
     setSelectedStream(null);
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string | null) => {
+    if (!name) return "AN";
     return name
       .split(" ")
       .map((n) => n[0])
