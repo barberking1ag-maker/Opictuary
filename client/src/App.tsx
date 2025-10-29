@@ -49,11 +49,20 @@ function Router() {
   
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      {/* Skip to main content link for screen readers and keyboard navigation */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
+        data-testid="link-skip-to-content"
+      >
+        Skip to main content
+      </a>
+      
+      <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/">
-              <div className="hover-elevate px-3 py-2 rounded-md transition-colors cursor-pointer" data-testid="link-home">
+              <div className="hover-elevate px-3 py-2 rounded-md transition-colors cursor-pointer" data-testid="link-home" role="link" aria-label="Opictuary home page">
                 <OpictuaryLogo variant="classic" showTagline={true} className="hidden md:flex" />
                 <OpictuaryLogo variant="classic" showTagline={false} className="flex md:hidden" />
               </div>
@@ -101,11 +110,13 @@ function Router() {
                 size="icon" 
                 className="relative hidden md:flex"
                 data-testid="button-notifications"
+                aria-label="Notifications - 3 unread"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-5 h-5" aria-hidden="true" />
                 <Badge 
                   variant="destructive" 
                   className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  aria-label="3 notifications"
                 >
                   3
                 </Badge>
@@ -133,12 +144,13 @@ function Router() {
         </div>
       </nav>
 
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/obituary/:memorialId" component={ObituaryPage} />
-        <Route path="/memorial/:code/upload" component={MemorialUpload} />
-        <Route path="/memorial/:id" component={Home} />
-        <Route path="/about" component={About} />
+      <main id="main-content" role="main">
+        <Switch>
+          <Route path="/" component={Landing} />
+          <Route path="/obituary/:memorialId" component={ObituaryPage} />
+          <Route path="/memorial/:code/upload" component={MemorialUpload} />
+          <Route path="/memorial/:id" component={Home} />
+          <Route path="/about" component={About} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
@@ -164,7 +176,8 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/support" component={SupportHub} />
         <Route component={NotFound} />
-      </Switch>
+        </Switch>
+      </main>
 
       <Footer badgeVariant="classic" />
     </div>

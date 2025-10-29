@@ -239,7 +239,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Background Image */}
-      <div className="relative h-[600px] md:h-[700px] w-full overflow-hidden">
+      <header className="relative h-[600px] md:h-[700px] w-full overflow-hidden" aria-label={`Memorial hero for ${memorial.name}`}>
         {/* Background Image or Gradient */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -248,6 +248,8 @@ export default function Home() {
               ? `url(${memorial.backgroundImage})` 
               : 'linear-gradient(135deg, hsl(280, 70%, 30%) 0%, hsl(280, 60%, 20%) 50%, hsl(280, 70%, 15%) 100%)'
           }}
+          role="img"
+          aria-label={memorial.backgroundImage ? `Memorial background image for ${memorial.name}` : "Memorial background gradient"}
         />
         {/* Enhanced dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
@@ -282,41 +284,42 @@ export default function Home() {
             )}
 
             {/* Quick Stats with improved design */}
-            <div className="flex flex-wrap justify-center gap-8 mt-16 pt-8 border-t border-white/20">
+            <div className="flex flex-wrap justify-center gap-8 mt-16 pt-8 border-t border-white/20" role="region" aria-label="Memorial statistics">
               <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
                 <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
-                  <ImageIcon className="w-6 h-6" />
+                  <ImageIcon className="w-6 h-6" aria-hidden="true" />
                 </div>
-                <span className="font-semibold text-lg" data-testid="text-memory-count">{approvedMemories.length}</span>
+                <span className="font-semibold text-lg" data-testid="text-memory-count" aria-label={`${approvedMemories.length} ${approvedMemories.length === 1 ? 'memory' : 'memories'}`}>{approvedMemories.length}</span>
                 <span className="text-sm text-white/70">Memories</span>
               </div>
               <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
                 <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
-                  <MessageSquare className="w-6 h-6" />
+                  <MessageSquare className="w-6 h-6" aria-hidden="true" />
                 </div>
-                <span className="font-semibold text-lg" data-testid="text-condolence-count">{condolences.length}</span>
+                <span className="font-semibold text-lg" data-testid="text-condolence-count" aria-label={`${condolences.length} ${condolences.length === 1 ? 'condolence' : 'condolences'}`}>{condolences.length}</span>
                 <span className="text-sm text-white/70">Condolences</span>
               </div>
               {events.length > 0 && (
                 <div className="flex flex-col items-center gap-2 text-white/90 min-w-[100px]">
                   <div className="bg-white/15 backdrop-blur-md rounded-full p-3 border border-white/20">
-                    <Calendar className="w-6 h-6" />
+                    <Calendar className="w-6 h-6" aria-hidden="true" />
                   </div>
-                  <span className="font-semibold text-lg" data-testid="text-event-count">{events.length}</span>
+                  <span className="font-semibold text-lg" data-testid="text-event-count" aria-label={`${events.length} ${events.length === 1 ? 'event' : 'events'}`}>{events.length}</span>
                   <span className="text-sm text-white/70">Events</span>
                 </div>
               )}
             </div>
 
             {/* Action Buttons with improved layout */}
-            <div className="flex flex-wrap justify-center gap-4 mt-12 pt-4">
+            <nav className="flex flex-wrap justify-center gap-4 mt-12 pt-4" role="navigation" aria-label="Memorial actions">
               <Button 
                 size="lg" 
                 className="bg-white hover:bg-white/95 text-foreground border-none shadow-2xl font-medium min-w-[160px]"
                 onClick={() => setCodeModalOpen(true)} 
                 data-testid="button-enter-code"
+                aria-label="Enter memorial invite code"
               >
-                <MessageSquare className="w-5 h-5 mr-2" />
+                <MessageSquare className="w-5 h-5 mr-2" aria-hidden="true" />
                 Enter Code
               </Button>
               {funeralProgram && (
@@ -325,8 +328,9 @@ export default function Home() {
                   className="bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none shadow-2xl font-medium min-w-[160px]"
                   onClick={() => window.location.href = `/memorial/${memorialId}/program`}
                   data-testid="button-view-program"
+                  aria-label="View digital funeral program"
                 >
-                  <FileText className="w-5 h-5 mr-2" />
+                  <FileText className="w-5 h-5 mr-2" aria-hidden="true" />
                   View Program
                 </Button>
               )}
@@ -336,8 +340,9 @@ export default function Home() {
                 className="bg-white/10 backdrop-blur-md text-white border-white/50 hover-elevate active-elevate-2 shadow-lg font-medium min-w-[160px]"
                 onClick={handleShare} 
                 data-testid="button-share"
+                aria-label="Share memorial"
               >
-                <Share2 className="w-5 h-5 mr-2" />
+                <Share2 className="w-5 h-5 mr-2" aria-hidden="true" />
                 Share
               </Button>
               <ShareObituaryButton 
@@ -350,18 +355,20 @@ export default function Home() {
                 className="bg-white/10 backdrop-blur-md text-white border-white/50 hover-elevate active-elevate-2 shadow-lg font-medium min-w-[160px]"
                 onClick={handleSave} 
                 data-testid="button-save"
+                aria-label={isSaved ? `Memorial already saved` : `Save memorial`}
+                aria-pressed={isSaved}
               >
-                <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} aria-hidden="true" />
                 {isSaved ? 'Saved' : 'Save'}
               </Button>
               <FlowerOrderButton 
                 memorialId={memorialId || undefined}
                 memorialName={memorial.name}
               />
-            </div>
+            </nav>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Engagement Call-to-Action Card */}
       {!isAuthenticated && (
