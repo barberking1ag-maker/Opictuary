@@ -5,6 +5,8 @@ import {
   memorialAdmins,
   qrCodes,
   memories,
+  memoryComments,
+  memoryCondolences,
   condolences,
   memorialLikes,
   memorialComments,
@@ -58,6 +60,10 @@ import {
   type InsertQRCode,
   type Memory,
   type InsertMemory,
+  type MemoryComment,
+  type InsertMemoryComment,
+  type MemoryCondolence,
+  type InsertMemoryCondolence,
   type Condolence,
   type InsertCondolence,
   type MemorialLike,
@@ -188,6 +194,18 @@ export interface IStorage {
   createMemory(memory: InsertMemory): Promise<Memory>;
   approveMemory(id: string): Promise<Memory | undefined>;
   rejectMemory(id: string): Promise<void>;
+
+  // Memory Comment operations (comments on individual photos/videos)
+  getMemoryComments(memoryId: string): Promise<MemoryComment[]>;
+  createMemoryComment(comment: InsertMemoryComment): Promise<MemoryComment>;
+  deleteMemoryComment(id: string): Promise<void>;
+  getMemoryCommentsCount(memoryId: string): Promise<number>;
+
+  // Memory Condolence operations (condolences on individual photos/videos)
+  getMemoryCondolences(memoryId: string): Promise<MemoryCondolence[]>;
+  createMemoryCondolence(condolence: InsertMemoryCondolence): Promise<MemoryCondolence>;
+  deleteMemoryCondolence(memoryId: string, userId?: string, userEmail?: string): Promise<void>;
+  getMemoryCondolencesCount(memoryId: string): Promise<number>;
 
   // Condolence operations
   getCondolencesByMemorialId(memorialId: string): Promise<Condolence[]>;
@@ -604,6 +622,50 @@ export class DatabaseStorage implements IStorage {
 
   async rejectMemory(id: string): Promise<void> {
     await db.delete(memories).where(eq(memories.id, id));
+  }
+
+  // Memory Comment operations (comments on individual photos/videos)
+  async getMemoryComments(memoryId: string): Promise<MemoryComment[]> {
+    return await db.select().from(memoryComments).where(eq(memoryComments.memoryId, memoryId)).orderBy(desc(memoryComments.createdAt));
+  }
+
+  async createMemoryComment(comment: InsertMemoryComment): Promise<MemoryComment> {
+    const [created] = await db.insert(memoryComments).values(comment).returning();
+    return created;
+  }
+
+  async deleteMemoryComment(id: string): Promise<void> {
+    await db.delete(memoryComments).where(eq(memoryComments.id, id));
+  }
+
+  async getMemoryCommentsCount(memoryId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(memoryComments).where(eq(memoryComments.memoryId, memoryId));
+    return result[0]?.count || 0;
+  }
+
+  // Memory Condolence operations (condolences on individual photos/videos)
+  async getMemoryCondolences(memoryId: string): Promise<MemoryCondolence[]> {
+    return await db.select().from(memoryCondolences).where(eq(memoryCondolences.memoryId, memoryId)).orderBy(desc(memoryCondolences.createdAt));
+  }
+
+  async createMemoryCondolence(condolence: InsertMemoryCondolence): Promise<MemoryCondolence> {
+    const [created] = await db.insert(memoryCondolences).values(condolence).returning();
+    return created;
+  }
+
+  async deleteMemoryCondolence(memoryId: string, userId?: string, userEmail?: string): Promise<void> {
+    const conditions = [eq(memoryCondolences.memoryId, memoryId)];
+    if (userId) {
+      conditions.push(eq(memoryCondolences.userId, userId));
+    } else if (userEmail) {
+      conditions.push(eq(memoryCondolences.userEmail, userEmail));
+    }
+    await db.delete(memoryCondolences).where(and(...conditions));
+  }
+
+  async getMemoryCondolencesCount(memoryId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(memoryCondolences).where(eq(memoryCondolences.memoryId, memoryId));
+    return result[0]?.count || 0;
   }
 
   // Condolence operations

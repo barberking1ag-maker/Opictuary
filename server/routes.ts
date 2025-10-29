@@ -19,6 +19,8 @@ import Stripe from "stripe";
 import { 
   insertMemorialSchema, 
   insertMemorySchema, 
+  insertMemoryCommentSchema,
+  insertMemoryCondolenceSchema,
   insertCondolenceSchema,
   insertMemorialLikeSchema,
   insertMemorialCommentSchema,
@@ -667,6 +669,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/memories/:id", async (req, res) => {
     try {
       await storage.rejectMemory(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memory Comment routes (comments on individual photos/videos)
+  app.get("/api/memories/:memoryId/comments", async (req, res) => {
+    try {
+      const comments = await storage.getMemoryComments(req.params.memoryId);
+      res.json(comments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memories/:memoryId/comments/count", async (req, res) => {
+    try {
+      const count = await storage.getMemoryCommentsCount(req.params.memoryId);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memories/:memoryId/comments", async (req, res) => {
+    try {
+      const data = insertMemoryCommentSchema.parse({
+        ...req.body,
+        memoryId: req.params.memoryId,
+      });
+      
+      // Content moderation
+      const moderated = moderateContent(data.comment);
+      if (!moderated.isClean) {
+        return res.status(400).json({ 
+          error: "Your comment contains inappropriate language. Please revise and try again.",
+          vulgarLanguageDetected: true,
+        });
+      }
+      
+      const comment = await storage.createMemoryComment(data);
+      res.status(201).json(comment);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memory-comments/:id", async (req, res) => {
+    try {
+      await storage.deleteMemoryComment(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memory Condolence routes (condolences on individual photos/videos)
+  app.get("/api/memories/:memoryId/condolences", async (req, res) => {
+    try {
+      const condolences = await storage.getMemoryCondolences(req.params.memoryId);
+      res.json(condolences);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memories/:memoryId/condolences/count", async (req, res) => {
+    try {
+      const count = await storage.getMemoryCondolencesCount(req.params.memoryId);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memories/:memoryId/condolences", async (req, res) => {
+    try {
+      const data = insertMemoryCondolenceSchema.parse({
+        ...req.body,
+        memoryId: req.params.memoryId,
+      });
+      
+      const condolence = await storage.createMemoryCondolence(data);
+      res.status(201).json(condolence);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memories/:memoryId/condolences", async (req, res) => {
+    try {
+      const userId = req.body.userId;
+      const userEmail = req.body.userEmail;
+      await storage.deleteMemoryCondolence(req.params.memoryId, userId, userEmail);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
