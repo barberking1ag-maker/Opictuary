@@ -31,6 +31,9 @@ const createMemorialSchema = z.object({
   fontFamily: z.string().optional(),
   symbol: z.string().optional(),
   isPublic: z.boolean().default(false),
+}).refine((data) => new Date(data.deathDate) >= new Date(data.birthDate), {
+  message: "Death date cannot be before birth date",
+  path: ["deathDate"],
 });
 
 type CreateMemorialForm = z.infer<typeof createMemorialSchema>;
@@ -64,12 +67,8 @@ export default function CreateMemorial() {
       const response = await apiRequest("POST", "/api/memorials", {
         ...data,
         creatorEmail: user?.email,
-        inviteCode: Math.random().toString(36).substring(2, 15),
+        inviteCode: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create memorial");
-      }
       return await response.json();
     },
     onSuccess: (memorial) => {
@@ -80,10 +79,11 @@ export default function CreateMemorial() {
       });
       window.location.href = `/my-memorials`;
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error("Create memorial error:", error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Error Creating Memorial",
+        description: error.message || "Please check all required fields and try again.",
         variant: "destructive",
       });
     },

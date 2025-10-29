@@ -12,7 +12,10 @@ export const initGA = () => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
   if (!measurementId) {
-    console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
+    // Only warn in development - it's optional in production
+    if (import.meta.env.DEV) {
+      console.warn('Google Analytics not configured. Set VITE_GA_MEASUREMENT_ID to enable tracking.');
+    }
     return;
   }
 

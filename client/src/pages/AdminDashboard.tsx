@@ -471,14 +471,6 @@ export default function AdminDashboard() {
                         View Support Hub
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full justify-start" disabled data-testid="button-manage-tickets">
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Manage Tickets (Coming Soon)
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" disabled data-testid="button-manage-articles">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Manage Articles (Coming Soon)
-                    </Button>
                   </CardContent>
                 </Card>
               </div>

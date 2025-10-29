@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Plus, Trash2, GripVertical, Eye } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, GripVertical, Eye, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ITEM_TYPES = [
   { value: "hymn", label: "Hymn/Song" },
@@ -23,12 +24,50 @@ const ITEM_TYPES = [
   { value: "other", label: "Other" },
 ];
 
+// Validation helpers
+function validateTimeFormat(time: string | undefined): boolean {
+  if (!time) return true; // Optional field
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  return timeRegex.test(time);
+}
+
+function hasDuplicateItems(items: Array<Partial<ProgramItem>>): boolean {
+  const titles = items.filter(item => item.title?.trim()).map(item => item.title?.trim().toLowerCase());
+  return titles.length !== new Set(titles).size;
+}
+
+function validateProgramData(program: Partial<FuneralProgram>, items: Array<Partial<ProgramItem>>): string | null {
+  // Validate service time format
+  if (program.serviceTime && !validateTimeFormat(program.serviceTime)) {
+    return "Service time must be in HH:MM format (e.g., 14:00)";
+  }
+  
+  // Validate service date (should not be in distant past)
+  if (program.serviceDate) {
+    const serviceDate = new Date(program.serviceDate);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    
+    if (serviceDate < oneYearAgo) {
+      return "Service date seems unusually far in the past. Please verify.";
+    }
+  }
+  
+  // Check for duplicate items
+  if (hasDuplicateItems(items)) {
+    return "You have duplicate items with the same title. Please make titles unique.";
+  }
+  
+  return null; // All validations passed
+}
+
 export default function FuneralProgramEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [programData, setProgramData] = useState<Partial<FuneralProgram>>({});
   const [items, setItems] = useState<Array<Partial<ProgramItem>>>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Fetch memorial
   const { data: memorial } = useQuery<Memorial>({
@@ -66,11 +105,10 @@ export default function FuneralProgramEditor() {
   // Create/Update program mutation
   const saveProgramMutation = useMutation({
     mutationFn: async (data: Partial<FuneralProgram>) => {
-      if (existingProgram) {
-        return await apiRequest("PATCH", `/api/memorials/${id}/funeral-program`, data);
-      } else {
-        return await apiRequest("POST", `/api/memorials/${id}/funeral-program`, data);
-      }
+      const response = existingProgram
+        ? await apiRequest("PATCH", `/api/memorials/${id}/funeral-program`, data)
+        : await apiRequest("POST", `/api/memorials/${id}/funeral-program`, data);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${id}/funeral-program`] });
@@ -126,6 +164,20 @@ export default function FuneralProgramEditor() {
   });
 
   const handleSave = async () => {
+    // Validate before saving
+    const error = validateProgramData(programData, items);
+    if (error) {
+      setValidationError(error);
+      toast({
+        title: "Validation Error",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setValidationError(null);
+    
     // Save program first
     const program = await saveProgramMutation.mutateAsync(programData);
     
@@ -215,6 +267,14 @@ export default function FuneralProgramEditor() {
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="grid gap-6">
+          {/* Validation Error Alert */}
+          {validationError && (
+            <Alert variant="destructive" data-testid="alert-validation-error">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
           {/* Service Information */}
           <Card>
             <CardHeader>
