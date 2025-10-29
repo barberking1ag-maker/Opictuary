@@ -705,6 +705,57 @@ export const flowerPayouts = pgTable("flower_payouts", {
   index("idx_flower_payouts_status").on(table.status),
 ]);
 
+// Funeral Program tables
+export const funeralPrograms = pgTable("funeral_programs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }).unique(),
+  // Service information
+  serviceDate: text("service_date"),
+  serviceTime: text("service_time"),
+  serviceName: text("service_name").default("Celebration of Life"),
+  serviceLocation: text("service_location"),
+  serviceAddress: text("service_address"),
+  // Program details
+  welcomeMessage: text("welcome_message"),
+  closingMessage: text("closing_message"),
+  // Family information
+  survivedBy: text("survived_by"),
+  predeceased: text("predeceased"),
+  pallbearers: text("pallbearers"),
+  honoraryPallbearers: text("honorary_pallbearers"),
+  // Additional sections
+  acknowledgments: text("acknowledgments"),
+  specialThanks: text("special_thanks"),
+  repastLocation: text("repast_location"),
+  repastAddress: text("repast_address"),
+  // Customization
+  coverImageUrl: text("cover_image_url"),
+  themeColor: text("theme_color"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_funeral_programs_memorial_id").on(table.memorialId),
+]);
+
+export const programItems = pgTable("program_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  programId: varchar("program_id").notNull().references(() => funeralPrograms.id, { onDelete: "cascade" }),
+  // Item details
+  orderIndex: integer("order_index").notNull(),
+  itemType: text("item_type").notNull(), // 'hymn', 'reading', 'prayer', 'eulogy', 'music', 'poem', 'tribute', 'other'
+  title: text("title").notNull(),
+  description: text("description"),
+  performedBy: text("performed_by"),
+  // Content
+  lyrics: text("lyrics"),
+  content: text("content"),
+  duration: text("duration"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_program_items_program_id").on(table.programId),
+  index("idx_program_items_order").on(table.orderIndex),
+]);
+
 // Analytics tracking tables
 export const pageViews = pgTable("page_views", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -748,6 +799,7 @@ export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   musicPlaylist: one(musicPlaylists),
   admins: many(memorialAdmins),
   qrCodes: many(qrCodes),
+  funeralProgram: one(funeralPrograms),
 }));
 
 export const memorialAdminsRelations = relations(memorialAdmins, ({ one }) => ({
@@ -818,6 +870,21 @@ export const pushTokens = pgTable("push_tokens", {
   platform: text("platform").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const funeralProgramsRelations = relations(funeralPrograms, ({ one, many }) => ({
+  memorial: one(memorials, {
+    fields: [funeralPrograms.memorialId],
+    references: [memorials.id],
+  }),
+  items: many(programItems),
+}));
+
+export const programItemsRelations = relations(programItems, ({ one }) => ({
+  program: one(funeralPrograms, {
+    fields: [programItems.programId],
+    references: [funeralPrograms.id],
+  }),
+}));
 
 export const pushTokensRelations = relations(pushTokens, ({ one }) => ({
   memorial: one(memorials, {
@@ -1376,3 +1443,13 @@ export type MemorialEvent = typeof memorialEvents.$inferSelect;
 
 export type InsertMemorialEventRsvp = z.infer<typeof insertMemorialEventRsvpSchema>;
 export type MemorialEventRsvp = typeof memorialEventRsvps.$inferSelect;
+
+// Funeral Program schemas
+export const insertFuneralProgramSchema = createInsertSchema(funeralPrograms).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertProgramItemSchema = createInsertSchema(programItems).omit({ id: true, createdAt: true });
+
+export type InsertFuneralProgram = z.infer<typeof insertFuneralProgramSchema>;
+export type FuneralProgram = typeof funeralPrograms.$inferSelect;
+
+export type InsertProgramItem = z.infer<typeof insertProgramItemSchema>;
+export type ProgramItem = typeof programItems.$inferSelect;
