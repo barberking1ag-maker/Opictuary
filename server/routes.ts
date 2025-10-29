@@ -817,10 +817,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const savedMemorial = await storage.getSavedMemorial(userId, req.params.memorialId);
+      // Return success response regardless, with isSaved flag
       if (!savedMemorial) {
-        return res.status(404).json({ error: "Saved memorial not found" });
+        return res.json({ isSaved: false, savedMemorial: null });
       }
-      res.json(savedMemorial);
+      res.json({ isSaved: true, savedMemorial });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

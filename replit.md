@@ -2,7 +2,7 @@
 
 ## Overview
 
-Opictuary is a digital memorial platform dedicated to creating, sharing, and preserving memories of deceased loved ones. It integrates traditional memorial practices with modern functionalities like photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. The platform emphasizes dignified design, multi-faith customization, and privacy through invite-only access. Its business vision includes personal memorials and B2B partnerships with funeral homes and correctional facilities, generating revenue from platform fees on fundraisers, advertisements, partnerships, and prison access services.
+Opictuary is a digital memorial platform dedicated to creating, sharing, and preserving memories of deceased loved ones. It integrates traditional memorial practices with modern functionalities like photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. The platform emphasizes dignified design, multi-faith customization, and privacy through invite-only access. Recent additions include database-backed saved memorials with relationship categorization (family, friend, colleague, police officer, etc.), server-side content moderation for offensive language, and merchandise services integration (T-shirts, cardboard cutouts, holograms). The business vision includes personal memorials and B2B partnerships with funeral homes, flower shops, merchandise vendors, and correctional facilities, generating revenue from platform fees on fundraisers, advertisements, partnerships, prison access services, and merchandise referrals.
 
 ## User Preferences
 
@@ -133,6 +133,75 @@ Connects memorial visitors with local florists for sympathy flower delivery, gen
 
 **Revenue Potential:**
 Based on industry averages for sympathy arrangements ($75-150 per order), 20% commission generates $15-30 per transaction. With scale, this creates a sustainable B2B revenue stream alongside platform fees.
+
+### Saved Memorials System
+
+**Purpose:**
+Allows authenticated users to save memorials with relationship categorization for personal memorial management and tracking.
+
+**Features:**
+- Database-backed persistence (replaced localStorage)
+- Relationship categories: family, friend, colleague, police_officer, other
+- Optional custom category for "other"
+- Personal notes field for each saved memorial
+- Real-time state synchronization via React Query
+
+**Technical Implementation:**
+- `savedMemorials` table in PostgreSQL
+- GET /api/saved-memorials/:memorialId returns `{isSaved: boolean, savedMemorial: object|null}`
+- SaveMemorialDialog component for category selection and notes
+- Automatic query invalidation for immediate UI updates
+
+**User Flow:**
+1. User clicks "Save Memorial" button on memorial page
+2. If not authenticated, redirects to login
+3. After authentication, opens SaveMemorialDialog
+4. User selects relationship category and optionally adds notes
+5. Memorial saved to database with user association
+6. Button immediately updates to "Unsave Memorial"
+
+### Content Moderation System
+
+**Purpose:**
+Server-side filtering to maintain respectful and appropriate user-generated content across the platform.
+
+**Implementation:**
+- Conservative profanity filter (strong offensive language only)
+- Applied before database persistence to comments, condolences, and memories
+- Returns clear error messages: "Your comment contains inappropriate language. Please revise and try again."
+- Frontend displays actual API error messages to users
+
+**Filtered Content:**
+Blocks strong profanity including: fuck, shit, bitch, bastard, piss, dick, cock, pussy, cunt, whore, slut, retard, and direct attacks like "kill yourself", "drop dead"
+
+**Design Philosophy:**
+Conservative approach that blocks truly offensive content while allowing normal condolence language like "thoughts and prayers", "love and sympathy", etc.
+
+**Technical Details:**
+- `server/contentModeration.ts` module with `moderateContent()` function
+- Regex-based word boundary matching for accurate detection
+- Returns `{isClean: boolean, filteredText: string, originalText: string}`
+
+### Merchandise Services Integration
+
+**Purpose:**
+Connects memorial visitors with external services for physical memorial products and innovative tribute options.
+
+**Services Offered:**
+1. **Memorial T-Shirts** (CustomInk): Custom memorial clothing and apparel
+2. **Life-Size Cardboard Cutouts** (Build-A-Head): Physical memorial cutouts for events
+3. **Holographic Tributes** (ARHT Media): Innovative holographic memorial displays
+
+**Features:**
+- Responsive card-based UI in dedicated section on memorial pages
+- External links to service providers with tracking parameters
+- Analytics event tracking for service views and click-throughs
+- Future revenue potential through affiliate partnerships
+
+**Implementation:**
+- `MerchandiseServices` component with three service cards
+- Each card includes service description, external link, and analytics tracking
+- Positioned after social engagement section on memorial pages
 
 ## Revenue Model
 

@@ -102,13 +102,13 @@ export default function Home() {
   }, [memorial]);
 
   // Check if memorial is saved (database-backed)
-  const { data: savedMemorial } = useQuery({
+  const { data: savedMemorialResponse } = useQuery<{isSaved: boolean; savedMemorial: any}>({
     queryKey: [`/api/saved-memorials/${memorialId}`],
     enabled: !!memorialId && isAuthenticated,
     retry: false,
   });
 
-  const isSaved = !!savedMemorial;
+  const isSaved = savedMemorialResponse?.isSaved || false;
 
   const handleShare = async () => {
     trackEvent('memorial_share', 'memorial', memorial?.name, undefined, {
@@ -146,7 +146,7 @@ export default function Home() {
       description: "Please log in to interact with this memorial.",
       variant: "default",
     });
-    window.location.href = "/api/auth/login";
+    window.location.href = "/api/login";
   };
 
   const unsaveMutation = useMutation({
@@ -176,7 +176,7 @@ export default function Home() {
         description: "Please log in to save memorials.",
         variant: "default",
       });
-      window.location.href = "/api/auth/login";
+      window.location.href = "/api/login";
       return;
     }
 

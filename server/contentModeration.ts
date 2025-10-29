@@ -4,16 +4,15 @@
  */
 
 const VULGAR_WORDS = [
-  // Common profanity
-  'fuck', 'shit', 'damn', 'hell', 'ass', 'bitch', 'bastard', 'crap',
+  // Strong profanity only
+  'fuck', 'shit', 'bitch', 'bastard', 
   'piss', 'dick', 'cock', 'pussy', 'cunt', 'whore', 'slut',
   // Variants with common letter substitutions
-  'f**k', 'sh*t', 'b*tch', 'a**', 'fck', 'fuk',
-  // Disrespectful terms
-  'stupid', 'idiot', 'moron', 'dumb', 'retard', 'loser',
-  'ugly', 'fat', 'disgusting', 'pathetic', 'worthless',
-  // Additional offensive terms
-  'screw you', 'go to hell', 'drop dead', 'kill yourself',
+  'f**k', 'sh*t', 'b*tch', 'fck', 'fuk',
+  // Truly offensive slurs and terms  
+  'retard', 'retarded',
+  // Direct attacks
+  'kill yourself', 'drop dead',
 ];
 
 const REPLACEMENT_CHAR = '*';

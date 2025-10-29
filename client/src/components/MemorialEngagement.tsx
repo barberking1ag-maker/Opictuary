@@ -166,11 +166,13 @@ export function MemorialEngagement({
         description: "Your comment has been posted.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       if (error.message !== "Login required") {
+        // Show the actual API error message if available
+        const errorMessage = error.message || "Failed to post comment.";
         toast({
           title: "Error",
-          description: "Failed to post comment.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -198,10 +200,12 @@ export function MemorialEngagement({
         description: "Your message of sympathy has been shared.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Show the actual API error message if available
+      const errorMessage = error.message || "Failed to send condolence.";
       toast({
         title: "Error",
-        description: "Failed to send condolence.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
