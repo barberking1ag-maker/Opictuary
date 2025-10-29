@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, X, Download, Heart, User } from "lucide-react";
-import type { Memory } from "@shared/schema";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { Image as ImageIcon, X, Download, Heart, MessageCircle, User } from "lucide-react";
+import type { Memory, MemoryComment, MemoryCondolence } from "@shared/schema";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 interface PhotoGalleryProps {
   memories: Memory[];
@@ -12,9 +19,116 @@ interface PhotoGalleryProps {
 
 export function PhotoGallery({ memories }: PhotoGalleryProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<Memory | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [commentAuthorName, setCommentAuthorName] = useState("");
+  const [commentAuthorEmail, setCommentAuthorEmail] = useState("");
+  const { toast } = useToast();
 
   // Filter memories that have photos
   const photosWithMemories = memories.filter((m) => m.mediaUrl && m.isApproved);
+
+  // Fetch comments for selected photo
+  const { data: comments = [], refetch: refetchComments } = useQuery<MemoryComment[]>({
+    queryKey: ["/api/memories", selectedPhoto?.id, "comments"],
+    enabled: !!selectedPhoto,
+  });
+
+  // Fetch condolences count for selected photo
+  const { data: condolencesData } = useQuery<{ count: number }>({
+    queryKey: ["/api/memories", selectedPhoto?.id, "condolences", "count"],
+    enabled: !!selectedPhoto,
+  });
+
+  const condolencesCount = condolencesData?.count || 0;
+
+  // Add comment mutation
+  const addCommentMutation = useMutation({
+    mutationFn: async (data: { comment: string; authorName: string; authorEmail?: string }) => {
+      if (!selectedPhoto) throw new Error("No photo selected");
+      return await apiRequest("POST", `/api/memories/${selectedPhoto.id}/comments`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been shared with love.",
+      });
+      setNewComment("");
+      setCommentAuthorName("");
+      setCommentAuthorEmail("");
+      refetchComments();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Add Comment",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add condolence mutation
+  const addCondolenceMutation = useMutation({
+    mutationFn: async (data: { authorName: string; authorEmail?: string }) => {
+      if (!selectedPhoto) throw new Error("No photo selected");
+      return await apiRequest("POST", `/api/memories/${selectedPhoto.id}/condolences`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Condolence Sent",
+        description: "Your condolence has been expressed with sympathy.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedPhoto?.id, "condolences"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Condolence",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please enter a comment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!commentAuthorName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addCommentMutation.mutate({
+      comment: newComment,
+      authorName: commentAuthorName,
+      authorEmail: commentAuthorEmail || undefined,
+    });
+  };
+
+  const handleSendCondolence = () => {
+    if (!commentAuthorName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name to send condolences.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addCondolenceMutation.mutate({
+      authorName: commentAuthorName,
+      authorEmail: commentAuthorEmail || undefined,
+    });
+  };
 
   if (photosWithMemories.length === 0) {
     return (
@@ -67,7 +181,7 @@ export function PhotoGallery({ memories }: PhotoGalleryProps) {
                     data-testid={`photo-img-${memory.id}`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                    <div className="absolute bottom-2 left-2 right-2">
+                    <div className="absolute bottom-2 left-2 right-2 space-y-1">
                       <p className="text-white text-xs font-medium line-clamp-2 text-left drop-shadow-lg" data-testid={`photo-author-${memory.id}`}>
                         <User className="w-3 h-3 inline mr-1" />
                         {memory.authorName}
@@ -83,13 +197,13 @@ export function PhotoGallery({ memories }: PhotoGalleryProps) {
 
       {/* Photo Viewer Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none" data-testid="dialog-photo-viewer">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0" data-testid="dialog-photo-viewer">
           {selectedPhoto && (
-            <div className="relative">
+            <div className="flex flex-col h-full">
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 bg-black/50 text-white"
+                className="absolute top-4 right-4 z-10 bg-black/50 text-white hover:bg-black/70"
                 onClick={() => setSelectedPhoto(null)}
                 aria-label="Close photo viewer"
                 data-testid="button-close-photo"
@@ -97,17 +211,18 @@ export function PhotoGallery({ memories }: PhotoGalleryProps) {
                 <X className="w-5 h-5" />
               </Button>
 
-              <div className="flex flex-col">
+              <div className="flex-1 overflow-y-auto">
                 <div className="relative bg-black">
                   <img
                     src={selectedPhoto.mediaUrl!}
                     alt={selectedPhoto.caption || "Memorial photo"}
-                    className="w-full max-h-[70vh] object-contain"
+                    className="w-full max-h-[50vh] object-contain"
                     data-testid="img-photo-viewer"
                   />
                 </div>
 
-                <div className="bg-card p-6 space-y-4">
+                <div className="bg-card p-6 space-y-6">
+                  {/* Photo Info */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -156,6 +271,115 @@ export function PhotoGallery({ memories }: PhotoGalleryProps) {
                         </a>
                       </Button>
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Condolence Button */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-primary" />
+                      <div>
+                        <h4 className="font-semibold">Express Your Sympathy</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {condolencesCount} {condolencesCount === 1 ? 'person has' : 'people have'} sent condolences
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="default" 
+                      onClick={handleSendCondolence}
+                      disabled={addCondolenceMutation.isPending}
+                      data-testid="button-send-condolence"
+                    >
+                      <Heart className="w-4 h-4 mr-2" />
+                      Sorry for Your Loss
+                    </Button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Comments Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                      <h4 className="font-semibold">Comments ({comments.length})</h4>
+                    </div>
+
+                    {/* Add Comment Form */}
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                      <Input
+                        placeholder="Your name"
+                        value={commentAuthorName}
+                        onChange={(e) => setCommentAuthorName(e.target.value)}
+                        data-testid="input-comment-name"
+                      />
+                      <Input
+                        placeholder="Your email (optional)"
+                        type="email"
+                        value={commentAuthorEmail}
+                        onChange={(e) => setCommentAuthorEmail(e.target.value)}
+                        data-testid="input-comment-email"
+                      />
+                      <Textarea
+                        placeholder="Share your thoughts about this memory..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        rows={3}
+                        data-testid="input-comment-text"
+                      />
+                      <div className="flex justify-end">
+                        <Button 
+                          onClick={handleAddComment}
+                          disabled={addCommentMutation.isPending}
+                          data-testid="button-add-comment"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Add Comment
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Comments List */}
+                    <ScrollArea className="h-[300px] pr-4">
+                      <div className="space-y-4">
+                        {comments.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-8">
+                            No comments yet. Be the first to share your thoughts.
+                          </p>
+                        ) : (
+                          comments.map((comment) => (
+                            <Card key={comment.id} className="p-4" data-testid={`comment-card-${comment.id}`}>
+                              <div className="flex items-start gap-3">
+                                <div className="bg-primary/20 p-2 rounded-full">
+                                  <User className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <p className="font-semibold text-sm" data-testid={`comment-author-${comment.id}`}>
+                                      {comment.authorName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {comment.createdAt 
+                                        ? new Date(comment.createdAt).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                          })
+                                        : ''
+                                      }
+                                    </p>
+                                  </div>
+                                  <p className="text-sm text-foreground" data-testid={`comment-text-${comment.id}`}>
+                                    {comment.comment}
+                                  </p>
+                                </div>
+                              </div>
+                            </Card>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
                   </div>
                 </div>
               </div>
