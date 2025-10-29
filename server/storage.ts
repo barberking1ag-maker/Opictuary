@@ -47,6 +47,8 @@ import {
   griefResources,
   memorialEvents,
   memorialEventRsvps,
+  funeralPrograms,
+  programItems,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -144,6 +146,10 @@ import {
   type InsertMemorialEvent,
   type MemorialEventRsvp,
   type InsertMemorialEventRsvp,
+  type FuneralProgram,
+  type InsertFuneralProgram,
+  type ProgramItem,
+  type InsertProgramItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -409,6 +415,18 @@ export interface IStorage {
   createEventRsvp(rsvp: InsertMemorialEventRsvp): Promise<MemorialEventRsvp>;
   updateEventRsvp(id: string, rsvp: Partial<InsertMemorialEventRsvp>): Promise<MemorialEventRsvp | undefined>;
   deleteEventRsvp(id: string): Promise<void>;
+
+  // Funeral Program operations
+  getFuneralProgramByMemorialId(memorialId: string): Promise<FuneralProgram | undefined>;
+  createFuneralProgram(program: InsertFuneralProgram): Promise<FuneralProgram>;
+  updateFuneralProgram(memorialId: string, program: Partial<InsertFuneralProgram>): Promise<FuneralProgram | undefined>;
+  deleteFuneralProgram(memorialId: string): Promise<void>;
+
+  // Program Items operations
+  getProgramItems(programId: string): Promise<ProgramItem[]>;
+  createProgramItem(item: InsertProgramItem): Promise<ProgramItem>;
+  updateProgramItem(id: string, item: Partial<InsertProgramItem>): Promise<ProgramItem | undefined>;
+  deleteProgramItem(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2135,6 +2153,50 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEventRsvp(id: string): Promise<void> {
     await db.delete(memorialEventRsvps).where(eq(memorialEventRsvps.id, id));
+  }
+
+  // Funeral Program operations
+  async getFuneralProgramByMemorialId(memorialId: string): Promise<FuneralProgram | undefined> {
+    const [program] = await db.select().from(funeralPrograms).where(eq(funeralPrograms.memorialId, memorialId));
+    return program || undefined;
+  }
+
+  async createFuneralProgram(program: InsertFuneralProgram): Promise<FuneralProgram> {
+    const [created] = await db.insert(funeralPrograms).values(program).returning();
+    return created;
+  }
+
+  async updateFuneralProgram(memorialId: string, program: Partial<InsertFuneralProgram>): Promise<FuneralProgram | undefined> {
+    const [updated] = await db.update(funeralPrograms)
+      .set({ ...program, updatedAt: new Date() })
+      .where(eq(funeralPrograms.memorialId, memorialId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteFuneralProgram(memorialId: string): Promise<void> {
+    await db.delete(funeralPrograms).where(eq(funeralPrograms.memorialId, memorialId));
+  }
+
+  // Program Items operations
+  async getProgramItems(programId: string): Promise<ProgramItem[]> {
+    return await db.select().from(programItems)
+      .where(eq(programItems.programId, programId))
+      .orderBy(programItems.orderIndex);
+  }
+
+  async createProgramItem(item: InsertProgramItem): Promise<ProgramItem> {
+    const [created] = await db.insert(programItems).values(item).returning();
+    return created;
+  }
+
+  async updateProgramItem(id: string, item: Partial<InsertProgramItem>): Promise<ProgramItem | undefined> {
+    const [updated] = await db.update(programItems).set(item).where(eq(programItems.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteProgramItem(id: string): Promise<void> {
+    await db.delete(programItems).where(eq(programItems.id, id));
   }
 }
 
