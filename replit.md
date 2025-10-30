@@ -56,6 +56,29 @@ Preferred communication style: Simple, everyday language.
 - **Verification System**: All submissions default to "pending" status and require admin approval. Captures submitter relationship and contact information for verification by family members, lawyers, or authorized representatives
 - **Customization Options**: Memorial template selection, custom theme colors (primary, secondary, accent), and profession-specific stickers
 - **Database Schema**: Extended celebrity_memorials table with profession_category, sub_profession, achievements (JSON array), awards (JSON array), verification_status, verified_by, verification_date, verification_documents (JSON array), submitter fields, memorial_template, custom_stickers (JSON array), and theme_colors (JSON object)
+**Celebrity Fan Content System:** Exclusive content platform for celebrity memorial estates to share special videos, photos, and messages with fans. Admin-only creation and publishing ensures only verified estate representatives can upload content. Features:
+- **Content Types**: Video messages from estates, exclusive photos, behind-the-scenes content, and tribute videos
+- **Security**: Admin authentication required for creation/publishing; unpublished content hidden from public API with 404 responses
+- **Draft Management**: Admin dashboard view for reviewing unpublished content before making it public
+- **View Tracking**: Analytics for published content views (unpublished content views don't inflate metrics)
+- **Estate Integrity**: No comments allowed on celebrity memorials to maintain dignity and prevent spam
+- **Database Schema**: celebrityFanContent table with contentType, videoUrl, photoUrl, caption, isPublished, viewCount, and celebrityMemorialId foreign key
+**Funeral Program Audio & Bluetooth System:** Enhanced funeral service programs with audio capabilities for ceremony music, readings, and Bluetooth connectivity. Features:
+- **Program-Level Audio**: Background music for entire ceremony with Bluetooth device pairing
+- **Item-Level Audio**: Individual audio clips for readings, eulogies, musical tributes, and prayers
+- **Bluetooth Support**: enableBluetoothAudio flag and bluetoothDeviceName for wireless speaker connectivity
+- **Audio Types**: Support for background music, readings, eulogies, musical tributes, prayers, and silence/reflection moments
+- **Database Schema**: funeralPrograms table extended with backgroundAudioUrl, enableBluetoothAudio, bluetoothDeviceName; programItems table extended with audioUrl and audioType
+**Memorial Events System:** Comprehensive event planning for memorial gatherings with notification capabilities. Features:
+- **Event Types**: Balloon releases, candlelight vigils, memorial picnics, memorial barbecues, tree plantings, charity walks, and scholarship announcements
+- **Notifications**: Email and text reminders with sendReminders flag for attendee coordination
+- **RSVP Tracking**: Guest list management with attendance confirmation
+- **Database Schema**: memorialEvents table with eventType, eventDate, location, description, sendReminders; memorialEventRsvps for guest tracking
+**Cemetery Location Mapping:** Interactive map integration for cemetery burial sites with coordinates and directions. Features:
+- **Location Storage**: Latitude/longitude coordinates in memorials.cemeteryCoordinates field
+- **Map Integration Ready**: Prepared for Google Maps, Mapbox, or OpenStreetMap integration
+- **Cemetery Information**: Cemetery name, address, section, plot number for precise location
+- **Visitor Guidance**: Enable families to share exact burial locations for visitors and mourners
 **Revenue Model:** Generates revenue through configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
 
 ### Analytics & Monitoring
