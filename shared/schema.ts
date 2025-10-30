@@ -376,6 +376,28 @@ export const celebrityDonations = pgTable("celebrity_donations", {
   index("idx_celebrity_donations_created_at").on(table.createdAt),
 ]);
 
+// Celebrity Fan Content - Exclusive videos and photos from estates (no comments for integrity)
+export const celebrityFanContent = pgTable("celebrity_fan_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  celebrityMemorialId: varchar("celebrity_memorial_id").notNull().references(() => celebrityMemorials.id, { onDelete: "cascade" }),
+  contentType: text("content_type").notNull(), // 'video_message', 'photo', 'video', 'audio_message'
+  title: text("title").notNull(),
+  description: text("description"),
+  mediaUrl: text("media_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  isVideoMessage: boolean("is_video_message").default(false), // Special flag for messages from the deceased to fans
+  uploadedByEstate: boolean("uploaded_by_estate").default(true),
+  uploaderName: text("uploader_name"),
+  uploaderEmail: text("uploader_email"),
+  viewCount: integer("view_count").default(0),
+  isPublished: boolean("is_published").default(false), // Requires admin approval
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_celebrity_fan_content_memorial_id").on(table.celebrityMemorialId),
+  index("idx_celebrity_fan_content_is_published").on(table.isPublished),
+  index("idx_celebrity_fan_content_content_type").on(table.contentType),
+]);
+
 export const griefSupport = pgTable("grief_support", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().unique().references(() => memorials.id, { onDelete: "cascade" }),
@@ -782,6 +804,10 @@ export const funeralPrograms = pgTable("funeral_programs", {
   // Customization
   coverImageUrl: text("cover_image_url"),
   themeColor: text("theme_color"),
+  // Audio and Bluetooth features
+  backgroundAudioUrl: text("background_audio_url"),
+  enableBluetoothAudio: boolean("enable_bluetooth_audio").default(false),
+  bluetoothDeviceName: text("bluetooth_device_name"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -801,6 +827,9 @@ export const programItems = pgTable("program_items", {
   lyrics: text("lyrics"),
   content: text("content"),
   duration: text("duration"),
+  // Audio support
+  audioUrl: text("audio_url"),
+  audioType: text("audio_type"), // 'recording', 'music', 'speech'
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_program_items_program_id").on(table.programId),
@@ -905,11 +934,19 @@ export const donationsRelations = relations(donations, ({ one }) => ({
 
 export const celebrityMemorialsRelations = relations(celebrityMemorials, ({ many }) => ({
   donations: many(celebrityDonations),
+  fanContent: many(celebrityFanContent),
 }));
 
 export const celebrityDonationsRelations = relations(celebrityDonations, ({ one }) => ({
   celebrityMemorial: one(celebrityMemorials, {
     fields: [celebrityDonations.celebrityMemorialId],
+    references: [celebrityMemorials.id],
+  }),
+}));
+
+export const celebrityFanContentRelations = relations(celebrityFanContent, ({ one }) => ({
+  celebrityMemorial: one(celebrityMemorials, {
+    fields: [celebrityFanContent.celebrityMemorialId],
     references: [celebrityMemorials.id],
   }),
 }));
@@ -1184,6 +1221,13 @@ export const insertCelebrityDonationSchema = createInsertSchema(celebrityDonatio
   createdAt: true,
 });
 
+export const insertCelebrityFanContentSchema = createInsertSchema(celebrityFanContent).omit({
+  id: true,
+  createdAt: true,
+  viewCount: true,
+  isPublished: true,
+});
+
 export const insertGriefSupportSchema = createInsertSchema(griefSupport).omit({
   id: true,
 });
@@ -1412,6 +1456,9 @@ export type CelebrityMemorial = typeof celebrityMemorials.$inferSelect;
 
 export type InsertCelebrityDonation = z.infer<typeof insertCelebrityDonationSchema>;
 export type CelebrityDonation = typeof celebrityDonations.$inferSelect;
+
+export type InsertCelebrityFanContent = z.infer<typeof insertCelebrityFanContentSchema>;
+export type CelebrityFanContent = typeof celebrityFanContent.$inferSelect;
 
 export type InsertGriefSupport = z.infer<typeof insertGriefSupportSchema>;
 export type GriefSupport = typeof griefSupport.$inferSelect;
