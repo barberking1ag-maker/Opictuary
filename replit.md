@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
 **Authorization Patterns:** Role-based access control with granular permissions.
 
 ### Key Features & Systems
+**Memorial QR Code System:** Comprehensive QR code generation for tombstones and memorial cards. Families can generate printable QR codes that link to memorial pages containing photos, videos, memories, and condolences. Features professional PDF download with purple/gold branding, clear scanning instructions, and the Opictuary tagline. QR codes support three purposes: tombstone upload (allows cemetery visitors to upload photos/videos), memorial view (links to memorial page), and general photo/video upload for memorial cards. QR codes can be continuously updated as families add new content to memorials.
 **Prison Access System:** Provides secure, monitored access for incarcerated individuals to memorials, including identity verification, payment, time-limited access tokens, and session monitoring.
 **Flower Shop Partnership System:** Connects users with local florists for sympathy flower delivery, operating on a 20% commission model. Includes partner registration, location-based search, order tracking, and commission management.
 **Saved Memorials System:** Allows authenticated users to save memorials with relationship categorization (family, friend, colleague, etc.) and personal notes, persisting data in PostgreSQL.
