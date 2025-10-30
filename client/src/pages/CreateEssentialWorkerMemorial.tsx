@@ -85,10 +85,7 @@ export default function CreateEssentialWorkerMemorial() {
         honors: honors.length > 0 ? honors : undefined,
         deployments: deployments.length > 0 ? deployments : undefined,
       };
-      return await apiRequest("/api/essential-workers", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      return await apiRequest("POST", "/api/essential-workers", payload);
     },
     onSuccess: () => {
       toast({
