@@ -33,6 +33,7 @@ import {
   insertDonationSchema,
   insertCelebrityMemorialSchema,
   insertCelebrityDonationSchema,
+  insertCelebrityFanContentSchema,
   insertGriefSupportSchema,
   insertLegacyEventSchema,
   insertMusicPlaylistSchema,
@@ -1742,6 +1743,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Celebrity Fan Content routes (exclusive videos/photos from estates)
+  // Public: Get published fan content for a celebrity memorial
+  app.get("/api/celebrity-memorials/:celebrityMemorialId/fan-content", async (req, res) => {
+    try {
+      const content = await storage.listCelebrityFanContent(req.params.celebrityMemorialId);
+      
+      // Admin can see all content including unpublished, others only see published
+      const adminView = req.query.admin === 'true' && req.user && (req.user as any).isAdmin;
+      const filteredContent = adminView ? content : content.filter(c => c.isPublished);
+      
+      res.json(filteredContent);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Public: Get individual fan content (only if published or admin)
+  app.get("/api/celebrity-fan-content/:id", async (req, res) => {
+    try {
+      const content = await storage.getCelebrityFanContent(req.params.id);
+      if (!content) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      
+      // Only allow viewing if published OR user is admin
+      const isAdminUser = req.user && (req.user as any).isAdmin;
+      if (!content.isPublished && !isAdminUser) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      
+      // Only increment view count for published content
+      if (content.isPublished) {
+        await storage.incrementFanContentViews(req.params.id);
+      }
+      
+      res.json(content);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Protected: Create celebrity fan content (admin only - for estate uploads)
+  app.post("/api/celebrity-memorials/:celebrityMemorialId/fan-content", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const data = insertCelebrityFanContentSchema.parse({
+        ...req.body,
+        celebrityMemorialId: req.params.celebrityMemorialId,
+      });
+      const content = await storage.createCelebrityFanContent(data);
+      res.status(201).json(content);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Protected: Publish celebrity fan content (admin only)
+  app.put("/api/celebrity-fan-content/:id/publish", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.publishCelebrityFanContent(req.params.id);
+      const content = await storage.getCelebrityFanContent(req.params.id);
+      res.json(content);
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });

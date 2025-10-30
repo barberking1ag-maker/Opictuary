@@ -19,6 +19,7 @@ import {
   donations,
   celebrityMemorials,
   celebrityDonations,
+  celebrityFanContent,
   griefSupport,
   legacyEvents,
   musicPlaylists,
@@ -91,6 +92,8 @@ import {
   type InsertCelebrityMemorial,
   type CelebrityDonation,
   type InsertCelebrityDonation,
+  type CelebrityFanContent,
+  type InsertCelebrityFanContent,
   type GriefSupport,
   type InsertGriefSupport,
   type LegacyEvent,
@@ -282,6 +285,13 @@ export interface IStorage {
   getCelebrityMemorial(id: string): Promise<CelebrityMemorial | undefined>;
   createCelebrityMemorial(memorial: InsertCelebrityMemorial): Promise<CelebrityMemorial>;
   createCelebrityDonation(donation: InsertCelebrityDonation): Promise<CelebrityDonation>;
+  
+  // Celebrity Fan Content operations (exclusive videos/photos from estates)
+  listCelebrityFanContent(celebrityMemorialId: string): Promise<CelebrityFanContent[]>;
+  getCelebrityFanContent(id: string): Promise<CelebrityFanContent | undefined>;
+  createCelebrityFanContent(content: InsertCelebrityFanContent): Promise<CelebrityFanContent>;
+  incrementFanContentViews(id: string): Promise<void>;
+  publishCelebrityFanContent(id: string): Promise<void>;
 
   // Grief Support operations
   getGriefSupportByMemorialId(memorialId: string): Promise<GriefSupport | undefined>;
@@ -992,6 +1002,38 @@ export class DatabaseStorage implements IStorage {
     `);
     
     return created;
+  }
+
+  // Celebrity Fan Content operations (exclusive videos/photos from estates)
+  async listCelebrityFanContent(celebrityMemorialId: string): Promise<CelebrityFanContent[]> {
+    return await db.select()
+      .from(celebrityFanContent)
+      .where(eq(celebrityFanContent.celebrityMemorialId, celebrityMemorialId))
+      .orderBy(desc(celebrityFanContent.createdAt));
+  }
+
+  async getCelebrityFanContent(id: string): Promise<CelebrityFanContent | undefined> {
+    const [content] = await db.select().from(celebrityFanContent).where(eq(celebrityFanContent.id, id));
+    return content || undefined;
+  }
+
+  async createCelebrityFanContent(content: InsertCelebrityFanContent): Promise<CelebrityFanContent> {
+    const [created] = await db.insert(celebrityFanContent).values(content).returning();
+    return created;
+  }
+
+  async incrementFanContentViews(id: string): Promise<void> {
+    await db.execute(sql`
+      UPDATE celebrity_fan_content 
+      SET view_count = view_count + 1
+      WHERE id = ${id}
+    `);
+  }
+
+  async publishCelebrityFanContent(id: string): Promise<void> {
+    await db.update(celebrityFanContent)
+      .set({ isPublished: true })
+      .where(eq(celebrityFanContent.id, id));
   }
 
   // Grief Support operations
