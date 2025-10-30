@@ -93,6 +93,13 @@ export default function Home() {
 
   const approvedMemories = memories.filter(m => m.isApproved);
   const firstFundraiser = fundraisers[0];
+  
+  // Query live streams for prominent "LIVE NOW" banner
+  const { data: liveStreams = [] } = useQuery<any[]>({
+    queryKey: [`/api/memorials/${memorialId}/live-streams`],
+    enabled: !!memorialId,
+  });
+  const activeStreams = liveStreams.filter((s: any) => s.isActive);
 
   const { data: donations = [] } = useQuery<Donation[]>({
     queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
@@ -452,6 +459,64 @@ export default function Home() {
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* LIVE NOW Banner - Prominent callout for active streams */}
+      {activeStreams.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-8 relative z-10">
+          <Card className="bg-gradient-to-r from-red-600/95 to-red-700/95 border-red-400/30 shadow-2xl overflow-hidden" data-testid="card-live-now-banner">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-red-500/20 animate-pulse" />
+            <CardContent className="p-6 sm:p-8 relative">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4 text-center md:text-left">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-white/30 rounded-full animate-ping" />
+                    <div className="relative bg-white rounded-full p-4">
+                      <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse" aria-hidden="true" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 justify-center md:justify-start">
+                      <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">LIVE NOW</h3>
+                      <Badge variant="secondary" className="bg-white text-red-600 font-bold">
+                        {activeStreams.length} {activeStreams.length === 1 ? 'Stream' : 'Streams'} Active
+                      </Badge>
+                    </div>
+                    <p className="text-white/90 text-base sm:text-lg">
+                      {activeStreams[0]?.title || "Memorial service in progress"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-red-600 hover:bg-white/90 shadow-xl font-semibold min-w-[180px]"
+                    onClick={() => {
+                      const element = document.getElementById('live-stream-section');
+                      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    data-testid="button-watch-live"
+                    aria-label="Watch live memorial service"
+                  >
+                    <MessageSquare className="w-5 h-5 mr-2" aria-hidden="true" />
+                    Watch Live Stream
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="bg-white/10 backdrop-blur-md text-white border-white/50 hover:bg-white/20 shadow-lg font-medium min-w-[160px]"
+                    onClick={handleShare}
+                    data-testid="button-share-live"
+                    aria-label="Share live stream with others"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" aria-hidden="true" />
+                    Share Stream
                   </Button>
                 </div>
               </div>
@@ -832,8 +897,142 @@ export default function Home() {
           </TabsContent>
         </Tabs>
 
+        {/* Discover All Memorial Features - Prominent Feature Callouts */}
+        <div className="mt-16 pt-12 border-t border-border/30" role="region" aria-label="Memorial platform features">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">Memorial Platform Features</h2>
+            <p className="text-muted-foreground text-lg">Explore all the ways to honor and remember {memorial.name}</p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* QR Code Feature */}
+            {user?.id === memorial.userId && (
+              <Card className="hover-elevate" data-testid="card-feature-qr">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <QrCode className="w-7 h-7 text-primary" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">QR Codes</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Generate printable QR codes for tombstones or memorial cards that link to this memorial
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => window.location.href = `/memorials/${memorialId}/manage`}
+                    data-testid="button-manage-qr"
+                    aria-label="Manage QR codes for this memorial"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" aria-hidden="true" />
+                    Manage QR Codes
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Future Messages Feature */}
+            {user?.id === memorial.userId && (
+              <Card className="hover-elevate" data-testid="card-feature-future-messages">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center">
+                    <MessageSquare className="w-7 h-7 text-accent-foreground" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">Future Messages</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Schedule heartfelt messages to be delivered to loved ones on special occasions
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => {
+                      const element = document.getElementById('future-messages-section');
+                      element?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    data-testid="button-view-future-messages"
+                    aria-label="View and create future messages"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" aria-hidden="true" />
+                    View Messages
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Funeral Program Feature */}
+            {funeralProgram && (
+              <Card className="hover-elevate" data-testid="card-feature-program">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-[hsl(45,80%,60%)]/10 flex items-center justify-center">
+                    <FileText className="w-7 h-7 text-[hsl(45,80%,50%)]" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">Funeral Program</h3>
+                    <p className="text-sm text-muted-foreground">
+                      View the beautifully designed digital funeral program for this memorial
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground"
+                    onClick={() => window.location.href = `/memorial/${memorialId}/program`}
+                    data-testid="button-view-program-card"
+                    aria-label="View funeral program"
+                  >
+                    <FileText className="w-4 h-4 mr-2" aria-hidden="true" />
+                    View Program
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Live Streams Feature */}
+            {liveStreams.length > 0 && (
+              <Card className="hover-elevate" data-testid="card-feature-livestream">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center relative">
+                    {activeStreams.length > 0 && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse" aria-hidden="true" />
+                    )}
+                    <MessageSquare className="w-7 h-7 text-red-500" aria-hidden="true" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">
+                      Live Streams
+                      {activeStreams.length > 0 && (
+                        <Badge variant="destructive" className="ml-2 text-xs">LIVE</Badge>
+                      )}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {activeStreams.length > 0 
+                        ? `${activeStreams.length} memorial service${activeStreams.length > 1 ? 's' : ''} streaming now`
+                        : `${liveStreams.length} upcoming or past service${liveStreams.length > 1 ? 's' : ''}`
+                      }
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    variant={activeStreams.length > 0 ? "default" : "outline"}
+                    onClick={() => {
+                      const element = document.getElementById('live-stream-section');
+                      element?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    data-testid="button-view-livestream-card"
+                    aria-label={activeStreams.length > 0 ? "Watch live stream now" : "View memorial live streams"}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" aria-hidden="true" />
+                    {activeStreams.length > 0 ? 'Watch Now' : 'View Streams'}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
         {/* Live Stream Section */}
-        <div className="mt-16 pt-16 border-t border-border/30">
+        <div id="live-stream-section" className="mt-16 pt-16 border-t border-border/30" role="region" aria-label="Live stream memorial services">
           <LiveStreamViewer
             memorialId={memorialId!}
             currentUser={
@@ -882,7 +1081,7 @@ export default function Home() {
         </div>
 
         {/* Future Messages Section */}
-        <div className="mt-16 pt-16 border-t border-border/30">
+        <div id="future-messages-section" className="mt-16 pt-16 border-t border-border/30" role="region" aria-label="Future messages for loved ones">
           <FutureMessagesSection 
             memorialId={memorialId!}
             memorialName={memorial.name}
