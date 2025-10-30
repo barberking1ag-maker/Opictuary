@@ -64,17 +64,28 @@ export default function CreateMemorial() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateMemorialForm) => {
+      console.log("CreateMemorial mutation starting with data:", data);
+      console.log("User info:", { email: user?.email, isAuthenticated });
+      
       // Generate a 20-character invite code (database limit)
       const inviteCode = (Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12)).substring(0, 20);
       
-      const response = await apiRequest("POST", "/api/memorials", {
+      const payload = {
         ...data,
         creatorEmail: user?.email,
         inviteCode,
-      });
-      return await response.json();
+      };
+      
+      console.log("Sending POST to /api/memorials with payload:", payload);
+      
+      const response = await apiRequest("POST", "/api/memorials", payload);
+      const result = await response.json();
+      
+      console.log("Memorial created successfully:", result);
+      return result;
     },
     onSuccess: (memorial) => {
+      console.log("onSuccess called with memorial:", memorial);
       queryClient.invalidateQueries({ queryKey: ['/api/user/memorials'] });
       toast({
         title: "Memorial Created",
@@ -93,6 +104,11 @@ export default function CreateMemorial() {
   });
 
   const onSubmit = (data: CreateMemorialForm) => {
+    console.log("Form onSubmit called with data:", data);
+    console.log("Form validation state:", {
+      isValid: form.formState.isValid,
+      errors: form.formState.errors,
+    });
     createMutation.mutate(data);
   };
 
