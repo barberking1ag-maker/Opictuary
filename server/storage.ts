@@ -186,6 +186,7 @@ export interface IStorage {
   // QR Code operations
   getQRCodesByMemorialId(memorialId: string): Promise<QRCode[]>;
   getQRCodeById(id: string): Promise<QRCode | undefined>;
+  getQRCodeByCode(code: string): Promise<QRCode | undefined>;
   generateQRCode(
     memorialId: string, 
     purpose: string, 
@@ -449,10 +450,9 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     // First check if user exists by email
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, userData.email));
+    const [existingUser] = userData.email 
+      ? await db.select().from(users).where(eq(users.email, userData.email))
+      : [];
 
     if (existingUser) {
       // Update existing user
@@ -462,7 +462,7 @@ export class DatabaseStorage implements IStorage {
           ...userData,
           updatedAt: new Date(),
         })
-        .where(eq(users.email, userData.email))
+        .where(userData.email ? eq(users.email, userData.email) : eq(users.id, userData.id))
         .returning();
       return user;
     }
@@ -599,6 +599,11 @@ export class DatabaseStorage implements IStorage {
     return qrCode || undefined;
   }
 
+  async getQRCodeByCode(code: string): Promise<QRCode | undefined> {
+    const [qrCode] = await db.select().from(qrCodes).where(eq(qrCodes.code, code));
+    return qrCode || undefined;
+  }
+
   async generateQRCode(
     memorialId: string, 
     purpose: string, 
@@ -706,7 +711,7 @@ export class DatabaseStorage implements IStorage {
     if (userId) {
       conditions.push(eq(memoryCondolences.userId, userId));
     } else if (userEmail) {
-      conditions.push(eq(memoryCondolences.userEmail, userEmail));
+      conditions.push(eq(memoryCondolences.authorEmail, userEmail));
     }
     await db.delete(memoryCondolences).where(and(...conditions));
   }
@@ -904,8 +909,8 @@ export class DatabaseStorage implements IStorage {
     return fundraiser || undefined;
   }
 
-  async createFundraiser(fundraiser: InsertFundraiser): Promise<Fundraiser> {
-    const [created] = await db.insert(fundraisers).values(fundraiser).returning();
+  async createFundraiser(fundraiserData: InsertFundraiser): Promise<Fundraiser> {
+    const [created] = await db.insert(fundraisers).values(fundraiserData as any).returning();
     return created;
   }
 
