@@ -70,54 +70,175 @@ export default function EssentialWorkers() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8">
-        <div className="flex gap-2 flex-wrap">
+      {/* Interactive Category Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        {/* Police Officers */}
+        <Card className="hover-elevate overflow-hidden group" data-testid="card-category-police">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Shield className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Police Officers</h3>
+                <p className="text-xs text-muted-foreground">Protect & Serve</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  size="sm"
+                  variant={selectedCategory === "police" ? "default" : "outline"}
+                  onClick={() => setSelectedCategory("police")}
+                  data-testid="button-view-police"
+                  className="w-full"
+                >
+                  View Memorials
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => window.location.href = '/create-memorial?category=police'}
+                  data-testid="button-create-police"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create Police Memorial
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Firefighters */}
+        <Card className="hover-elevate overflow-hidden group" data-testid="card-category-fire">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Flame className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Firefighters</h3>
+                <p className="text-xs text-muted-foreground">Courage & Honor</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  size="sm"
+                  variant={selectedCategory === "fire" ? "default" : "outline"}
+                  onClick={() => setSelectedCategory("fire")}
+                  data-testid="button-view-fire"
+                  className="w-full"
+                >
+                  View Memorials
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => window.location.href = '/create-memorial?category=fire'}
+                  data-testid="button-create-fire"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create Fire Memorial
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Medical Workers */}
+        <Card className="hover-elevate overflow-hidden group" data-testid="card-category-medical">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Activity className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Medical Workers</h3>
+                <p className="text-xs text-muted-foreground">Heal & Care</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  size="sm"
+                  variant={selectedCategory === "medical" ? "default" : "outline"}
+                  onClick={() => setSelectedCategory("medical")}
+                  data-testid="button-view-medical"
+                  className="w-full"
+                >
+                  View Memorials
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => window.location.href = '/create-memorial?category=medical'}
+                  data-testid="button-create-medical"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create Medical Memorial
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Military */}
+        <Card className="hover-elevate overflow-hidden group" data-testid="card-category-military">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Shield className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Military</h3>
+                <p className="text-xs text-muted-foreground">Duty & Sacrifice</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  size="sm"
+                  variant={selectedCategory === "military" ? "default" : "outline"}
+                  onClick={() => setSelectedCategory("military")}
+                  data-testid="button-view-military"
+                  className="w-full"
+                >
+                  View Memorials
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => window.location.href = '/create-memorial?category=military'}
+                  data-testid="button-create-military"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create Military Memorial
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Active Filter Display */}
+      {selectedCategory && (
+        <div className="flex items-center justify-between mb-6 bg-muted/50 p-4 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+              {getCategoryIcon(selectedCategory)}
+            </div>
+            <div>
+              <p className="font-semibold">
+                Showing {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Memorials
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {memorials?.length || 0} memorial{memorials?.length !== 1 ? 's' : ''} found
+              </p>
+            </div>
+          </div>
           <Button
-            variant={selectedCategory === "" ? "default" : "outline"}
+            variant="outline"
             size="sm"
             onClick={() => setSelectedCategory("")}
-            data-testid="filter-all"
+            data-testid="button-clear-filter"
           >
-            All Heroes
-          </Button>
-          <Button
-            variant={selectedCategory === "police" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("police")}
-            data-testid="filter-police"
-          >
-            <Shield className="w-4 h-4 mr-2" />
-            Police
-          </Button>
-          <Button
-            variant={selectedCategory === "fire" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("fire")}
-            data-testid="filter-fire"
-          >
-            <Flame className="w-4 h-4 mr-2" />
-            Firefighters
-          </Button>
-          <Button
-            variant={selectedCategory === "medical" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("medical")}
-            data-testid="filter-medical"
-          >
-            <Activity className="w-4 h-4 mr-2" />
-            Medical
-          </Button>
-          <Button
-            variant={selectedCategory === "military" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("military")}
-            data-testid="filter-military"
-          >
-            <Shield className="w-4 h-4 mr-2" />
-            Military
+            Show All Heroes
           </Button>
         </div>
-      </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
