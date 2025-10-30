@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, decimal, json, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, decimal, json, index, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -162,6 +162,7 @@ export const memoryReactions = pgTable("memory_reactions", {
 }, (table) => [
   index("idx_memory_reactions_memory_id").on(table.memoryId),
   index("idx_memory_reactions_user_id").on(table.userId),
+  uniqueIndex("idx_memory_reactions_unique_user").on(table.memoryId, table.userId, table.userEmail),
 ]);
 
 export const condolences = pgTable("condolences", {

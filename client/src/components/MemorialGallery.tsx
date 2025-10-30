@@ -202,7 +202,6 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
       }
     },
     onSuccess: () => {
-      console.log('[REACTION] Mutation succeeded - releasing lock');
       // Release lock
       reactionMutationLock.current = false;
       // Clear optimistic state and let server data take over
@@ -213,7 +212,6 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
       queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedMemory?.id, "reactions", "user"] });
     },
     onError: (error: any) => {
-      console.log('[REACTION] Mutation failed - releasing lock');
       // Release lock
       reactionMutationLock.current = false;
       // Revert optimistic state on error
@@ -243,11 +241,9 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
   const handleToggleReaction = () => {
     // Prevent rapid clicks with synchronous lock
     if (reactionMutationLock.current) {
-      console.log('[REACTION] Click ignored - lock is held');
       return;
     }
     
-    console.log('[REACTION] Processing click - acquiring lock');
     // Acquire lock immediately (synchronous)
     reactionMutationLock.current = true;
     
@@ -255,7 +251,6 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
     const newState = !hasReacted;
     setOptimisticReacted(newState);
     
-    console.log('[REACTION] Triggering mutation with shouldReact:', newState);
     // Execute mutation with explicit should react state
     toggleReactionMutation.mutate({ shouldReact: newState });
   };

@@ -976,6 +976,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reactionType: req.body.reactionType || 'heart',
       });
       
+      // Check if user has already reacted (idempotency check)
+      const existingReaction = await storage.getUserMemoryReaction(
+        req.params.memoryId,
+        data.userId,
+        data.userEmail
+      );
+      
+      // If already reacted, return existing reaction (idempotent)
+      if (existingReaction) {
+        return res.status(200).json(existingReaction);
+      }
+      
       const reaction = await storage.createMemoryReaction(data);
       res.status(201).json(reaction);
     } catch (error: any) {
