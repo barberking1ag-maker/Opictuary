@@ -61,6 +61,11 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
   const { toast} = useToast();
   const { user } = useAuth();
 
+  // Debug logging for lightbox state
+  useEffect(() => {
+    console.log("MemorialGallery selectedMemory changed:", selectedMemory ? selectedMemory.id : "null");
+  }, [selectedMemory]);
+
   // Fetch memories
   const { data: memories = [], isLoading } = useQuery<Memory[]>({
     queryKey: ["/api/memorials", memorialId, "memories"],
@@ -373,7 +378,10 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
           <Card
             key={memory.id}
             className="group relative overflow-hidden cursor-pointer hover-elevate active-elevate-2 transition-all"
-            onClick={() => setSelectedMemory(memory)}
+            onClick={() => {
+              console.log("Memory card clicked:", memory.id, memory.caption);
+              setSelectedMemory(memory);
+            }}
             data-testid={`card-memory-${memory.id}`}
           >
             <div className="aspect-square relative">
@@ -391,13 +399,13 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
                   src={memory.mediaUrl}
                   alt={memory.caption}
                   className="w-full h-full object-cover"
-                  data-testid="img-memory-thumbnail"
+                  data-testid={`img-memory-${memory.id}`}
                 />
               )}
               
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                  <p className="text-sm font-medium line-clamp-2">{memory.caption}</p>
+                  <p className="text-sm font-medium line-clamp-2" data-testid={`text-memory-caption-${memory.id}`}>{memory.caption}</p>
                   <p className="text-xs text-white/80 mt-1">{memory.authorName}</p>
                 </div>
               </div>
@@ -415,7 +423,13 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
       </div>
 
       {/* Lightbox Dialog */}
-      <Dialog open={!!selectedMemory} onOpenChange={(open) => !open && setSelectedMemory(null)}>
+      <Dialog 
+        open={!!selectedMemory} 
+        onOpenChange={(open) => {
+          console.log("Dialog onOpenChange called:", open);
+          if (!open) setSelectedMemory(null);
+        }}
+      >
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="dialog-memory-lightbox">
           {selectedMemory && (
             <div className="space-y-6">
