@@ -64,10 +64,13 @@ export default function CreateMemorial() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateMemorialForm) => {
+      // Generate a 20-character invite code (database limit)
+      const inviteCode = (Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12)).substring(0, 20);
+      
       const response = await apiRequest("POST", "/api/memorials", {
         ...data,
         creatorEmail: user?.email,
-        inviteCode: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+        inviteCode,
       });
       return await response.json();
     },
