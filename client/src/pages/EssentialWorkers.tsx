@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Shield, Activity, Flame, Cross } from "lucide-react";
+import { Heart, Shield, Activity, Flame, Cross, Plus } from "lucide-react";
 import type { EssentialWorkerMemorial } from "@shared/schema";
 import { getFontFamily, getSymbolIcon } from "@/lib/customization";
 import { AdDisplay } from "@/components/AdDisplay";
@@ -56,9 +56,18 @@ export default function EssentialWorkers() {
             Honoring Essential Workers
           </h1>
         </div>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
           In grateful memory of the brave men and women who dedicated their lives to serving and protecting our communities.
         </p>
+        <Button 
+          size="lg"
+          onClick={() => window.location.href = '/create-memorial'}
+          data-testid="button-create-essential-worker-memorial"
+          className="bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none shadow-lg font-medium"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Create Essential Worker Memorial
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8">
@@ -126,8 +135,8 @@ export default function EssentialWorkers() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
           {memorials.map((memorial) => {
-            const customFont = getFontFamily(memorial.fontFamily);
-            const SymbolIcon = getSymbolIcon(memorial.symbol);
+            const customFont = getFontFamily(memorial.fontFamily ?? undefined);
+            const SymbolIcon = getSymbolIcon(memorial.symbol ?? undefined);
             
             return (
             <Card key={memorial.id} className="overflow-hidden hover-elevate" data-testid={`card-memorial-${memorial.id}`}>
