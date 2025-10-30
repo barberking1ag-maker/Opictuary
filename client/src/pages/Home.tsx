@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
 import DonationPaymentModal from "@/components/DonationPaymentModal";
 import FlowerOrderButton from "@/components/FlowerOrderButton";
-import { PhotoGallery } from "@/components/PhotoGallery";
+import { MemorialGallery } from "@/components/MemorialGallery";
 import { MemorialEngagement } from "@/components/MemorialEngagement";
 import { LiveStreamViewer } from "@/components/LiveStreamViewer";
 import { ShareObituaryButton } from "@/components/ShareObituaryButton";
@@ -659,7 +659,10 @@ export default function Home() {
 
           {/* Photos Tab */}
           <TabsContent value="photos" className="space-y-6" data-testid="content-photos">
-            <PhotoGallery memories={approvedMemories} />
+            <MemorialGallery 
+              memorialId={memorialId || ''} 
+              isOwner={memorial?.creatorEmail === user?.email}
+            />
           </TabsContent>
 
           {/* Condolences Tab */}
@@ -906,7 +909,7 @@ export default function Home() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* QR Code Feature */}
-            {user?.id === memorial.userId && (
+            {user?.email === memorial.creatorEmail && (
               <Card className="hover-elevate" data-testid="card-feature-qr">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -933,7 +936,7 @@ export default function Home() {
             )}
 
             {/* Future Messages Feature */}
-            {user?.id === memorial.userId && (
+            {user?.email === memorial.creatorEmail && (
               <Card className="hover-elevate" data-testid="card-feature-future-messages">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="mx-auto w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center">
