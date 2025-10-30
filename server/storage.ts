@@ -970,7 +970,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCelebrityMemorial(memorial: InsertCelebrityMemorial): Promise<CelebrityMemorial> {
-    const [created] = await db.insert(celebrityMemorials).values(memorial).returning();
+    const [created] = await db.insert(celebrityMemorials).values({
+      ...memorial,
+      achievements: memorial.achievements as any,
+      awards: memorial.awards as any,
+      verificationDocuments: memorial.verificationDocuments as any,
+      customStickers: memorial.customStickers as any,
+      themeColors: memorial.themeColors as any,
+    }).returning();
     return created;
   }
 

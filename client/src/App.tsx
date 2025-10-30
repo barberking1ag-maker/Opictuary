@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Landing from "@/pages/Landing";
 import About from "@/pages/About";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
+import CreateCelebrityMemorial from "@/pages/CreateCelebrityMemorial";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
 import CreateEssentialWorkerMemorial from "@/pages/CreateEssentialWorkerMemorial";
@@ -154,6 +155,7 @@ function Router() {
           <Route path="/memorial/:id" component={Home} />
           <Route path="/about" component={About} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
+        <Route path="/create-celebrity-memorial" component={CreateCelebrityMemorial} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
         <Route path="/create-essential-worker" component={CreateEssentialWorkerMemorial} />

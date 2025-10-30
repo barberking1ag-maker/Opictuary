@@ -333,6 +333,32 @@ export const celebrityMemorials = pgTable("celebrity_memorials", {
   donationAmount: decimal("donation_amount", { precision: 10, scale: 2 }).notNull().default("10"),
   platformPercentage: integer("platform_percentage").notNull().default(5),
   fanCount: integer("fan_count").default(0),
+  
+  // Profession categorization
+  professionCategory: text("profession_category"),
+  subProfession: text("sub_profession"),
+  achievements: json("achievements").$type<Array<{ title: string; year: string; description?: string }>>(),
+  awards: json("awards").$type<Array<{ name: string; year: string; category?: string }>>(),
+  
+  // Verification system
+  verificationStatus: text("verification_status").default("pending"),
+  verifiedBy: text("verified_by"),
+  verificationDate: timestamp("verification_date"),
+  verificationDocuments: json("verification_documents").$type<Array<{ type: string; url: string; uploadedAt: string }>>(),
+  submitterName: text("submitter_name"),
+  submitterEmail: text("submitter_email"),
+  submitterRelationship: text("submitter_relationship"),
+  submitterPhone: text("submitter_phone"),
+  
+  // Customization options
+  memorialTemplate: text("memorial_template"),
+  customStickers: json("custom_stickers").$type<Array<{ name: string; imageUrl: string; category: string }>>(),
+  themeColors: json("theme_colors").$type<{ primary: string; secondary: string; accent: string }>(),
+  
+  // Dates
+  birthDate: text("birth_date"),
+  deathDate: text("death_date"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1148,6 +1174,9 @@ export const insertCelebrityMemorialSchema = createInsertSchema(celebrityMemoria
   id: true,
   createdAt: true,
   fanCount: true,
+  verificationStatus: true,
+  verifiedBy: true,
+  verificationDate: true,
 });
 
 export const insertCelebrityDonationSchema = createInsertSchema(celebrityDonations).omit({

@@ -4,10 +4,88 @@ import type { CelebrityMemorial } from "@shared/schema";
 import CelebrityMemorialCard from "@/components/CelebrityMemorialCard";
 import DonationGateModal from "@/components/DonationGateModal";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Crown, Trophy, Music, Film, Heart, Briefcase, Users, Plus, Star, Award, Mic2 } from "lucide-react";
+
+// Profession categories with comprehensive list
+const professionCategories = [
+  { 
+    id: "sports", 
+    name: "Sports & Athletics", 
+    icon: Trophy,
+    color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    subCategories: ["Basketball", "Football", "Baseball", "Soccer", "Tennis", "Boxing", "Golf", "Track & Field", "Swimming", "Other Sports"]
+  },
+  { 
+    id: "entertainment", 
+    name: "Actors & Actresses", 
+    icon: Film,
+    color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+    subCategories: ["Film", "Television", "Theater", "Voice Acting", "Stunt Performers"]
+  },
+  { 
+    id: "music", 
+    name: "Musicians & Artists", 
+    icon: Music,
+    color: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
+    subCategories: ["Pop", "Rock", "Hip-Hop/Rap", "R&B/Soul", "Country", "Jazz", "Classical", "Gospel", "Producers", "Songwriters"]
+  },
+  { 
+    id: "royalty", 
+    name: "Royalty & Nobility", 
+    icon: Crown,
+    color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    subCategories: ["Kings", "Queens", "Princes", "Princesses", "Dukes", "Duchesses", "Other Nobility"]
+  },
+  { 
+    id: "philanthropy", 
+    name: "Philanthropists", 
+    icon: Heart,
+    color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    subCategories: ["Humanitarian", "Charity Founders", "Social Activists", "Environmental"]
+  },
+  { 
+    id: "business", 
+    name: "Business Leaders", 
+    icon: Briefcase,
+    color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    subCategories: ["CEOs", "Entrepreneurs", "Investors", "Innovators"]
+  },
+  { 
+    id: "politics", 
+    name: "Political Figures", 
+    icon: Users,
+    color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
+    subCategories: ["Presidents", "Prime Ministers", "Senators", "Governors", "Ambassadors", "Activists"]
+  },
+  { 
+    id: "arts", 
+    name: "Artists & Writers", 
+    icon: Award,
+    color: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
+    subCategories: ["Painters", "Sculptors", "Novelists", "Poets", "Playwrights", "Journalists", "Critics"]
+  },
+  { 
+    id: "comedy", 
+    name: "Comedians", 
+    icon: Mic2,
+    color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+    subCategories: ["Stand-up", "Improv", "Sketch Comedy", "Comedy Writers"]
+  },
+  { 
+    id: "science", 
+    name: "Scientists & Educators", 
+    icon: Star,
+    color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300",
+    subCategories: ["Physicists", "Biologists", "Chemists", "Astronomers", "Professors", "Researchers"]
+  },
+];
 
 export default function CelebrityMemorials() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedCelebrity, setSelectedCelebrity] = useState<CelebrityMemorial | null>(null);
   const [donationModalOpen, setDonationModalOpen] = useState(false);
 
@@ -15,10 +93,12 @@ export default function CelebrityMemorials() {
     queryKey: ["/api/celebrity-memorials"],
   });
 
-  const filteredCelebrities = celebrities.filter(celebrity =>
-    celebrity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    celebrity.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCelebrities = celebrities.filter(celebrity => {
+    const matchesSearch = celebrity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      celebrity.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || celebrity.professionCategory === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleDonate = (celebrity: CelebrityMemorial) => {
     setSelectedCelebrity(celebrity);
@@ -40,29 +120,74 @@ export default function CelebrityMemorials() {
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-br from-primary/15 to-accent/15 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 mb-4">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary drop-shadow-md">
-              <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
-              <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
-              <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
-              <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-              <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
-              <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-              <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
-              <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
-            </svg>
-            <h1 className="text-4xl md:text-5xl font-serif font-semibold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-              Celebrity & Influencer Memorials
-            </h1>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary drop-shadow-md">
+                <path d="M16 2L18 8H14L16 2Z" fill="currentColor" opacity="0.9"/>
+                <rect x="14" y="8" width="4" height="16" fill="currentColor" opacity="0.8"/>
+                <path d="M16 24C16 24 20 22 20 18V12H12V18C12 22 16 24 16 24Z" fill="currentColor" opacity="0.6"/>
+                <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+                <circle cx="24" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+                <path d="M8 8C8 8 10 6 12 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+                <path d="M24 8C24 8 22 6 20 8" stroke="currentColor" strokeWidth="1" opacity="0.7"/>
+                <ellipse cx="16" cy="28" rx="12" ry="2" fill="currentColor" opacity="0.3"/>
+              </svg>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-serif font-semibold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+                  Celebrity & Influencer Memorials
+                </h1>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => window.location.href = '/create-celebrity-memorial'}
+              data-testid="button-create-celebrity-memorial"
+              className="bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none shadow-lg font-medium"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Memorial
+            </Button>
           </div>
-          <p className="text-lg text-muted-foreground max-w-3xl">
+          <p className="text-lg text-muted-foreground max-w-3xl mb-6">
             Honor iconic figures and support their favorite charities. Each memorial unlocks with a $10 donation, 
             with 95% going directly to the charity.
           </p>
+          <Badge variant="outline" className="text-sm">
+            Verified by family, lawyers, or authorized representatives
+          </Badge>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Profession Category Cards */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6">Browse by Profession</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            {professionCategories.map((category) => {
+              const IconComponent = category.icon;
+              const isSelected = selectedCategory === category.id;
+              return (
+                <Card
+                  key={category.id}
+                  className={`cursor-pointer transition-all hover-elevate ${isSelected ? 'ring-2 ring-primary shadow-lg' : ''}`}
+                  onClick={() => setSelectedCategory(isSelected ? "" : category.id)}
+                  data-testid={`card-category-${category.id}`}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-12 h-12 mx-auto mb-3 rounded-full ${category.color} flex items-center justify-center`}>
+                      <IconComponent className="w-6 h-6" />
+                    </div>
+                    <p className="font-semibold text-sm">{category.name}</p>
+                    {isSelected && (
+                      <Badge variant="secondary" className="mt-2 text-xs">Active</Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="mb-8">
           <div className="relative max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -75,6 +200,39 @@ export default function CelebrityMemorials() {
             />
           </div>
         </div>
+
+        {/* Active Category Filter Display */}
+        {selectedCategory && (
+          <div className="flex items-center justify-between mb-6 bg-muted/50 p-4 rounded-lg">
+            <div className="flex items-center gap-3">
+              {(() => {
+                const category = professionCategories.find(c => c.id === selectedCategory);
+                const IconComponent = category?.icon || Star;
+                return (
+                  <>
+                    <div className={`w-8 h-8 rounded-full ${category?.color} flex items-center justify-center`}>
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Showing {category?.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {filteredCelebrities.length} memorial{filteredCelebrities.length !== 1 ? 's' : ''} found
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedCategory("")}
+              data-testid="button-clear-category-filter"
+            >
+              Show All
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="text-center py-16">
