@@ -43,6 +43,11 @@ Preferred communication style: Simple, everyday language.
 **Saved Memorials System:** Allows authenticated users to save memorials with relationship categorization (family, friend, colleague, etc.) and personal notes, persisting data in PostgreSQL.
 **Future Messages System:** Enables memorial creators to schedule messages to be delivered to loved ones on future occasions, with pre-written templates, recurrence support, email delivery, and media attachments.
 **Merchandise Services Integration:** Connects users with external services for physical memorial products like custom T-shirts, cardboard cutouts, and holographic tributes, with tracking for affiliate partnerships.
+**Essential Worker Memorial Creation System:** Comprehensive creation flow for honoring first responders and essential workers with category-specific forms. Features interactive category cards (Police, Fire, Medical, Military) with dedicated creation paths. The 2-step form wizard includes:
+- **Step 1 - Basic Information**: Name, profession, category, department, years of service, biography, dates, and photo upload
+- **Step 2 - Professional Details**: Dynamic category-specific fields including rank, badge number, unit, service branch, specialization, precinct, station, deployments (array), certifications (array), line-of-duty death status, and honors
+- **Professional Details Display**: Memorial cards show professional credentials with category-specific badges (rank, badge number, unit details, etc.)
+- **Database Schema**: Extended essential_workers_memorials table with dedicated columns for rank, badge_number, unit, service_branch, specialization, precinct, station, deployments (JSON array), and certifications (text array)
 **Revenue Model:** Generates revenue through configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
 
 ### Analytics & Monitoring
