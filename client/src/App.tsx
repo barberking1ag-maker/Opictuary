@@ -32,6 +32,7 @@ import ManageMemorial from "@/pages/ManageMemorial";
 import ObituaryPage from "@/pages/ObituaryPage";
 import FuneralProgramEditor from "@/pages/FuneralProgramEditor";
 import FuneralProgramViewer from "@/pages/FuneralProgramViewer";
+import QRCodeGenerator from "@/pages/QRCodeGenerator";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -173,6 +174,8 @@ function Router() {
         <Route path="/memorial/:id/program" component={FuneralProgramViewer} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/screenshots" component={AdminScreenshots} />
+        <Route path="/admin/qr-code" component={QRCodeGenerator} />
+        <Route path="/qr-code" component={QRCodeGenerator} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/support" component={SupportHub} />
         <Route component={NotFound} />
