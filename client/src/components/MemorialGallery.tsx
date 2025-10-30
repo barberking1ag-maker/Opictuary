@@ -71,6 +71,14 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
     queryKey: ["/api/memorials", memorialId, "memories"],
   });
 
+  // Filter approved memories
+  const approvedMemories = memories.filter(m => m.isApproved || isOwner);
+
+  // Debug logging for memories loaded
+  useEffect(() => {
+    console.log("MemorialGallery memories loaded:", memories.length, "approved:", approvedMemories.length);
+  }, [memories.length, approvedMemories.length]);
+
   // Fetch comments for selected memory
   const { data: comments = [] } = useQuery<MemoryComment[]>({
     queryKey: ["/api/memories", selectedMemory?.id, "comments"],
@@ -229,7 +237,6 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
     },
   });
 
-  const approvedMemories = memories.filter(m => m.isApproved || isOwner);
   const isVideo = (url: string | null) => {
     if (!url) return false;
     return /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('youtube.com') || url.includes('vimeo.com');
@@ -375,14 +382,17 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="container-gallery">
         {approvedMemories.map((memory) => (
-          <Card
+          <button
             key={memory.id}
-            className="group relative overflow-hidden cursor-pointer hover-elevate active-elevate-2 transition-all"
-            onClick={() => {
+            className="group relative overflow-hidden cursor-pointer bg-card rounded-lg border border-border hover-elevate active-elevate-2 transition-all text-left"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               console.log("Memory card clicked:", memory.id, memory.caption);
               setSelectedMemory(memory);
             }}
             data-testid={`card-memory-${memory.id}`}
+            type="button"
           >
             <div className="aspect-square relative">
               {isVideo(memory.mediaUrl) ? (
@@ -398,8 +408,13 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
                 <img
                   src={memory.mediaUrl}
                   alt={memory.caption}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-t-lg"
                   data-testid={`img-memory-${memory.id}`}
+                  loading="lazy"
+                  onError={(e) => {
+                    console.error("Image failed to load:", memory.mediaUrl);
+                    e.currentTarget.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+                  }}
                 />
               )}
               
@@ -411,14 +426,14 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
               </div>
 
               {!memory.isApproved && (
-                <div className="absolute top-2 left-2">
+                <div className="absolute top-2 left-2 pointer-events-none">
                   <Badge variant="outline" className="bg-amber-500 text-white border-amber-600">
                     Pending
                   </Badge>
                 </div>
               )}
             </div>
-          </Card>
+          </button>
         ))}
       </div>
 
@@ -502,8 +517,12 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
                   <img
                     src={selectedMemory.mediaUrl}
                     alt={selectedMemory.caption}
-                    className="w-full max-h-[60vh] object-contain mx-auto"
+                    className="w-full max-h-[60vh] object-contain mx-auto bg-black"
                     data-testid="img-memory-full"
+                    onError={(e) => {
+                      console.error("Full image failed to load:", selectedMemory.mediaUrl);
+                      e.currentTarget.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                    }}
                   />
                 )}
 
