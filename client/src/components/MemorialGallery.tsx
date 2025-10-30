@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Heart, MessageCircle, Calendar, Image as ImageIcon, Video, X, Send, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Calendar, Image as ImageIcon, Video, X, Send, Loader2, Share2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Memory {
@@ -52,10 +52,13 @@ interface MemorialGalleryProps {
 
 export function MemorialGallery({ memorialId, isOwner = false }: MemorialGalleryProps) {
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
+  const [selectedMemoryIndex, setSelectedMemoryIndex] = useState<number>(0);
   const [commentText, setCommentText] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
-  const { toast } = useToast();
+  const [optimisticReacted, setOptimisticReacted] = useState<boolean | null>(null);
+  const reactionMutationLock = useRef(false);
+  const { toast} = useToast();
   const { user } = useAuth();
 
   // Fetch memories
@@ -73,6 +76,26 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
   const { data: condolences = [] } = useQuery<MemoryCondolence[]>({
     queryKey: ["/api/memories", selectedMemory?.id, "condolences"],
     enabled: !!selectedMemory,
+  });
+
+  // Fetch reaction count for selected memory
+  const { data: reactionData } = useQuery<{count: number}>({
+    queryKey: ["/api/memories", selectedMemory?.id, "reactions", "count"],
+    enabled: !!selectedMemory,
+  });
+  const reactionCount = reactionData?.count || 0;
+
+  // Check if current user has reacted to selected memory
+  const { data: userReaction } = useQuery<{hasReacted: boolean}>({
+    queryKey: ["/api/memories", selectedMemory?.id, "reactions", "user"],
+    enabled: !!selectedMemory,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (user?.id) params.append("userId", user.id);
+      else if (user?.email) params.append("userEmail", user.email);
+      const res = await fetch(`/api/memories/${selectedMemory?.id}/reactions/user?${params}`);
+      return await res.json();
+    },
   });
 
   // Add comment mutation
@@ -151,6 +174,58 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
     },
   });
 
+  // Determine actual reaction state (optimistic state takes precedence)
+  const hasReacted = optimisticReacted !== null ? optimisticReacted : (userReaction?.hasReacted || false);
+
+  // Toggle reaction mutation
+  const toggleReactionMutation = useMutation({
+    mutationFn: async ({ shouldReact }: { shouldReact: boolean }) => {
+      if (!selectedMemory) return;
+
+      const authorName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'User' : 'Guest';
+      const authorEmail = user?.email || '';
+
+      if (shouldReact) {
+        // Add reaction
+        await apiRequest("POST", `/api/memories/${selectedMemory.id}/reactions`, {
+          userName: authorName,
+          userEmail: authorEmail,
+          userId: user?.id,
+          reactionType: 'heart',
+        });
+      } else {
+        // Delete reaction
+        await apiRequest("DELETE", `/api/memories/${selectedMemory.id}/reactions`, {
+          userId: user?.id,
+          userEmail: authorEmail,
+        });
+      }
+    },
+    onSuccess: () => {
+      console.log('[REACTION] Mutation succeeded - releasing lock');
+      // Release lock
+      reactionMutationLock.current = false;
+      // Clear optimistic state and let server data take over
+      setOptimisticReacted(null);
+      // Invalidate all reaction-related queries to ensure UI stays in sync
+      queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedMemory?.id, "reactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedMemory?.id, "reactions", "count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/memories", selectedMemory?.id, "reactions", "user"] });
+    },
+    onError: (error: any) => {
+      console.log('[REACTION] Mutation failed - releasing lock');
+      // Release lock
+      reactionMutationLock.current = false;
+      // Revert optimistic state on error
+      setOptimisticReacted(null);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update reaction.",
+      });
+    },
+  });
+
   const approvedMemories = memories.filter(m => m.isApproved || isOwner);
   const isVideo = (url: string | null) => {
     if (!url) return false;
@@ -164,6 +239,117 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
   const handleSendCondolence = () => {
     addCondolenceMutation.mutate();
   };
+
+  const handleToggleReaction = () => {
+    // Prevent rapid clicks with synchronous lock
+    if (reactionMutationLock.current) {
+      console.log('[REACTION] Click ignored - lock is held');
+      return;
+    }
+    
+    console.log('[REACTION] Processing click - acquiring lock');
+    // Acquire lock immediately (synchronous)
+    reactionMutationLock.current = true;
+    
+    // Set optimistic state immediately
+    const newState = !hasReacted;
+    setOptimisticReacted(newState);
+    
+    console.log('[REACTION] Triggering mutation with shouldReact:', newState);
+    // Execute mutation with explicit should react state
+    toggleReactionMutation.mutate({ shouldReact: newState });
+  };
+
+  const handleShare = async () => {
+    if (!selectedMemory) return;
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?memoryId=${selectedMemory.id}`;
+    const shareText = `Check out this memory from ${selectedMemory.authorName}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Memorial Memory',
+          text: shareText,
+          url: shareUrl,
+        });
+        toast({
+          title: "Shared",
+          description: "Memory shared successfully.",
+        });
+      } catch (err) {
+        // User cancelled
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied",
+        description: "Memory link copied to clipboard.",
+      });
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!selectedMemory || isVideo(selectedMemory.mediaUrl)) return;
+
+    try {
+      const response = await fetch(selectedMemory.mediaUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `memory-${selectedMemory.id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast({
+        title: "Downloaded",
+        description: "Photo downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to download photo.",
+      });
+    }
+  };
+
+  const navigateMemory = (direction: 'prev' | 'next') => {
+    const currentIndex = approvedMemories.findIndex(m => m.id === selectedMemory?.id);
+    let newIndex = currentIndex;
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (direction === 'next' && currentIndex < approvedMemories.length - 1) {
+      newIndex = currentIndex + 1;
+    }
+    
+    if (newIndex !== currentIndex) {
+      setSelectedMemory(approvedMemories[newIndex]);
+      setSelectedMemoryIndex(newIndex);
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!selectedMemory) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        navigateMemory('prev');
+      } else if (e.key === 'ArrowRight') {
+        navigateMemory('next');
+      } else if (e.key === 'Escape') {
+        setSelectedMemory(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMemory, approvedMemories]);
 
   if (isLoading) {
     return (
@@ -239,7 +425,7 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
           {selectedMemory && (
             <div className="space-y-6">
               <DialogHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarFallback>{selectedMemory.authorName.charAt(0)}</AvatarFallback>
@@ -252,11 +438,50 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
                       </p>
                     </div>
                   </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Heart/Like Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleToggleReaction}
+                      disabled={toggleReactionMutation.isPending}
+                      className="gap-2"
+                      data-testid="button-toggle-reaction"
+                    >
+                      <Heart 
+                        className={`w-5 h-5 ${hasReacted ? 'fill-red-500 text-red-500' : ''}`} 
+                      />
+                      <span className="text-sm font-medium">{reactionCount}</span>
+                    </Button>
+
+                    {/* Share Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleShare}
+                      data-testid="button-share-memory"
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </Button>
+
+                    {/* Download Button (only for photos) */}
+                    {!isVideo(selectedMemory.mediaUrl) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDownload}
+                        data-testid="button-download-photo"
+                      >
+                        <Download className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </DialogHeader>
 
-              {/* Media Display */}
-              <div className="rounded-lg overflow-hidden bg-black">
+              {/* Media Display with Navigation */}
+              <div className="relative rounded-lg overflow-hidden bg-black">
                 {isVideo(selectedMemory.mediaUrl) ? (
                   <video
                     src={selectedMemory.mediaUrl}
@@ -271,6 +496,30 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
                     className="w-full max-h-[60vh] object-contain mx-auto"
                     data-testid="img-memory-full"
                   />
+                )}
+
+                {/* Navigation Arrows */}
+                {approvedMemories.findIndex(m => m.id === selectedMemory.id) > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                    onClick={() => navigateMemory('prev')}
+                    data-testid="button-prev-memory"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </Button>
+                )}
+                {approvedMemories.findIndex(m => m.id === selectedMemory.id) < approvedMemories.length - 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                    onClick={() => navigateMemory('next')}
+                    data-testid="button-next-memory"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </Button>
                 )}
               </div>
 
