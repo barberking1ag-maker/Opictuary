@@ -61,7 +61,7 @@ export default function EssentialWorkers() {
         </p>
         <Button 
           size="lg"
-          onClick={() => window.location.href = '/create-memorial'}
+          onClick={() => window.location.href = '/create-essential-worker'}
           data-testid="button-create-essential-worker-memorial"
           className="bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none shadow-lg font-medium"
         >
@@ -95,7 +95,7 @@ export default function EssentialWorkers() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => window.location.href = '/create-memorial?category=police'}
+                  onClick={() => window.location.href = '/create-essential-worker?category=police'}
                   data-testid="button-create-police"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
@@ -130,7 +130,7 @@ export default function EssentialWorkers() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => window.location.href = '/create-memorial?category=fire'}
+                  onClick={() => window.location.href = '/create-essential-worker?category=fire'}
                   data-testid="button-create-fire"
                   className="w-full bg-red-600 hover:bg-red-700 text-white"
                 >
@@ -165,7 +165,7 @@ export default function EssentialWorkers() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => window.location.href = '/create-memorial?category=medical'}
+                  onClick={() => window.location.href = '/create-essential-worker?category=medical'}
                   data-testid="button-create-medical"
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                 >
@@ -200,7 +200,7 @@ export default function EssentialWorkers() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => window.location.href = '/create-memorial?category=military'}
+                  onClick={() => window.location.href = '/create-essential-worker?category=military'}
                   data-testid="button-create-military"
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                 >
@@ -288,6 +288,45 @@ export default function EssentialWorkers() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Professional Details Section */}
+                <div className="flex flex-wrap gap-2">
+                  {memorial.rank && (
+                    <Badge variant="secondary" className="text-xs">
+                      {memorial.rank}
+                    </Badge>
+                  )}
+                  {memorial.badgeNumber && (
+                    <Badge variant="outline" className="text-xs">
+                      Badge #{memorial.badgeNumber}
+                    </Badge>
+                  )}
+                  {memorial.serviceBranch && (
+                    <Badge variant="secondary" className="text-xs">
+                      {memorial.serviceBranch}
+                    </Badge>
+                  )}
+                  {memorial.unit && (
+                    <Badge variant="outline" className="text-xs">
+                      {memorial.unit}
+                    </Badge>
+                  )}
+                  {memorial.specialization && (
+                    <Badge variant="secondary" className="text-xs">
+                      {memorial.specialization}
+                    </Badge>
+                  )}
+                  {memorial.precinct && (
+                    <Badge variant="outline" className="text-xs">
+                      Precinct {memorial.precinct}
+                    </Badge>
+                  )}
+                  {memorial.station && (
+                    <Badge variant="outline" className="text-xs">
+                      Station {memorial.station}
+                    </Badge>
+                  )}
+                </div>
+
                 {memorial.yearsOfService && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Badge variant="secondary">{memorial.yearsOfService} Years of Service</Badge>
@@ -299,6 +338,44 @@ export default function EssentialWorkers() {
                     <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
                       Line of Duty
                     </Badge>
+                  </div>
+                )}
+
+                {/* Deployments for Military */}
+                {memorial.deployments && memorial.deployments.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs font-semibold mb-1">Deployments:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {memorial.deployments.slice(0, 2).map((deployment, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {deployment.location} ({deployment.years})
+                        </Badge>
+                      ))}
+                      {memorial.deployments.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{memorial.deployments.length - 2} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Certifications */}
+                {memorial.certifications && memorial.certifications.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs font-semibold mb-1">Certifications:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {memorial.certifications.slice(0, 2).map((cert, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {cert}
+                        </Badge>
+                      ))}
+                      {memorial.certifications.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{memorial.certifications.length - 2} more
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 )}
 

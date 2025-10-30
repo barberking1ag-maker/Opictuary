@@ -396,6 +396,16 @@ export const essentialWorkersMemorials = pgTable("essential_workers_memorials", 
   fontFamily: text("font_family"),
   symbol: text("symbol"),
   isPublic: boolean("is_public").default(true),
+  // Professional Details - Category Specific
+  rank: text("rank"), // Military/Police rank (e.g., "Captain", "Sergeant", "Lieutenant Colonel")
+  badgeNumber: text("badge_number"), // Police/Fire badge number
+  unit: text("unit"), // Hospital unit, Fire station, Military unit
+  serviceBranch: text("service_branch"), // Military branch (Army, Navy, Air Force, Marines, Coast Guard)
+  specialization: text("specialization"), // Medical specialization (e.g., "Emergency Medicine", "ICU Nurse")
+  precinct: text("precinct"), // Police precinct/district
+  station: text("station"), // Fire station number/name
+  deployments: json("deployments").$type<Array<{ location: string; years: string; campaign?: string }>>(), // Military deployments
+  certifications: text("certifications").array(), // Professional certifications
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_essential_workers_category").on(table.category),

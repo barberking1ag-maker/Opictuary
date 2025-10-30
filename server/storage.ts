@@ -1255,6 +1255,8 @@ export class DatabaseStorage implements IStorage {
     const [created] = await db.insert(essentialWorkersMemorials).values({
       ...memorial,
       honors: memorial.honors as any,
+      deployments: memorial.deployments as any,
+      certifications: memorial.certifications as any,
     }).returning();
     return created;
   }
@@ -1264,6 +1266,8 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...memorial,
         honors: memorial.honors as any,
+        deployments: memorial.deployments as any,
+        certifications: memorial.certifications as any,
       })
       .where(eq(essentialWorkersMemorials.id, id))
       .returning();

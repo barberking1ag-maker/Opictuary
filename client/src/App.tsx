@@ -10,6 +10,7 @@ import About from "@/pages/About";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
+import CreateEssentialWorkerMemorial from "@/pages/CreateEssentialWorkerMemorial";
 import SelfObituary from "@/pages/SelfObituary";
 import CreateMemorial from "@/pages/CreateMemorial";
 import CustomizationDemo from "@/pages/CustomizationDemo";
@@ -155,6 +156,7 @@ function Router() {
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
+        <Route path="/create-essential-worker" component={CreateEssentialWorkerMemorial} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
