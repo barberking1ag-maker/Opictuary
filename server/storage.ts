@@ -163,6 +163,7 @@ export interface IStorage {
   // User Settings operations
   getUserSettings(userId: string): Promise<UserSettings | undefined>;
   upsertUserSettings(settings: InsertUserSettings): Promise<UserSettings>;
+  deleteUser(userId: string): Promise<void>;
 
   // Memorial operations
   getMemorial(id: string): Promise<Memorial | undefined>;
@@ -502,6 +503,25 @@ export class DatabaseStorage implements IStorage {
       .values(settingsData)
       .returning();
     return settings;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete user and all related data
+    // The user record will cascade delete most related records automatically
+    
+    // Simply delete the user - this will cascade to all related records
+    // that have onDelete: "cascade" in their foreign key references:
+    // - userSettings (cascades)
+    // - memorialComments (cascades via userId foreign key)
+    // - memoryComments (cascades via userId foreign key)  
+    // - memorialLikes (cascades via userId foreign key)
+    // - memoryCondolences (cascades via userId foreign key)
+    // - memorialEventRsvps (cascades via userId foreign key)
+    // - savedMemorials (cascades via userId foreign key)
+    // - pushTokens (cascades via userId foreign key)
+    // - memorialLiveStreamViewers (cascades via userId foreign key)
+    
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   // Memorial operations

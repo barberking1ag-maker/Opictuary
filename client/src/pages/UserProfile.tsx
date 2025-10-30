@@ -11,8 +11,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useToast } from "@/hooks/use-toast";
-import { User, Settings, Bell, Shield, Heart } from "lucide-react";
+import { User, Settings, Bell, Shield, Heart, AlertTriangle } from "lucide-react";
 import { useLocation } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function UserProfile() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -20,6 +30,8 @@ export default function UserProfile() {
   const [location] = useLocation();
   const params = new URLSearchParams(location.split('?')[1]);
   const defaultTab = params.get('tab') || 'profile';
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -139,6 +151,42 @@ export default function UserProfile() {
   const handlePrivacySettingsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettingsMutation.mutate(privacySettings);
+  };
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/user/account", {});
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted. You will be logged out.",
+      });
+      // Wait a moment to show the toast, then redirect to logout
+      setTimeout(() => {
+        window.location.href = '/api/logout';
+      }, 2000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deletion Failed",
+        description: error.message || "Failed to delete your account. Please try again or contact support.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (confirmText !== "DELETE") {
+      toast({
+        title: "Incorrect Confirmation",
+        description: 'Please type "DELETE" to confirm account deletion.',
+        variant: "destructive",
+      });
+      return;
+    }
+    deleteAccountMutation.mutate();
   };
 
   if (isLoading) {
@@ -354,17 +402,38 @@ export default function UserProfile() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-destructive">Danger Zone</h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Delete Account</p>
-                      <p className="text-sm text-muted-foreground">
-                        Permanently delete your account and all data
-                      </p>
-                    </div>
-                    <Button variant="destructive" data-testid="button-delete-account">
-                      Delete Account
-                    </Button>
-                  </div>
+                  <Card className="border-destructive/50 bg-destructive/5">
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" aria-hidden="true" />
+                          <div className="flex-1">
+                            <p className="font-semibold text-destructive">Delete Account</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Permanently delete your account and all associated data. This action cannot be undone.
+                            </p>
+                            <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+                              <li>All your saved memorials will be removed</li>
+                              <li>Your profile and settings will be deleted</li>
+                              <li>Any condolences or memories you created will be anonymized</li>
+                              <li>Memorials you created will remain but your account will be disconnected</li>
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button 
+                            variant="destructive" 
+                            onClick={() => setDeleteDialogOpen(true)}
+                            data-testid="button-delete-account"
+                            aria-label="Open account deletion dialog"
+                          >
+                            <AlertTriangle className="w-4 h-4 mr-2" aria-hidden="true" />
+                            Delete My Account
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
@@ -553,6 +622,86 @@ export default function UserProfile() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Account Deletion Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+        setDeleteDialogOpen(open);
+        if (!open) {
+          setConfirmText(""); // Reset confirmation text when dialog closes
+        }
+      }}>
+        <AlertDialogContent data-testid="dialog-delete-account">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" aria-hidden="true" />
+              Permanently Delete Account?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p className="text-base">
+                This action is <strong>irreversible</strong>. Your account and all associated data will be permanently deleted.
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="font-medium text-foreground">What will be deleted:</p>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Your user account and profile information</li>
+                  <li>All your saved memorials and bookmarks</li>
+                  <li>Your notification and privacy settings</li>
+                  <li>Your donation history and receipts</li>
+                </ul>
+              </div>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="font-medium text-foreground">What will also be removed:</p>
+                <ul className="text-sm space-y-1 list-disc list-inside">
+                  <li>Condolences and memories you've posted</li>
+                  <li>Comments you've made on memorials</li>
+                  <li>Your likes and reactions on memorials</li>
+                </ul>
+              </div>
+              <div className="bg-accent p-4 rounded-md space-y-2">
+                <p className="font-medium text-foreground">Memorials you created:</p>
+                <p className="text-sm">
+                  Memorials will remain active but will no longer be connected to your account. 
+                  You won't be able to manage them after deletion.
+                </p>
+              </div>
+              <div className="pt-4 space-y-2">
+                <Label htmlFor="confirm-delete" className="text-base font-medium">
+                  Type <span className="font-bold text-destructive">DELETE</span> to confirm:
+                </Label>
+                <Input
+                  id="confirm-delete"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Type DELETE here"
+                  className="font-mono"
+                  data-testid="input-confirm-delete"
+                  aria-label="Type DELETE to confirm account deletion"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setConfirmText("");
+                setDeleteDialogOpen(false);
+              }}
+              data-testid="button-cancel-delete"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={confirmText !== "DELETE" || deleteAccountMutation.isPending}
+              className="bg-destructive hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+              aria-label="Confirm account deletion"
+            >
+              {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
