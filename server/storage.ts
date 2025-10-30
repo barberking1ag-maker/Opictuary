@@ -7,6 +7,7 @@ import {
   memories,
   memoryComments,
   memoryCondolences,
+  memoryReactions,
   condolences,
   memorialLikes,
   memorialComments,
@@ -66,6 +67,8 @@ import {
   type InsertMemoryComment,
   type MemoryCondolence,
   type InsertMemoryCondolence,
+  type MemoryReaction,
+  type InsertMemoryReaction,
   type Condolence,
   type InsertCondolence,
   type MemorialLike,
@@ -213,6 +216,13 @@ export interface IStorage {
   createMemoryCondolence(condolence: InsertMemoryCondolence): Promise<MemoryCondolence>;
   deleteMemoryCondolence(memoryId: string, userId?: string, userEmail?: string): Promise<void>;
   getMemoryCondolencesCount(memoryId: string): Promise<number>;
+
+  // Memory Reaction operations (hearts/likes on individual photos/videos)
+  getMemoryReactions(memoryId: string): Promise<MemoryReaction[]>;
+  createMemoryReaction(reaction: InsertMemoryReaction): Promise<MemoryReaction>;
+  deleteMemoryReaction(memoryId: string, userId?: string, userEmail?: string): Promise<void>;
+  getMemoryReactionsCount(memoryId: string): Promise<number>;
+  getUserMemoryReaction(memoryId: string, userId?: string, userEmail?: string): Promise<MemoryReaction | undefined>;
 
   // Condolence operations
   getCondolencesByMemorialId(memorialId: string): Promise<Condolence[]>;
@@ -704,6 +714,44 @@ export class DatabaseStorage implements IStorage {
   async getMemoryCondolencesCount(memoryId: string): Promise<number> {
     const result = await db.select({ count: sql<number>`count(*)` }).from(memoryCondolences).where(eq(memoryCondolences.memoryId, memoryId));
     return result[0]?.count || 0;
+  }
+
+  // Memory Reaction operations (hearts/likes on individual photos/videos)
+  async getMemoryReactions(memoryId: string): Promise<MemoryReaction[]> {
+    return await db.select().from(memoryReactions).where(eq(memoryReactions.memoryId, memoryId)).orderBy(desc(memoryReactions.createdAt));
+  }
+
+  async createMemoryReaction(reaction: InsertMemoryReaction): Promise<MemoryReaction> {
+    const [created] = await db.insert(memoryReactions).values(reaction).returning();
+    return created;
+  }
+
+  async deleteMemoryReaction(memoryId: string, userId?: string, userEmail?: string): Promise<void> {
+    const conditions = [eq(memoryReactions.memoryId, memoryId)];
+    if (userId) {
+      conditions.push(eq(memoryReactions.userId, userId));
+    } else if (userEmail) {
+      conditions.push(eq(memoryReactions.userEmail, userEmail));
+    }
+    await db.delete(memoryReactions).where(and(...conditions));
+  }
+
+  async getMemoryReactionsCount(memoryId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(memoryReactions).where(eq(memoryReactions.memoryId, memoryId));
+    return result[0]?.count || 0;
+  }
+
+  async getUserMemoryReaction(memoryId: string, userId?: string, userEmail?: string): Promise<MemoryReaction | undefined> {
+    const conditions = [eq(memoryReactions.memoryId, memoryId)];
+    if (userId) {
+      conditions.push(eq(memoryReactions.userId, userId));
+    } else if (userEmail) {
+      conditions.push(eq(memoryReactions.userEmail, userEmail));
+    } else {
+      return undefined;
+    }
+    const [reaction] = await db.select().from(memoryReactions).where(and(...conditions));
+    return reaction || undefined;
   }
 
   // Condolence operations

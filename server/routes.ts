@@ -21,6 +21,7 @@ import {
   insertMemorySchema, 
   insertMemoryCommentSchema,
   insertMemoryCondolenceSchema,
+  insertMemoryReactionSchema,
   insertCondolenceSchema,
   insertMemorialLikeSchema,
   insertMemorialCommentSchema,
@@ -931,6 +932,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.body.userId;
       const userEmail = req.body.userEmail;
       await storage.deleteMemoryCondolence(req.params.memoryId, userId, userEmail);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memory Reaction routes (hearts/likes on individual photos/videos)
+  app.get("/api/memories/:memoryId/reactions", async (req, res) => {
+    try {
+      const reactions = await storage.getMemoryReactions(req.params.memoryId);
+      res.json(reactions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memories/:memoryId/reactions/count", async (req, res) => {
+    try {
+      const count = await storage.getMemoryReactionsCount(req.params.memoryId);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memories/:memoryId/reactions/user", async (req, res) => {
+    try {
+      const userId = req.query.userId as string | undefined;
+      const userEmail = req.query.userEmail as string | undefined;
+      const reaction = await storage.getUserMemoryReaction(req.params.memoryId, userId, userEmail);
+      res.json({ hasReacted: !!reaction, reaction });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memories/:memoryId/reactions", async (req, res) => {
+    try {
+      const data = insertMemoryReactionSchema.parse({
+        ...req.body,
+        memoryId: req.params.memoryId,
+        reactionType: req.body.reactionType || 'heart',
+      });
+      
+      const reaction = await storage.createMemoryReaction(data);
+      res.status(201).json(reaction);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memories/:memoryId/reactions", async (req, res) => {
+    try {
+      const userId = req.body.userId;
+      const userEmail = req.body.userEmail;
+      await storage.deleteMemoryReaction(req.params.memoryId, userId, userEmail);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
