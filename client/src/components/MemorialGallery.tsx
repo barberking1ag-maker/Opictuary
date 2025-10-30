@@ -152,7 +152,10 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
   });
 
   const approvedMemories = memories.filter(m => m.isApproved || isOwner);
-  const isVideo = (url: string) => /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('youtube.com') || url.includes('vimeo.com');
+  const isVideo = (url: string | null) => {
+    if (!url) return false;
+    return /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('youtube.com') || url.includes('vimeo.com');
+  };
 
   const handleSubmitComment = () => {
     addCommentMutation.mutate();
