@@ -48,6 +48,14 @@ Preferred communication style: Simple, everyday language.
 - **Step 2 - Professional Details**: Dynamic category-specific fields including rank, badge number, unit, service branch, specialization, precinct, station, deployments (array), certifications (array), line-of-duty death status, and honors
 - **Professional Details Display**: Memorial cards show professional credentials with category-specific badges (rank, badge number, unit details, etc.)
 - **Database Schema**: Extended essential_workers_memorials table with dedicated columns for rank, badge_number, unit, service_branch, specialization, precinct, station, deployments (JSON array), and certifications (text array)
+**Celebrity Memorial Interactive System with Verification:** Enhanced celebrity memorial platform with comprehensive profession categorization and family/legal verification. Features 10 interactive profession category cards for browsing (Sports & Athletics, Actors & Actresses, Musicians, Royalty & Nobility, Philanthropists, Business Leaders, Political Figures, Artists & Writers, Comedians, Scientists & Educators). The 4-step creation wizard includes:
+- **Step 1 - Basic Information**: Name, title, profession category (with sub-profession selection for specific fields like Basketball, Film, Pop Music, etc.), dates, photo URL, and biography
+- **Step 2 - Charity Information**: Charity name, donation amount, platform fee percentage
+- **Step 3 - Achievements & Awards**: Optional arrays for achievements (title, year, description) and awards (name, year, category)
+- **Step 4 - Verification**: Submitter details (name, email, phone) with relationship to deceased (family, lawyer, power of attorney, estate executor, publicist, foundation representative, or other authorized) for verification purposes
+- **Verification System**: All submissions default to "pending" status and require admin approval. Captures submitter relationship and contact information for verification by family members, lawyers, or authorized representatives
+- **Customization Options**: Memorial template selection, custom theme colors (primary, secondary, accent), and profession-specific stickers
+- **Database Schema**: Extended celebrity_memorials table with profession_category, sub_profession, achievements (JSON array), awards (JSON array), verification_status, verified_by, verification_date, verification_documents (JSON array), submitter fields, memorial_template, custom_stickers (JSON array), and theme_colors (JSON object)
 **Revenue Model:** Generates revenue through configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
 
 ### Analytics & Monitoring
