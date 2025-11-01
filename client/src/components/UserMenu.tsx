@@ -96,6 +96,12 @@ export function UserMenu() {
             <span>Legacy Messages</span>
           </DropdownMenuItem>
         </Link>
+        <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81">
+          <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-photo-gallery">
+            <Image className="mr-2 h-4 w-4" />
+            <span>Photo Gallery</span>
+          </DropdownMenuItem>
+        </Link>
         <Link href="/profile?tab=settings">
           <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-settings">
             <Settings className="mr-2 h-4 w-4" />
