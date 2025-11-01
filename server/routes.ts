@@ -1643,6 +1643,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all upcoming messages for the current user across all memorials
+  app.get("/api/scheduled-messages/upcoming", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      
+      // Get all memorials where the user is the creator
+      const memorials = await storage.getMemorialsByCreatorEmail(userEmail);
+      
+      // Create a map of memorial IDs to names for quick lookup
+      const memorialMap = new Map(memorials.map(m => [m.id, m.name]));
+      
+      // Get all scheduled messages for all memorials
+      const allMessagesArrays = await Promise.all(
+        memorials.map(memorial => storage.getScheduledMessagesByMemorialId(memorial.id))
+      );
+      
+      // Flatten the array and add memorial names
+      const messagesWithMemorialNames = allMessagesArrays.flat().map(message => ({
+        ...message,
+        memorialName: memorialMap.get(message.memorialId) || 'Unknown Memorial'
+      }));
+      
+      // Sort by event date
+      const sortedMessages = messagesWithMemorialNames.sort((a, b) => {
+        if (!a.eventDate) return 1;
+        if (!b.eventDate) return -1;
+        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+      });
+      
+      res.json(sortedMessages);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Fundraiser routes
   app.get("/api/memorials/:memorialId/fundraisers", async (req, res) => {
     try {

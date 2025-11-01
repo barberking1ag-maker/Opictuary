@@ -39,6 +39,7 @@ import MemorialEvents from "@/pages/MemorialEvents";
 import FuneralProgramCreator from "@/pages/FuneralProgramCreator";
 import CelebrityEstateContent from "@/pages/CelebrityEstateContent";
 import FutureMessages from "@/pages/FutureMessages";
+import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
@@ -183,6 +184,7 @@ function Router() {
         <Route path="/memorial/:id/events" component={MemorialEvents} />
         <Route path="/memorial/:id/funeral-program" component={FuneralProgramCreator} />
         <Route path="/memorial/:id/future-messages" component={FutureMessages} />
+        <Route path="/upcoming-messages" component={UpcomingMessages} />
         <Route path="/celebrity/:id/estate-content" component={CelebrityEstateContent} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/screenshots" component={AdminScreenshots} />
