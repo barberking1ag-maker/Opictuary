@@ -880,6 +880,8 @@ export const memorialsRelations = relations(memorials, ({ many, one }) => ({
   admins: many(memorialAdmins),
   qrCodes: many(qrCodes),
   funeralProgram: one(funeralPrograms),
+  liveStreams: many(liveStreams),
+  documentaries: many(memorialDocumentaries),
 }));
 
 export const memorialAdminsRelations = relations(memorialAdmins, ({ one }) => ({
@@ -1033,6 +1035,66 @@ export const memorialEventRsvpsRelations = relations(memorialEventRsvps, ({ one 
   event: one(memorialEvents, {
     fields: [memorialEventRsvps.eventId],
     references: [memorialEvents.id],
+  }),
+}));
+
+// Live Streaming for Memorial Services
+export const liveStreams = pgTable("live_streams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  embedUrl: text("embed_url").notNull(), // Embed URL for the live stream
+  streamType: text("stream_type").notNull().default("youtube_live"), // 'youtube_live', 'vimeo_live', 'twitch', 'custom_embed'
+  scheduledTime: timestamp("scheduled_time"),
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'live', 'ended', 'cancelled'
+  viewerCount: integer("viewer_count").default(0),
+  recordingUrl: text("recording_url"), // URL to recording after stream ends
+  chatEnabled: boolean("chat_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_live_streams_memorial_id").on(table.memorialId),
+  index("idx_live_streams_status").on(table.status),
+  index("idx_live_streams_scheduled_time").on(table.scheduledTime),
+]);
+
+// Memorial Documentaries - full-length video content
+export const memorialDocumentaries = pgTable("memorial_documentaries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(), // Video file URL or embed URL
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // Duration in seconds
+  chapters: json("chapters").$type<Array<{ title: string; time: number }>>(), // Video chapters
+  captions: text("captions"), // URL to captions/subtitles file
+  isPublic: boolean("is_public").default(true),
+  viewCount: integer("view_count").default(0),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_documentaries_memorial_id").on(table.memorialId),
+  index("idx_documentaries_created_by").on(table.createdBy),
+]);
+
+export const liveStreamsRelations = relations(liveStreams, ({ one }) => ({
+  memorial: one(memorials, {
+    fields: [liveStreams.memorialId],
+    references: [memorials.id],
+  }),
+}));
+
+export const memorialDocumentariesRelations = relations(memorialDocumentaries, ({ one }) => ({
+  memorial: one(memorials, {
+    fields: [memorialDocumentaries.memorialId],
+    references: [memorials.id],
+  }),
+  creator: one(users, {
+    fields: [memorialDocumentaries.createdBy],
+    references: [users.id],
   }),
 }));
 
@@ -1401,6 +1463,18 @@ export const insertMemorialEventRsvpSchema = createInsertSchema(memorialEventRsv
   createdAt: true,
 });
 
+export const insertLiveStreamSchema = createInsertSchema(liveStreams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemorialDocumentarySchema = createInsertSchema(memorialDocumentaries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
@@ -1552,6 +1626,12 @@ export type MemorialEvent = typeof memorialEvents.$inferSelect;
 
 export type InsertMemorialEventRsvp = z.infer<typeof insertMemorialEventRsvpSchema>;
 export type MemorialEventRsvp = typeof memorialEventRsvps.$inferSelect;
+
+export type InsertLiveStream = z.infer<typeof insertLiveStreamSchema>;
+export type LiveStream = typeof liveStreams.$inferSelect;
+
+export type InsertMemorialDocumentary = z.infer<typeof insertMemorialDocumentarySchema>;
+export type MemorialDocumentary = typeof memorialDocumentaries.$inferSelect;
 
 // Funeral Program schemas
 export const insertFuneralProgramSchema = createInsertSchema(funeralPrograms).omit({ id: true, createdAt: true, updatedAt: true });
