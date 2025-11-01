@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3 } from "lucide-react";
+import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3, Calendar, Image } from "lucide-react";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -88,6 +88,12 @@ export function UserMenu() {
           <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-memorials">
             <Heart className="mr-2 h-4 w-4" />
             <span>My Memorials</span>
+          </DropdownMenuItem>
+        </Link>
+        <Link href="/upcoming-messages">
+          <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-upcoming-messages">
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>Future Messages</span>
           </DropdownMenuItem>
         </Link>
         <Link href="/profile?tab=settings">

@@ -142,10 +142,10 @@ export default function Landing() {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Users className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Community Support</h3>
+                <h3 className="text-xl font-semibold text-foreground">Share Memories Together</h3>
                 <p className="text-muted-foreground">
-                  You're not alone. Friends and family can contribute memories, share condolences, 
-                  and rally together to support one another.
+                  Friends and family can share photos, videos, and stories about their experiences with your loved one. 
+                  Interactive galleries let everyone react, comment, and preserve precious memories forever.
                 </p>
               </CardContent>
             </Card>
