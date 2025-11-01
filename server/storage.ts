@@ -51,6 +51,7 @@ import {
   memorialEventRsvps,
   funeralPrograms,
   programItems,
+  memorialDocumentaries,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -156,6 +157,8 @@ import {
   type InsertFuneralProgram,
   type ProgramItem,
   type InsertProgramItem,
+  type MemorialDocumentary,
+  type InsertMemorialDocumentary,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -261,6 +264,14 @@ export interface IStorage {
   getLiveStreamViewers(streamId: string): Promise<MemorialLiveStreamViewer[]>;
   createLiveStreamViewer(viewer: InsertMemorialLiveStreamViewer): Promise<MemorialLiveStreamViewer>;
   updateLiveStreamViewer(id: string, leftAt: Date, durationMinutes: number): Promise<void>;
+
+  // Memorial Documentary operations
+  getMemorialDocumentaries(memorialId: string): Promise<MemorialDocumentary[]>;
+  getMemorialDocumentary(id: string): Promise<MemorialDocumentary | undefined>;
+  createMemorialDocumentary(documentary: InsertMemorialDocumentary): Promise<MemorialDocumentary>;
+  updateMemorialDocumentary(id: string, documentary: Partial<InsertMemorialDocumentary>): Promise<MemorialDocumentary | undefined>;
+  deleteMemorialDocumentary(id: string): Promise<void>;
+  incrementDocumentaryViewCount(id: string): Promise<void>;
 
   // Scheduled Message operations
   getScheduledMessagesByMemorialId(memorialId: string): Promise<ScheduledMessage[]>;
@@ -883,6 +894,36 @@ export class DatabaseStorage implements IStorage {
 
   async updateLiveStreamViewer(id: string, leftAt: Date, durationMinutes: number): Promise<void> {
     await db.update(memorialLiveStreamViewers).set({ leftAt, durationMinutes }).where(eq(memorialLiveStreamViewers.id, id));
+  }
+
+  // Memorial Documentary operations
+  async getMemorialDocumentaries(memorialId: string): Promise<MemorialDocumentary[]> {
+    return await db.select().from(memorialDocumentaries).where(eq(memorialDocumentaries.memorialId, memorialId)).orderBy(desc(memorialDocumentaries.createdAt));
+  }
+
+  async getMemorialDocumentary(id: string): Promise<MemorialDocumentary | undefined> {
+    const [documentary] = await db.select().from(memorialDocumentaries).where(eq(memorialDocumentaries.id, id));
+    return documentary || undefined;
+  }
+
+  async createMemorialDocumentary(documentary: InsertMemorialDocumentary): Promise<MemorialDocumentary> {
+    const [created] = await db.insert(memorialDocumentaries).values(documentary as any).returning();
+    return created;
+  }
+
+  async updateMemorialDocumentary(id: string, documentary: Partial<InsertMemorialDocumentary>): Promise<MemorialDocumentary | undefined> {
+    const [updated] = await db.update(memorialDocumentaries).set(documentary as any).where(eq(memorialDocumentaries.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMemorialDocumentary(id: string): Promise<void> {
+    await db.delete(memorialDocumentaries).where(eq(memorialDocumentaries.id, id));
+  }
+
+  async incrementDocumentaryViewCount(id: string): Promise<void> {
+    await db.update(memorialDocumentaries)
+      .set({ viewCount: sql`${memorialDocumentaries.viewCount} + 1` })
+      .where(eq(memorialDocumentaries.id, id));
   }
 
   // Scheduled Message operations

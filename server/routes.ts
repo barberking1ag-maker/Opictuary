@@ -68,6 +68,7 @@ import {
   insertMemorialEventRsvpSchema,
   insertFuneralProgramSchema,
   insertProgramItemSchema,
+  insertMemorialDocumentarySchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -1346,6 +1347,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { leftAt, durationMinutes } = req.body;
       await storage.updateLiveStreamViewer(req.params.viewerId, new Date(leftAt), durationMinutes);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Documentary routes
+  app.get("/api/memorials/:memorialId/documentaries", async (req, res) => {
+    try {
+      const documentaries = await storage.getMemorialDocumentaries(req.params.memorialId);
+      res.json(documentaries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/documentaries/:documentaryId", async (req, res) => {
+    try {
+      const documentary = await storage.getMemorialDocumentary(req.params.documentaryId);
+      if (!documentary) {
+        return res.status(404).json({ error: "Documentary not found" });
+      }
+      res.json(documentary);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/documentaries", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const userId = req.user.claims.sub;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to create documentaries for this memorial" });
+      }
+
+      const data = insertMemorialDocumentarySchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+        createdBy: userId,
+      });
+      const documentary = await storage.createMemorialDocumentary(data);
+      res.status(201).json(documentary);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/documentaries/:documentaryId", isAuthenticated, async (req: any, res) => {
+    try {
+      const documentary = await storage.getMemorialDocumentary(req.params.documentaryId);
+      if (!documentary) {
+        return res.status(404).json({ error: "Documentary not found" });
+      }
+
+      const memorial = await storage.getMemorial(documentary.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(documentary.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const data = insertMemorialDocumentarySchema.partial().parse(req.body);
+      const updated = await storage.updateMemorialDocumentary(req.params.documentaryId, data);
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/documentaries/:documentaryId", isAuthenticated, async (req: any, res) => {
+    try {
+      const documentary = await storage.getMemorialDocumentary(req.params.documentaryId);
+      if (!documentary) {
+        return res.status(404).json({ error: "Documentary not found" });
+      }
+
+      const memorial = await storage.getMemorial(documentary.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(documentary.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteMemorialDocumentary(req.params.documentaryId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/documentaries/:documentaryId/view", async (req, res) => {
+    try {
+      await storage.incrementDocumentaryViewCount(req.params.documentaryId);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
