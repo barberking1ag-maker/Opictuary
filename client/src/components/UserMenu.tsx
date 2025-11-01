@@ -93,7 +93,7 @@ export function UserMenu() {
         <Link href="/upcoming-messages">
           <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-upcoming-messages">
             <Calendar className="mr-2 h-4 w-4" />
-            <span>Future Messages</span>
+            <span>Legacy Messages</span>
           </DropdownMenuItem>
         </Link>
         <Link href="/profile?tab=settings">
