@@ -63,7 +63,7 @@ export default function CelebrityEstateContent() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/celebrity-memorials", celebrityMemorialId, "fan-content"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/celebrity-memorials", celebrityMemorialId, "fan-content", "admin"] });
       setIsCreateOpen(false);
       form.reset();
       toast({
@@ -86,7 +86,7 @@ export default function CelebrityEstateContent() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/celebrity-memorials", celebrityMemorialId, "fan-content"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/celebrity-memorials", celebrityMemorialId, "fan-content", "admin"] });
       toast({
         title: "Content Published",
         description: "Content is now visible to the public.",

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar as CalendarIcon, MapPin, Users, Plus, Clock, Bell, Mail, MessageSquare } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Users, Plus, Clock, Bell, Mail, MessageSquare, Flame, Shield, Heart as HeartIcon, TreePine, Footprints, GraduationCap } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -51,13 +51,13 @@ const eventSchema = z.object({
 type EventFormData = z.infer<typeof eventSchema>;
 
 const eventTypes = [
-  { value: "balloon_release", label: "Balloon Release", icon: "🎈" },
-  { value: "candlelight_vigil", label: "Candlelight Vigil", icon: "🕯️" },
-  { value: "memorial_picnic", label: "Memorial Picnic", icon: "🧺" },
-  { value: "memorial_barbecue", label: "Memorial Barbecue", icon: "🍖" },
-  { value: "tree_planting", label: "Tree Planting", icon: "🌳" },
-  { value: "charity_walk", label: "Charity Walk", icon: "🚶" },
-  { value: "scholarship_announcement", label: "Scholarship Announcement", icon: "🎓" },
+  { value: "balloon_release", label: "Balloon Release", icon: HeartIcon },
+  { value: "candlelight_vigil", label: "Candlelight Vigil", icon: Flame },
+  { value: "memorial_picnic", label: "Memorial Picnic", icon: Users },
+  { value: "memorial_barbecue", label: "Memorial Barbecue", icon: Flame },
+  { value: "tree_planting", label: "Tree Planting", icon: TreePine },
+  { value: "charity_walk", label: "Charity Walk", icon: Footprints },
+  { value: "scholarship_announcement", label: "Scholarship Announcement", icon: GraduationCap },
 ];
 
 export default function MemorialEvents() {
@@ -116,7 +116,7 @@ export default function MemorialEvents() {
 
   const getEventTypeDisplay = (type: string) => {
     const eventType = eventTypes.find(t => t.value === type);
-    return eventType || { value: type, label: type, icon: "📅" };
+    return eventType || { value: type, label: type, icon: CalendarIcon };
   };
 
   return (
@@ -152,11 +152,17 @@ export default function MemorialEvents() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {eventTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.icon} {type.label}
-                            </SelectItem>
-                          ))}
+                          {eventTypes.map((type) => {
+                            const Icon = type.icon;
+                            return (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div className="flex items-center gap-2">
+                                  <Icon className="w-4 h-4" />
+                                  {type.label}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -297,7 +303,12 @@ export default function MemorialEvents() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="text-3xl mb-2">{eventType.icon}</div>
+                      <div className="mb-2">
+                        {(() => {
+                          const Icon = eventType.icon;
+                          return <Icon className="w-8 h-8 text-primary" />;
+                        })()}
+                      </div>
                       <CardTitle className="text-lg">{eventType.label}</CardTitle>
                     </div>
                     {isPast ? (
@@ -337,7 +348,12 @@ export default function MemorialEvents() {
             <div className="space-y-6">
               <DialogHeader>
                 <div className="flex items-start gap-4">
-                  <div className="text-5xl">{getEventTypeDisplay(selectedEvent.eventType).icon}</div>
+                  <div>
+                    {(() => {
+                      const Icon = getEventTypeDisplay(selectedEvent.eventType).icon;
+                      return <Icon className="w-12 h-12 text-primary" />;
+                    })()}
+                  </div>
                   <div className="flex-1">
                     <DialogTitle className="text-2xl mb-2">
                       {getEventTypeDisplay(selectedEvent.eventType).label}
