@@ -1,92 +1,43 @@
 # Memorial Platform (Opictuary)
 
 ## Overview
-Opictuary is a digital memorial platform for preserving memories of deceased loved ones, offering features like photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. It includes functionalities like Future Messages, enhanced memorial page design, database-backed saved memorials with categorization, server-side content moderation, a funeral program creation system, and merchandise services integration. The platform aims for dignified design, multi-faith customization, and privacy. The business model includes B2B partnerships with funeral homes, flower shops, merchandise vendors, and correctional facilities, generating revenue from platform fees, advertisements, partnerships, prison access services, and merchandise referrals.
+Opictuary is a digital memorial platform designed to preserve memories of deceased loved ones. It offers a comprehensive suite of features including photo/video sharing, crowdfunding, legacy event planning, grief support, and celebrity tributes. Key functionalities include Future Messages, enhanced memorial page design, database-backed saved memorials with categorization, server-side content moderation, a funeral program creation system, merchandise services integration, and a unique prison access system. The platform emphasizes dignified design, multi-faith customization, and privacy. The business model includes B2B partnerships with funeral homes, flower shops, merchandise vendors, and correctional facilities, generating revenue through platform fees, advertisements, partnerships, prison access services, and merchandise referrals.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-**Technology Stack:** React 18 with TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS.
-**UI/UX Decisions:** "Dignity in Digital" design philosophy with a respectful, timeless aesthetic. Features multi-faith theming (rich purple backgrounds, gold accents), Radix UI primitives, shadcn/ui, custom component library, and specific typography (Crimson Text, Inter). It is a production-ready Progressive Web App (PWA) with smart install prompts, offline support, service worker caching, and standalone mode for iOS and Android.
-**Key Components:** Over 30 reusable components for navigation, memorial displays, fundraising, legacy features, special memorials, and admin functions.
-**Pages Implemented:** 18+ distinct pages covering core functionalities like Home, UserProfile, MyMemorials, CelebrityMemorials, GriefSupport, PartnerSignup, AdminDashboard, and others.
+### UI/UX Decisions
+The platform follows a "Dignity in Digital" design philosophy, employing a respectful and timeless aesthetic with multi-faith theming (rich purple backgrounds, gold accents). It utilizes Radix UI primitives, shadcn/ui, a custom component library, and specific typography (Crimson Text, Inter). The frontend is a production-ready Progressive Web App (PWA) with smart install prompts, offline support, service worker caching, and standalone mode.
 
-### Backend Architecture
-**Technology Stack:** Express.js with Node.js and TypeScript, designed as a RESTful API.
-**API Endpoints:** 80+ endpoints across 14 feature areas including Authentication & User Management, Memorials (CRUD, invite codes), QR Code System, Memories & Condolences, Fundraising & Donations (Stripe integration), Legacy Features (scheduled messages, event planning), Celebrity Memorials, Essential Workers, Self-Obituary, Advertisement Platform, Funeral Home Partners, Flower Shop Partners, Prison Access System, Push Notifications, and Analytics.
-**Content Moderation System:** Server-side profanity filter applied to user-generated content before database persistence, blocking strong offensive language.
+### Technical Implementations
+**Frontend:** Built with React 18, TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS. It includes over 30 reusable components and 18+ distinct pages for core functionalities.
+**Backend:** Developed using Express.js with Node.js and TypeScript, designed as a RESTful API with over 80 endpoints across 14 feature areas.
+**Content Moderation:** Implements server-side profanity filtering for user-generated content.
+**Authentication:** Integrates Replit Auth (OpenID Connect) for session-based authentication.
+**Authorization:** Employs role-based access control with granular permissions.
+**Data Storage:** Uses PostgreSQL (Neon serverless) with Drizzle ORM, comprising over 25 tables.
+**Security:** Features Zod validation, whitelisted fields, session-based authentication, CSRF protection, protected routes, and lazy-loaded Stripe.
 
-### Data Storage
-**Database:** PostgreSQL (Neon serverless) with Drizzle ORM.
-**Database Tables:** Over 25 tables covering all core features, business systems, prison access, analytics, and infrastructure.
-**Privacy & Access Control:** Invite code system for private memorials, optional public settings, role-based admin permissions, and verified QR code issuance.
-**Security Patterns:** Zod validation, whitelisted fields, session-based authentication, CSRF protection, protected routes, lazy-loaded Stripe.
-
-### Authentication & Authorization
-**Replit Auth Integration:** OpenID Connect (OIDC) via Replit for session-based authentication using PostgreSQL.
-**Authorization Patterns:** Role-based access control with granular permissions.
-
-### Key Features & Systems
-**Memorial Photo & Video Gallery:** Comprehensive gallery system with responsive grid layout displaying all approved memorial photos and videos. Features interactive lightbox modal for full-size media viewing with advanced interactive capabilities including:
-- **Heart/Like Reactions**: Users can react to individual photos and videos with heart reactions. Includes toggle functionality, real-time count display, visual feedback (filled heart when reacted), and multi-layer protection against duplicate reactions (client-side lock + server-side idempotency + database unique constraints).
-- **Share Functionality**: Share individual memories via Web Share API (mobile/modern browsers) or clipboard fallback with toast notifications.
-- **Download Feature**: Direct download of photos (not videos) to user's device with success notifications.
-- **Keyboard Navigation**: Full keyboard accessibility with left/right arrow keys to navigate between memories and Escape to close lightbox.
-- **Navigation Controls**: Visual prev/next buttons in lightbox for mouse navigation.
-- Integrated commenting system for individual memories, condolences functionality for each photo/video, and full support for both authenticated users and guests (guests provide name to participate). The gallery automatically detects video formats (mp4, webm, ogg, mov) and external video platforms (YouTube, Vimeo), displaying appropriate playback controls. Uses React Query with optimistic updates for instant UI feedback and real-time synchronization.
-**Memorial QR Code System:** Comprehensive QR code generation for tombstones and memorial cards. Families can generate printable QR codes that link to memorial pages containing photos, videos, memories, and condolences. Features professional PDF download with purple/gold branding, clear scanning instructions, and the Opictuary tagline. QR codes support three purposes: tombstone upload (allows cemetery visitors to upload photos/videos), memorial view (links to memorial page), and general photo/video upload for memorial cards. QR codes can be continuously updated as families add new content to memorials.
+### Feature Specifications
+**Memorial Photo & Video Gallery:** Comprehensive gallery with interactive lightbox, heart/like reactions, share functionality (Web Share API/clipboard), download options, keyboard navigation, and integrated commenting. Supports various video formats and external platforms.
+**Memorial QR Code System:** Generates printable QR codes for tombstones and memorial cards, linking to memorial pages. Codes support tombstone upload, memorial view, and general photo/video upload.
 **Prison Access System:** Provides secure, monitored access for incarcerated individuals to memorials, including identity verification, payment, time-limited access tokens, and session monitoring.
-**Flower Shop Partnership System:** Connects users with local florists for sympathy flower delivery, operating on a 20% commission model. Includes partner registration, location-based search, order tracking, and commission management.
-**Saved Memorials System:** Allows authenticated users to save memorials with relationship categorization (family, friend, colleague, etc.) and personal notes, persisting data in PostgreSQL.
-**Future Messages System:** Enables memorial creators to schedule messages to be delivered to loved ones on future occasions, with pre-written templates, recurrence support, email delivery, and media attachments.
-**Merchandise Services Integration:** Connects users with external services for physical memorial products like custom T-shirts, cardboard cutouts, and holographic tributes, with tracking for affiliate partnerships.
-**Essential Worker Memorial Creation System:** Comprehensive creation flow for honoring first responders and essential workers with category-specific forms. Features interactive category cards (Police, Fire, Medical, Military) with dedicated creation paths. The 2-step form wizard includes:
-- **Step 1 - Basic Information**: Name, profession, category, department, years of service, biography, dates, and photo upload
-- **Step 2 - Professional Details**: Dynamic category-specific fields including rank, badge number, unit, service branch, specialization, precinct, station, deployments (array), certifications (array), line-of-duty death status, and honors
-- **Professional Details Display**: Memorial cards show professional credentials with category-specific badges (rank, badge number, unit details, etc.)
-- **Database Schema**: Extended essential_workers_memorials table with dedicated columns for rank, badge_number, unit, service_branch, specialization, precinct, station, deployments (JSON array), and certifications (text array)
-**Celebrity Memorial Interactive System with Verification:** Enhanced celebrity memorial platform with comprehensive profession categorization and family/legal verification. Features 10 interactive profession category cards for browsing (Sports & Athletics, Actors & Actresses, Musicians, Royalty & Nobility, Philanthropists, Business Leaders, Political Figures, Artists & Writers, Comedians, Scientists & Educators). The 4-step creation wizard includes:
-- **Step 1 - Basic Information**: Name, title, profession category (with sub-profession selection for specific fields like Basketball, Film, Pop Music, etc.), dates, photo URL, and biography
-- **Step 2 - Charity Information**: Charity name, donation amount, platform fee percentage
-- **Step 3 - Achievements & Awards**: Optional arrays for achievements (title, year, description) and awards (name, year, category)
-- **Step 4 - Verification**: Submitter details (name, email, phone) with relationship to deceased (family, lawyer, power of attorney, estate executor, publicist, foundation representative, or other authorized) for verification purposes
-- **Verification System**: All submissions default to "pending" status and require admin approval. Captures submitter relationship and contact information for verification by family members, lawyers, or authorized representatives
-- **Customization Options**: Memorial template selection, custom theme colors (primary, secondary, accent), and profession-specific stickers
-- **Database Schema**: Extended celebrity_memorials table with profession_category, sub_profession, achievements (JSON array), awards (JSON array), verification_status, verified_by, verification_date, verification_documents (JSON array), submitter fields, memorial_template, custom_stickers (JSON array), and theme_colors (JSON object)
-**Celebrity Fan Content System:** Exclusive content platform for celebrity memorial estates to share special videos, photos, and messages with fans. Admin-only creation and publishing ensures only verified estate representatives can upload content. Features:
-- **Content Types**: Video messages from estates, exclusive photos, behind-the-scenes content, and tribute videos
-- **Security**: Admin authentication required for creation/publishing; unpublished content hidden from public API with 404 responses
-- **Draft Management**: Admin dashboard view for reviewing unpublished content before making it public
-- **View Tracking**: Analytics for published content views (unpublished content views don't inflate metrics)
-- **Estate Integrity**: No comments allowed on celebrity memorials to maintain dignity and prevent spam
-- **Database Schema**: celebrityFanContent table with contentType, videoUrl, photoUrl, caption, isPublished, viewCount, and celebrityMemorialId foreign key
-**Funeral Program Audio & Bluetooth System:** Enhanced funeral service programs with audio capabilities for ceremony music, readings, and Bluetooth connectivity. Features:
-- **Program-Level Audio**: Background music for entire ceremony with Bluetooth device pairing
-- **Item-Level Audio**: Individual audio clips for readings, eulogies, musical tributes, and prayers
-- **Bluetooth Support**: enableBluetoothAudio flag and bluetoothDeviceName for wireless speaker connectivity
-- **Audio Types**: Support for background music, readings, eulogies, musical tributes, prayers, and silence/reflection moments
-- **Database Schema**: funeralPrograms table extended with backgroundAudioUrl, enableBluetoothAudio, bluetoothDeviceName; programItems table extended with audioUrl and audioType
-**Memorial Events System:** Comprehensive event planning for memorial gatherings with notification capabilities. Features:
-- **Event Types**: Balloon releases, candlelight vigils, memorial picnics, memorial barbecues, tree plantings, charity walks, and scholarship announcements
-- **Notifications**: Email and text reminders with sendReminders flag for attendee coordination
-- **RSVP Tracking**: Guest list management with attendance confirmation
-- **Database Schema**: memorialEvents table with eventType, eventDate, location, description, sendReminders; memorialEventRsvps for guest tracking
-**Cemetery Location Mapping:** Interactive map integration for cemetery burial sites with coordinates and directions. Features:
-- **Location Storage**: Latitude/longitude coordinates in memorials.cemeteryCoordinates field
-- **Map Integration Ready**: Prepared for Google Maps, Mapbox, or OpenStreetMap integration
-- **Cemetery Information**: Cemetery name, address, section, plot number for precise location
-- **Visitor Guidance**: Enable families to share exact burial locations for visitors and mourners
-**Revenue Model:** Generates revenue through configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
+**Flower Shop Partnership System:** Connects users with local florists for sympathy flower delivery, operating on a commission model.
+**Saved Memorials System:** Allows authenticated users to save memorials with categorization and personal notes.
+**Future Messages System:** Enables scheduling of future messages with templates, recurrence support, email delivery, media attachments, and a global dashboard for management.
+**Merchandise Services Integration:** Connects users with external services for physical memorial products.
+**Essential Worker Memorial Creation System:** Guided creation flow for honoring first responders and essential workers with category-specific forms and professional detail display.
+**Celebrity Memorial Interactive System:** Enhanced platform with profession categorization, a 4-step creation wizard including charity information, achievements, awards, and a robust family/legal verification process.
+**Celebrity Fan Content System:** Exclusive content platform for celebrity memorial estates (videos, photos, messages) with admin-only creation/publishing, draft management, and view tracking.
+**Funeral Program Audio & Bluetooth System:** Enhanced funeral service programs with program-level and item-level audio capabilities, and Bluetooth connectivity for wireless speakers.
+**Memorial Events System:** Comprehensive event planning for memorial gatherings with event types, email/text notifications, and RSVP tracking.
+**Cemetery Location Mapping:** Storage of cemetery coordinates and information for future map integration.
+**Revenue Model:** Configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
 
-### Analytics & Monitoring
-**Admin Dashboard:** Real-time platform statistics (users, memorials, donations, revenue, page views) at `/admin` for authorized users.
-**Analytics Integration:** Google Analytics 4 for general tracking and Plausible Analytics for privacy-focused web analytics. Custom database tables for internal page view and event tracking.
-
-### Mobile App Publishing
-**Android/Google Play Store & iOS/App Store:** Production build ready with Capacitor for native app deployment. Requires developer accounts and submission materials.
+### System Design Choices
+The system prioritizes privacy with an invite code system for private memorials, optional public settings, and role-based admin permissions. It is built for scalability and maintainability with a clear separation of concerns between frontend and backend.
 
 ## External Dependencies
 *   **Stripe**: Payment processing.

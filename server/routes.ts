@@ -300,10 +300,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/memorials", async (req, res) => {
+  app.post("/api/memorials", isAuthenticated, async (req: any, res) => {
     try {
+      const userEmail = req.user.claims.email;
       const { referralCode, ...memorialData } = req.body;
-      const data = insertMemorialSchema.parse(memorialData);
+      
+      // Auto-set creatorEmail from authenticated user for security
+      const dataWithCreator = {
+        ...memorialData,
+        creatorEmail: userEmail,
+      };
+      
+      const data = insertMemorialSchema.parse(dataWithCreator);
       const memorial = await storage.createMemorial(data);
 
       if (referralCode && referralCode.trim() !== "") {

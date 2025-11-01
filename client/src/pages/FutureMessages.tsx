@@ -83,7 +83,7 @@ export default function FutureMessages() {
   const { toast } = useToast();
 
   const { data: messages = [], isLoading } = useQuery<FutureMessage[]>({
-    queryKey: ["/api/memorials", memorialId, "future-messages"],
+    queryKey: ["/api/memorials", memorialId, "scheduled-messages"],
   });
 
   const form = useForm<MessageFormData>({
@@ -102,11 +102,24 @@ export default function FutureMessages() {
 
   const createMessageMutation = useMutation({
     mutationFn: async (data: MessageFormData) => {
-      const res = await apiRequest("POST", `/api/memorials/${memorialId}/future-messages`, data);
+      // Transform frontend field names to backend field names
+      const backendData = {
+        recipientName: data.recipientName,
+        recipientEmail: data.recipientEmail,
+        eventType: data.occasion,
+        eventDate: data.scheduledDate.split('T')[0], // Extract date part only
+        sendTime: data.scheduledDate.split('T')[1], // Extract time part
+        message: data.message,
+        isRecurring: data.isRecurring,
+        recurrenceInterval: data.recurrencePattern as 'yearly' | 'monthly' | 'custom' | undefined,
+        attachmentUrls: data.mediaAttachmentUrl ? [data.mediaAttachmentUrl] : undefined,
+        status: 'pending' as const,
+      };
+      const res = await apiRequest("POST", `/api/memorials/${memorialId}/scheduled-messages`, backendData);
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/memorials", memorialId, "future-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/memorials", memorialId, "scheduled-messages"] });
       setIsCreateOpen(false);
       form.reset();
       toast({
