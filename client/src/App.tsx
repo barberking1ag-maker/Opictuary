@@ -42,7 +42,7 @@ import FutureMessages from "@/pages/FutureMessages";
 import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell, Calendar } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -86,6 +86,18 @@ function Router() {
                 <Button variant="ghost" size="sm" data-testid="nav-essential-workers" className="text-sm">
                   <Heart className="w-4 h-4 mr-1.5" />
                   Essential Workers
+                </Button>
+              </Link>
+              <Link href="/upcoming-messages">
+                <Button variant="ghost" size="sm" data-testid="nav-legacy-messages" className="text-sm">
+                  <Calendar className="w-4 h-4 mr-1.5" />
+                  Legacy Messages
+                </Button>
+              </Link>
+              <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81">
+                <Button variant="ghost" size="sm" data-testid="nav-photo-gallery" className="text-sm">
+                  <Image className="w-4 h-4 mr-1.5" />
+                  Photo Gallery
                 </Button>
               </Link>
               <Link href="/create-memorial">
