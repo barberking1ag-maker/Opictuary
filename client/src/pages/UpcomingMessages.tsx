@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Mail, Clock, MessageSquare, Filter, ChevronRight } from "lucide-react";
-import { format, isAfter, isBefore, addDays } from "date-fns";
+import { format, isBefore, addDays, startOfDay, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -55,12 +55,25 @@ export default function UpcomingMessages() {
   });
 
   const now = new Date();
-  const next7Days = addDays(now, 7);
-  const next30Days = addDays(now, 30);
+  const today = startOfDay(now);
+  const next7Days = addDays(today, 7);
+  const next30Days = addDays(today, 30);
 
-  const upcomingMessages = messages?.filter(m => !m.isSent && m.eventDate && isAfter(new Date(m.eventDate), now)) || [];
-  const next7DaysMessages = upcomingMessages.filter(m => m.eventDate && isBefore(new Date(m.eventDate), next7Days));
-  const next30DaysMessages = upcomingMessages.filter(m => m.eventDate && isBefore(new Date(m.eventDate), next30Days));
+  // Helper to parse event date as local date (not UTC)
+  const parseEventDate = (eventDate: string) => {
+    // If date is in YYYY-MM-DD format, parse as local date
+    if (/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+      const [year, month, day] = eventDate.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // Otherwise use parseISO which handles timestamps correctly
+    return parseISO(eventDate);
+  };
+
+  // Include messages scheduled for today or later that haven't been sent yet
+  const upcomingMessages = messages?.filter(m => !m.isSent && m.eventDate && !isBefore(parseEventDate(m.eventDate), today)) || [];
+  const next7DaysMessages = upcomingMessages.filter(m => m.eventDate && isBefore(parseEventDate(m.eventDate), next7Days));
+  const next30DaysMessages = upcomingMessages.filter(m => m.eventDate && isBefore(parseEventDate(m.eventDate), next30Days));
   const draftMessages = messages?.filter(m => m.status === 'draft') || [];
   const sentMessages = messages?.filter(m => m.isSent) || [];
 
@@ -70,6 +83,9 @@ export default function UpcomingMessages() {
       : eventTypeLabels[message.eventType] || message.eventType;
 
     const statusInfo = statusConfig[message.status as keyof typeof statusConfig] || statusConfig.pending;
+    
+    // Parse event date using the same helper for consistency
+    const eventDate = message.eventDate ? parseEventDate(message.eventDate) : null;
 
     return (
       <Card className="hover-elevate active-elevate-2 transition-all" data-testid={`card-message-${message.id}`}>
@@ -93,10 +109,10 @@ export default function UpcomingMessages() {
                 <span className="truncate">{eventLabel}</span>
               </CardDescription>
             </div>
-            {message.eventDate && (
+            {eventDate && (
               <div className="text-right shrink-0">
                 <div className="text-sm font-medium text-purple-200">
-                  {format(new Date(message.eventDate), "MMM d, yyyy")}
+                  {format(eventDate, "MMM d, yyyy")}
                 </div>
                 {message.sendTime && (
                   <div className="text-xs text-purple-400 flex items-center justify-end gap-1 mt-1">
