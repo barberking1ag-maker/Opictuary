@@ -461,6 +461,39 @@ export const essentialWorkersMemorials = pgTable("essential_workers_memorials", 
   index("idx_essential_workers_created_at").on(table.createdAt),
 ]);
 
+// Hood/Neighborhood Memorials
+export const hoodMemorials = pgTable("hood_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  nickname: text("nickname"),
+  birthDate: text("birth_date").notNull(),
+  deathDate: text("death_date").notNull(),
+  biography: text("biography"),
+  epitaph: text("epitaph"),
+  imageUrl: text("image_url"),
+  // Neighborhood/Community Details
+  neighborhoodName: text("neighborhood_name").notNull(),
+  neighborhoodLogoUrl: text("neighborhood_logo_url"),
+  clubName: text("club_name"),
+  clubLogoUrl: text("club_logo_url"),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  role: text("role"), // "Community Leader", "Youth Mentor", "Block Captain", etc.
+  communityImpact: text("community_impact"),
+  legendStatus: text("legend_status"), // "Hood Legend", "Community Icon", "Neighborhood OG", etc.
+  // Memorial Settings
+  fontFamily: text("font_family"),
+  symbol: text("symbol"),
+  isPublic: boolean("is_public").default(true),
+  creatorEmail: text("creator_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_hood_memorials_neighborhood").on(table.neighborhoodName),
+  index("idx_hood_memorials_city_state").on(table.city, table.state),
+  index("idx_hood_memorials_is_public").on(table.isPublic),
+  index("idx_hood_memorials_created_at").on(table.createdAt),
+]);
+
 // Self-Written Obituaries & Final Words
 export const selfWrittenObituaries = pgTable("self_written_obituaries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1281,6 +1314,11 @@ export const insertEssentialWorkerMemorialSchema = createInsertSchema(essentialW
   createdAt: true,
 });
 
+export const insertHoodMemorialSchema = createInsertSchema(hoodMemorials).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertSelfWrittenObituarySchema = createInsertSchema(selfWrittenObituaries).omit({
   id: true,
   createdAt: true,
@@ -1511,6 +1549,9 @@ export type MusicPlaylist = typeof musicPlaylists.$inferSelect;
 
 export type InsertEssentialWorkerMemorial = z.infer<typeof insertEssentialWorkerMemorialSchema>;
 export type EssentialWorkerMemorial = typeof essentialWorkersMemorials.$inferSelect;
+
+export type InsertHoodMemorial = z.infer<typeof insertHoodMemorialSchema>;
+export type HoodMemorial = typeof hoodMemorials.$inferSelect;
 
 export type InsertSelfWrittenObituary = z.infer<typeof insertSelfWrittenObituarySchema>;
 export type SelfWrittenObituary = typeof selfWrittenObituaries.$inferSelect;

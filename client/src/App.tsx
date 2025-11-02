@@ -12,6 +12,8 @@ import CreateCelebrityMemorial from "@/pages/CreateCelebrityMemorial";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
 import EssentialWorkers from "@/pages/EssentialWorkers";
 import CreateEssentialWorkerMemorial from "@/pages/CreateEssentialWorkerMemorial";
+import HoodMemorials from "@/pages/HoodMemorials";
+import CreateHoodMemorial from "@/pages/CreateHoodMemorial";
 import SelfObituary from "@/pages/SelfObituary";
 import CreateMemorial from "@/pages/CreateMemorial";
 import CustomizationDemo from "@/pages/CustomizationDemo";
@@ -176,6 +178,8 @@ function Router() {
         <Route path="/prison-access" component={PrisonAccessRequest} />
         <Route path="/essential-workers" component={EssentialWorkers} />
         <Route path="/create-essential-worker" component={CreateEssentialWorkerMemorial} />
+        <Route path="/hood-memorials" component={HoodMemorials} />
+        <Route path="/create-hood-memorial" component={CreateHoodMemorial} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

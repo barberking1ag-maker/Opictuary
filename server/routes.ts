@@ -38,6 +38,7 @@ import {
   insertLegacyEventSchema,
   insertMusicPlaylistSchema,
   insertEssentialWorkerMemorialSchema,
+  insertHoodMemorialSchema,
   insertSelfWrittenObituarySchema,
   insertAdvertisementSchema,
   insertAdvertisementSaleSchema,
@@ -2168,6 +2169,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/essential-workers/:id", async (req, res) => {
     try {
       await storage.deleteEssentialWorkerMemorial(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Hood Memorial routes
+  app.get("/api/hood-memorials", async (req, res) => {
+    try {
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+
+      const city = req.query.city as string | undefined;
+      const state = req.query.state as string | undefined;
+      
+      const [memorials, count] = await Promise.all([
+        storage.listHoodMemorials(city, state, limit, offset),
+        storage.getHoodMemorialsCount(city, state),
+      ]);
+      
+      res.json({
+        memorials,
+        count,
+        limit,
+        offset,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/hood-memorials/:id", async (req, res) => {
+    try {
+      const memorial = await storage.getHoodMemorial(req.params.id);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/hood-memorials", async (req, res) => {
+    try {
+      const data = insertHoodMemorialSchema.parse(req.body);
+      const memorial = await storage.createHoodMemorial(data);
+      res.status(201).json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/hood-memorials/:id", async (req, res) => {
+    try {
+      const data = insertHoodMemorialSchema.partial().parse(req.body);
+      const memorial = await storage.updateHoodMemorial(req.params.id, data);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/hood-memorials/:id", async (req, res) => {
+    try {
+      await storage.deleteHoodMemorial(req.params.id);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });

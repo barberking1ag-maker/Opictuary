@@ -285,6 +285,22 @@ export default function Landing() {
                 </CardContent>
               </Card>
             </Link>
+
+            {/* Feature 13 - Hood Memorials */}
+            <Link href="/hood-memorials" className="block" data-testid="link-feature-hood-memorials">
+              <Card className="hover-elevate h-full" data-testid="card-feature-hood-memorials">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Hood Memorials</h3>
+                  <p className="text-muted-foreground">
+                    Honor neighborhood legends, community leaders, and local icons. 
+                    Upload club or neighborhood logos and celebrate those who left their mark on the streets they called home.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

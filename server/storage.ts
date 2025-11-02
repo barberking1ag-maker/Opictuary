@@ -24,6 +24,7 @@ import {
   legacyEvents,
   musicPlaylists,
   essentialWorkersMemorials,
+  hoodMemorials,
   selfWrittenObituaries,
   advertisements,
   advertisementSales,
@@ -103,6 +104,8 @@ import {
   type InsertMusicPlaylist,
   type EssentialWorkerMemorial,
   type InsertEssentialWorkerMemorial,
+  type HoodMemorial,
+  type InsertHoodMemorial,
   type SelfWrittenObituary,
   type InsertSelfWrittenObituary,
   type Advertisement,
@@ -323,6 +326,14 @@ export interface IStorage {
   createEssentialWorkerMemorial(memorial: InsertEssentialWorkerMemorial): Promise<EssentialWorkerMemorial>;
   updateEssentialWorkerMemorial(id: string, memorial: Partial<InsertEssentialWorkerMemorial>): Promise<EssentialWorkerMemorial | undefined>;
   deleteEssentialWorkerMemorial(id: string): Promise<void>;
+
+  // Hood Memorial operations
+  listHoodMemorials(city?: string, state?: string, limit?: number, offset?: number): Promise<HoodMemorial[]>;
+  getHoodMemorialsCount(city?: string, state?: string): Promise<number>;
+  getHoodMemorial(id: string): Promise<HoodMemorial | undefined>;
+  createHoodMemorial(memorial: InsertHoodMemorial): Promise<HoodMemorial>;
+  updateHoodMemorial(id: string, memorial: Partial<InsertHoodMemorial>): Promise<HoodMemorial | undefined>;
+  deleteHoodMemorial(id: string): Promise<void>;
 
   // Self-Written Obituary operations
   getSelfWrittenObituaryByEmail(email: string): Promise<SelfWrittenObituary | undefined>;
@@ -1366,6 +1377,66 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEssentialWorkerMemorial(id: string): Promise<void> {
     await db.delete(essentialWorkersMemorials).where(eq(essentialWorkersMemorials.id, id));
+  }
+
+  // Hood Memorial operations
+  async listHoodMemorials(city?: string, state?: string, limit: number = 50, offset: number = 0): Promise<HoodMemorial[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    const conditions = [eq(hoodMemorials.isPublic, true)];
+    
+    if (city && city.trim() !== "") {
+      conditions.push(eq(hoodMemorials.city, city));
+    }
+    if (state && state.trim() !== "") {
+      conditions.push(eq(hoodMemorials.state, state));
+    }
+
+    return await db
+      .select()
+      .from(hoodMemorials)
+      .where(and(...conditions))
+      .orderBy(desc(hoodMemorials.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+
+  async getHoodMemorialsCount(city?: string, state?: string): Promise<number> {
+    const conditions = [eq(hoodMemorials.isPublic, true)];
+    
+    if (city && city.trim() !== "") {
+      conditions.push(eq(hoodMemorials.city, city));
+    }
+    if (state && state.trim() !== "") {
+      conditions.push(eq(hoodMemorials.state, state));
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(hoodMemorials)
+      .where(and(...conditions));
+    return result.count;
+  }
+
+  async getHoodMemorial(id: string): Promise<HoodMemorial | undefined> {
+    const [memorial] = await db.select().from(hoodMemorials).where(eq(hoodMemorials.id, id));
+    return memorial || undefined;
+  }
+
+  async createHoodMemorial(memorial: InsertHoodMemorial): Promise<HoodMemorial> {
+    const [created] = await db.insert(hoodMemorials).values(memorial).returning();
+    return created;
+  }
+
+  async updateHoodMemorial(id: string, memorial: Partial<InsertHoodMemorial>): Promise<HoodMemorial | undefined> {
+    const [updated] = await db.update(hoodMemorials)
+      .set(memorial)
+      .where(eq(hoodMemorials.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteHoodMemorial(id: string): Promise<void> {
+    await db.delete(hoodMemorials).where(eq(hoodMemorials.id, id));
   }
 
   // Self-Written Obituary operations
