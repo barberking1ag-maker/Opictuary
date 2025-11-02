@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Users, Shield, Smartphone, Calendar, DollarSign, Music, MessageSquare } from "lucide-react";
+import { Heart, Users, Shield, Smartphone, Calendar, DollarSign, Music, MessageSquare, QrCode } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 
 export default function Landing() {
@@ -95,89 +95,172 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <Card className="hover-elevate" data-testid="card-feature-dignity">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Dignity First</h3>
-                <p className="text-muted-foreground">
-                  Every memorial is designed with respect and grace. No intrusive ads, no distractions – 
-                  just a beautiful space to honor your loved one.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/about" className="block" data-testid="link-feature-dignity">
+              <Card className="hover-elevate h-full" data-testid="card-feature-dignity">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Dignity First</h3>
+                  <p className="text-muted-foreground">
+                    Every memorial is designed with respect and grace. No intrusive ads, no distractions – 
+                    just a beautiful space to honor your loved one.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Feature 2 */}
-            <Card className="hover-elevate" data-testid="card-feature-everyone">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Made for Everyone</h3>
-                <p className="text-muted-foreground">
-                  Whether honoring a parent, child, friend, or partner – whether they passed recently or years ago – 
-                  Opictuary adapts to your needs and beliefs.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/self-obituary" className="block" data-testid="link-feature-everyone">
+              <Card className="hover-elevate h-full" data-testid="card-feature-everyone">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Heart className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Made for Everyone</h3>
+                  <p className="text-muted-foreground">
+                    Whether honoring a parent, child, friend, or partner – whether they passed recently or years ago – 
+                    Opictuary adapts to your needs and beliefs.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Feature 3 */}
-            <Card className="hover-elevate" data-testid="card-feature-accessible">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Smartphone className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Accessible Anywhere</h3>
-                <p className="text-muted-foreground">
-                  Desktop, phone, tablet – even offline. Your loved one's memorial is always there 
-                  when you need to feel close to them.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/about" className="block" data-testid="link-feature-accessible">
+              <Card className="hover-elevate h-full" data-testid="card-feature-accessible">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Accessible Anywhere</h3>
+                  <p className="text-muted-foreground">
+                    Desktop, phone, tablet – even offline. Your loved one's memorial is always there 
+                    when you need to feel close to them.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Feature 4 */}
-            <Card className="hover-elevate" data-testid="card-feature-community">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Share Memories Together</h3>
-                <p className="text-muted-foreground">
-                  Friends and family can share photos, videos, and stories about their experiences with your loved one. 
-                  Interactive galleries let everyone react, comment, and preserve precious memories forever.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81" className="block" data-testid="link-feature-community">
+              <Card className="hover-elevate h-full" data-testid="card-feature-community">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Share Memories Together</h3>
+                  <p className="text-muted-foreground">
+                    Friends and family can share photos, videos, and stories about their experiences with your loved one. 
+                    Interactive galleries let everyone react, comment, and preserve precious memories forever.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Feature 5 */}
-            <Card className="hover-elevate" data-testid="card-feature-fundraising">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Practical Help</h3>
-                <p className="text-muted-foreground">
-                  Organize fundraisers for funeral costs or causes, plan memorial events, 
-                  and access professional grief resources.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/about" className="block" data-testid="link-feature-fundraising">
+              <Card className="hover-elevate h-full" data-testid="card-feature-fundraising">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Practical Help</h3>
+                  <p className="text-muted-foreground">
+                    Organize fundraisers for funeral costs or causes, plan memorial events, 
+                    and access professional grief resources.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Feature 6 */}
-            <Card className="hover-elevate" data-testid="card-feature-legacy">
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">Legacy Features</h3>
-                <p className="text-muted-foreground">
-                  Schedule future messages, create music playlists, plan memorial events, 
-                  and preserve their story for generations to come.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/upcoming-messages" className="block" data-testid="link-feature-legacy">
+              <Card className="hover-elevate h-full" data-testid="card-feature-legacy">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Legacy Features</h3>
+                  <p className="text-muted-foreground">
+                    Schedule future messages, create music playlists, plan memorial events, 
+                    and preserve their story for generations to come.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
+        </div>
+      </div>
+
+      {/* QR Code Feature Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-5xl mx-auto">
+          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+            <CardContent className="p-8 sm:p-12">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-6">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <QrCode className="w-8 h-8 text-primary" />
+                  </div>
+                  
+                  <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground" data-testid="text-qr-title">
+                    Bridge the Physical and Digital
+                  </h2>
+                  
+                  <div className="space-y-4 text-muted-foreground">
+                    <p className="text-lg" data-testid="text-qr-description">
+                      Our memorial QR codes create a powerful connection between a physical resting place and a living digital memorial.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                        <p><strong className="text-foreground">For Tombstones & Headstones:</strong> Place a QR code on the memorial marker so anyone visiting can instantly access the full life story, photos, and memories.</p>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                        <p><strong className="text-foreground">For Memorial Cards:</strong> Add QR codes to funeral programs or memorial cards so family and friends can easily visit and contribute memories.</p>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                        <p><strong className="text-foreground">Share Photos Instantly:</strong> Visitors can scan the code to upload photos and memories directly to the memorial, preserving moments from the service or graveside visits.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Link href="/self-obituary">
+                      <Button size="lg" variant="outline" data-testid="button-create-qr">
+                        <QrCode className="w-5 h-5 mr-2" />
+                        Create Your Memorial QR Code
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-64 h-64 bg-background rounded-lg shadow-lg p-8 flex items-center justify-center border-2 border-primary/20">
+                      <QrCode className="w-full h-full text-primary/20" />
+                    </div>
+                    <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-semibold">
+                      Scan & Remember
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-8 pt-8 border-t border-border">
+                <p className="text-center text-sm text-muted-foreground" data-testid="text-qr-importance">
+                  <strong className="text-foreground">Why QR codes matter:</strong> They transform static memorials into living tributes, allowing future generations 
+                  to discover and connect with your loved one's story for years to come. A simple scan unlocks a lifetime of memories.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
