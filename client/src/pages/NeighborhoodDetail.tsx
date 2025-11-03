@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, Users, Home, Heart, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Building2, MapPin, Users, Home, Heart, ArrowLeft, Loader2 } from "lucide-react";
 import type { Neighborhood, HoodMemorial } from "@shared/schema";
 import { Link, useParams } from "wouter";
 
@@ -38,8 +39,101 @@ export default function NeighborhoodDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen" data-testid="loading-skeletons">
+        {/* Hero Section Skeleton */}
+        <div className="h-64 bg-gradient-to-br from-primary/10 to-primary/5 relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <Skeleton className="w-24 h-24 mx-auto rounded-lg" />
+              <Skeleton className="h-10 w-64 mx-auto" />
+              <Skeleton className="h-6 w-48 mx-auto" />
+            </div>
+          </div>
+        </div>
+
+        <div className="container max-w-6xl mx-auto px-4 py-8">
+          <div className="flex items-center justify-center gap-2 mb-6 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <p>Loading neighborhood details...</p>
+          </div>
+
+          <Skeleton className="h-9 w-48 mb-6" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2 space-y-6">
+              {/* About Card Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </CardContent>
+              </Card>
+
+              {/* Notable Features Card Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              {/* Quick Facts Card Skeleton */}
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-5 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Skeleton className="h-10 w-full rounded" />
+            </div>
+          </div>
+
+          {/* Memorials Section Skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <Skeleton className="h-6 w-2/3" />
+                      <Skeleton className="w-20 h-20 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-9 w-full rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
