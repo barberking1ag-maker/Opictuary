@@ -5,19 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Heart, MapPin, Users, Plus, Home, Building2, QrCode } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, MapPin, Users, Plus, Home, Building2, QrCode, Loader2 } from "lucide-react";
 import type { HoodMemorial } from "@shared/schema";
 import { Link } from "wouter";
 
 export default function HoodMemorials() {
-  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("");
 
   const { data, isLoading } = useQuery<{ memorials: HoodMemorial[]; count: number }>({
     queryKey: ["/api/hood-memorials", selectedState, selectedCity],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedState) params.append("state", selectedState);
+      if (selectedState && selectedState !== "all") params.append("state", selectedState);
       if (selectedCity) params.append("city", selectedCity);
       
       const url = params.toString() 
@@ -61,14 +62,14 @@ export default function HoodMemorials() {
       <div className="max-w-2xl mx-auto mb-8 flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <Select value={selectedState} onValueChange={(value) => {
-            setSelectedState(value);
-            if (!value) setSelectedCity("");
+            setSelectedState(value === "all" ? "" : value);
+            if (value === "all" || !value) setSelectedCity("");
           }}>
             <SelectTrigger data-testid="select-state-filter">
               <SelectValue placeholder="Filter by State (All States)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All States</SelectItem>
+              <SelectItem value="all">All States</SelectItem>
             <SelectItem value="AL">Alabama</SelectItem>
             <SelectItem value="AK">Alaska</SelectItem>
             <SelectItem value="AZ">Arizona</SelectItem>
@@ -119,9 +120,40 @@ export default function HoodMemorials() {
 
       {/* Memorial Cards */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading hood memorials...</p>
+        <div className="space-y-8" data-testid="loading-skeletons">
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <p>Loading hood memorials...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                    <Skeleton className="w-20 h-20 rounded-lg" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-4">
+                    <Skeleton className="w-12 h-12 rounded" />
+                    <Skeleton className="w-12 h-12 rounded" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-9 w-full rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       ) : memorials.length === 0 ? (
         <Card className="text-center py-12">

@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Shield, Activity, Flame, Cross, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, Shield, Activity, Flame, Cross, Plus, Loader2 } from "lucide-react";
 import type { EssentialWorkerMemorial } from "@shared/schema";
 import { getFontFamily, getSymbolIcon } from "@/lib/customization";
 import { AdDisplay } from "@/components/AdDisplay";
@@ -241,16 +242,35 @@ export default function EssentialWorkers() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="h-48 bg-muted rounded-t-lg" />
-              <CardHeader>
-                <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-              </CardHeader>
-            </Card>
-          ))}
+        <div className="space-y-8" data-testid="loading-skeletons">
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <p>Loading essential worker memorials...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="h-48 w-full" />
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <Skeleton className="h-6 w-2/3" />
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-9 w-full rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       ) : memorials && memorials.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

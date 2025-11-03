@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Crown, Trophy, Music, Film, Heart, Briefcase, Users, Plus, Star, Award, Mic2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Crown, Trophy, Music, Film, Heart, Briefcase, Users, Plus, Star, Award, Mic2, Loader2 } from "lucide-react";
 
 // Profession categories with comprehensive list
 const professionCategories = [
@@ -235,8 +236,34 @@ export default function CelebrityMemorials() {
         )}
 
         {isLoading ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">Loading celebrity memorials...</p>
+          <div className="space-y-8" data-testid="loading-skeletons">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <p>Loading celebrity memorials...</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} className="overflow-hidden">
+                  <div className="relative">
+                    <Skeleton className="h-64 w-full" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                      <Skeleton className="h-6 w-3/4 bg-white/20 mb-2" />
+                      <Skeleton className="h-4 w-1/2 bg-white/20" />
+                    </div>
+                  </div>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-9 flex-1 rounded" />
+                      <Skeleton className="h-9 flex-1 rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         ) : (
           <>
