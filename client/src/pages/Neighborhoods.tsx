@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, Plus, Users, Home } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Building2, MapPin, Plus, Users, Home, Loader2 } from "lucide-react";
 import type { Neighborhood } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -92,9 +93,36 @@ export default function Neighborhoods() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading neighborhoods...</p>
+        <div className="space-y-8" data-testid="loading-skeletons">
+          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <p>Loading neighborhoods...</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="h-full">
+                <Skeleton className="h-32 w-full rounded-t-lg" />
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Skeleton className="h-6 w-3/4" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-4/6" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-3 w-3" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       ) : neighborhoods.length === 0 ? (
         <Card className="text-center py-12">
