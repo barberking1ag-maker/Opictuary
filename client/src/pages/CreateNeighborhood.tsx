@@ -36,7 +36,7 @@ export default function CreateNeighborhood() {
 
   const createMutation = useMutation({
     mutationFn: (data: InsertNeighborhood) => 
-      apiRequest("/api/neighborhoods", "POST", data),
+      apiRequest("POST", "/api/neighborhoods", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/neighborhoods"] });
       toast({

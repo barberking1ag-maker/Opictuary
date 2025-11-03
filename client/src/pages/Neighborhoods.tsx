@@ -59,15 +59,14 @@ export default function Neighborhoods() {
 
       <div className="max-w-2xl mx-auto mb-8 flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          <Select value={selectedState} onValueChange={(value) => {
+          <Select value={selectedState || undefined} onValueChange={(value) => {
             setSelectedState(value);
             if (!value) setSelectedCity("");
           }}>
             <SelectTrigger data-testid="select-state-filter">
-              <SelectValue placeholder="Filter by State (All States)" />
+              <SelectValue placeholder="All States" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All States</SelectItem>
               <SelectItem value="CA">California</SelectItem>
               <SelectItem value="IL">Illinois</SelectItem>
               <SelectItem value="NY">New York</SelectItem>
