@@ -55,7 +55,7 @@ export default function Home() {
     },
   });
 
-  const { data: memorial } = useQuery<Memorial>({
+  const { data: memorial, isLoading: memorialLoading, isError: memorialError } = useQuery<Memorial>({
     queryKey: [`/api/memorials/${memorialId}`],
     enabled: !!memorialId,
   });
@@ -220,7 +220,7 @@ export default function Home() {
 
   if (!memorialId || !memorial) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <InviteCodeModal 
           open={codeModalOpen}
           onOpenChange={(open) => {
@@ -232,9 +232,56 @@ export default function Home() {
             verifyInviteCodeMutation.mutate(code);
           }}
         />
-        {memorialId && !memorial && (
-          <p className="text-muted-foreground" data-testid="text-loading">Loading memorial...</p>
-        )}
+        <div className="text-center space-y-4 p-8">
+          {memorialId && memorialLoading && (
+            <>
+              <div className="animate-pulse">
+                <div className="h-12 w-12 mx-auto rounded-full bg-primary/20 mb-4"></div>
+              </div>
+              <p className="text-muted-foreground" data-testid="text-loading">Loading memorial...</p>
+            </>
+          )}
+          {memorialId && memorialError && (
+            <>
+              <div className="text-destructive text-4xl mb-4">⚠️</div>
+              <h2 className="text-xl font-semibold text-foreground" data-testid="text-error-title">Memorial Not Found</h2>
+              <p className="text-muted-foreground max-w-md" data-testid="text-error-message">
+                We couldn't find this memorial. It may have been removed or you may need an access code to view it.
+              </p>
+              <div className="flex gap-3 justify-center mt-6">
+                <Button 
+                  variant="outline"
+                  onClick={() => window.history.back()}
+                  data-testid="button-go-back"
+                >
+                  Go Back
+                </Button>
+                <Button 
+                  onClick={() => setCodeModalOpen(true)}
+                  data-testid="button-enter-code"
+                >
+                  Enter Access Code
+                </Button>
+              </div>
+            </>
+          )}
+          {!memorialId && (
+            <>
+              <div className="text-muted-foreground text-4xl mb-4">🔒</div>
+              <h2 className="text-xl font-semibold text-foreground">Private Memorial</h2>
+              <p className="text-muted-foreground max-w-md">
+                This memorial is private. Please enter an access code to continue.
+              </p>
+              <Button 
+                onClick={() => setCodeModalOpen(true)}
+                className="mt-6"
+                data-testid="button-enter-code"
+              >
+                Enter Access Code
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     );
   }
