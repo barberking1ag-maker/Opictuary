@@ -14,6 +14,9 @@ import EssentialWorkers from "@/pages/EssentialWorkers";
 import CreateEssentialWorkerMemorial from "@/pages/CreateEssentialWorkerMemorial";
 import HoodMemorials from "@/pages/HoodMemorials";
 import CreateHoodMemorial from "@/pages/CreateHoodMemorial";
+import Neighborhoods from "@/pages/Neighborhoods";
+import CreateNeighborhood from "@/pages/CreateNeighborhood";
+import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
 import SelfObituary from "@/pages/SelfObituary";
 import CreateMemorial from "@/pages/CreateMemorial";
 import CustomizationDemo from "@/pages/CustomizationDemo";
@@ -180,6 +183,9 @@ function Router() {
         <Route path="/create-essential-worker" component={CreateEssentialWorkerMemorial} />
         <Route path="/hood-memorials" component={HoodMemorials} />
         <Route path="/create-hood-memorial" component={CreateHoodMemorial} />
+        <Route path="/neighborhoods" component={Neighborhoods} />
+        <Route path="/create-neighborhood" component={CreateNeighborhood} />
+        <Route path="/neighborhood/:id" component={NeighborhoodDetail} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

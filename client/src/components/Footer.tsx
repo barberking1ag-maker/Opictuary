@@ -45,6 +45,13 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
                 </Link>
               </li>
               <li>
+                <Link href="/neighborhoods">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-neighborhoods">
+                    Neighborhoods
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/self-obituary">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-create">
                     Create Memorial

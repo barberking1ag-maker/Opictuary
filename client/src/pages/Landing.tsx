@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Users, Shield, Smartphone, Calendar, DollarSign, Music, MessageSquare, QrCode, FileText, Video, Star } from "lucide-react";
+import { Heart, Users, Shield, Smartphone, Calendar, DollarSign, Music, MessageSquare, QrCode, FileText, Video, Star, Building2 } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 
 export default function Landing() {
@@ -297,6 +297,22 @@ export default function Landing() {
                   <p className="text-muted-foreground">
                     Honor neighborhood legends, community leaders, and local icons. 
                     Upload club or neighborhood logos and celebrate those who left their mark on the streets they called home.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Feature 14 - Neighborhoods */}
+            <Link href="/neighborhoods" className="block" data-testid="link-feature-neighborhoods">
+              <Card className="hover-elevate h-full" data-testid="card-feature-neighborhoods">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Neighborhoods</h3>
+                  <p className="text-muted-foreground">
+                    Explore communities across America. Discover neighborhood stories, notable features, 
+                    and connect with memorials from your community.
                   </p>
                 </CardContent>
               </Card>
