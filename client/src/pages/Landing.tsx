@@ -159,7 +159,7 @@ export default function Landing() {
             </Link>
 
             {/* Feature 5 */}
-            <Link href="/about" className="block" data-testid="link-feature-fundraising">
+            <Link href="/create-memorial" className="block" data-testid="link-feature-fundraising">
               <Card className="hover-elevate h-full" data-testid="card-feature-fundraising">
                 <CardContent className="p-6 space-y-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -207,7 +207,7 @@ export default function Landing() {
             </Link>
 
             {/* Feature 8 - Funeral Programs */}
-            <Link href="/about" className="block" data-testid="link-feature-programs">
+            <Link href="/funeral-program-creator" className="block" data-testid="link-feature-programs">
               <Card className="hover-elevate h-full" data-testid="card-feature-programs">
                 <CardContent className="p-6 space-y-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -271,7 +271,7 @@ export default function Landing() {
             </Link>
 
             {/* Feature 12 - Memorial Events */}
-            <Link href="/about" className="block" data-testid="link-feature-events">
+            <Link href="/create-memorial" className="block" data-testid="link-feature-events">
               <Card className="hover-elevate h-full" data-testid="card-feature-events">
                 <CardContent className="p-6 space-y-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">

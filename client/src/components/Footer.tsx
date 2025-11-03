@@ -38,6 +38,13 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
                 </Link>
               </li>
               <li>
+                <Link href="/hood-memorials">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-hood">
+                    Hood Memorials
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/self-obituary">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-create">
                     Create Memorial

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Heart, MapPin, Users, Plus, Home, Building2 } from "lucide-react";
+import { Heart, MapPin, Users, Plus, Home, Building2, QrCode } from "lucide-react";
 import type { HoodMemorial } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -211,9 +211,85 @@ export default function HoodMemorials() {
         </div>
       )}
 
+      {/* QR Code Feature Section */}
+      <div className="max-w-4xl mx-auto mt-20">
+        <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+          <CardContent className="p-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <QrCode className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif font-semibold text-foreground">
+                    Memorial QR Codes
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Connect physical tributes to digital memories
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4 text-muted-foreground">
+                <p className="text-base">
+                  Create QR codes that link to hood memorials, making it easy for the community to pay respects and share memories.
+                </p>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-foreground font-medium">For Murals & Street Art</p>
+                      <p className="text-sm">Place QR codes on memorial murals so visitors can access the full story and contribute memories.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-foreground font-medium">For Memorial Cards</p>
+                      <p className="text-sm">Add to funeral programs or memorial cards for easy access and photo sharing.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-foreground font-medium">For Community Events</p>
+                      <p className="text-sm">Display at candlelight vigils and memorial gatherings for instant photo uploads.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-foreground font-medium">For Neighborhood Markers</p>
+                      <p className="text-sm">Place on benches, trees, or community spots dedicated to local legends.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pt-4">
+                <Link href="/about">
+                  <Button 
+                    variant="default" 
+                    className="bg-primary/90 hover:bg-primary"
+                    data-testid="button-learn-more-qr"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Learn More About QR Codes
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Stats */}
       {data && data.count > 0 && (
-        <div className="text-center mt-8 text-sm text-muted-foreground">
+        <div className="text-center mt-12 text-sm text-muted-foreground">
           Honoring {data.count} neighborhood {data.count === 1 ? 'legend' : 'legends'}
         </div>
       )}
