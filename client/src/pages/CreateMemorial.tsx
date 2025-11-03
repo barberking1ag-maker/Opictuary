@@ -454,6 +454,7 @@ export default function CreateMemorial() {
                               <SelectItem value="cross">Cross</SelectItem>
                               <SelectItem value="star-of-david">Star of David</SelectItem>
                               <SelectItem value="crescent">Crescent Moon</SelectItem>
+                              <SelectItem value="ankh">Ankh</SelectItem>
                               <SelectItem value="lotus">Lotus Flower</SelectItem>
                               <SelectItem value="om">Om Symbol</SelectItem>
                               <SelectItem value="dove">Dove</SelectItem>
