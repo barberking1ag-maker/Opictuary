@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
@@ -55,9 +56,11 @@ export default function Home() {
     },
   });
 
-  const { data: memorial, isLoading: memorialLoading, isError: memorialError } = useQuery<Memorial>({
+  const { data: memorial, isLoading: memorialLoading, isError: memorialError, refetch: refetchMemorial } = useQuery<Memorial>({
     queryKey: [`/api/memorials/${memorialId}`],
     enabled: !!memorialId,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const { data: memories = [] } = useQuery<Memory[]>({
@@ -218,72 +221,138 @@ export default function Home() {
     }
   };
 
-  if (!memorialId || !memorial) {
+  // Memorial Loading Skeleton
+  if (memorialId && memorialLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Hero Section Skeleton */}
+        <div className="relative h-[600px] md:h-[700px] w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="relative h-full flex flex-col justify-center items-center text-center px-4">
+            <div className="max-w-5xl mx-auto space-y-8 w-full">
+              <Skeleton className="h-8 w-48 mx-auto rounded-full" />
+              <Skeleton className="h-24 w-[500px] max-w-full mx-auto" />
+              <Skeleton className="h-12 w-64 mx-auto rounded-full" />
+              <div className="flex justify-center gap-8 mt-16">
+                <Skeleton className="h-20 w-24" />
+                <Skeleton className="h-20 w-24" />
+                <Skeleton className="h-20 w-24" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-muted-foreground" data-testid="text-loading">Loading memorial...</p>
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-3 mb-8">
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+          </div>
+          
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Memorial Error State
+  if (memorialId && memorialError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <InviteCodeModal 
           open={codeModalOpen}
-          onOpenChange={(open) => {
-            if (memorialId) {
-              setCodeModalOpen(open);
-            }
-          }}
+          onOpenChange={setCodeModalOpen}
           onSubmit={(code) => {
             verifyInviteCodeMutation.mutate(code);
           }}
         />
-        <div className="text-center space-y-4 p-8">
-          {memorialId && memorialLoading && (
-            <>
-              <div className="animate-pulse">
-                <div className="h-12 w-12 mx-auto rounded-full bg-primary/20 mb-4"></div>
-              </div>
-              <p className="text-muted-foreground" data-testid="text-loading">Loading memorial...</p>
-            </>
-          )}
-          {memorialId && memorialError && (
-            <>
-              <div className="text-destructive text-4xl mb-4">⚠️</div>
-              <h2 className="text-xl font-semibold text-foreground" data-testid="text-error-title">Memorial Not Found</h2>
-              <p className="text-muted-foreground max-w-md" data-testid="text-error-message">
-                We couldn't find this memorial. It may have been removed or you may need an access code to view it.
-              </p>
-              <div className="flex gap-3 justify-center mt-6">
-                <Button 
-                  variant="outline"
-                  onClick={() => window.history.back()}
-                  data-testid="button-go-back"
-                >
-                  Go Back
-                </Button>
-                <Button 
-                  onClick={() => setCodeModalOpen(true)}
-                  data-testid="button-enter-code"
-                >
-                  Enter Access Code
-                </Button>
-              </div>
-            </>
-          )}
-          {!memorialId && (
-            <>
-              <div className="text-muted-foreground text-4xl mb-4">🔒</div>
-              <h2 className="text-xl font-semibold text-foreground">Private Memorial</h2>
-              <p className="text-muted-foreground max-w-md">
-                This memorial is private. Please enter an access code to continue.
-              </p>
-              <Button 
-                onClick={() => setCodeModalOpen(true)}
-                className="mt-6"
-                data-testid="button-enter-code"
-              >
-                Enter Access Code
-              </Button>
-            </>
-          )}
-        </div>
+        <Card className="max-w-lg mx-4" data-testid="card-error">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <QrCode className="w-8 h-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl" data-testid="text-error-title">Memorial Not Found</CardTitle>
+            <CardDescription className="text-base" data-testid="text-error-message">
+              We couldn't find this memorial. It may have been removed, made private, or you may need an access code to view it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              className="w-full"
+              onClick={() => refetchMemorial()}
+              data-testid="button-retry"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+            <Button 
+              variant="outline"
+              className="w-full"
+              onClick={() => setCodeModalOpen(true)}
+              data-testid="button-enter-code"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              Enter Access Code
+            </Button>
+            <Button 
+              variant="ghost"
+              className="w-full"
+              onClick={() => window.history.back()}
+              data-testid="button-go-back"
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
+  }
+
+  // No Memorial ID - Private Memorial
+  if (!memorialId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <InviteCodeModal 
+          open={codeModalOpen}
+          onOpenChange={setCodeModalOpen}
+          onSubmit={(code) => {
+            verifyInviteCodeMutation.mutate(code);
+          }}
+        />
+        <Card className="max-w-lg mx-4">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <QrCode className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Private Memorial</CardTitle>
+            <CardDescription className="text-base">
+              This memorial is private. Please enter an access code to continue.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              className="w-full"
+              onClick={() => setCodeModalOpen(true)}
+              data-testid="button-enter-code"
+            >
+              <QrCode className="w-4 h-4 mr-2" />
+              Enter Access Code
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Memorial not loaded yet
+  if (!memorial) {
+    return null;
   }
 
   const years = memorial.birthDate && memorial.deathDate
