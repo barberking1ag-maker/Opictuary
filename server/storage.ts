@@ -25,6 +25,7 @@ import {
   musicPlaylists,
   essentialWorkersMemorials,
   hoodMemorials,
+  neighborhoods,
   selfWrittenObituaries,
   advertisements,
   advertisementSales,
@@ -106,6 +107,8 @@ import {
   type InsertEssentialWorkerMemorial,
   type HoodMemorial,
   type InsertHoodMemorial,
+  type Neighborhood,
+  type InsertNeighborhood,
   type SelfWrittenObituary,
   type InsertSelfWrittenObituary,
   type Advertisement,
@@ -334,6 +337,15 @@ export interface IStorage {
   createHoodMemorial(memorial: InsertHoodMemorial): Promise<HoodMemorial>;
   updateHoodMemorial(id: string, memorial: Partial<InsertHoodMemorial>): Promise<HoodMemorial | undefined>;
   deleteHoodMemorial(id: string): Promise<void>;
+
+  // Neighborhood operations
+  getNeighborhoods(city?: string, state?: string, limit?: number, offset?: number): Promise<Neighborhood[]>;
+  getNeighborhoodsCount(city?: string, state?: string): Promise<number>;
+  getNeighborhood(id: string): Promise<Neighborhood | undefined>;
+  getNeighborhoodByName(name: string, city: string, state: string): Promise<Neighborhood | undefined>;
+  createNeighborhood(neighborhood: InsertNeighborhood): Promise<Neighborhood>;
+  updateNeighborhood(id: string, neighborhood: Partial<InsertNeighborhood>): Promise<Neighborhood | undefined>;
+  deleteNeighborhood(id: string): Promise<void>;
 
   // Self-Written Obituary operations
   getSelfWrittenObituaryByEmail(email: string): Promise<SelfWrittenObituary | undefined>;
@@ -1437,6 +1449,79 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHoodMemorial(id: string): Promise<void> {
     await db.delete(hoodMemorials).where(eq(hoodMemorials.id, id));
+  }
+
+  // Neighborhood operations
+  async getNeighborhoods(city?: string, state?: string, limit = 20, offset = 0): Promise<Neighborhood[]> {
+    const conditions = [eq(neighborhoods.isPublic, true)];
+    
+    if (city && city.trim() !== "") {
+      conditions.push(eq(neighborhoods.city, city.trim()));
+    }
+    if (state && state.trim() !== "") {
+      conditions.push(eq(neighborhoods.state, state));
+    }
+
+    return db
+      .select()
+      .from(neighborhoods)
+      .where(and(...conditions))
+      .orderBy(desc(neighborhoods.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getNeighborhoodsCount(city?: string, state?: string): Promise<number> {
+    const conditions = [eq(neighborhoods.isPublic, true)];
+    
+    if (city && city.trim() !== "") {
+      conditions.push(eq(neighborhoods.city, city.trim()));
+    }
+    if (state && state.trim() !== "") {
+      conditions.push(eq(neighborhoods.state, state));
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(neighborhoods)
+      .where(and(...conditions));
+    return result.count;
+  }
+
+  async getNeighborhood(id: string): Promise<Neighborhood | undefined> {
+    const [neighborhood] = await db.select().from(neighborhoods).where(eq(neighborhoods.id, id));
+    return neighborhood || undefined;
+  }
+
+  async getNeighborhoodByName(name: string, city: string, state: string): Promise<Neighborhood | undefined> {
+    const [neighborhood] = await db
+      .select()
+      .from(neighborhoods)
+      .where(
+        and(
+          eq(neighborhoods.name, name),
+          eq(neighborhoods.city, city),
+          eq(neighborhoods.state, state)
+        )
+      );
+    return neighborhood || undefined;
+  }
+
+  async createNeighborhood(neighborhood: InsertNeighborhood): Promise<Neighborhood> {
+    const [created] = await db.insert(neighborhoods).values(neighborhood).returning();
+    return created;
+  }
+
+  async updateNeighborhood(id: string, neighborhood: Partial<InsertNeighborhood>): Promise<Neighborhood | undefined> {
+    const [updated] = await db.update(neighborhoods)
+      .set({ ...neighborhood, updatedAt: new Date() })
+      .where(eq(neighborhoods.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteNeighborhood(id: string): Promise<void> {
+    await db.delete(neighborhoods).where(eq(neighborhoods.id, id));
   }
 
   // Self-Written Obituary operations

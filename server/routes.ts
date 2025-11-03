@@ -39,6 +39,7 @@ import {
   insertMusicPlaylistSchema,
   insertEssentialWorkerMemorialSchema,
   insertHoodMemorialSchema,
+  insertNeighborhoodSchema,
   insertSelfWrittenObituarySchema,
   insertAdvertisementSchema,
   insertAdvertisementSaleSchema,
@@ -2260,6 +2261,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/hood-memorials/:id", async (req, res) => {
     try {
       await storage.deleteHoodMemorial(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Neighborhood Routes
+  app.get("/api/neighborhoods", async (req, res) => {
+    try {
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        limit = Math.min(parseInt(req.query.limit as string), 200);
+      }
+      if (req.query.offset) {
+        offset = parseInt(req.query.offset as string);
+      }
+      
+      const city = req.query.city as string | undefined;
+      const state = req.query.state as string | undefined;
+
+      const neighborhoods = await storage.getNeighborhoods(city, state, limit, offset);
+      const count = await storage.getNeighborhoodsCount(city, state);
+      
+      res.json({ neighborhoods, count });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/neighborhoods/:id", async (req, res) => {
+    try {
+      const neighborhood = await storage.getNeighborhood(req.params.id);
+      if (!neighborhood) {
+        return res.status(404).json({ error: "Neighborhood not found" });
+      }
+      res.json(neighborhood);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/neighborhoods", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const data = insertNeighborhoodSchema.parse({
+        ...req.body,
+        creatorEmail: userEmail,
+      });
+      const neighborhood = await storage.createNeighborhood(data);
+      res.status(201).json(neighborhood);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/neighborhoods/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertNeighborhoodSchema.partial().parse(req.body);
+      const neighborhood = await storage.updateNeighborhood(req.params.id, data);
+      if (!neighborhood) {
+        return res.status(404).json({ error: "Neighborhood not found" });
+      }
+      res.json(neighborhood);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/neighborhoods/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteNeighborhood(req.params.id);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
