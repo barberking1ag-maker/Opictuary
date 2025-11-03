@@ -516,6 +516,30 @@ export const selfWrittenObituaries = pgTable("self_written_obituaries", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Neighborhoods table for managing community/neighborhood profiles
+export const neighborhoods = pgTable("neighborhoods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  backgroundImage: text("background_image"),
+  foundedYear: text("founded_year"),
+  population: integer("population"),
+  landmarks: text("landmarks").array(),
+  notableFeatures: text("notable_features"),
+  isPublic: boolean("is_public").default(true),
+  creatorEmail: text("creator_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_neighborhoods_state").on(table.state),
+  index("idx_neighborhoods_city").on(table.city),
+  index("idx_neighborhoods_creator_email").on(table.creatorEmail),
+  uniqueIndex("idx_neighborhoods_unique_name").on(table.name, table.city, table.state),
+]);
+
 // Prison Access System
 export const prisonFacilities = pgTable("prison_facilities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1319,6 +1343,12 @@ export const insertHoodMemorialSchema = createInsertSchema(hoodMemorials).omit({
   createdAt: true,
 });
 
+export const insertNeighborhoodSchema = createInsertSchema(neighborhoods).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertSelfWrittenObituarySchema = createInsertSchema(selfWrittenObituaries).omit({
   id: true,
   createdAt: true,
@@ -1552,6 +1582,9 @@ export type EssentialWorkerMemorial = typeof essentialWorkersMemorials.$inferSel
 
 export type InsertHoodMemorial = z.infer<typeof insertHoodMemorialSchema>;
 export type HoodMemorial = typeof hoodMemorials.$inferSelect;
+
+export type InsertNeighborhood = z.infer<typeof insertNeighborhoodSchema>;
+export type Neighborhood = typeof neighborhoods.$inferSelect;
 
 export type InsertSelfWrittenObituary = z.infer<typeof insertSelfWrittenObituarySchema>;
 export type SelfWrittenObituary = typeof selfWrittenObituaries.$inferSelect;
