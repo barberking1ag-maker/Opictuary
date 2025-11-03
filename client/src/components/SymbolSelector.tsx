@@ -1,21 +1,29 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Cross, Heart, Star, Sparkles, Sun, Moon, TreePine, Flower2, Bird, Infinity, HandHeart, Feather, Anchor } from "lucide-react";
+import { Cross, Heart, Star, Sparkles, Sun, Moon, TreePine, Flower2, Bird, Infinity, HandHeart, Feather, Anchor, CircleDot, Hand, Eye, Workflow, Mountain, Waves, Wind, Flame } from "lucide-react";
 
 const SYMBOL_OPTIONS = [
   { value: "cross", label: "Cross (Christian)", icon: Cross },
   { value: "heart", label: "Heart (Love)", icon: Heart },
   { value: "star", label: "Star of David (Jewish)", icon: Star },
-  { value: "sparkles", label: "Sparkles (Spiritual Light)", icon: Sparkles },
-  { value: "sun", label: "Sun (Life & Energy)", icon: Sun },
   { value: "moon", label: "Crescent Moon (Islamic)", icon: Moon },
   { value: "ankh", label: "Ankh (Kemetic/Egyptian)", icon: Anchor },
-  { value: "tree", label: "Tree (Growth & Life)", icon: TreePine },
-  { value: "flower", label: "Flower (Beauty)", icon: Flower2 },
-  { value: "bird", label: "Bird (Freedom)", icon: Bird },
-  { value: "infinity", label: "Infinity (Eternal)", icon: Infinity },
-  { value: "handheart", label: "Hand & Heart (Care)", icon: HandHeart },
-  { value: "feather", label: "Feather (Peace)", icon: Feather },
+  { value: "dharma-wheel", label: "Dharma Wheel (Buddhist)", icon: CircleDot },
+  { value: "om", label: "Om Symbol (Hindu)", icon: Sparkles },
+  { value: "lotus", label: "Lotus (Buddhist/Hindu)", icon: Flower2 },
+  { value: "hamsa", label: "Hamsa (Protection)", icon: Hand },
+  { value: "eye-horus", label: "Eye of Horus (Egyptian)", icon: Eye },
+  { value: "yin-yang", label: "Yin Yang (Taoist)", icon: Workflow },
+  { value: "tree-life", label: "Tree of Life (Universal)", icon: TreePine },
+  { value: "mountain", label: "Sacred Mountain (Spiritual)", icon: Mountain },
+  { value: "water", label: "Water (Life & Renewal)", icon: Waves },
+  { value: "wind", label: "Spirit Wind (Indigenous)", icon: Wind },
+  { value: "flame", label: "Eternal Flame (Memorial)", icon: Flame },
+  { value: "sun", label: "Sun (Life & Energy)", icon: Sun },
+  { value: "bird", label: "Bird (Freedom & Ascension)", icon: Bird },
+  { value: "infinity", label: "Infinity (Eternal Love)", icon: Infinity },
+  { value: "handheart", label: "Hand & Heart (Compassion)", icon: HandHeart },
+  { value: "feather", label: "Feather (Peace & Journey)", icon: Feather },
 ];
 
 interface SymbolSelectorProps {

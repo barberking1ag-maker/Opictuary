@@ -451,14 +451,25 @@ export default function CreateMemorial() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="cross">Cross</SelectItem>
-                              <SelectItem value="star-of-david">Star of David</SelectItem>
-                              <SelectItem value="crescent">Crescent Moon</SelectItem>
-                              <SelectItem value="ankh">Ankh</SelectItem>
-                              <SelectItem value="lotus">Lotus Flower</SelectItem>
-                              <SelectItem value="om">Om Symbol</SelectItem>
-                              <SelectItem value="dove">Dove</SelectItem>
-                              <SelectItem value="angel">Angel Halo</SelectItem>
+                              <SelectItem value="cross">Cross (Christian)</SelectItem>
+                              <SelectItem value="star-of-david">Star of David (Jewish)</SelectItem>
+                              <SelectItem value="crescent">Crescent Moon (Islamic)</SelectItem>
+                              <SelectItem value="ankh">Ankh (Kemetic/Egyptian)</SelectItem>
+                              <SelectItem value="dharma-wheel">Dharma Wheel (Buddhist)</SelectItem>
+                              <SelectItem value="om">Om Symbol (Hindu)</SelectItem>
+                              <SelectItem value="lotus">Lotus (Buddhist/Hindu)</SelectItem>
+                              <SelectItem value="hamsa">Hamsa (Protection)</SelectItem>
+                              <SelectItem value="eye-horus">Eye of Horus (Egyptian)</SelectItem>
+                              <SelectItem value="yin-yang">Yin Yang (Taoist)</SelectItem>
+                              <SelectItem value="tree-life">Tree of Life (Universal)</SelectItem>
+                              <SelectItem value="mountain">Sacred Mountain (Spiritual)</SelectItem>
+                              <SelectItem value="water">Water (Life & Renewal)</SelectItem>
+                              <SelectItem value="wind">Spirit Wind (Indigenous)</SelectItem>
+                              <SelectItem value="flame">Eternal Flame (Memorial)</SelectItem>
+                              <SelectItem value="dove">Dove (Peace)</SelectItem>
+                              <SelectItem value="angel">Angel (Guardian)</SelectItem>
+                              <SelectItem value="heart">Heart (Love)</SelectItem>
+                              <SelectItem value="infinity">Infinity (Eternal Love)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
