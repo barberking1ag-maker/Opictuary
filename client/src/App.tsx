@@ -47,6 +47,7 @@ import FutureMessages from "@/pages/FutureMessages";
 import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { AIChat } from "@/components/AIChat";
 import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell, Calendar } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
@@ -238,6 +239,7 @@ function App() {
       <TooltipProvider>
         <Router />
         <InstallPrompt />
+        <AIChat />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
