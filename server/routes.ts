@@ -3898,6 +3898,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Chat Assistant routes
+  app.get("/api/chat/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const messages = await storage.getChatMessages(userId, limit);
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error fetching chat messages:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { message } = req.body;
+
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      await storage.createChatMessage({
+        userId,
+        role: "user",
+        content: message
+      });
+
+      const chatHistory = await storage.getChatMessages(userId, 20);
+      
+      const { openai } = await import("./openai");
+
+      const stream = await openai.chat.completions.create({
+        model: "gpt-5",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful AI assistant for a memorial platform called Opictuary. You help users navigate the platform, create memorials, understand features, and provide compassionate support. Be empathetic, professional, and respectful given the sensitive nature of the platform."
+          },
+          ...chatHistory.map(msg => ({
+            role: msg.role as "user" | "assistant",
+            content: msg.content
+          }))
+        ],
+        max_completion_tokens: 8192,
+        stream: true
+      });
+
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      let fullResponse = '';
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      await storage.createChatMessage({
+        userId,
+        role: "assistant",
+        content: fullResponse
+      });
+
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (error: any) {
+      console.error("Error in chat:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: error.message });
+      } else {
+        res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+        res.end();
+      }
+    }
+  });
+
+  app.delete("/api/chat/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteChatMessages(userId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting chat messages:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
