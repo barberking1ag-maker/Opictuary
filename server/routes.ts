@@ -1778,15 +1778,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid donation amount" });
       }
 
+      const fundraiser = await storage.getFundraiser(req.params.fundraiserId);
+      if (!fundraiser) {
+        return res.status(404).json({ error: "Fundraiser not found" });
+      }
+
+      const platformFeePercent = Number(fundraiser.platformFeePercentage);
+      const donationAmount = Number(amount);
+      const platformFee = (donationAmount * platformFeePercent) / 100;
+
       const paymentIntent = await getStripe().paymentIntents.create({
-        amount: Math.round(Number(amount) * 100),
+        amount: Math.round(donationAmount * 100),
         currency: "usd",
         metadata: {
           fundraiserId: req.params.fundraiserId,
+          memorialId: fundraiser.memorialId,
+          platformFeePercentage: platformFeePercent.toString(),
+          platformFeeAmount: platformFee.toFixed(2),
+          donationAmount: donationAmount.toFixed(2),
         },
       });
 
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        platformFee: platformFee.toFixed(2),
+        total: donationAmount.toFixed(2),
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
