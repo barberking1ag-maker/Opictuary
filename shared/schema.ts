@@ -1679,3 +1679,19 @@ export type FuneralProgram = typeof funeralPrograms.$inferSelect;
 
 export type InsertProgramItem = z.infer<typeof insertProgramItemSchema>;
 export type ProgramItem = typeof programItems.$inferSelect;
+
+// AI Chat Messages
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_chat_messages_user_id").on(table.userId),
+  index("idx_chat_messages_created_at").on(table.createdAt),
+]);
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
