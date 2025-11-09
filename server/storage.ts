@@ -165,6 +165,9 @@ import {
   type InsertProgramItem,
   type MemorialDocumentary,
   type InsertMemorialDocumentary,
+  chatMessages,
+  type ChatMessage,
+  type InsertChatMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -483,6 +486,11 @@ export interface IStorage {
   createProgramItem(item: InsertProgramItem): Promise<ProgramItem>;
   updateProgramItem(id: string, item: Partial<InsertProgramItem>): Promise<ProgramItem | undefined>;
   deleteProgramItem(id: string): Promise<void>;
+
+  // Chat Message operations
+  getChatMessages(userId: string, limit?: number): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  deleteChatMessages(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2520,6 +2528,23 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProgramItem(id: string): Promise<void> {
     await db.delete(programItems).where(eq(programItems.id, id));
+  }
+
+  // Chat Message operations
+  async getChatMessages(userId: string, limit: number = 50): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages)
+      .where(eq(chatMessages.userId, userId))
+      .orderBy(chatMessages.createdAt)
+      .limit(limit);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [created] = await db.insert(chatMessages).values(message).returning();
+    return created;
+  }
+
+  async deleteChatMessages(userId: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.userId, userId));
   }
 }
 
