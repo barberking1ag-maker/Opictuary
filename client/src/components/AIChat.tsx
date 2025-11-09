@@ -61,15 +61,19 @@ export function AIChat() {
             }
             try {
               const parsed = JSON.parse(data);
+              if (parsed.error) {
+                setIsStreaming(false);
+                setStreamingMessage("");
+                throw new Error(parsed.error);
+              }
               if (parsed.content) {
                 fullMessage += parsed.content;
                 setStreamingMessage(fullMessage);
               }
-              if (parsed.error) {
-                throw new Error(parsed.error);
-              }
             } catch (e) {
-              console.error("Error parsing SSE data:", e);
+              setIsStreaming(false);
+              setStreamingMessage("");
+              throw e;
             }
           }
         }
@@ -90,7 +94,7 @@ export function AIChat() {
   });
 
   const clearMutation = useMutation({
-    mutationFn: () => apiRequest("/api/chat/messages", "DELETE"),
+    mutationFn: () => apiRequest("DELETE", "/api/chat/messages"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
       toast({
