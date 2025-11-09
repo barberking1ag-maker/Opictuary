@@ -34,6 +34,7 @@ The platform follows a "Dignity in Digital" design philosophy, employing a respe
 **Funeral Program Audio & Bluetooth System:** Enhanced funeral service programs with program-level and item-level audio capabilities, and Bluetooth connectivity for wireless speakers.
 **Memorial Events System:** Comprehensive event planning for memorial gatherings with event types, email/text notifications, and RSVP tracking.
 **Cemetery Location Mapping:** Storage of cemetery coordinates and information for future map integration.
+**AI Chat Assistant:** Intelligent chat assistant powered by OpenAI (via Replit AI Integrations) that helps users navigate the platform, create memorials, and understand features. Features include real-time streaming responses, persistent message history, and empathetic support tailored to the memorial platform context. Accessible via floating button on all pages.
 **Revenue Model:** Configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
 
 ### System Design Choices
