@@ -211,14 +211,14 @@ These investors have backed companies in death care, grief support, or legacy pl
 These investors focus on criminal justice reform, social impact, or underserved communities.
 
 ### 21. **Chris Redlitz** (@ChrisRedlitz)
-- **Background:** Transmedia Capital, The Last Mile founder (prison tech training)
-- **Notable investments:** Prison reform, social impact tech
-- **Sector interest:** **PERFECT FIT** - Prison technology, reentry programs
-- **Check size:** $25K-$100K
-- **Why he'll invest:** Prison access system is EXACTLY his thesis
-- **Contact:** chris@transmedia.com, LinkedIn
-- **Warm intro path:** The Last Mile network, prison reform community
-- **⭐ HIGHEST PRIORITY:** This is your #1 target!
+- **Background:** Transmedia Capital Partner, The Last Mile Co-Founder (prison tech training)
+- **Notable investments:** Transmedia has invested in 41+ companies including Wish, Snap, Genius
+- **Sector interest:** **PERFECT FIT** - Prison technology, reentry programs, social impact tech
+- **Check size:** $25K-$100K (Transmedia invests $250K-$2M, but he does angel deals)
+- **Why he'll invest:** Prison access system is EXACTLY his thesis - The Last Mile has 0% recidivism!
+- **Contact:** chris@transmediacapital.com, +1 (415) 847-1035, LinkedIn
+- **Warm intro path:** The Last Mile network (operates in 16 facilities across 7 states), prison reform community
+- **⭐ HIGHEST PRIORITY:** This is your #1 target! His Last Mile graduates work at Slack, Zoom, Dropbox!
 
 ### 22. **Freada Kapor Klein** (@freada)
 - **Background:** Kapor Capital, social impact focus
