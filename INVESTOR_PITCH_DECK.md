@@ -198,7 +198,7 @@ Founder & CEO
 - ✅ Zero critical bugs, zero technical debt
 
 **User Metrics:**
-- 86 active users (organically acquired)
+- 88 active users (organically acquired)
 - 48% month-over-month growth
 - Average 15 minutes time on site
 - 2.3 memorials created per user
