@@ -1,0 +1,47 @@
+STRIPE API KEYS - COPY INSTRUCTIONS
+====================================
+
+From your screenshot, your Stripe keys look like this:
+
+SECRET KEY (Bottom row):
+sk_test_51RkelVABZE3wfQkuevyrVdJH0i9eFZFG2TBbkll9lSd2NmrSiCMT7BQlfAcqTUqCDoTQCYlz0d9lxUhKf1V5Syom00U1e8sKL4
+
+PUBLISHABLE KEY (Top row):
+pk_test_51RkelVABZE3wfQkulq0rGZbhs0z4hMJ78TLtnSD082VMErXyoh9LrKb1Raf1qeHopG9YAtuKxQid5g0H42Z7Pdh500kgGqLP19
+
+
+HOW TO ENTER THEM IN REPLIT:
+=============================
+
+1. Go to Replit Secrets (lock icon on left sidebar)
+
+2. Find or create: STRIPE_SECRET_KEY
+   - Click Edit or Add
+   - Paste the ENTIRE Secret key (starts with sk_test_51Rkel...)
+   - Make sure it includes "sk_test_" at the beginning!
+   - Save
+
+3. Find or create: VITE_STRIPE_PUBLIC_KEY
+   - Click Edit or Add
+   - Paste the ENTIRE Publishable key (starts with pk_test_51Rkel...)
+   - Make sure it includes "pk_test_" at the beginning!
+   - Save
+
+4. Let me know when done - I'll restart and test!
+
+
+COMMON MISTAKES TO AVOID:
+==========================
+❌ Only copying part of the key (missing sk_test_ or pk_test_)
+❌ Swapping the keys (putting secret in public, or vice versa)
+❌ Extra spaces at beginning or end
+✅ Copy the COMPLETE key from sk_test or pk_test all the way to the end
+
+
+TESTING:
+========
+Once both keys are entered correctly, I will:
+1. Test a $50 donation
+2. Verify platform fee calculation ($1.50)
+3. Confirm payment processing works
+4. Show you the revenue tracking
