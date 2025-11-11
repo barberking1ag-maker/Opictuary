@@ -26,6 +26,7 @@ import {
   essentialWorkersMemorials,
   hoodMemorials,
   neighborhoods,
+  alumniMemorials,
   selfWrittenObituaries,
   advertisements,
   advertisementSales,
@@ -109,6 +110,8 @@ import {
   type InsertHoodMemorial,
   type Neighborhood,
   type InsertNeighborhood,
+  type AlumniMemorial,
+  type InsertAlumniMemorial,
   type SelfWrittenObituary,
   type InsertSelfWrittenObituary,
   type Advertisement,
@@ -349,6 +352,15 @@ export interface IStorage {
   createNeighborhood(neighborhood: InsertNeighborhood): Promise<Neighborhood>;
   updateNeighborhood(id: string, neighborhood: Partial<InsertNeighborhood>): Promise<Neighborhood | undefined>;
   deleteNeighborhood(id: string): Promise<void>;
+
+  // Alumni Memorial operations
+  listAlumniMemorials(filters?: { schoolName?: string; graduationYear?: string; major?: string; isPublic?: boolean }, limit?: number, offset?: number): Promise<AlumniMemorial[]>;
+  getAlumniMemorialsCount(filters?: { schoolName?: string; graduationYear?: string; major?: string; isPublic?: boolean }): Promise<number>;
+  getAlumniMemorial(id: string): Promise<AlumniMemorial | undefined>;
+  createAlumniMemorial(memorial: InsertAlumniMemorial): Promise<AlumniMemorial>;
+  updateAlumniMemorial(id: string, memorial: Partial<InsertAlumniMemorial>): Promise<AlumniMemorial | undefined>;
+  deleteAlumniMemorial(id: string): Promise<void>;
+  getSchoolsAutocomplete(query: string): Promise<string[]>;
 
   // Self-Written Obituary operations
   getSelfWrittenObituaryByEmail(email: string): Promise<SelfWrittenObituary | undefined>;
@@ -1530,6 +1542,106 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNeighborhood(id: string): Promise<void> {
     await db.delete(neighborhoods).where(eq(neighborhoods.id, id));
+  }
+
+  // Alumni Memorial operations
+  async listAlumniMemorials(filters?: { schoolName?: string; graduationYear?: string; major?: string; isPublic?: boolean }, limit: number = 50, offset: number = 0): Promise<AlumniMemorial[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    const conditions = [];
+    
+    if (filters?.isPublic !== undefined) {
+      conditions.push(eq(alumniMemorials.isPublic, filters.isPublic));
+    } else {
+      conditions.push(eq(alumniMemorials.isPublic, true));
+    }
+    
+    if (filters?.schoolName && filters.schoolName.trim() !== "") {
+      conditions.push(eq(alumniMemorials.schoolName, filters.schoolName));
+    }
+    if (filters?.graduationYear && filters.graduationYear.trim() !== "") {
+      conditions.push(eq(alumniMemorials.graduationYear, filters.graduationYear));
+    }
+    if (filters?.major && filters.major.trim() !== "") {
+      conditions.push(eq(alumniMemorials.major, filters.major));
+    }
+
+    return await db
+      .select()
+      .from(alumniMemorials)
+      .where(and(...conditions))
+      .orderBy(desc(alumniMemorials.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+
+  async getAlumniMemorialsCount(filters?: { schoolName?: string; graduationYear?: string; major?: string; isPublic?: boolean }): Promise<number> {
+    const conditions = [];
+    
+    if (filters?.isPublic !== undefined) {
+      conditions.push(eq(alumniMemorials.isPublic, filters.isPublic));
+    } else {
+      conditions.push(eq(alumniMemorials.isPublic, true));
+    }
+    
+    if (filters?.schoolName && filters.schoolName.trim() !== "") {
+      conditions.push(eq(alumniMemorials.schoolName, filters.schoolName));
+    }
+    if (filters?.graduationYear && filters.graduationYear.trim() !== "") {
+      conditions.push(eq(alumniMemorials.graduationYear, filters.graduationYear));
+    }
+    if (filters?.major && filters.major.trim() !== "") {
+      conditions.push(eq(alumniMemorials.major, filters.major));
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(alumniMemorials)
+      .where(and(...conditions));
+    return result.count;
+  }
+
+  async getAlumniMemorial(id: string): Promise<AlumniMemorial | undefined> {
+    const [memorial] = await db.select().from(alumniMemorials).where(eq(alumniMemorials.id, id));
+    return memorial || undefined;
+  }
+
+  async createAlumniMemorial(memorial: InsertAlumniMemorial): Promise<AlumniMemorial> {
+    const [created] = await db.insert(alumniMemorials).values({
+      ...memorial,
+      activities: memorial.activities as any,
+      notableAchievements: memorial.notableAchievements as any,
+    }).returning();
+    return created;
+  }
+
+  async updateAlumniMemorial(id: string, memorial: Partial<InsertAlumniMemorial>): Promise<AlumniMemorial | undefined> {
+    const [updated] = await db.update(alumniMemorials)
+      .set({
+        ...memorial,
+        activities: memorial.activities as any,
+        notableAchievements: memorial.notableAchievements as any,
+      })
+      .where(eq(alumniMemorials.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteAlumniMemorial(id: string): Promise<void> {
+    await db.delete(alumniMemorials).where(eq(alumniMemorials.id, id));
+  }
+
+  async getSchoolsAutocomplete(query: string): Promise<string[]> {
+    if (!query || query.trim() === "") {
+      return [];
+    }
+    
+    const schools = await db
+      .selectDistinct({ schoolName: alumniMemorials.schoolName })
+      .from(alumniMemorials)
+      .where(sql`${alumniMemorials.schoolName} ILIKE ${`%${query}%`}`)
+      .limit(10);
+    
+    return schools.map(s => s.schoolName).filter((name): name is string => name !== null);
   }
 
   // Self-Written Obituary operations

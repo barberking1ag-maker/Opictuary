@@ -17,6 +17,9 @@ import CreateHoodMemorial from "@/pages/CreateHoodMemorial";
 import Neighborhoods from "@/pages/Neighborhoods";
 import CreateNeighborhood from "@/pages/CreateNeighborhood";
 import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
+import BrowseAlumniMemorials from "@/pages/browse-alumni-memorials";
+import CreateAlumniMemorial from "@/pages/create-alumni-memorial";
+import AlumniMemorialDetail from "@/pages/alumni-memorial";
 import SelfObituary from "@/pages/SelfObituary";
 import CreateMemorial from "@/pages/CreateMemorial";
 import CustomizationDemo from "@/pages/CustomizationDemo";
@@ -48,7 +51,7 @@ import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell, Calendar } from "lucide-react";
+import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell, Calendar, GraduationCap } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -92,6 +95,12 @@ function Router() {
                 <Button variant="ghost" size="sm" data-testid="nav-essential-workers" className="text-sm">
                   <Heart className="w-4 h-4 mr-1.5" />
                   Essential Workers
+                </Button>
+              </Link>
+              <Link href="/alumni-memorials">
+                <Button variant="ghost" size="sm" data-testid="nav-alumni" className="text-sm">
+                  <GraduationCap className="w-4 h-4 mr-1.5" />
+                  Alumni
                 </Button>
               </Link>
               <Link href="/upcoming-messages">
@@ -187,6 +196,9 @@ function Router() {
         <Route path="/neighborhoods" component={Neighborhoods} />
         <Route path="/create-neighborhood" component={CreateNeighborhood} />
         <Route path="/neighborhood/:id" component={NeighborhoodDetail} />
+        <Route path="/alumni-memorials" component={BrowseAlumniMemorials} />
+        <Route path="/alumni-memorials/create" component={CreateAlumniMemorial} />
+        <Route path="/alumni-memorials/:id" component={AlumniMemorialDetail} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

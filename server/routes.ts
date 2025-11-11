@@ -40,6 +40,7 @@ import {
   insertEssentialWorkerMemorialSchema,
   insertHoodMemorialSchema,
   insertNeighborhoodSchema,
+  insertAlumniMemorialSchema,
   insertSelfWrittenObituarySchema,
   insertAdvertisementSchema,
   insertAdvertisementSaleSchema,
@@ -2357,6 +2358,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/neighborhoods/:id", isAuthenticated, async (req: any, res) => {
     try {
       await storage.deleteNeighborhood(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Alumni Memorial routes
+  app.get("/api/alumni-memorials/schools/autocomplete", async (req, res) => {
+    try {
+      const query = req.query.q as string || "";
+      const schools = await storage.getSchoolsAutocomplete(query);
+      res.json(schools);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/alumni-memorials", async (req, res) => {
+    try {
+      let limit = 50;
+      let offset = 0;
+      
+      if (req.query.limit) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({ error: "Invalid limit parameter" });
+        }
+        limit = Math.min(parsedLimit, 200);
+      }
+      
+      if (req.query.offset) {
+        const parsedOffset = parseInt(req.query.offset as string, 10);
+        if (isNaN(parsedOffset) || parsedOffset < 0) {
+          return res.status(400).json({ error: "Invalid offset parameter" });
+        }
+        offset = parsedOffset;
+      }
+
+      const filters = {
+        schoolName: req.query.schoolName as string | undefined,
+        graduationYear: req.query.graduationYear as string | undefined,
+        major: req.query.major as string | undefined,
+        isPublic: req.query.isPublic === 'true' ? true : req.query.isPublic === 'false' ? false : undefined,
+      };
+      
+      const [memorials, count] = await Promise.all([
+        storage.listAlumniMemorials(filters, limit, offset),
+        storage.getAlumniMemorialsCount(filters),
+      ]);
+      
+      res.json({
+        memorials,
+        count,
+        limit,
+        offset,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/alumni-memorials/:id", async (req, res) => {
+    try {
+      const memorial = await storage.getAlumniMemorial(req.params.id);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/alumni-memorials", async (req, res) => {
+    try {
+      const data = insertAlumniMemorialSchema.parse(req.body);
+      const memorial = await storage.createAlumniMemorial(data);
+      res.status(201).json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/alumni-memorials/:id", async (req, res) => {
+    try {
+      const data = insertAlumniMemorialSchema.partial().parse(req.body);
+      const memorial = await storage.updateAlumniMemorial(req.params.id, data);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      res.json(memorial);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/alumni-memorials/:id", async (req, res) => {
+    try {
+      await storage.deleteAlumniMemorial(req.params.id);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });

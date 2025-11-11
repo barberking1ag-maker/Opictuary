@@ -540,6 +540,37 @@ export const neighborhoods = pgTable("neighborhoods", {
   uniqueIndex("idx_neighborhoods_unique_name").on(table.name, table.city, table.state),
 ]);
 
+// Alumni Memorials - for honoring deceased alumni
+export const alumniMemorials = pgTable("alumni_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "cascade" }).unique(),
+  fullName: text("full_name").notNull(),
+  preferredName: text("preferred_name"),
+  birthDate: text("birth_date").notNull(),
+  deathDate: text("death_date").notNull(),
+  biography: text("biography"),
+  epitaph: text("epitaph"),
+  heroImageUrl: text("hero_image_url"),
+  schoolName: text("school_name").notNull(),
+  campusLocation: text("campus_location"),
+  graduationYear: text("graduation_year"),
+  degreeType: text("degree_type"),
+  major: text("major"),
+  schoolLogoUrl: text("school_logo_url"),
+  activities: json("activities").$type<Array<{ name: string; role: string; years: string }>>(),
+  notableAchievements: json("notable_achievements").$type<Array<string>>(),
+  classNotes: text("class_notes"),
+  isPublic: boolean("is_public").default(true),
+  creatorEmail: text("creator_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_alumni_memorials_school_name").on(table.schoolName),
+  index("idx_alumni_memorials_graduation_year").on(table.graduationYear),
+  index("idx_alumni_memorials_major").on(table.major),
+  index("idx_alumni_memorials_is_public").on(table.isPublic),
+  index("idx_alumni_memorials_created_at").on(table.createdAt),
+]);
+
 // Prison Access System
 export const prisonFacilities = pgTable("prison_facilities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1349,6 +1380,11 @@ export const insertNeighborhoodSchema = createInsertSchema(neighborhoods).omit({
   updatedAt: true,
 });
 
+export const insertAlumniMemorialSchema = createInsertSchema(alumniMemorials).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertSelfWrittenObituarySchema = createInsertSchema(selfWrittenObituaries).omit({
   id: true,
   createdAt: true,
@@ -1585,6 +1621,9 @@ export type HoodMemorial = typeof hoodMemorials.$inferSelect;
 
 export type InsertNeighborhood = z.infer<typeof insertNeighborhoodSchema>;
 export type Neighborhood = typeof neighborhoods.$inferSelect;
+
+export type InsertAlumniMemorial = z.infer<typeof insertAlumniMemorialSchema>;
+export type AlumniMemorial = typeof alumniMemorials.$inferSelect;
 
 export type InsertSelfWrittenObituary = z.infer<typeof insertSelfWrittenObituarySchema>;
 export type SelfWrittenObituary = typeof selfWrittenObituaries.$inferSelect;
