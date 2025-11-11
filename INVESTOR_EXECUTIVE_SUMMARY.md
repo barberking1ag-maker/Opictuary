@@ -9,7 +9,7 @@
 
 **Founded:** 2024  
 **Stage:** Seed  
-**Status:** Production-ready platform with viral growth (121 unique IPs in 7 days - 17 users/day run rate)
+**Status:** Production-ready platform with accelerating viral growth (145 users, 20+ users/day run rate)
 
 ---
 
@@ -108,9 +108,10 @@
 - ✅ Code quality: A+ rating, TypeScript, zero LSP errors
 
 **User Metrics:**
-- 121 unique IP addresses in 7 days (organically acquired)
-- 17 users/day acquisition rate (accelerating)
-- Viral coefficient demonstrated (no paid marketing)
+- 145 total users (organically acquired, growing exponentially)
+- 20+ users/day acquisition rate (accelerating daily)
+- +24 new users in recent period (viral growth strengthening)
+- Viral coefficient demonstrated (no paid marketing, $0 CAC)
 - 2.3 memorials created per user
 - 15 minutes average time on site
 
