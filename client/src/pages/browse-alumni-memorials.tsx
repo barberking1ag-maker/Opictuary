@@ -33,18 +33,37 @@ export default function BrowseAlumniMemorials() {
   const limit = 12;
 
   const { data, isLoading } = useQuery<AlumniMemorialsResponse>({
-    queryKey: [
-      '/api/alumni-memorials',
-      {
-        ...searchQuery,
-        limit,
-        offset: page * limit,
-      },
-    ],
+    queryKey: ['/api/alumni-memorials', searchQuery, page],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchQuery.schoolName) params.append('schoolName', searchQuery.schoolName);
+      if (searchQuery.graduationYear) params.append('graduationYear', searchQuery.graduationYear);
+      if (searchQuery.major) params.append('major', searchQuery.major);
+      params.append('limit', limit.toString());
+      params.append('offset', (page * limit).toString());
+      
+      const response = await fetch(`/api/alumni-memorials?${params.toString()}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    },
   });
 
   const { data: schools = [] } = useQuery<string[]>({
     queryKey: ['/api/alumni-memorials/schools/autocomplete', schoolAutocompleteQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams({ q: schoolAutocompleteQuery });
+      const response = await fetch(`/api/alumni-memorials/schools/autocomplete?${params.toString()}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    },
     enabled: schoolAutocompleteQuery.length > 2,
   });
 

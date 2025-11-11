@@ -64,11 +64,8 @@ export default function CreateAlumniMemorial() {
 
   const createMemorialMutation = useMutation({
     mutationFn: async (data: AlumniMemorialFormData) => {
-      return await apiRequest('/api/alumni-memorials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest('POST', '/api/alumni-memorials', data);
+      return await res.json();
     },
     onSuccess: (memorial) => {
       queryClient.invalidateQueries({ queryKey: ['/api/alumni-memorials'] });
