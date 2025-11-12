@@ -36,6 +36,7 @@ import MyMemorials from "@/pages/MyMemorials";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminScreenshots from "@/pages/AdminScreenshots";
 import Privacy from "@/pages/Privacy";
+import ChildSafety from "@/pages/ChildSafety";
 import SupportHub from "@/pages/SupportHub";
 import MemorialUpload from "@/pages/MemorialUpload";
 import ManageMemorial from "@/pages/ManageMemorial";
@@ -226,6 +227,7 @@ function Router() {
         <Route path="/admin/qr-code" component={QRCodeGenerator} />
         <Route path="/qr-code" component={QRCodeGenerator} />
         <Route path="/privacy" component={Privacy} />
+        <Route path="/child-safety" component={ChildSafety} />
         <Route path="/support" component={SupportHub} />
         <Route component={NotFound} />
         </Switch>
