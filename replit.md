@@ -27,7 +27,7 @@ The platform follows a "Dignity in Digital" design philosophy, employing a respe
 **Security:** Features Zod validation, whitelisted fields, session-based authentication, CSRF protection, protected routes, and lazy-loaded Stripe.
 
 ### Feature Specifications
-**Memorial Photo & Video Gallery:** Comprehensive gallery with interactive lightbox, heart/like reactions, share functionality (Web Share API/clipboard), download options, keyboard navigation, and integrated commenting. Supports various video formats and external platforms.
+**Memorial Photo & Video Gallery:** Comprehensive gallery with interactive lightbox, heart/like reactions, share functionality (Web Share API/clipboard), download options, keyboard navigation, and integrated commenting. Supports browser-native video formats (.mp4, .webm, .ogg, .mov, .m4v) with CDN/S3 signed URL compatibility (strips query parameters), YouTube and Vimeo embeds with safe fallbacks, and graceful degradation for streaming manifests (.m3u8, .mpd) showing helpful guidance messages instead of broken media.
 **Memorial QR Code System:** Generates printable QR codes for tombstones and memorial cards, linking to memorial pages. Codes support tombstone upload, memorial view, and general photo/video upload.
 **Prison Access System:** Provides secure, monitored access for incarcerated individuals to memorials, including identity verification, payment, time-limited access tokens, and session monitoring.
 **Flower Shop Partnership System:** Connects users with local florists for sympathy flower delivery, operating on a commission model.
@@ -47,13 +47,23 @@ The platform follows a "Dignity in Digital" design philosophy, employing a respe
 ### System Design Choices
 The system prioritizes privacy with an invite code system for private memorials, optional public settings, and role-based admin permissions. It is built for scalability and maintainability with a clear separation of concerns between frontend and backend.
 
+## Mobile App Configuration
+**Android App Icons:** Properly configured adaptive icons using Google Play badge artwork:
+- Foreground layer: assets/icon-foreground.png (1024x1024 with proper padding)
+- Background layer: Solid color #1a0f29 (theme color) defined in values/ic_launcher_background.xml
+- All 48 mipmap density assets generated via capacitor-assets
+- Adaptive icon XML files configured without insets for full-bleed backgrounds
+- Ready for Google Play Store submission
+
+**Build System:** GitHub Actions CI/CD pipeline configured for automated Android .aab builds with secure keystore management (see GITHUB_ACTIONS_BUILD_GUIDE.md)
+
 ## External Dependencies
 *   **Stripe**: Payment processing.
 *   **`qrcode` library**: QR code generation.
 *   **Google Fonts**: Crimson Text and Inter.
 *   **Radix UI**: Accessible UI primitives.
 *   **Lucide React**: Icon library.
-*   **Capacitor**: Native mobile app features.
+*   **Capacitor**: Native mobile app features and Android build system.
 *   **Google Analytics**: Usage analytics and tracking.
 *   **Plausible Analytics**: Privacy-focused web analytics.
 *   **ConnectNetwork/GTL, ViaPath Technologies, Securus Technologies**: Integrations for the prison access system.
