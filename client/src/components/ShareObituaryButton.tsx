@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share2, Check, Copy } from "lucide-react";
+import { Share2, Check, Copy, Facebook, Twitter, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 interface ShareObituaryButtonProps {
   memorialId: string;
@@ -66,6 +67,23 @@ export function ShareObituaryButton({
     }
   };
 
+  const shareFacebook = () => {
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareableUrl)}`;
+    window.open(fbUrl, '_blank', 'width=600,height=400');
+  };
+
+  const shareTwitter = () => {
+    const text = `Remembering ${deceasedName}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareableUrl)}`;
+    window.open(twitterUrl, '_blank', 'width=600,height=400');
+  };
+
+  const shareWhatsApp = () => {
+    const text = `View the obituary for ${deceasedName}: ${shareableUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -98,7 +116,7 @@ export function ShareObituaryButton({
               size="icon"
               variant="outline"
               onClick={copyToClipboard}
-              data-testid="button-copy-url"
+              data-testid="button-copy-link"
             >
               {copied ? (
                 <Check className="h-4 w-4 text-green-500" />
@@ -107,25 +125,54 @@ export function ShareObituaryButton({
               )}
             </Button>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={shareViaWebShare}
-              className="flex-1 gap-2"
-              data-testid="button-share-via-native"
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </Button>
-            <Button
-              variant="outline"
-              onClick={copyToClipboard}
-              className="flex-1 gap-2"
-              data-testid="button-copy-link"
-            >
-              <Copy className="h-4 w-4" />
-              Copy Link
-            </Button>
+
+          {navigator.share && (
+            <>
+              <Button
+                onClick={shareViaWebShare}
+                className="w-full gap-2"
+                data-testid="button-share-via-native"
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+              <Separator />
+            </>
+          )}
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Share on social media</p>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                onClick={shareFacebook}
+                className="gap-2"
+                data-testid="button-share-facebook"
+              >
+                <Facebook className="h-4 w-4" />
+                Facebook
+              </Button>
+              <Button
+                variant="outline"
+                onClick={shareTwitter}
+                className="gap-2"
+                data-testid="button-share-twitter"
+              >
+                <Twitter className="h-4 w-4" />
+                Twitter
+              </Button>
+              <Button
+                variant="outline"
+                onClick={shareWhatsApp}
+                className="gap-2"
+                data-testid="button-share-whatsapp"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </Button>
+            </div>
           </div>
+
           <p className="text-xs text-muted-foreground">
             This link provides public access to the obituary only. The full memorial, photos, and fundraisers remain private and require an invite code.
           </p>

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, decimal, json, index, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, decimal, json, index, jsonb, uniqueIndex, check } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -206,6 +206,37 @@ export const memorialComments = pgTable("memorial_comments", {
   index("idx_memorial_comments_user_id").on(table.userId),
   index("idx_memorial_comments_parent_id").on(table.parentCommentId),
 ]);
+
+// Memorial Condolence Reactions - emoji reactions for memorials (candle, prayer, flowers, heart)
+export const memorialCondolenceReactions = pgTable("memorial_condolence_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  reactionType: text("reaction_type").notNull(), // 'candle', 'prayer', 'flowers', 'heart'
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: varchar("session_id"), // For anonymous users
+  userEmail: text("user_email"),
+  userName: text("user_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  memorialIdIndex: index("idx_memorial_condolence_reactions_memorial_id").on(table.memorialId),
+  reactionTypeIndex: index("idx_memorial_condolence_reactions_type").on(table.reactionType),
+  // Partial unique index for authenticated users (ignores sessionId which is NULL)
+  authenticatedUserUnique: uniqueIndex("authenticated_user_reaction_unique")
+    .on(table.memorialId, table.reactionType, table.userId)
+    .where(sql`${table.userId} IS NOT NULL`),
+  // Partial unique index for anonymous users (ignores userId which is NULL)
+  anonymousUserUnique: uniqueIndex("anonymous_user_reaction_unique")
+    .on(table.memorialId, table.reactionType, table.sessionId)
+    .where(sql`${table.sessionId} IS NOT NULL`),
+  // Database-level CHECK constraint to enforce exactly one identity field
+  identityCheck: check(
+    "identity_check",
+    sql`(
+      (user_id IS NOT NULL AND session_id IS NULL) OR
+      (user_id IS NULL AND session_id IS NOT NULL)
+    )`
+  ),
+}));
 
 // Saved Memorials - users can save memorials with relationship categories
 export const savedMemorials = pgTable("saved_memorials", {
@@ -1278,6 +1309,38 @@ export const insertMemorialCommentSchema = createInsertSchema(memorialComments).
   updatedAt: true,
 });
 
+export const insertMemorialCondolenceReactionSchema = createInsertSchema(memorialCondolenceReactions).omit({
+  id: true,
+  createdAt: true,
+}).refine(
+  (data) => {
+    // Require exactly ONE of userId or sessionId (not both, not neither)
+    const hasUserId = !!data.userId;
+    const hasSessionId = !!data.sessionId;
+    return (hasUserId && !hasSessionId) || (!hasUserId && hasSessionId);
+  },
+  {
+    message: "Exactly one of userId or sessionId must be provided (not both, not neither)"
+  }
+);
+
+export const deleteMemorialCondolenceReactionSchema = z.object({
+  memorialId: z.string(),
+  reactionType: z.enum(['heart', 'prayer', 'candle', 'flower', 'dove']),
+  userId: z.string().optional(),
+  sessionId: z.string().optional(),
+}).refine(
+  (data) => {
+    // Require exactly ONE of userId or sessionId
+    const hasUserId = !!data.userId;
+    const hasSessionId = !!data.sessionId;
+    return (hasUserId && !hasSessionId) || (!hasUserId && hasSessionId);
+  },
+  {
+    message: "Exactly one of userId or sessionId must be provided for deletion (not both, not neither)"
+  }
+);
+
 export const insertSavedMemorialSchema = createInsertSchema(savedMemorials).omit({
   id: true,
   createdAt: true,
@@ -1576,6 +1639,10 @@ export type MemorialLike = typeof memorialLikes.$inferSelect;
 
 export type InsertMemorialComment = z.infer<typeof insertMemorialCommentSchema>;
 export type MemorialComment = typeof memorialComments.$inferSelect;
+
+export type InsertMemorialCondolenceReaction = z.infer<typeof insertMemorialCondolenceReactionSchema>;
+export type DeleteMemorialCondolenceReaction = z.infer<typeof deleteMemorialCondolenceReactionSchema>;
+export type MemorialCondolenceReaction = typeof memorialCondolenceReactions.$inferSelect;
 
 export type InsertSavedMemorial = z.infer<typeof insertSavedMemorialSchema>;
 export type SavedMemorial = typeof savedMemorials.$inferSelect;

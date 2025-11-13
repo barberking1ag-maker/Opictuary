@@ -21,6 +21,7 @@ import { ShareObituaryButton } from "@/components/ShareObituaryButton";
 import { SaveMemorialDialog } from "@/components/SaveMemorialDialog";
 import { MerchandiseServices } from "@/components/MerchandiseServices";
 import { FutureMessagesSection } from "@/components/FutureMessagesSection";
+import { MemorialCondolenceBar } from "@/components/MemorialCondolenceBar";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -31,6 +32,7 @@ export default function Home() {
   const [donationModalOpen, setDonationModalOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [memorialId, setMemorialId] = useState<string | null>(params.id || null);
+  const [hasValidatedAccess, setHasValidatedAccess] = useState(false);
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
@@ -75,6 +77,7 @@ export default function Home() {
     },
     onSuccess: (memorial) => {
       setMemorialId(memorial.id);
+      setHasValidatedAccess(true);
       setCodeModalOpen(false);
       toast({
         title: "Access Granted",
@@ -143,14 +146,25 @@ export default function Home() {
     enabled: !!firstFundraiser?.id,
   });
 
-  // Check for ?code= parameter in URL on mount
+  // Check for ?code= or ?inviteCode= parameter in URL on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const code = urlParams.get('code') || urlParams.get('inviteCode');
     if (code) {
       verifyInviteCodeMutation.mutate(code);
     }
   }, []);
+
+  // Check if memorial is private and show invite modal
+  useEffect(() => {
+    if (memorial && !memorial.isPublic && !hasValidatedAccess && !codeModalOpen) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasInviteCodeParam = urlParams.get('code') || urlParams.get('inviteCode');
+      if (!hasInviteCodeParam) {
+        setCodeModalOpen(true);
+      }
+    }
+  }, [memorial, hasValidatedAccess]);
 
   // Track memorial view when page loads
   useEffect(() => {
@@ -691,6 +705,21 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Memorial Condolence Reactions */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-gradient-to-br from-card/50 to-card/30 backdrop-blur-sm rounded-2xl p-8 border border-border/50 shadow-xl">
+          <div className="text-center space-y-6">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
+              Express Your Condolences
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Share your love and support with a simple gesture
+            </p>
+            <MemorialCondolenceBar memorialId={memorialId!} />
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

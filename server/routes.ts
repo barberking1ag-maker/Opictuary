@@ -25,6 +25,8 @@ import {
   insertCondolenceSchema,
   insertMemorialLikeSchema,
   insertMemorialCommentSchema,
+  insertMemorialCondolenceReactionSchema,
+  deleteMemorialCondolenceReactionSchema,
   insertSavedMemorialSchema,
   insertMemorialLiveStreamSchema,
   insertMemorialLiveStreamViewerSchema,
@@ -1148,6 +1150,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Condolence Reaction routes
+  app.get("/api/memorials/:memorialId/condolence-reactions", async (req: any, res) => {
+    try {
+      const { memorialId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.headers['x-session-id'] as string | undefined;
+      
+      const reactions = await storage.getMemorialCondolenceReactions(memorialId);
+      
+      let userReactions: string[] = [];
+      if (userId || sessionId) {
+        const userReactionRecords = await storage.getUserMemorialCondolenceReactions({
+          memorialId,
+          userId,
+          sessionId,
+        });
+        userReactions = userReactionRecords.map(r => r.reactionType);
+      }
+      
+      res.json({ 
+        reactions,
+        userReactions 
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/condolence-reactions", async (req, res) => {
+    try {
+      // Parse and validate request body with Zod schema (includes refinement check)
+      const parsed = insertMemorialCondolenceReactionSchema.safeParse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request", 
+          errors: parsed.error.errors 
+        });
+      }
+      
+      // Explicit validation (redundant but defensive - additional layer)
+      const data = parsed.data;
+      const hasUserId = !!data.userId;
+      const hasSessionId = !!data.sessionId;
+      
+      if (!hasUserId && !hasSessionId) {
+        return res.status(400).json({ 
+          message: "Either userId or sessionId must be provided" 
+        });
+      }
+      
+      if (hasUserId && hasSessionId) {
+        return res.status(400).json({ 
+          message: "Only one of userId or sessionId should be provided" 
+        });
+      }
+      
+      const reaction = await storage.addMemorialCondolenceReaction(data);
+      res.status(201).json(reaction);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      if (error.message === "DUPLICATE_REACTION") {
+        return res.status(409).json({ message: "You already reacted with this emoji" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memorials/:memorialId/condolence-reactions/:reactionType", async (req, res) => {
+    try {
+      // Validate request body
+      const parsed = deleteMemorialCondolenceReactionSchema.safeParse({
+        memorialId: req.params.memorialId,
+        reactionType: req.params.reactionType,
+        ...req.body
+      });
+      
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid request",
+          errors: parsed.error.errors
+        });
+      }
+      
+      const data = parsed.data;
+      
+      // Explicit validation (defensive layer)
+      const hasUserId = !!data.userId;
+      const hasSessionId = !!data.sessionId;
+      
+      if (!hasUserId && !hasSessionId) {
+        return res.status(400).json({
+          message: "Either userId or sessionId must be provided for deletion"
+        });
+      }
+      
+      if (hasUserId && hasSessionId) {
+        return res.status(400).json({
+          message: "Only one of userId or sessionId should be provided for deletion"
+        });
+      }
+      
+      // Execute delete with identity enforcement
+      const deleted = await storage.removeMemorialCondolenceReaction({
+        memorialId: data.memorialId,
+        reactionType: data.reactionType,
+        userId: data.userId,
+        sessionId: data.sessionId
+      });
+      
+      res.json({
+        message: "Condolence reaction removed successfully",
+        reaction: deleted
+      });
+      
+    } catch (error: any) {
+      if (error.message === "MISSING_IDENTITY" || error.message === "DUPLICATE_IDENTITY") {
+        return res.status(400).json({ message: error.message });
+      }
+      if (error.message.startsWith("NOT_FOUND")) {
+        return res.status(404).json({ message: "Reaction not found or already deleted" });
+      }
+      console.error("Error removing condolence reaction:", error);
+      res.status(500).json({ message: "Failed to remove condolence reaction" });
     }
   });
 

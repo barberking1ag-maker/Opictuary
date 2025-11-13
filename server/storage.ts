@@ -11,6 +11,7 @@ import {
   condolences,
   memorialLikes,
   memorialComments,
+  memorialCondolenceReactions,
   savedMemorials,
   memorialLiveStreams,
   memorialLiveStreamViewers,
@@ -80,6 +81,8 @@ import {
   type InsertMemorialLike,
   type MemorialComment,
   type InsertMemorialComment,
+  type MemorialCondolenceReaction,
+  type InsertMemorialCondolenceReaction,
   type SavedMemorial,
   type InsertSavedMemorial,
   type MemorialLiveStream,
@@ -257,6 +260,21 @@ export interface IStorage {
   getMemorialComments(memorialId: string): Promise<MemorialComment[]>;
   createMemorialComment(comment: InsertMemorialComment): Promise<MemorialComment>;
   deleteMemorialComment(id: string): Promise<void>;
+
+  // Memorial Condolence Reaction operations
+  getMemorialCondolenceReactions(memorialId: string): Promise<{ reactionType: string; count: number }[]>;
+  getUserMemorialCondolenceReactions(params: {
+    memorialId: string;
+    userId?: string;
+    sessionId?: string;
+  }): Promise<MemorialCondolenceReaction[]>;
+  addMemorialCondolenceReaction(reaction: InsertMemorialCondolenceReaction): Promise<MemorialCondolenceReaction>;
+  removeMemorialCondolenceReaction(params: {
+    memorialId: string;
+    reactionType: string;
+    userId?: string;
+    sessionId?: string;
+  }): Promise<MemorialCondolenceReaction>;
 
   // Saved Memorial operations
   getSavedMemorials(userId: string): Promise<SavedMemorial[]>;
@@ -870,6 +888,106 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMemorialComment(id: string): Promise<void> {
     await db.delete(memorialComments).where(eq(memorialComments.id, id));
+  }
+
+  // Memorial Condolence Reaction operations
+  async getMemorialCondolenceReactions(memorialId: string): Promise<{ reactionType: string; count: number }[]> {
+    const result = await db
+      .select({
+        reactionType: memorialCondolenceReactions.reactionType,
+        count: count(memorialCondolenceReactions.id),
+      })
+      .from(memorialCondolenceReactions)
+      .where(eq(memorialCondolenceReactions.memorialId, memorialId))
+      .groupBy(memorialCondolenceReactions.reactionType);
+    
+    return result.map(r => ({ reactionType: r.reactionType!, count: Number(r.count) }));
+  }
+
+  async getUserMemorialCondolenceReactions(params: {
+    memorialId: string;
+    userId?: string;
+    sessionId?: string;
+  }): Promise<MemorialCondolenceReaction[]> {
+    const { memorialId, userId, sessionId } = params;
+    
+    // If neither userId nor sessionId is provided, return empty array
+    if (!userId && !sessionId) {
+      return [];
+    }
+    
+    // Build WHERE clause with identity filter
+    const where = userId
+      ? and(
+          eq(memorialCondolenceReactions.memorialId, memorialId),
+          eq(memorialCondolenceReactions.userId, userId)
+        )
+      : and(
+          eq(memorialCondolenceReactions.memorialId, memorialId),
+          eq(memorialCondolenceReactions.sessionId, sessionId!)
+        );
+    
+    return await db
+      .select()
+      .from(memorialCondolenceReactions)
+      .where(where);
+  }
+
+  async addMemorialCondolenceReaction(reaction: InsertMemorialCondolenceReaction): Promise<MemorialCondolenceReaction> {
+    try {
+      // Atomic insert - database will enforce uniqueness via partial unique indexes
+      const [created] = await db.insert(memorialCondolenceReactions).values(reaction).returning();
+      return created;
+    } catch (error: any) {
+      // PostgreSQL unique constraint violation error code is 23505
+      if (error.code === '23505') {
+        throw new Error("DUPLICATE_REACTION");
+      }
+      throw error;
+    }
+  }
+
+  async removeMemorialCondolenceReaction(params: {
+    memorialId: string;
+    reactionType: string;
+    userId?: string;
+    sessionId?: string;
+  }): Promise<MemorialCondolenceReaction> {
+    const { memorialId, reactionType, userId, sessionId } = params;
+    
+    // CRITICAL: Refuse to execute if neither identity is provided
+    if (!userId && !sessionId) {
+      throw new Error("MISSING_IDENTITY: Cannot delete without userId or sessionId");
+    }
+    
+    // CRITICAL: Refuse if both are provided
+    if (userId && sessionId) {
+      throw new Error("DUPLICATE_IDENTITY: Cannot delete with both userId and sessionId");
+    }
+    
+    // Build WHERE clause with identity filter
+    const where = userId
+      ? and(
+          eq(memorialCondolenceReactions.memorialId, memorialId),
+          eq(memorialCondolenceReactions.reactionType, reactionType),
+          eq(memorialCondolenceReactions.userId, userId)
+        )
+      : and(
+          eq(memorialCondolenceReactions.memorialId, memorialId),
+          eq(memorialCondolenceReactions.reactionType, reactionType),
+          eq(memorialCondolenceReactions.sessionId, sessionId!)
+        );
+    
+    const result = await db
+      .delete(memorialCondolenceReactions)
+      .where(where)
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error("NOT_FOUND: Reaction not found or already deleted");
+    }
+    
+    return result[0];
   }
 
   // Saved Memorial operations

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calendar, MapPin, Heart } from "lucide-react";
 import { format } from "date-fns";
+import { ShareObituaryButton } from "@/components/ShareObituaryButton";
+import { MemorialCondolenceBar } from "@/components/MemorialCondolenceBar";
 
 interface Memorial {
   id: string;
@@ -97,7 +99,13 @@ export default function ObituaryPage() {
               Back
             </a>
           </Button>
-          <div className="text-sm text-muted-foreground">Public Obituary</div>
+          <div className="flex items-center gap-3">
+            <ShareObituaryButton 
+              memorialId={memorial.id} 
+              deceasedName={fullName} 
+            />
+            <div className="text-sm text-muted-foreground">Public Obituary</div>
+          </div>
         </div>
 
         <Card className="bg-card/40 backdrop-blur-sm border-white/10">
@@ -171,6 +179,13 @@ export default function ObituaryPage() {
                 </div>
               </>
             )}
+
+            <Separator className="bg-white/10" />
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-serif font-semibold text-center">Express Your Condolences</h3>
+              <MemorialCondolenceBar memorialId={memorial.id} />
+            </div>
 
             <Separator className="bg-white/10" />
 
