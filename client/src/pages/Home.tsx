@@ -34,6 +34,33 @@ export default function Home() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
+  const isVideo = (url: string | null) => {
+    if (!url) return false;
+    // Strip query parameters and hash to check file extension
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    return /\.(mp4|webm|ogg|mov)$/i.test(cleanUrl);
+  };
+
+  const isYouTube = (url: string | null) => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+  };
+
+  const isVimeo = (url: string | null) => {
+    if (!url) return false;
+    return url.includes('vimeo.com');
+  };
+
+  const getYouTubeEmbedUrl = (url: string): string | null => {
+    const videoIdMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return videoIdMatch ? `https://www.youtube.com/embed/${videoIdMatch[1]}` : null;
+  };
+
+  const getVimeoEmbedUrl = (url: string): string | null => {
+    const videoIdMatch = url.match(/vimeo\.com\/(\d+)/);
+    return videoIdMatch ? `https://player.vimeo.com/video/${videoIdMatch[1]}` : null;
+  };
+
   const verifyInviteCodeMutation = useMutation({
     mutationFn: async (inviteCode: string) => {
       const res = await apiRequest("POST", "/api/memorials/validate-code", { inviteCode });
@@ -722,13 +749,38 @@ export default function Home() {
                 <Card key={memory.id} data-testid={`card-memory-${memory.id}`} className="overflow-hidden hover-elevate border-border/50 shadow-lg group">
                   {memory.mediaUrl && (
                     <div className="aspect-video w-full overflow-hidden bg-muted relative">
-                      <img 
-                        src={memory.mediaUrl} 
-                        alt={memory.caption || ''}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        data-testid={`img-memory-${memory.id}`}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {isVideo(memory.mediaUrl) ? (
+                        <video 
+                          src={memory.mediaUrl} 
+                          controls
+                          className="w-full h-full object-cover"
+                          data-testid={`video-memory-${memory.id}`}
+                        />
+                      ) : isYouTube(memory.mediaUrl) && getYouTubeEmbedUrl(memory.mediaUrl) ? (
+                        <iframe
+                          src={getYouTubeEmbedUrl(memory.mediaUrl)!}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          data-testid={`youtube-memory-${memory.id}`}
+                        />
+                      ) : isVimeo(memory.mediaUrl) && getVimeoEmbedUrl(memory.mediaUrl) ? (
+                        <iframe
+                          src={getVimeoEmbedUrl(memory.mediaUrl)!}
+                          className="w-full h-full"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                          data-testid={`vimeo-memory-${memory.id}`}
+                        />
+                      ) : (
+                        <img 
+                          src={memory.mediaUrl} 
+                          alt={memory.caption || ''}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          data-testid={`img-memory-${memory.id}`}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                     </div>
                   )}
                   <CardHeader className="pb-3">
