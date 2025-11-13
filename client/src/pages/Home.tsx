@@ -36,9 +36,10 @@ export default function Home() {
 
   const isVideo = (url: string | null) => {
     if (!url) return false;
-    // Strip query parameters and hash to check file extension
+    // Strip query parameters and hash to check file extension (handles CDN/S3 signed URLs)
     const cleanUrl = url.split('?')[0].split('#')[0];
-    return /\.(mp4|webm|ogg|mov)$/i.test(cleanUrl);
+    // Check for video file extensions that browsers can play natively
+    return /\.(mp4|webm|ogg|mov|m4v)$/i.test(cleanUrl);
   };
 
   const isYouTube = (url: string | null) => {
@@ -49,6 +50,12 @@ export default function Home() {
   const isVimeo = (url: string | null) => {
     if (!url) return false;
     return url.includes('vimeo.com');
+  };
+
+  const isStreamingManifest = (url: string | null) => {
+    if (!url) return false;
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    return /\.(m3u8|mpd|dash|f4m)$/i.test(cleanUrl);
   };
 
   const getYouTubeEmbedUrl = (url: string): string | null => {
@@ -772,6 +779,14 @@ export default function Home() {
                           allowFullScreen
                           data-testid={`vimeo-memory-${memory.id}`}
                         />
+                      ) : isStreamingManifest(memory.mediaUrl) ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
+                          <ImageIcon className="w-12 h-12 text-muted-foreground mb-3" />
+                          <p className="text-sm text-muted-foreground mb-2">Video Format Not Supported</p>
+                          <p className="text-xs text-muted-foreground/80">
+                            Please upload MP4/WebM files or share YouTube/Vimeo links
+                          </p>
+                        </div>
                       ) : (
                         <img 
                           src={memory.mediaUrl} 
