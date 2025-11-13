@@ -11,3 +11,5 @@ android/*.jks
 android/*.keystore
 *.jks
 *.keystore
+keystore.base64.txt
+keystores/

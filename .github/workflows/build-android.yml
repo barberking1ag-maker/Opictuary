@@ -1,0 +1,83 @@
+name: Build Android App Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Android AAB
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build production frontend
+        run: npm run build
+      
+      - name: Sync Capacitor
+        run: npx cap sync android
+      
+      - name: Decode keystore
+        run: |
+          mkdir -p keystores
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystores/opictuary-upload.jks
+        working-directory: ./
+      
+      - name: Create key.properties
+        run: |
+          mkdir -p android
+          cat > android/key.properties << EOF
+          storeFile=../keystores/opictuary-upload.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+      
+      - name: Build Android App Bundle
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
+      
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+      
+      - name: Build summary
+        run: |
+          echo "### ✅ Android App Bundle Built Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Download your app:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to the 'Actions' tab" >> $GITHUB_STEP_SUMMARY
+          echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "3. Download the 'app-release' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "4. Extract the ZIP to get your .aab file" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Upload app-release.aab to Google Play Console" >> $GITHUB_STEP_SUMMARY
+          echo "- Submit for review" >> $GITHUB_STEP_SUMMARY
