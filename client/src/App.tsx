@@ -52,7 +52,7 @@ import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { Star, Home as HomeIcon, Shield, Heart, FileText, Palette, Megaphone, HandshakeIcon, Image, Layout, Bell, Calendar, GraduationCap } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -86,34 +86,10 @@ function Router() {
               </div>
             </Link>
             <div className="hidden lg:flex gap-1">
-              <Link href="/celebrity-memorials">
-                <Button variant="ghost" size="sm" data-testid="nav-celebrity" className="text-sm">
-                  <Star className="w-4 h-4 mr-1.5" />
-                  Celebrity
-                </Button>
-              </Link>
-              <Link href="/essential-workers">
-                <Button variant="ghost" size="sm" data-testid="nav-essential-workers" className="text-sm">
-                  <Heart className="w-4 h-4 mr-1.5" />
-                  Essential Workers
-                </Button>
-              </Link>
-              <Link href="/alumni-memorials">
-                <Button variant="ghost" size="sm" data-testid="nav-alumni" className="text-sm">
-                  <GraduationCap className="w-4 h-4 mr-1.5" />
-                  Alumni
-                </Button>
-              </Link>
-              <Link href="/upcoming-messages">
-                <Button variant="ghost" size="sm" data-testid="nav-legacy-messages" className="text-sm">
-                  <Calendar className="w-4 h-4 mr-1.5" />
-                  Legacy Messages
-                </Button>
-              </Link>
               <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81">
-                <Button variant="ghost" size="sm" data-testid="nav-photo-gallery" className="text-sm">
+                <Button variant="ghost" size="sm" data-testid="nav-demo-memorial" className="text-sm">
                   <Image className="w-4 h-4 mr-1.5" />
-                  Photo Gallery
+                  Demo Memorial
                 </Button>
               </Link>
               <Link href="/create-memorial">
@@ -122,15 +98,16 @@ function Router() {
                   Create Memorial
                 </Button>
               </Link>
-              <Link href="/partner-signup">
-                <Button variant="ghost" size="sm" data-testid="nav-partner" className="text-sm">
-                  <HandshakeIcon className="w-4 h-4 mr-1.5" />
-                  Partners
+              <Link href="/upcoming-messages">
+                <Button variant="ghost" size="sm" data-testid="nav-future-messages" className="text-sm">
+                  <Calendar className="w-4 h-4 mr-1.5" />
+                  Future Messages
                 </Button>
               </Link>
-              <Link href="/support">
-                <Button variant="ghost" size="sm" data-testid="nav-support" className="text-sm">
-                  Support
+              <Link href="/qr-code">
+                <Button variant="ghost" size="sm" data-testid="nav-qr-memorials" className="text-sm">
+                  <Layout className="w-4 h-4 mr-1.5" />
+                  QR Memorials
                 </Button>
               </Link>
               <Link href="/about">
