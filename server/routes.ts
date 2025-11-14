@@ -438,6 +438,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QR Code generation endpoint - generates QR code and returns base64 data
+  app.get("/api/qr-codes/generate", async (req, res) => {
+    try {
+      const { url, type = 'memorial-view' } = req.query;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "URL parameter is required" });
+      }
+
+      // Generate QR code as base64
+      const QRCode = await import('qrcode');
+      const qrCodeDataUrl = await QRCode.default.toDataURL(url, {
+        width: 512,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+
+      res.json({
+        success: true,
+        qrCode: qrCodeDataUrl,
+        url: url,
+        type: type
+      });
+    } catch (error: any) {
+      console.error("QR code generation error:", error);
+      res.status(500).json({ error: "Failed to generate QR code", message: error.message });
+    }
+  });
+
   // QR Code routes (protected)
   app.get("/api/memorials/:memorialId/qr-codes", isAuthenticated, async (req: any, res) => {
     try {
@@ -1153,6 +1185,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Memorial Reactions endpoint - alias for condolence-reactions
+  app.get("/api/memorials/:id/reactions", async (req: any, res) => {
+    try {
+      const { id: memorialId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const sessionId = req.headers['x-session-id'] as string | undefined;
+      
+      const reactions = await storage.getMemorialCondolenceReactions(memorialId);
+      
+      // Format response to match expected structure
+      const formattedReactions = reactions.reduce((acc: any, reaction) => {
+        acc[reaction.reactionType] = reaction.count;
+        return acc;
+      }, {});
+      
+      let userReactions: string[] = [];
+      if (userId || sessionId) {
+        const userReactionRecords = await storage.getUserMemorialCondolenceReactions({
+          memorialId,
+          userId,
+          sessionId,
+        });
+        userReactions = userReactionRecords.map(r => r.reactionType);
+      }
+      
+      res.json({ 
+        reactions: formattedReactions,
+        userReactions,
+        counts: reactions // Also include the raw counts array for backward compatibility
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Memorial Condolence Reaction routes
   app.get("/api/memorials/:memorialId/condolence-reactions", async (req: any, res) => {
     try {
@@ -1177,6 +1244,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userReactions 
       });
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Reactions creation endpoint - alias for condolence-reactions
+  app.post("/api/memorial-reactions", async (req, res) => {
+    try {
+      // Extract memorialId from request body
+      const { memorialId, reactionType, userId, sessionId, userEmail, userName } = req.body;
+      
+      if (!memorialId) {
+        return res.status(400).json({ error: "memorialId is required" });
+      }
+      
+      if (!reactionType) {
+        return res.status(400).json({ error: "reactionType is required" });
+      }
+      
+      // Parse and validate request body with Zod schema
+      const parsed = insertMemorialCondolenceReactionSchema.safeParse({
+        memorialId,
+        reactionType,
+        userId,
+        sessionId,
+        userEmail,
+        userName,
+      });
+      
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request", 
+          errors: parsed.error.errors 
+        });
+      }
+      
+      // Explicit validation
+      const data = parsed.data;
+      const hasUserId = !!data.userId;
+      const hasSessionId = !!data.sessionId;
+      
+      if (!hasUserId && !hasSessionId) {
+        return res.status(400).json({ 
+          message: "Either userId or sessionId must be provided" 
+        });
+      }
+      
+      if (hasUserId && hasSessionId) {
+        return res.status(400).json({ 
+          message: "Only one of userId or sessionId should be provided" 
+        });
+      }
+      
+      const reaction = await storage.addMemorialCondolenceReaction(data);
+      res.status(201).json(reaction);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      if (error.message === "DUPLICATE_REACTION") {
+        return res.status(409).json({ message: "You already reacted with this emoji" });
+      }
       res.status(500).json({ error: error.message });
     }
   });
@@ -1847,10 +1975,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/memorials/:memorialId/fundraisers", async (req, res) => {
     try {
-      const data = insertFundraiserSchema.parse({
+      // Parse goalAmount as number if it's a string
+      const bodyWithParsedGoalAmount = {
         ...req.body,
         memorialId: req.params.memorialId,
-      });
+      };
+      
+      // Convert goalAmount to number if it's a string
+      if (bodyWithParsedGoalAmount.goalAmount && typeof bodyWithParsedGoalAmount.goalAmount === 'string') {
+        bodyWithParsedGoalAmount.goalAmount = parseFloat(bodyWithParsedGoalAmount.goalAmount);
+        if (isNaN(bodyWithParsedGoalAmount.goalAmount)) {
+          return res.status(400).json({ error: "Invalid goalAmount: must be a valid number" });
+        }
+      }
+      
+      const data = insertFundraiserSchema.parse(bodyWithParsedGoalAmount);
       const fundraiser = await storage.createFundraiser(data);
       res.status(201).json(fundraiser);
     } catch (error: any) {
