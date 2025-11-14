@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode, Loader2, RefreshCw } from "lucide-react";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode, Loader2, RefreshCw, Sparkles, PlayCircle, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
@@ -22,6 +22,9 @@ import { SaveMemorialDialog } from "@/components/SaveMemorialDialog";
 import { MerchandiseServices } from "@/components/MerchandiseServices";
 import { FutureMessagesSection } from "@/components/FutureMessagesSection";
 import { MemorialCondolenceBar } from "@/components/MemorialCondolenceBar";
+import { ReligiousSymbolGallery } from "@/components/ReligiousSymbolGallery";
+import { SlideshowPlayer } from "@/components/SlideshowPlayer";
+import { VideoCondolence } from "@/components/VideoCondolence";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -144,6 +147,22 @@ export default function Home() {
   const { data: donations = [] } = useQuery<Donation[]>({
     queryKey: [`/api/fundraisers/${firstFundraiser?.id}/donations`],
     enabled: !!firstFundraiser?.id,
+  });
+
+  // Query for new features
+  const { data: memorialSymbols = [] } = useQuery<any[]>({
+    queryKey: [`/api/memorials/${memorialId}/symbols`],
+    enabled: !!memorialId,
+  });
+
+  const { data: slideshows = [] } = useQuery<any[]>({
+    queryKey: [`/api/memorials/${memorialId}/slideshows`],
+    enabled: !!memorialId,
+  });
+
+  const { data: videoCondolences = [] } = useQuery<any[]>({
+    queryKey: [`/api/memorials/${memorialId}/video-condolences`],
+    enabled: !!memorialId,
   });
 
   // Check for ?code= or ?inviteCode= parameter in URL on mount
@@ -724,7 +743,7 @@ export default function Home() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <Tabs defaultValue="memories" className="w-full" data-testid="tabs-main">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-12 bg-muted/30 p-2 rounded-xl h-auto" data-testid="tabs-list">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 mb-12 bg-muted/30 p-2 rounded-xl h-auto" data-testid="tabs-list">
             <TabsTrigger 
               value="memories" 
               data-testid="tab-memories"
@@ -748,6 +767,30 @@ export default function Home() {
             >
               <MessageSquare className="w-5 h-5" />
               <span className="font-medium">Condolences</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="videos" 
+              data-testid="tab-videos"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <Video className="w-5 h-5" />
+              <span className="font-medium">Videos</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="slideshows" 
+              data-testid="tab-slideshows"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <PlayCircle className="w-5 h-5" />
+              <span className="font-medium">Slideshows</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="symbols" 
+              data-testid="tab-symbols"
+              className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-card data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <Sparkles className="w-5 h-5" />
+              <span className="font-medium">Symbols</span>
             </TabsTrigger>
             <TabsTrigger 
               value="events" 
@@ -1109,6 +1152,80 @@ export default function Home() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Video Condolences Tab */}
+          <TabsContent value="videos" className="space-y-8" data-testid="content-videos">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Video Condolences</h2>
+                <p className="text-muted-foreground">Heartfelt video messages from friends and family</p>
+              </div>
+            </div>
+            
+            <VideoCondolence 
+              memorialId={memorialId || ''} 
+              canApprove={false}
+            />
+          </TabsContent>
+
+          {/* Slideshows Tab */}
+          <TabsContent value="slideshows" className="space-y-8" data-testid="content-slideshows">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Memorial Slideshows</h2>
+                <p className="text-muted-foreground">Photo presentations celebrating their life journey</p>
+              </div>
+            </div>
+
+            {slideshows.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {slideshows.map((slideshow: any) => (
+                  <Card key={slideshow.id} className="hover-elevate">
+                    <CardHeader>
+                      <CardTitle>{slideshow.title}</CardTitle>
+                      {slideshow.description && (
+                        <CardDescription>{slideshow.description}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <SlideshowPlayer
+                        slideshow={slideshow}
+                        memorialId={memorialId || ''}
+                        onClose={() => {}}
+                      />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="border-2 border-dashed border-border/50 bg-muted/20">
+                <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="bg-muted/50 rounded-full p-6 mb-6">
+                    <PlayCircle className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No slideshows yet</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Beautiful memorial slideshows with photos and music will appear here.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Religious Symbols Tab */}
+          <TabsContent value="symbols" className="space-y-8" data-testid="content-symbols">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Religious & Spiritual Symbols</h2>
+                <p className="text-muted-foreground">Symbols of faith and spirituality honoring their beliefs</p>
+              </div>
+            </div>
+            
+            <ReligiousSymbolGallery 
+              memorialId={memorialId || ''} 
+              canEdit={false}
+            />
           </TabsContent>
         </Tabs>
 

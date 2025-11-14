@@ -74,6 +74,11 @@ import {
   insertFuneralProgramSchema,
   insertProgramItemSchema,
   insertMemorialDocumentarySchema,
+  insertReligiousSymbolSchema,
+  insertMemorialSymbolSchema,
+  insertMemorialPlaylistSchema,
+  insertMemorialSlideshowSchema,
+  insertVideoCondolenceSchema,
   type QRCode,
 } from "@shared/schema";
 
@@ -1910,6 +1915,383 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.deleteScheduledMessage(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Religious Symbol routes
+  app.get("/api/religious-symbols", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const symbols = await storage.listReligiousSymbols(category);
+      res.json(symbols);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/religious-symbols/:id", async (req, res) => {
+    try {
+      const symbol = await storage.getReligiousSymbol(req.params.id);
+      if (!symbol) {
+        return res.status(404).json({ error: "Symbol not found" });
+      }
+      res.json(symbol);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/religious-symbols", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const data = insertReligiousSymbolSchema.parse({
+        ...req.body,
+        uploadedBy: userId,
+      });
+      const symbol = await storage.createReligiousSymbol(data);
+      res.status(201).json(symbol);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/religious-symbols/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteReligiousSymbol(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Symbol routes
+  app.get("/api/memorials/:memorialId/symbols", async (req, res) => {
+    try {
+      const symbols = await storage.getMemorialSymbols(req.params.memorialId);
+      res.json(symbols);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/symbols", isAuthenticated, async (req: any, res) => {
+    try {
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const data = insertMemorialSymbolSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const symbol = await storage.addMemorialSymbol(data);
+      res.status(201).json(symbol);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/memorial-symbols/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.removeMemorialSymbol(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Playlist routes
+  app.get("/api/memorials/:memorialId/playlists", async (req, res) => {
+    try {
+      const playlists = await storage.getMemorialPlaylists(req.params.memorialId);
+      res.json(playlists);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      const playlist = await storage.getMemorialPlaylist(req.params.id);
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      res.json(playlist);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/playlists", isAuthenticated, async (req: any, res) => {
+    try {
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userId = req.user.claims.sub;
+      const data = insertMemorialPlaylistSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+        createdBy: userId,
+      });
+      const playlist = await storage.createMemorialPlaylist(data);
+      res.status(201).json(playlist);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/playlists/:id", isAuthenticated, async (req, res) => {
+    try {
+      const data = insertMemorialPlaylistSchema.partial().parse(req.body);
+      const playlist = await storage.updateMemorialPlaylist(req.params.id, data);
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      res.json(playlist);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/playlists/:id", isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteMemorialPlaylist(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/playlists/:id/set-default", isAuthenticated, async (req: any, res) => {
+    try {
+      const playlist = await storage.getMemorialPlaylist(req.params.id);
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      await storage.setDefaultPlaylist(playlist.memorialId, req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Memorial Slideshow routes
+  app.get("/api/memorials/:memorialId/slideshows", async (req, res) => {
+    try {
+      const slideshows = await storage.getMemorialSlideshows(req.params.memorialId);
+      res.json(slideshows);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/slideshows/:id", async (req, res) => {
+    try {
+      const slideshow = await storage.getMemorialSlideshow(req.params.id);
+      if (!slideshow) {
+        return res.status(404).json({ error: "Slideshow not found" });
+      }
+      res.json(slideshow);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/slideshows", isAuthenticated, async (req: any, res) => {
+    try {
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userId = req.user.claims.sub;
+      const data = insertMemorialSlideshowSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+        createdBy: userId,
+      });
+      const slideshow = await storage.createMemorialSlideshow(data);
+      res.status(201).json(slideshow);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/slideshows/:id", isAuthenticated, async (req, res) => {
+    try {
+      const data = insertMemorialSlideshowSchema.partial().parse(req.body);
+      const slideshow = await storage.updateMemorialSlideshow(req.params.id, data);
+      if (!slideshow) {
+        return res.status(404).json({ error: "Slideshow not found" });
+      }
+      res.json(slideshow);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/slideshows/:id", isAuthenticated, async (req, res) => {
+    try {
+      await storage.deleteMemorialSlideshow(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/slideshows/:id/view", async (req, res) => {
+    try {
+      await storage.incrementSlideshowViews(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Video Condolence routes
+  app.get("/api/memorials/:memorialId/video-condolences", async (req, res) => {
+    try {
+      const includePrivate = req.query.includePrivate === 'true';
+      const condolences = await storage.getVideoCondolences(req.params.memorialId, includePrivate);
+      res.json(condolences);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/video-condolences/:id", async (req, res) => {
+    try {
+      const condolence = await storage.getVideoCondolence(req.params.id);
+      if (!condolence) {
+        return res.status(404).json({ error: "Video condolence not found" });
+      }
+      res.json(condolence);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/video-condolences", async (req, res) => {
+    try {
+      const data = insertVideoCondolenceSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+        isApproved: false, // Require approval by default
+      });
+      
+      // Content moderation for transcription
+      if (data.transcription) {
+        const moderated = moderateContent(data.transcription);
+        if (!moderated.isClean) {
+          return res.status(400).json({ 
+            error: "Your message contains inappropriate language. Please revise and try again.",
+            vulgarLanguageDetected: true,
+          });
+        }
+      }
+      
+      const condolence = await storage.createVideoCondolence(data);
+      res.status(201).json(condolence);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/video-condolences/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const condolence = await storage.getVideoCondolence(req.params.id);
+      if (!condolence) {
+        return res.status(404).json({ error: "Video condolence not found" });
+      }
+
+      const memorial = await storage.getMemorial(condolence.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(condolence.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail && admin.canApproveContent);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to approve video condolences" });
+      }
+
+      const approved = await storage.approveVideoCondolence(req.params.id);
+      res.json(approved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/video-condolences/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const condolence = await storage.getVideoCondolence(req.params.id);
+      if (!condolence) {
+        return res.status(404).json({ error: "Video condolence not found" });
+      }
+
+      const memorial = await storage.getMemorial(condolence.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      const userEmail = req.user.claims.email;
+      const admins = await storage.getMemorialAdmins(condolence.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail && admin.canApproveContent);
+
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.rejectVideoCondolence(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/video-condolences/:id/view", async (req, res) => {
+    try {
+      await storage.incrementVideoViews(req.params.id);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });

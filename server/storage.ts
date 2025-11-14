@@ -56,6 +56,11 @@ import {
   funeralPrograms,
   programItems,
   memorialDocumentaries,
+  religiousSymbols,
+  memorialSymbols,
+  memorialPlaylists,
+  memorialSlideshows,
+  videoCondolences,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -174,6 +179,16 @@ import {
   chatMessages,
   type ChatMessage,
   type InsertChatMessage,
+  type ReligiousSymbol,
+  type InsertReligiousSymbol,
+  type MemorialSymbol,
+  type InsertMemorialSymbol,
+  type MemorialPlaylist,
+  type InsertMemorialPlaylist,
+  type MemorialSlideshow,
+  type InsertMemorialSlideshow,
+  type VideoCondolence,
+  type InsertVideoCondolence,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -345,6 +360,43 @@ export interface IStorage {
   // Music Playlist operations
   getMusicPlaylistByMemorialId(memorialId: string): Promise<MusicPlaylist | undefined>;
   upsertMusicPlaylist(playlist: InsertMusicPlaylist): Promise<MusicPlaylist>;
+
+  // Religious Symbol operations
+  listReligiousSymbols(category?: string): Promise<ReligiousSymbol[]>;
+  getReligiousSymbol(id: string): Promise<ReligiousSymbol | undefined>;
+  createReligiousSymbol(symbol: InsertReligiousSymbol): Promise<ReligiousSymbol>;
+  updateReligiousSymbol(id: string, symbol: Partial<InsertReligiousSymbol>): Promise<ReligiousSymbol | undefined>;
+  deleteReligiousSymbol(id: string): Promise<void>;
+
+  // Memorial Symbol operations
+  getMemorialSymbols(memorialId: string): Promise<MemorialSymbol[]>;
+  addMemorialSymbol(symbol: InsertMemorialSymbol): Promise<MemorialSymbol>;
+  removeMemorialSymbol(id: string): Promise<void>;
+  updateMemorialSymbol(id: string, data: Partial<InsertMemorialSymbol>): Promise<MemorialSymbol | undefined>;
+
+  // Memorial Playlist operations
+  getMemorialPlaylists(memorialId: string): Promise<MemorialPlaylist[]>;
+  getMemorialPlaylist(id: string): Promise<MemorialPlaylist | undefined>;
+  createMemorialPlaylist(playlist: InsertMemorialPlaylist): Promise<MemorialPlaylist>;
+  updateMemorialPlaylist(id: string, playlist: Partial<InsertMemorialPlaylist>): Promise<MemorialPlaylist | undefined>;
+  deleteMemorialPlaylist(id: string): Promise<void>;
+  setDefaultPlaylist(memorialId: string, playlistId: string): Promise<void>;
+
+  // Memorial Slideshow operations
+  getMemorialSlideshows(memorialId: string): Promise<MemorialSlideshow[]>;
+  getMemorialSlideshow(id: string): Promise<MemorialSlideshow | undefined>;
+  createMemorialSlideshow(slideshow: InsertMemorialSlideshow): Promise<MemorialSlideshow>;
+  updateMemorialSlideshow(id: string, slideshow: Partial<InsertMemorialSlideshow>): Promise<MemorialSlideshow | undefined>;
+  deleteMemorialSlideshow(id: string): Promise<void>;
+  incrementSlideshowViews(id: string): Promise<void>;
+
+  // Video Condolence operations
+  getVideoCondolences(memorialId: string, includePrivate?: boolean): Promise<VideoCondolence[]>;
+  getVideoCondolence(id: string): Promise<VideoCondolence | undefined>;
+  createVideoCondolence(condolence: InsertVideoCondolence): Promise<VideoCondolence>;
+  approveVideoCondolence(id: string): Promise<VideoCondolence | undefined>;
+  rejectVideoCondolence(id: string): Promise<void>;
+  incrementVideoViews(id: string): Promise<void>;
 
   // Essential Workers Memorial operations
   listEssentialWorkersMemorials(category?: string, limit?: number, offset?: number): Promise<EssentialWorkerMemorial[]>;
@@ -1301,6 +1353,174 @@ export class DatabaseStorage implements IStorage {
       }).returning();
       return created;
     }
+  }
+
+  // Religious Symbol operations
+  async listReligiousSymbols(category?: string): Promise<ReligiousSymbol[]> {
+    let query = db.select().from(religiousSymbols);
+    if (category) {
+      query = query.where(eq(religiousSymbols.category, category)) as any;
+    }
+    return await query.orderBy(religiousSymbols.category, religiousSymbols.name);
+  }
+
+  async getReligiousSymbol(id: string): Promise<ReligiousSymbol | undefined> {
+    const [symbol] = await db.select().from(religiousSymbols).where(eq(religiousSymbols.id, id));
+    return symbol || undefined;
+  }
+
+  async createReligiousSymbol(symbol: InsertReligiousSymbol): Promise<ReligiousSymbol> {
+    const [created] = await db.insert(religiousSymbols).values(symbol).returning();
+    return created;
+  }
+
+  async updateReligiousSymbol(id: string, symbol: Partial<InsertReligiousSymbol>): Promise<ReligiousSymbol | undefined> {
+    const [updated] = await db.update(religiousSymbols).set(symbol).where(eq(religiousSymbols.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteReligiousSymbol(id: string): Promise<void> {
+    await db.delete(religiousSymbols).where(eq(religiousSymbols.id, id));
+  }
+
+  // Memorial Symbol operations
+  async getMemorialSymbols(memorialId: string): Promise<MemorialSymbol[]> {
+    return await db.select().from(memorialSymbols)
+      .where(eq(memorialSymbols.memorialId, memorialId))
+      .orderBy(memorialSymbols.position);
+  }
+
+  async addMemorialSymbol(symbol: InsertMemorialSymbol): Promise<MemorialSymbol> {
+    const [created] = await db.insert(memorialSymbols).values(symbol).returning();
+    return created;
+  }
+
+  async removeMemorialSymbol(id: string): Promise<void> {
+    await db.delete(memorialSymbols).where(eq(memorialSymbols.id, id));
+  }
+
+  async updateMemorialSymbol(id: string, data: Partial<InsertMemorialSymbol>): Promise<MemorialSymbol | undefined> {
+    const [updated] = await db.update(memorialSymbols).set(data).where(eq(memorialSymbols.id, id)).returning();
+    return updated || undefined;
+  }
+
+  // Memorial Playlist operations
+  async getMemorialPlaylists(memorialId: string): Promise<MemorialPlaylist[]> {
+    return await db.select().from(memorialPlaylists)
+      .where(eq(memorialPlaylists.memorialId, memorialId))
+      .orderBy(desc(memorialPlaylists.isDefault), desc(memorialPlaylists.createdAt));
+  }
+
+  async getMemorialPlaylist(id: string): Promise<MemorialPlaylist | undefined> {
+    const [playlist] = await db.select().from(memorialPlaylists).where(eq(memorialPlaylists.id, id));
+    return playlist || undefined;
+  }
+
+  async createMemorialPlaylist(playlist: InsertMemorialPlaylist): Promise<MemorialPlaylist> {
+    const [created] = await db.insert(memorialPlaylists).values(playlist).returning();
+    return created;
+  }
+
+  async updateMemorialPlaylist(id: string, playlist: Partial<InsertMemorialPlaylist>): Promise<MemorialPlaylist | undefined> {
+    const [updated] = await db.update(memorialPlaylists).set(playlist).where(eq(memorialPlaylists.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMemorialPlaylist(id: string): Promise<void> {
+    await db.delete(memorialPlaylists).where(eq(memorialPlaylists.id, id));
+  }
+
+  async setDefaultPlaylist(memorialId: string, playlistId: string): Promise<void> {
+    // First, unset all defaults for this memorial
+    await db.update(memorialPlaylists)
+      .set({ isDefault: false })
+      .where(eq(memorialPlaylists.memorialId, memorialId));
+    
+    // Then set the new default
+    await db.update(memorialPlaylists)
+      .set({ isDefault: true })
+      .where(eq(memorialPlaylists.id, playlistId));
+  }
+
+  // Memorial Slideshow operations
+  async getMemorialSlideshows(memorialId: string): Promise<MemorialSlideshow[]> {
+    return await db.select().from(memorialSlideshows)
+      .where(eq(memorialSlideshows.memorialId, memorialId))
+      .orderBy(desc(memorialSlideshows.createdAt));
+  }
+
+  async getMemorialSlideshow(id: string): Promise<MemorialSlideshow | undefined> {
+    const [slideshow] = await db.select().from(memorialSlideshows).where(eq(memorialSlideshows.id, id));
+    return slideshow || undefined;
+  }
+
+  async createMemorialSlideshow(slideshow: InsertMemorialSlideshow): Promise<MemorialSlideshow> {
+    const [created] = await db.insert(memorialSlideshows).values(slideshow).returning();
+    return created;
+  }
+
+  async updateMemorialSlideshow(id: string, slideshow: Partial<InsertMemorialSlideshow>): Promise<MemorialSlideshow | undefined> {
+    const [updated] = await db.update(memorialSlideshows).set(slideshow).where(eq(memorialSlideshows.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMemorialSlideshow(id: string): Promise<void> {
+    await db.delete(memorialSlideshows).where(eq(memorialSlideshows.id, id));
+  }
+
+  async incrementSlideshowViews(id: string): Promise<void> {
+    await db.execute(sql`
+      UPDATE memorial_slideshows
+      SET views = views + 1
+      WHERE id = ${id}
+    `);
+  }
+
+  // Video Condolence operations
+  async getVideoCondolences(memorialId: string, includePrivate: boolean = false): Promise<VideoCondolence[]> {
+    let query = db.select().from(videoCondolences)
+      .where(
+        and(
+          eq(videoCondolences.memorialId, memorialId),
+          eq(videoCondolences.isApproved, true)
+        )
+      );
+    
+    if (!includePrivate) {
+      query = query.where(eq(videoCondolences.isPrivate, false)) as any;
+    }
+    
+    return await query.orderBy(desc(videoCondolences.createdAt));
+  }
+
+  async getVideoCondolence(id: string): Promise<VideoCondolence | undefined> {
+    const [condolence] = await db.select().from(videoCondolences).where(eq(videoCondolences.id, id));
+    return condolence || undefined;
+  }
+
+  async createVideoCondolence(condolence: InsertVideoCondolence): Promise<VideoCondolence> {
+    const [created] = await db.insert(videoCondolences).values(condolence).returning();
+    return created;
+  }
+
+  async approveVideoCondolence(id: string): Promise<VideoCondolence | undefined> {
+    const [approved] = await db.update(videoCondolences)
+      .set({ isApproved: true })
+      .where(eq(videoCondolences.id, id))
+      .returning();
+    return approved || undefined;
+  }
+
+  async rejectVideoCondolence(id: string): Promise<void> {
+    await db.delete(videoCondolences).where(eq(videoCondolences.id, id));
+  }
+
+  async incrementVideoViews(id: string): Promise<void> {
+    await db.execute(sql`
+      UPDATE video_condolences
+      SET views = views + 1
+      WHERE id = ${id}
+    `);
   }
 
   // Prison Access System operations

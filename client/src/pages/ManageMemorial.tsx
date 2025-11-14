@@ -12,9 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar, Info, BookOpen } from "lucide-react";
+import { Heart, ArrowLeft, Settings, QrCode as QrCodeIcon, Users, Clock, Plus, FileText, Repeat, Calendar, Info, BookOpen, Music, Video, Sparkles, PlayCircle } from "lucide-react";
 import { QRCodeManager } from "@/components/QRCodeManager";
 import { ScheduledMessageCard } from "@/components/ScheduledMessageCard";
+import { ReligiousSymbolGallery } from "@/components/ReligiousSymbolGallery";
+import { MusicPlaylistManager } from "@/components/MusicPlaylistManager";
+import { SlideshowCreator } from "@/components/SlideshowCreator";
+import { SlideshowPlayer } from "@/components/SlideshowPlayer";
+import { VideoCondolence } from "@/components/VideoCondolence";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -287,6 +292,22 @@ export default function ManageMemorial() {
             <TabsTrigger value="admins" data-testid="tab-admins">
               <Users className="w-4 h-4 mr-2" />
               Admins
+            </TabsTrigger>
+            <TabsTrigger value="symbols" data-testid="tab-symbols">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Symbols
+            </TabsTrigger>
+            <TabsTrigger value="music" data-testid="tab-music">
+              <Music className="w-4 h-4 mr-2" />
+              Music
+            </TabsTrigger>
+            <TabsTrigger value="slideshows" data-testid="tab-slideshows">
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Slideshows
+            </TabsTrigger>
+            <TabsTrigger value="video-condolences" data-testid="tab-video-condolences">
+              <Video className="w-4 h-4 mr-2" />
+              Video Messages
             </TabsTrigger>
           </TabsList>
 
@@ -717,8 +738,236 @@ export default function ManageMemorial() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Religious Symbols Tab */}
+          <TabsContent value="symbols" className="mt-6">
+            <Card className="bg-purple-900/50 border-purple-700/50">
+              <CardHeader>
+                <CardTitle className="text-purple-100 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-gold-400" />
+                  Religious & Spiritual Symbols
+                </CardTitle>
+                <CardDescription className="text-purple-300">
+                  Add meaningful religious and spiritual symbols to honor their faith and beliefs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReligiousSymbolGallery memorialId={memorial.id} canEdit={true} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Music Playlists Tab */}
+          <TabsContent value="music" className="mt-6">
+            <Card className="bg-purple-900/50 border-purple-700/50">
+              <CardHeader>
+                <CardTitle className="text-purple-100 flex items-center gap-2">
+                  <Music className="w-5 h-5 text-gold-400" />
+                  Music Playlists
+                </CardTitle>
+                <CardDescription className="text-purple-300">
+                  Create playlists of meaningful songs for slideshows and memorial pages
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MusicPlaylistManager memorialId={memorial.id} canEdit={true} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Slideshows Tab */}
+          <TabsContent value="slideshows" className="mt-6">
+            <SlideshowSection memorialId={memorial.id} />
+          </TabsContent>
+
+          {/* Video Condolences Tab */}
+          <TabsContent value="video-condolences" className="mt-6">
+            <Card className="bg-purple-900/50 border-purple-700/50">
+              <CardHeader>
+                <CardTitle className="text-purple-100 flex items-center gap-2">
+                  <Video className="w-5 h-5 text-gold-400" />
+                  Video Condolences
+                </CardTitle>
+                <CardDescription className="text-purple-300">
+                  Manage video messages from friends and family
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <VideoCondolence memorialId={memorial.id} canApprove={true} />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
     </div>
+  );
+}
+
+// Slideshow Section Component
+function SlideshowSection({ memorialId }: { memorialId: string }) {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedSlideshow, setSelectedSlideshow] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch slideshows
+  const { data: slideshows = [] } = useQuery({
+    queryKey: [`/api/memorials/${memorialId}/slideshows`],
+  });
+
+  // Delete slideshow
+  const deleteSlideshowMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/slideshows/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/slideshows`] });
+      toast({
+        title: "Slideshow Deleted",
+        description: "The slideshow has been removed.",
+      });
+    },
+  });
+
+  return (
+    <>
+      <Card className="bg-purple-900/50 border-purple-700/50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-purple-100 flex items-center gap-2">
+                <PlayCircle className="w-5 h-5 text-gold-400" />
+                Memorial Slideshows
+              </CardTitle>
+              <CardDescription className="text-purple-300">
+                Create beautiful photo slideshows with music to celebrate their life
+              </CardDescription>
+            </div>
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              data-testid="button-create-slideshow"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Slideshow
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {slideshows.length === 0 ? (
+            <div className="text-center py-12">
+              <PlayCircle className="w-16 h-16 mx-auto mb-4 text-gold-400 opacity-50" />
+              <h3 className="text-xl font-semibold text-purple-100 mb-2">No Slideshows Yet</h3>
+              <p className="text-purple-300 mb-6">
+                Create your first slideshow to share cherished memories through photos and music
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {slideshows.map((slideshow: any) => (
+                <Card
+                  key={slideshow.id}
+                  className="bg-purple-950/30 border-purple-700/50"
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-purple-100 text-lg">
+                          {slideshow.title}
+                        </CardTitle>
+                        {slideshow.description && (
+                          <CardDescription className="text-purple-300">
+                            {slideshow.description}
+                          </CardDescription>
+                        )}
+                      </div>
+                      <Badge variant="secondary">
+                        {slideshow.photoIds?.length || 0} photos
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-purple-300 mb-4">
+                      <span>{slideshow.transitionType} transitions</span>
+                      <Separator orientation="vertical" className="h-4" />
+                      <span>{slideshow.photoDuration}s per photo</span>
+                      {slideshow.playlistId && (
+                        <>
+                          <Separator orientation="vertical" className="h-4" />
+                          <Music className="w-3 h-3" />
+                          <span>Music</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSlideshow(slideshow);
+                          setIsPlaying(true);
+                        }}
+                        data-testid={`button-play-${slideshow.id}`}
+                      >
+                        <PlayCircle className="w-4 h-4 mr-2" />
+                        Play
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSlideshow(slideshow);
+                          setIsCreateOpen(true);
+                        }}
+                        data-testid={`button-edit-slideshow-${slideshow.id}`}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this slideshow?")) {
+                            deleteSlideshowMutation.mutate(slideshow.id);
+                          }
+                        }}
+                        data-testid={`button-delete-slideshow-${slideshow.id}`}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Slideshow Creator Dialog */}
+      <SlideshowCreator
+        memorialId={memorialId}
+        isOpen={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false);
+          setSelectedSlideshow(null);
+        }}
+        editingSlideshow={selectedSlideshow && !isPlaying ? selectedSlideshow : undefined}
+      />
+
+      {/* Slideshow Player Dialog */}
+      {isPlaying && selectedSlideshow && (
+        <Dialog open={isPlaying} onOpenChange={setIsPlaying}>
+          <DialogContent className="max-w-4xl p-0 bg-black">
+            <SlideshowPlayer
+              slideshow={selectedSlideshow}
+              memorialId={memorialId}
+              onClose={() => {
+                setIsPlaying(false);
+                setSelectedSlideshow(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
