@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'dist/public',
   server: {
     androidScheme: 'https',
-    iosScheme: 'https'
+    iosScheme: 'https',
+    url: 'https://eternal-tribute-barbering-tag.replit.app',
+    cleartext: false
   },
   plugins: {
     SplashScreen: {
