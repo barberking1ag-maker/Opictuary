@@ -122,6 +122,102 @@ export const memories = pgTable("memories", {
   index("idx_memories_is_approved").on(table.isApproved),
 ]);
 
+// Religious and spiritual symbols library
+export const religiousSymbols = pgTable("religious_symbols", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // 'christian', 'islamic', 'jewish', 'buddhist', 'hindu', 'spiritual', 'cultural', 'custom'
+  symbolUrl: text("symbol_url").notNull(),
+  symbolUnicode: text("symbol_unicode"), // For text-based symbols like ✝️
+  description: text("description"),
+  isCustom: boolean("is_custom").default(false),
+  uploadedBy: varchar("uploaded_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_religious_symbols_category").on(table.category),
+  index("idx_religious_symbols_is_custom").on(table.isCustom),
+]);
+
+// Memorial symbol associations
+export const memorialSymbols = pgTable("memorial_symbols", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  symbolId: varchar("symbol_id").notNull().references(() => religiousSymbols.id, { onDelete: "cascade" }),
+  position: integer("position").default(0), // For ordering multiple symbols
+  size: text("size").default("medium"), // 'small', 'medium', 'large'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_symbols_memorial_id").on(table.memorialId),
+]);
+
+// Memorial playlists for slideshows
+export const memorialPlaylists = pgTable("memorial_playlists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  songs: jsonb("songs").notNull().$type<Array<{
+    title: string;
+    artist: string;
+    url?: string;
+    spotifyId?: string;
+    appleMusicId?: string;
+    duration?: number;
+  }>>().default([]),
+  isDefault: boolean("is_default").default(false),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_playlists_memorial_id").on(table.memorialId),
+  index("idx_memorial_playlists_is_default").on(table.isDefault),
+]);
+
+// Memorial slideshows with music
+export const memorialSlideshows = pgTable("memorial_slideshows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  playlistId: varchar("playlist_id").references(() => memorialPlaylists.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  photoIds: jsonb("photo_ids").notNull().$type<string[]>().default([]), // Array of memory IDs
+  transitionEffect: text("transition_effect").default("fade"), // 'fade', 'slide', 'zoom', 'ken-burns'
+  photoDuration: integer("photo_duration").default(5000), // milliseconds per photo
+  syncToBeats: boolean("sync_to_beats").default(false),
+  autoplay: boolean("autoplay").default(true),
+  loop: boolean("loop").default(true),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "set null" }),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_slideshows_memorial_id").on(table.memorialId),
+]);
+
+// Video condolences
+export const videoCondolences = pgTable("video_condolences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  relationship: text("relationship"), // 'friend', 'family', 'colleague', 'neighbor', etc.
+  videoUrl: text("video_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // seconds
+  transcription: text("transcription"), // Auto-generated or manual
+  isApproved: boolean("is_approved").default(false),
+  isPrivate: boolean("is_private").default(false), // Only visible to family
+  deliveryDate: timestamp("delivery_date"), // For time-locked delivery
+  location: text("location"), // Where recorded from
+  deviceType: text("device_type"), // 'mobile', 'webcam', 'professional'
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_video_condolences_memorial_id").on(table.memorialId),
+  index("idx_video_condolences_is_approved").on(table.isApproved),
+  index("idx_video_condolences_delivery_date").on(table.deliveryDate),
+]);
+
 // Memory Comments - comments on individual photos/videos
 export const memoryComments = pgTable("memory_comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1608,6 +1704,35 @@ export const insertMemorialDocumentarySchema = createInsertSchema(memorialDocume
   updatedAt: true,
 });
 
+export const insertReligiousSymbolSchema = createInsertSchema(religiousSymbols).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemorialSymbolSchema = createInsertSchema(memorialSymbols).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemorialPlaylistSchema = createInsertSchema(memorialPlaylists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemorialSlideshowSchema = createInsertSchema(memorialSlideshows).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  views: true,
+});
+
+export const insertVideoCondolenceSchema = createInsertSchema(videoCondolences).omit({
+  id: true,
+  createdAt: true,
+  views: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = typeof users.$inferInsert;
@@ -1775,6 +1900,21 @@ export type MemorialEventRsvp = typeof memorialEventRsvps.$inferSelect;
 
 export type InsertMemorialDocumentary = z.infer<typeof insertMemorialDocumentarySchema>;
 export type MemorialDocumentary = typeof memorialDocumentaries.$inferSelect;
+
+export type InsertReligiousSymbol = z.infer<typeof insertReligiousSymbolSchema>;
+export type ReligiousSymbol = typeof religiousSymbols.$inferSelect;
+
+export type InsertMemorialSymbol = z.infer<typeof insertMemorialSymbolSchema>;
+export type MemorialSymbol = typeof memorialSymbols.$inferSelect;
+
+export type InsertMemorialPlaylist = z.infer<typeof insertMemorialPlaylistSchema>;
+export type MemorialPlaylist = typeof memorialPlaylists.$inferSelect;
+
+export type InsertMemorialSlideshow = z.infer<typeof insertMemorialSlideshowSchema>;
+export type MemorialSlideshow = typeof memorialSlideshows.$inferSelect;
+
+export type InsertVideoCondolence = z.infer<typeof insertVideoCondolenceSchema>;
+export type VideoCondolence = typeof videoCondolences.$inferSelect;
 
 // Funeral Program schemas
 export const insertFuneralProgramSchema = createInsertSchema(funeralPrograms).omit({ id: true, createdAt: true, updatedAt: true });
