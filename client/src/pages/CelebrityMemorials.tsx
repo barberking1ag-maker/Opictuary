@@ -94,6 +94,11 @@ export default function CelebrityMemorials() {
     queryKey: ["/api/celebrity-memorials"],
   });
 
+  // Sort celebrities by fan count to get featured ones
+  const featuredCelebrities = [...celebrities]
+    .sort((a, b) => (b.fanCount || 0) - (a.fanCount || 0))
+    .slice(0, 3);
+
   const filteredCelebrities = celebrities.filter(celebrity => {
     const matchesSearch = celebrity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       celebrity.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -160,6 +165,95 @@ export default function CelebrityMemorials() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Featured Celebrities Section */}
+        {featuredCelebrities.length > 0 && !isLoading && (
+          <div className="mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-3xl font-serif font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Featured Memorials</h2>
+                <p className="text-muted-foreground mt-1">Most visited and celebrated figures</p>
+              </div>
+              <Badge variant="secondary" className="bg-[hsl(45,80%,15%)] text-[hsl(45,80%,60%)]">
+                <Star className="w-4 h-4 mr-1" />
+                Top Tributes
+              </Badge>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {featuredCelebrities.map((celebrity) => {
+                const category = professionCategories.find(c => c.id === celebrity.professionCategory);
+                return (
+                  <Card key={celebrity.id} className="group cursor-pointer overflow-hidden hover-elevate">
+                    <div className="relative h-48 bg-gradient-to-br from-primary/20 to-accent/20">
+                      {celebrity.imageUrl ? (
+                        <img 
+                          src={celebrity.imageUrl} 
+                          alt={celebrity.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-center">
+                            <Star className="w-16 h-16 mx-auto mb-2 text-primary/50" />
+                            <p className="text-lg font-serif text-foreground/80">{celebrity.name}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-xl font-semibold text-white">{celebrity.name}</h3>
+                        <p className="text-white/90 text-sm">{celebrity.title}</p>
+                      </div>
+                      {category && (
+                        <div className={`absolute top-3 right-3 w-10 h-10 rounded-full ${category.color} flex items-center justify-center`}>
+                          <category.icon className="w-5 h-5" />
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant="outline" className="text-xs">
+                          <Heart className="w-3 h-3 mr-1" />
+                          {celebrity.fanCount?.toLocaleString() || 0} fans
+                        </Badge>
+                        <p className="text-sm text-muted-foreground">
+                          {celebrity.birthDate} - {celebrity.deathDate}
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Supporting: <span className="font-medium text-foreground">{celebrity.charityName}</span>
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="flex-1 bg-[hsl(45,80%,60%)] hover:bg-[hsl(45,80%,55%)] text-foreground border-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDonate(celebrity);
+                          }}
+                          data-testid={`button-donate-${celebrity.id}`}
+                        >
+                          <Heart className="w-4 h-4 mr-1" />
+                          Support ${celebrity.donationAmount}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => window.location.href = `/celebrity-memorial/${celebrity.id}`}
+                          data-testid={`button-view-${celebrity.id}`}
+                        >
+                          View Memorial
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Profession Category Cards */}
         <div className="mb-12">
           <h2 className="text-2xl font-semibold mb-6">Browse by Profession</h2>
