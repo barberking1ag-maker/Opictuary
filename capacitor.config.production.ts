@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    url: 'https://your-app-name.replit.app',
+    url: 'https://eternal-tribute-barbering-tag.replit.app',
     cleartext: false
   },
   plugins: {
