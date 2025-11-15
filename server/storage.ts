@@ -67,6 +67,11 @@ import {
   byusMediationHistory,
   byusMediationComments,
   byusFeedback,
+  byusHealthProfiles,
+  byusDiagnoses,
+  byusPrescriptions,
+  byusCrisisEvents,
+  byusCrisisCompanion,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -203,6 +208,16 @@ import {
   type InsertByusMediationHistory,
   type ByusFeedback,
   type InsertByusFeedback,
+  type ByusHealthProfile,
+  type InsertByusHealthProfile,
+  type ByusDiagnosis,
+  type InsertByusDiagnosis,
+  type ByusPrescription,
+  type InsertByusPrescription,
+  type ByusCrisisEvent,
+  type InsertByusCrisisEvent,
+  type ByusCrisisCompanion,
+  type InsertByusCrisisCompanion,
   byusTherapists,
   type ByusTherapist,
   type InsertByusTherapist,
@@ -630,9 +645,51 @@ export interface IStorage {
   createProfessionalReview(review: InsertByusProfessionalReview): Promise<ByusProfessionalReview>;
   getProfessionalReview(id: string): Promise<ByusProfessionalReview | undefined>;
   getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined>;
+  getReviewsByCrisisEventId(crisisEventId: string): Promise<ByusProfessionalReview[]>;
   getReviewsByTherapist(therapistId: string, limit?: number, offset?: number): Promise<ByusProfessionalReview[]>;
   getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]>;
   updateReviewStatus(id: string, status: string, therapistNotes?: string, professionalRecommendations?: string, validationScore?: number): Promise<ByusProfessionalReview | undefined>;
+  
+  // BYUS Health Profile operations (anonymized)
+  createHealthProfile(profile: InsertByusHealthProfile): Promise<ByusHealthProfile>;
+  getHealthProfile(pseudonymousId: string): Promise<ByusHealthProfile | undefined>;
+  updateHealthProfile(id: string, profile: Partial<InsertByusHealthProfile>): Promise<ByusHealthProfile | undefined>;
+  getHealthStatistics(ageGroup?: string, region?: string): Promise<{
+    totalProfiles: number;
+    ageDistribution: Record<string, number>;
+    regionDistribution: Record<string, number>;
+  }>;
+  
+  // BYUS Diagnosis operations
+  createDiagnosis(diagnosis: InsertByusDiagnosis): Promise<ByusDiagnosis>;
+  getDiagnosesByHealthProfile(healthProfileId: string): Promise<ByusDiagnosis[]>;
+  updateDiagnosisStatus(id: string, isActive: boolean): Promise<ByusDiagnosis | undefined>;
+  
+  // BYUS Prescription operations
+  createPrescription(prescription: InsertByusPrescription): Promise<ByusPrescription>;
+  getPrescriptionsByHealthProfile(healthProfileId: string): Promise<ByusPrescription[]>;
+  updatePrescriptionEffectiveness(id: string, effectiveness: number, sideEffectsSeverity: number): Promise<ByusPrescription | undefined>;
+  getActivePrescriptions(healthProfileId: string): Promise<ByusPrescription[]>;
+  
+  // BYUS Crisis Event operations
+  recordCrisisEvent(event: InsertByusCrisisEvent): Promise<ByusCrisisEvent>;
+  getCrisisEventsByHealthProfile(healthProfileId: string): Promise<ByusCrisisEvent[]>;
+  getCrisisEventById(id: string): Promise<ByusCrisisEvent | undefined>;
+  updateCrisisEventOutcome(id: string, outcome: string): Promise<ByusCrisisEvent | undefined>;
+  getCrisisStatistics(timeRange?: { start: Date; end: Date }): Promise<{
+    totalEvents: number;
+    byEventType: Record<string, number>;
+    bySeverity: Record<number, number>;
+    byOutcome: Record<string, number>;
+    averageResponseTime: number;
+  }>;
+  
+  // BYUS Crisis Companion operations
+  createCrisisCompanion(companion: InsertByusCrisisCompanion): Promise<ByusCrisisCompanion>;
+  getCrisisCompanionsByCategory(category: string): Promise<ByusCrisisCompanion[]>;
+  getActiveCrisisCompanions(): Promise<ByusCrisisCompanion[]>;
+  updateCrisisCompanion(id: string, companion: Partial<InsertByusCrisisCompanion>): Promise<ByusCrisisCompanion | undefined>;
+  deleteCrisisCompanion(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3299,6 +3356,234 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updated || undefined;
+  }
+
+  // BYUS Health Profile operations (anonymized)
+  async createHealthProfile(profile: InsertByusHealthProfile): Promise<ByusHealthProfile> {
+    const [created] = await db.insert(byusHealthProfiles).values(profile).returning();
+    return created;
+  }
+
+  async getHealthProfile(pseudonymousId: string): Promise<ByusHealthProfile | undefined> {
+    const [profile] = await db.select()
+      .from(byusHealthProfiles)
+      .where(eq(byusHealthProfiles.pseudonymousId, pseudonymousId));
+    return profile || undefined;
+  }
+
+  async updateHealthProfile(id: string, profile: Partial<InsertByusHealthProfile>): Promise<ByusHealthProfile | undefined> {
+    const [updated] = await db.update(byusHealthProfiles)
+      .set({ ...profile, updatedAt: new Date() })
+      .where(eq(byusHealthProfiles.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getHealthStatistics(ageGroup?: string, region?: string): Promise<{
+    totalProfiles: number;
+    ageDistribution: Record<string, number>;
+    regionDistribution: Record<string, number>;
+  }> {
+    let query = db.select().from(byusHealthProfiles);
+    
+    if (ageGroup) {
+      query = query.where(eq(byusHealthProfiles.ageGroup, ageGroup));
+    }
+    if (region) {
+      query = query.where(eq(byusHealthProfiles.region, region));
+    }
+
+    const profiles = await query;
+    
+    const ageDistribution: Record<string, number> = {};
+    const regionDistribution: Record<string, number> = {};
+    
+    profiles.forEach(profile => {
+      ageDistribution[profile.ageGroup] = (ageDistribution[profile.ageGroup] || 0) + 1;
+      if (profile.region) {
+        regionDistribution[profile.region] = (regionDistribution[profile.region] || 0) + 1;
+      }
+    });
+
+    return {
+      totalProfiles: profiles.length,
+      ageDistribution,
+      regionDistribution
+    };
+  }
+
+  // BYUS Diagnosis operations
+  async createDiagnosis(diagnosis: InsertByusDiagnosis): Promise<ByusDiagnosis> {
+    const [created] = await db.insert(byusDiagnoses).values(diagnosis).returning();
+    return created;
+  }
+
+  async getDiagnosesByHealthProfile(healthProfileId: string): Promise<ByusDiagnosis[]> {
+    return await db.select()
+      .from(byusDiagnoses)
+      .where(eq(byusDiagnoses.healthProfileId, healthProfileId))
+      .orderBy(desc(byusDiagnoses.reportedDate));
+  }
+
+  async updateDiagnosisStatus(id: string, isActive: boolean): Promise<ByusDiagnosis | undefined> {
+    const [updated] = await db.update(byusDiagnoses)
+      .set({ isActive })
+      .where(eq(byusDiagnoses.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // BYUS Prescription operations
+  async createPrescription(prescription: InsertByusPrescription): Promise<ByusPrescription> {
+    const [created] = await db.insert(byusPrescriptions).values(prescription).returning();
+    return created;
+  }
+
+  async getPrescriptionsByHealthProfile(healthProfileId: string): Promise<ByusPrescription[]> {
+    return await db.select()
+      .from(byusPrescriptions)
+      .where(eq(byusPrescriptions.healthProfileId, healthProfileId))
+      .orderBy(desc(byusPrescriptions.startDate));
+  }
+
+  async updatePrescriptionEffectiveness(
+    id: string, 
+    effectiveness: number, 
+    sideEffectsSeverity: number
+  ): Promise<ByusPrescription | undefined> {
+    const [updated] = await db.update(byusPrescriptions)
+      .set({ effectiveness, sideEffectsSeverity })
+      .where(eq(byusPrescriptions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getActivePrescriptions(healthProfileId: string): Promise<ByusPrescription[]> {
+    return await db.select()
+      .from(byusPrescriptions)
+      .where(
+        and(
+          eq(byusPrescriptions.healthProfileId, healthProfileId),
+          sql`${byusPrescriptions.endDate} IS NULL OR ${byusPrescriptions.endDate} > NOW()`
+        )
+      )
+      .orderBy(desc(byusPrescriptions.startDate));
+  }
+
+  // BYUS Crisis Event operations
+  async recordCrisisEvent(event: InsertByusCrisisEvent): Promise<ByusCrisisEvent> {
+    const [created] = await db.insert(byusCrisisEvents).values(event).returning();
+    return created;
+  }
+
+  async getCrisisEventsByHealthProfile(healthProfileId: string): Promise<ByusCrisisEvent[]> {
+    return await db.select()
+      .from(byusCrisisEvents)
+      .where(eq(byusCrisisEvents.healthProfileId, healthProfileId))
+      .orderBy(desc(byusCrisisEvents.createdAt));
+  }
+
+  async getCrisisEventById(id: string): Promise<ByusCrisisEvent | undefined> {
+    const [event] = await db.select()
+      .from(byusCrisisEvents)
+      .where(eq(byusCrisisEvents.id, id));
+    return event || undefined;
+  }
+
+  async updateCrisisEventOutcome(id: string, outcome: string): Promise<ByusCrisisEvent | undefined> {
+    const [updated] = await db.update(byusCrisisEvents)
+      .set({ outcome })
+      .where(eq(byusCrisisEvents.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getCrisisStatistics(timeRange?: { start: Date; end: Date }): Promise<{
+    totalEvents: number;
+    byEventType: Record<string, number>;
+    bySeverity: Record<number, number>;
+    byOutcome: Record<string, number>;
+    averageResponseTime: number;
+  }> {
+    let query = db.select().from(byusCrisisEvents);
+    
+    if (timeRange) {
+      query = query.where(
+        and(
+          sql`${byusCrisisEvents.createdAt} >= ${timeRange.start}`,
+          sql`${byusCrisisEvents.createdAt} <= ${timeRange.end}`
+        )
+      );
+    }
+
+    const events = await query;
+    
+    const byEventType: Record<string, number> = {};
+    const bySeverity: Record<number, number> = {};
+    const byOutcome: Record<string, number> = {};
+    
+    events.forEach(event => {
+      byEventType[event.eventType] = (byEventType[event.eventType] || 0) + 1;
+      bySeverity[event.severity] = (bySeverity[event.severity] || 0) + 1;
+      byOutcome[event.outcome] = (byOutcome[event.outcome] || 0) + 1;
+    });
+
+    // Calculate average response time (placeholder - would need more data)
+    const averageResponseTime = 15; // minutes
+
+    return {
+      totalEvents: events.length,
+      byEventType,
+      bySeverity,
+      byOutcome,
+      averageResponseTime
+    };
+  }
+
+  // BYUS Crisis Companion operations
+  async createCrisisCompanion(companion: InsertByusCrisisCompanion): Promise<ByusCrisisCompanion> {
+    const [created] = await db.insert(byusCrisisCompanion).values(companion).returning();
+    return created;
+  }
+
+  async getCrisisCompanionsByCategory(category: string): Promise<ByusCrisisCompanion[]> {
+    return await db.select()
+      .from(byusCrisisCompanion)
+      .where(
+        and(
+          eq(byusCrisisCompanion.category, category),
+          eq(byusCrisisCompanion.isActive, true)
+        )
+      )
+      .orderBy(desc(byusCrisisCompanion.priority));
+  }
+
+  async getActiveCrisisCompanions(): Promise<ByusCrisisCompanion[]> {
+    return await db.select()
+      .from(byusCrisisCompanion)
+      .where(eq(byusCrisisCompanion.isActive, true))
+      .orderBy(desc(byusCrisisCompanion.priority));
+  }
+
+  async updateCrisisCompanion(id: string, companion: Partial<InsertByusCrisisCompanion>): Promise<ByusCrisisCompanion | undefined> {
+    const [updated] = await db.update(byusCrisisCompanion)
+      .set(companion)
+      .where(eq(byusCrisisCompanion.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCrisisCompanion(id: string): Promise<void> {
+    await db.delete(byusCrisisCompanion)
+      .where(eq(byusCrisisCompanion.id, id));
+  }
+
+  // BYUS Professional Review - additional method for crisis events
+  async getReviewsByCrisisEventId(crisisEventId: string): Promise<ByusProfessionalReview[]> {
+    return await db.select()
+      .from(byusProfessionalReviews)
+      .where(eq(byusProfessionalReviews.crisisEventId, crisisEventId))
+      .orderBy(desc(byusProfessionalReviews.createdAt));
   }
 }
 

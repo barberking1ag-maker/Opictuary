@@ -890,41 +890,151 @@ export const byusMediationComments = pgTable("byus_mediation_comments", {
   index("idx_byus_comments_user_id").on(table.userId),
 ]);
 
-// BYUS Therapist Review System
-export const byusTherapists = pgTable("byus_therapists", {
+// BYUS Mental Health Data Tables
+
+// Health Profiles - anonymized patient profiles
+export const byusHealthProfiles = pgTable("byus_health_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").notNull().unique(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  licenseNumber: text("license_number").notNull(),
-  specialty: text("specialty"), // marriage, family, conflict resolution, etc.
-  qualifications: text("qualifications"),
-  bio: text("bio"),
-  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
-  isActive: boolean("is_active").default(true),
+  pseudonymousId: varchar("pseudonymous_id").notNull().unique(), // For privacy
+  demographicHash: text("demographic_hash").notNull(), // Encrypted demographic data
+  ageGroup: text("age_group").notNull(), // 18-25, 26-35, 36-45, 46-55, 56-65, 65+
+  region: text("region"), // General geographic area
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  index("idx_byus_therapists_email").on(table.email),
-  index("idx_byus_therapists_is_active").on(table.isActive),
-  index("idx_byus_therapists_specialty").on(table.specialty),
+  index("idx_byus_health_profiles_pseudonymous_id").on(table.pseudonymousId),
+  index("idx_byus_health_profiles_age_group").on(table.ageGroup),
+  index("idx_byus_health_profiles_region").on(table.region),
+  index("idx_byus_health_profiles_created_at").on(table.createdAt),
 ]);
 
+// Diagnoses - anonymized diagnosis records
+export const byusDiagnoses = pgTable("byus_diagnoses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  healthProfileId: varchar("health_profile_id").notNull().references(() => byusHealthProfiles.id, { onDelete: "cascade" }),
+  diagnosisCode: text("diagnosis_code").notNull(), // Anonymized condition category
+  severity: text("severity").notNull(), // mild, moderate, severe
+  reportedDate: timestamp("reported_date").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_diagnoses_health_profile_id").on(table.healthProfileId),
+  index("idx_byus_diagnoses_diagnosis_code").on(table.diagnosisCode),
+  index("idx_byus_diagnoses_severity").on(table.severity),
+  index("idx_byus_diagnoses_is_active").on(table.isActive),
+  index("idx_byus_diagnoses_reported_date").on(table.reportedDate),
+]);
+
+// Prescriptions - anonymized medication records
+export const byusPrescriptions = pgTable("byus_prescriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  healthProfileId: varchar("health_profile_id").notNull().references(() => byusHealthProfiles.id, { onDelete: "cascade" }),
+  medicationCategory: text("medication_category").notNull(), // General category, not specific drugs
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  effectiveness: integer("effectiveness"), // 0-100
+  sideEffectsSeverity: integer("side_effects_severity"), // 0-100
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_prescriptions_health_profile_id").on(table.healthProfileId),
+  index("idx_byus_prescriptions_medication_category").on(table.medicationCategory),
+  index("idx_byus_prescriptions_start_date").on(table.startDate),
+  index("idx_byus_prescriptions_end_date").on(table.endDate),
+  check("effectiveness_range", sql`effectiveness >= 0 AND effectiveness <= 100`),
+  check("side_effects_severity_range", sql`side_effects_severity >= 0 AND side_effects_severity <= 100`),
+]);
+
+// Crisis Events - tracking mental health crisis events
+export const byusCrisisEvents = pgTable("byus_crisis_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  healthProfileId: varchar("health_profile_id").notNull().references(() => byusHealthProfiles.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // anxiety, panic, depression, suicidal_ideation, other
+  severity: integer("severity").notNull(), // 1-10
+  triggerCategory: text("trigger_category"),
+  interventionUsed: text("intervention_used"), // breathing, grounding, hotline, emergency
+  outcome: text("outcome").notNull(), // resolved, escalated, ongoing
+  safeWordUsed: boolean("safe_word_used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_crisis_events_health_profile_id").on(table.healthProfileId),
+  index("idx_byus_crisis_events_event_type").on(table.eventType),
+  index("idx_byus_crisis_events_severity").on(table.severity),
+  index("idx_byus_crisis_events_outcome").on(table.outcome),
+  index("idx_byus_crisis_events_created_at").on(table.createdAt),
+  check("severity_range", sql`severity >= 1 AND severity <= 10`),
+]);
+
+// Crisis Companion - pre-configured crisis support messages
+export const byusCrisisCompanion = pgTable("byus_crisis_companion", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  category: text("category").notNull(), // calming, grounding, breathing, affirmation, emergency
+  audioUrl: text("audio_url"), // Optional audio version
+  priority: integer("priority").notNull().default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_crisis_companion_category").on(table.category),
+  index("idx_byus_crisis_companion_priority").on(table.priority),
+  index("idx_byus_crisis_companion_is_active").on(table.isActive),
+]);
+
+// BYUS Therapist Review System - Updated
+export const byusTherapists = pgTable("byus_therapists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => byusUsers.id, { onDelete: "cascade" }),
+  licenseNumber: text("license_number").notNull(),
+  specializations: jsonb("specializations").$type<string[]>().notNull().default([]),
+  availability: jsonb("availability").$type<{
+    monday?: { start: string; end: string }[];
+    tuesday?: { start: string; end: string }[];
+    wednesday?: { start: string; end: string }[];
+    thursday?: { start: string; end: string }[];
+    friday?: { start: string; end: string }[];
+    saturday?: { start: string; end: string }[];
+    sunday?: { start: string; end: string }[];
+  }>().default({}),
+  isVerified: boolean("is_verified").default(false),
+  canReviewCrisis: boolean("can_review_crisis").default(false),
+  responseTime: text("response_time").notNull().default("24hour"), // immediate, 1hour, 24hour
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_therapists_user_id").on(table.userId),
+  index("idx_byus_therapists_is_verified").on(table.isVerified),
+  index("idx_byus_therapists_can_review_crisis").on(table.canReviewCrisis),
+  index("idx_byus_therapists_response_time").on(table.responseTime),
+]);
+
+// Professional Reviews - Updated for both mediation and crisis reviews
 export const byusProfessionalReviews = pgTable("byus_professional_reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
+  mediationId: varchar("mediation_id").references(() => byusMediations.id, { onDelete: "cascade" }), // Optional
+  crisisEventId: varchar("crisis_event_id").references(() => byusCrisisEvents.id, { onDelete: "cascade" }), // Optional
   therapistId: varchar("therapist_id").notNull().references(() => byusTherapists.id, { onDelete: "cascade" }),
-  reviewStatus: text("review_status").notNull().default("pending"), // pending, reviewing, approved, needs_revision
-  therapistNotes: text("therapist_notes"),
-  professionalRecommendations: text("professional_recommendations"),
-  validationScore: integer("validation_score"), // 0-100
+  reviewType: text("review_type").notNull(), // mediation, crisis, diagnosis
+  originalContent: text("original_content").notNull(),
+  professionalNotes: text("professional_notes").notNull(),
+  recommendations: jsonb("recommendations").$type<{
+    immediate?: string[];
+    shortTerm?: string[];
+    longTerm?: string[];
+    referrals?: string[];
+  }>().default({}),
+  approvalStatus: text("approval_status").notNull().default("pending"), // approved, modified, rejected
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  index("idx_byus_reviews_mediation_id").on(table.mediationId),
-  index("idx_byus_reviews_therapist_id").on(table.therapistId),
-  index("idx_byus_reviews_status").on(table.reviewStatus),
-  uniqueIndex("idx_byus_reviews_unique_mediation").on(table.mediationId), // One review per mediation
+  index("idx_byus_professional_reviews_mediation_id").on(table.mediationId),
+  index("idx_byus_professional_reviews_crisis_event_id").on(table.crisisEventId),
+  index("idx_byus_professional_reviews_therapist_id").on(table.therapistId),
+  index("idx_byus_professional_reviews_review_type").on(table.reviewType),
+  index("idx_byus_professional_reviews_approval_status").on(table.approvalStatus),
+  check("review_target_check", sql`
+    (mediation_id IS NOT NULL AND crisis_event_id IS NULL) OR
+    (mediation_id IS NULL AND crisis_event_id IS NOT NULL) OR
+    (review_type = 'diagnosis')
+  `),
 ]);
 
 // Memorial Product & Service Advertisements
@@ -2083,8 +2193,13 @@ export const insertByusAnalysisSchema = createInsertSchema(byusAnalysis).omit({ 
 export const insertByusMediationHistorySchema = createInsertSchema(byusMediationHistory).omit({ id: true, createdAt: true });
 export const insertByusMediationCommentSchema = createInsertSchema(byusMediationComments).omit({ id: true, createdAt: true });
 export const insertByusFeedbackSchema = createInsertSchema(byusFeedback).omit({ id: true, createdAt: true });
-export const insertByusTherapistSchema = createInsertSchema(byusTherapists).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertByusProfessionalReviewSchema = createInsertSchema(byusProfessionalReviews).omit({ id: true, createdAt: true });
+export const insertByusHealthProfileSchema = createInsertSchema(byusHealthProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertByusDiagnosisSchema = createInsertSchema(byusDiagnoses).omit({ id: true, createdAt: true });
+export const insertByusPrescriptionSchema = createInsertSchema(byusPrescriptions).omit({ id: true, createdAt: true });
+export const insertByusCrisisEventSchema = createInsertSchema(byusCrisisEvents).omit({ id: true, createdAt: true });
+export const insertByusCrisisCompanionSchema = createInsertSchema(byusCrisisCompanion).omit({ id: true, createdAt: true });
+export const insertByusTherapistSchema = createInsertSchema(byusTherapists).omit({ id: true, createdAt: true });
+export const insertByusProfessionalReviewSchema = createInsertSchema(byusProfessionalReviews).omit({ id: true, createdAt: true, reviewedAt: true });
 
 export type InsertByusUser = z.infer<typeof insertByusUserSchema>;
 export type ByusUser = typeof byusUsers.$inferSelect;
@@ -2103,6 +2218,21 @@ export type ByusMediationComment = typeof byusMediationComments.$inferSelect;
 
 export type InsertByusFeedback = z.infer<typeof insertByusFeedbackSchema>;
 export type ByusFeedback = typeof byusFeedback.$inferSelect;
+
+export type InsertByusHealthProfile = z.infer<typeof insertByusHealthProfileSchema>;
+export type ByusHealthProfile = typeof byusHealthProfiles.$inferSelect;
+
+export type InsertByusDiagnosis = z.infer<typeof insertByusDiagnosisSchema>;
+export type ByusDiagnosis = typeof byusDiagnoses.$inferSelect;
+
+export type InsertByusPrescription = z.infer<typeof insertByusPrescriptionSchema>;
+export type ByusPrescription = typeof byusPrescriptions.$inferSelect;
+
+export type InsertByusCrisisEvent = z.infer<typeof insertByusCrisisEventSchema>;
+export type ByusCrisisEvent = typeof byusCrisisEvents.$inferSelect;
+
+export type InsertByusCrisisCompanion = z.infer<typeof insertByusCrisisCompanionSchema>;
+export type ByusCrisisCompanion = typeof byusCrisisCompanion.$inferSelect;
 
 export type InsertByusTherapist = z.infer<typeof insertByusTherapistSchema>;
 export type ByusTherapist = typeof byusTherapists.$inferSelect;
