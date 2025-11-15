@@ -68,9 +68,10 @@ export default function ByusCreateMediation() {
 
   const saveDraftMutation = useMutation({
     mutationFn: (data: MediationFormData) => 
-      apiRequest("/api/byus/mediations", {
-        method: "POST",
-        body: JSON.stringify({ ...data, status: "draft" }),
+      apiRequest("POST", "/api/byus/mediations", { 
+        ...data, 
+        status: "draft",
+        creatorId: "test-user-123" // Hardcoded test user ID for now
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/byus/mediations"] });
@@ -83,9 +84,11 @@ export default function ByusCreateMediation() {
 
   const submitMediationMutation = useMutation({
     mutationFn: (data: MediationFormData) =>
-      apiRequest("/api/byus/mediations", {
-        method: "POST",
-        body: JSON.stringify({ ...data, status: "active", aiAnalysisRequested: true }),
+      apiRequest("POST", "/api/byus/mediations", { 
+        ...data, 
+        status: "active", 
+        aiAnalysisRequested: true,
+        creatorId: "test-user-123" // Hardcoded test user ID for now
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/byus/mediations"] });

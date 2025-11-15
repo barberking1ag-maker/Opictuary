@@ -50,10 +50,7 @@ export default function ByusMediationDetail() {
   // Update mediation mutation
   const updateMutation = useMutation({
     mutationFn: (updates: any) =>
-      apiRequest(`/api/byus/mediations/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      }),
+      apiRequest("PATCH", `/api/byus/mediations/${id}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/byus/mediations/${id}`] });
       toast({
@@ -67,9 +64,7 @@ export default function ByusMediationDetail() {
   // Request AI analysis mutation
   const analysisMutation = useMutation({
     mutationFn: () =>
-      apiRequest(`/api/byus/mediations/${id}/analyze`, {
-        method: "POST",
-      }),
+      apiRequest("POST", `/api/byus/mediations/${id}/analyze`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/byus/mediations/${id}`] });
       toast({
