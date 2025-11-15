@@ -794,6 +794,100 @@ export const prisonAuditLogs = pgTable("prison_audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// BYUS Mediator App Tables
+export const byusUsers = pgTable("byus_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: varchar("phone"),
+  organization: text("organization"),
+  role: text("role").default("user"), // user, mediator, admin
+  isVerified: boolean("is_verified").default(false),
+  verificationToken: text("verification_token"),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_users_email").on(table.email),
+  index("idx_byus_users_role").on(table.role),
+]);
+
+export const byusMediations = pgTable("byus_mediations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorId: varchar("creator_id").notNull().references(() => byusUsers.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // dispute, divorce, business, family, other
+  status: text("status").notNull().default("draft"), // draft, active, analyzing, resolved, archived
+  party1Name: text("party1_name").notNull(),
+  party1Email: text("party1_email"),
+  party1Perspective: text("party1_perspective"),
+  party2Name: text("party2_name").notNull(),
+  party2Email: text("party2_email"),
+  party2Perspective: text("party2_perspective"),
+  desiredOutcome: text("desired_outcome"),
+  additionalContext: text("additional_context"),
+  aiAnalysisRequested: boolean("ai_analysis_requested").default(false),
+  aiAnalysisCompleted: boolean("ai_analysis_completed").default(false),
+  confidentialityLevel: text("confidentiality_level").default("standard"), // public, standard, confidential
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_mediations_creator_id").on(table.creatorId),
+  index("idx_byus_mediations_status").on(table.status),
+  index("idx_byus_mediations_category").on(table.category),
+]);
+
+export const byusAnalysis = pgTable("byus_analysis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
+  aiProvider: text("ai_provider").default("openai"),
+  fairnessScore: integer("fairness_score"), // 0-100
+  party1BiasScore: integer("party1_bias_score"), // 0-100
+  party2BiasScore: integer("party2_bias_score"), // 0-100
+  suggestedSolution: text("suggested_solution"),
+  keyPoints: jsonb("key_points").$type<string[]>().default([]),
+  compromiseAreas: jsonb("compromise_areas").$type<Array<{area: string, suggestion: string}>>().default([]),
+  legalConsiderations: text("legal_considerations"),
+  emotionalFactors: jsonb("emotional_factors").$type<Array<{factor: string, impact: string}>>().default([]),
+  nextSteps: jsonb("next_steps").$type<string[]>().default([]),
+  confidence: integer("confidence"), // 0-100
+  analysisVersion: integer("analysis_version").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_analysis_mediation_id").on(table.mediationId),
+  index("idx_byus_analysis_fairness_score").on(table.fairnessScore),
+]);
+
+export const byusMediationHistory = pgTable("byus_mediation_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => byusUsers.id, { onDelete: "set null" }),
+  action: text("action").notNull(), // created, updated, analyzed, resolved, comment_added
+  description: text("description"),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_history_mediation_id").on(table.mediationId),
+  index("idx_byus_history_user_id").on(table.userId),
+  index("idx_byus_history_action").on(table.action),
+]);
+
+export const byusMediationComments = pgTable("byus_mediation_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => byusUsers.id, { onDelete: "cascade" }),
+  comment: text("comment").notNull(),
+  isPrivate: boolean("is_private").default(false), // Only visible to mediators
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_comments_mediation_id").on(table.mediationId),
+  index("idx_byus_comments_user_id").on(table.userId),
+]);
+
 // Memorial Product & Service Advertisements
 export const advertisements = pgTable("advertisements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1926,78 +2020,6 @@ export type FuneralProgram = typeof funeralPrograms.$inferSelect;
 export type InsertProgramItem = z.infer<typeof insertProgramItemSchema>;
 export type ProgramItem = typeof programItems.$inferSelect;
 
-// ====================================================================================
-// BYUS MEDIATOR APP TABLES
-// ====================================================================================
-
-// BYUS Users table (separate from Opictuary users)
-export const byusUsers = pgTable("byus_users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").notNull().unique("byus_users_email_key"),
-  firstName: varchar("first_name").notNull(),
-  lastName: varchar("last_name").notNull(),
-  profileImageUrl: varchar("profile_image_url"),
-  subscriptionTier: varchar("subscription_tier").notNull().default("free"), // free, basic, pro, enterprise
-  subscriptionStatus: varchar("subscription_status").notNull().default("active"), // active, cancelled, expired
-  trialEndDate: timestamp("trial_end_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  index("idx_byus_users_email").on(table.email),
-  index("idx_byus_users_subscription_tier").on(table.subscriptionTier),
-  index("idx_byus_users_created_at").on(table.createdAt),
-]);
-
-// BYUS Mediations table
-export const byusMediations = pgTable("byus_mediations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => byusUsers.id, { onDelete: "cascade" }),
-  type: varchar("type").notNull(), // relationship, business, family, legal, other
-  title: text("title").notNull(),
-  partyAName: text("party_a_name").notNull(),
-  partyAPerspective: text("party_a_perspective"),
-  partyBName: text("party_b_name").notNull(),
-  partyBPerspective: text("party_b_perspective"),
-  aiAnalysis: text("ai_analysis"),
-  aiSolution: text("ai_solution"),
-  fairnessScore: integer("fairness_score"), // 0-100
-  status: varchar("status").notNull().default("pending"), // pending, analyzing, complete
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  index("idx_byus_mediations_user_id").on(table.userId),
-  index("idx_byus_mediations_type").on(table.type),
-  index("idx_byus_mediations_status").on(table.status),
-  index("idx_byus_mediations_created_at").on(table.createdAt),
-  check("fairness_score_range", sql`fairness_score >= 0 AND fairness_score <= 100`),
-]);
-
-// BYUS Mediation Categories table
-export const byusMediationCategories = pgTable("byus_mediation_categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name").notNull().unique(),
-  description: text("description"),
-  icon: varchar("icon"), // Icon name or URL
-  promptTemplate: text("prompt_template"), // AI prompt template for this category
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("idx_byus_mediation_categories_name").on(table.name),
-]);
-
-// BYUS Mediation History table
-export const byusMediationHistory = pgTable("byus_mediation_history", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
-  userId: varchar("user_id").notNull().references(() => byusUsers.id, { onDelete: "cascade" }),
-  action: varchar("action").notNull(), // created, updated_perspective, analyzed, viewed, exported, etc.
-  details: text("details"),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("idx_byus_mediation_history_mediation_id").on(table.mediationId),
-  index("idx_byus_mediation_history_user_id").on(table.userId),
-  index("idx_byus_mediation_history_created_at").on(table.createdAt),
-]);
-
 // BYUS Feedback table
 export const byusFeedback = pgTable("byus_feedback", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2018,8 +2040,9 @@ export const byusFeedback = pgTable("byus_feedback", {
 // Create insert schemas and types for BYUS tables
 export const insertByusUserSchema = createInsertSchema(byusUsers).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertByusMediationSchema = createInsertSchema(byusMediations).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertByusMediationCategorySchema = createInsertSchema(byusMediationCategories).omit({ id: true, createdAt: true });
+export const insertByusAnalysisSchema = createInsertSchema(byusAnalysis).omit({ id: true, createdAt: true });
 export const insertByusMediationHistorySchema = createInsertSchema(byusMediationHistory).omit({ id: true, createdAt: true });
+export const insertByusMediationCommentSchema = createInsertSchema(byusMediationComments).omit({ id: true, createdAt: true });
 export const insertByusFeedbackSchema = createInsertSchema(byusFeedback).omit({ id: true, createdAt: true });
 
 export type InsertByusUser = z.infer<typeof insertByusUserSchema>;
@@ -2028,11 +2051,14 @@ export type ByusUser = typeof byusUsers.$inferSelect;
 export type InsertByusMediation = z.infer<typeof insertByusMediationSchema>;
 export type ByusMediation = typeof byusMediations.$inferSelect;
 
-export type InsertByusMediationCategory = z.infer<typeof insertByusMediationCategorySchema>;
-export type ByusMediationCategory = typeof byusMediationCategories.$inferSelect;
+export type InsertByusAnalysis = z.infer<typeof insertByusAnalysisSchema>;
+export type ByusAnalysis = typeof byusAnalysis.$inferSelect;
 
 export type InsertByusMediationHistory = z.infer<typeof insertByusMediationHistorySchema>;
 export type ByusMediationHistory = typeof byusMediationHistory.$inferSelect;
+
+export type InsertByusMediationComment = z.infer<typeof insertByusMediationCommentSchema>;
+export type ByusMediationComment = typeof byusMediationComments.$inferSelect;
 
 export type InsertByusFeedback = z.infer<typeof insertByusFeedbackSchema>;
 export type ByusFeedback = typeof byusFeedback.$inferSelect;

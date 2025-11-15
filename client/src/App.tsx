@@ -61,6 +61,14 @@ import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
 
+// BYUS Mediator App Pages
+import ByusLanding from "@/pages/ByusLanding";
+import ByusLogin from "@/pages/ByusLogin";
+import ByusDashboard from "@/pages/ByusDashboard";
+import ByusCreateMediation from "@/pages/ByusCreateMediation";
+import ByusMediationDetail from "@/pages/ByusMediationDetail";
+import ByusAnalysis from "@/pages/ByusAnalysis";
+
 function Router() {
   // From blueprint: javascript_google_analytics - Track page views when routes change
   useAnalytics();
@@ -206,6 +214,17 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/child-safety" component={ChildSafety} />
         <Route path="/support" component={SupportHub} />
+        
+        {/* BYUS Mediator App Routes */}
+        <Route path="/byus" component={ByusLanding} />
+        <Route path="/byus/login" component={ByusLogin} />
+        <Route path="/byus/register" component={ByusLogin} />
+        <Route path="/byus/dashboard" component={ByusDashboard} />
+        <Route path="/byus/create" component={ByusCreateMediation} />
+        <Route path="/byus/mediation/:id" component={ByusMediationDetail} />
+        <Route path="/byus/mediation/:id/edit" component={ByusMediationDetail} />
+        <Route path="/byus/analysis/:id" component={ByusAnalysis} />
+        
         <Route component={NotFound} />
         </Switch>
       </main>
