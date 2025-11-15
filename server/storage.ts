@@ -63,8 +63,9 @@ import {
   videoCondolences,
   byusUsers,
   byusMediations,
-  byusMediationCategories,
+  byusAnalysis,
   byusMediationHistory,
+  byusMediationComments,
   byusFeedback,
   type User,
   type InsertUser,
@@ -198,8 +199,6 @@ import {
   type InsertByusUser,
   type ByusMediation,
   type InsertByusMediation,
-  type ByusMediationCategory,
-  type InsertByusMediationCategory,
   type ByusMediationHistory,
   type InsertByusMediationHistory,
   type ByusFeedback,
@@ -611,8 +610,8 @@ export interface IStorage {
   getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]>;
 
   // BYUS Mediation Categories operations
-  getMediationCategories(): Promise<ByusMediationCategory[]>;
-  createMediationCategory(category: InsertByusMediationCategory): Promise<ByusMediationCategory>;
+  getMediationCategories(): Promise<any[]>;
+  createMediationCategory(category: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3127,13 +3126,19 @@ export class DatabaseStorage implements IStorage {
 
   // BYUS Mediation Categories operations
   async getMediationCategories(): Promise<ByusMediationCategory[]> {
-    return await db.select().from(byusMediationCategories)
-      .orderBy(byusMediationCategories.name);
+    // For now return hardcoded categories since we don't have a separate categories table
+    return [
+      { id: '1', name: 'relationship', description: 'Relationship conflicts', icon: 'heart' },
+      { id: '2', name: 'business', description: 'Business disputes', icon: 'briefcase' },
+      { id: '3', name: 'family', description: 'Family matters', icon: 'home' },
+      { id: '4', name: 'legal', description: 'Legal disagreements', icon: 'gavel' },
+      { id: '5', name: 'other', description: 'Other conflicts', icon: 'help' }
+    ];
   }
 
-  async createMediationCategory(category: InsertByusMediationCategory): Promise<ByusMediationCategory> {
-    const [created] = await db.insert(byusMediationCategories).values(category).returning();
-    return created;
+  async createMediationCategory(category: any): Promise<any> {
+    // Categories are hardcoded for now, just return the category
+    return { ...category, id: String(Date.now()) };
   }
 }
 
