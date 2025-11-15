@@ -833,12 +833,14 @@ export const byusMediations = pgTable("byus_mediations", {
   aiAnalysisRequested: boolean("ai_analysis_requested").default(false),
   aiAnalysisCompleted: boolean("ai_analysis_completed").default(false),
   confidentialityLevel: text("confidentiality_level").default("standard"), // public, standard, confidential
+  professionalReviewStatus: text("professional_review_status"), // null, pending, reviewed, approved
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_byus_mediations_creator_id").on(table.creatorId),
   index("idx_byus_mediations_status").on(table.status),
   index("idx_byus_mediations_category").on(table.category),
+  index("idx_byus_mediations_review_status").on(table.professionalReviewStatus),
 ]);
 
 export const byusAnalysis = pgTable("byus_analysis", {
@@ -886,6 +888,43 @@ export const byusMediationComments = pgTable("byus_mediation_comments", {
 }, (table) => [
   index("idx_byus_comments_mediation_id").on(table.mediationId),
   index("idx_byus_comments_user_id").on(table.userId),
+]);
+
+// BYUS Therapist Review System
+export const byusTherapists = pgTable("byus_therapists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull().unique(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  licenseNumber: text("license_number").notNull(),
+  specialty: text("specialty"), // marriage, family, conflict resolution, etc.
+  qualifications: text("qualifications"),
+  bio: text("bio"),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_therapists_email").on(table.email),
+  index("idx_byus_therapists_is_active").on(table.isActive),
+  index("idx_byus_therapists_specialty").on(table.specialty),
+]);
+
+export const byusProfessionalReviews = pgTable("byus_professional_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mediationId: varchar("mediation_id").notNull().references(() => byusMediations.id, { onDelete: "cascade" }),
+  therapistId: varchar("therapist_id").notNull().references(() => byusTherapists.id, { onDelete: "cascade" }),
+  reviewStatus: text("review_status").notNull().default("pending"), // pending, reviewing, approved, needs_revision
+  therapistNotes: text("therapist_notes"),
+  professionalRecommendations: text("professional_recommendations"),
+  validationScore: integer("validation_score"), // 0-100
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_byus_reviews_mediation_id").on(table.mediationId),
+  index("idx_byus_reviews_therapist_id").on(table.therapistId),
+  index("idx_byus_reviews_status").on(table.reviewStatus),
+  uniqueIndex("idx_byus_reviews_unique_mediation").on(table.mediationId), // One review per mediation
 ]);
 
 // Memorial Product & Service Advertisements
@@ -2044,6 +2083,8 @@ export const insertByusAnalysisSchema = createInsertSchema(byusAnalysis).omit({ 
 export const insertByusMediationHistorySchema = createInsertSchema(byusMediationHistory).omit({ id: true, createdAt: true });
 export const insertByusMediationCommentSchema = createInsertSchema(byusMediationComments).omit({ id: true, createdAt: true });
 export const insertByusFeedbackSchema = createInsertSchema(byusFeedback).omit({ id: true, createdAt: true });
+export const insertByusTherapistSchema = createInsertSchema(byusTherapists).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertByusProfessionalReviewSchema = createInsertSchema(byusProfessionalReviews).omit({ id: true, createdAt: true });
 
 export type InsertByusUser = z.infer<typeof insertByusUserSchema>;
 export type ByusUser = typeof byusUsers.$inferSelect;
@@ -2062,6 +2103,12 @@ export type ByusMediationComment = typeof byusMediationComments.$inferSelect;
 
 export type InsertByusFeedback = z.infer<typeof insertByusFeedbackSchema>;
 export type ByusFeedback = typeof byusFeedback.$inferSelect;
+
+export type InsertByusTherapist = z.infer<typeof insertByusTherapistSchema>;
+export type ByusTherapist = typeof byusTherapists.$inferSelect;
+
+export type InsertByusProfessionalReview = z.infer<typeof insertByusProfessionalReviewSchema>;
+export type ByusProfessionalReview = typeof byusProfessionalReviews.$inferSelect;
 
 // AI Chat Messages
 export const chatMessages = pgTable("chat_messages", {

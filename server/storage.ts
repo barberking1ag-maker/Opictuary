@@ -203,6 +203,12 @@ import {
   type InsertByusMediationHistory,
   type ByusFeedback,
   type InsertByusFeedback,
+  byusTherapists,
+  type ByusTherapist,
+  type InsertByusTherapist,
+  byusProfessionalReviews,
+  type ByusProfessionalReview,
+  type InsertByusProfessionalReview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -597,7 +603,7 @@ export interface IStorage {
 
   // BYUS Mediation operations
   createMediation(mediation: InsertByusMediation): Promise<ByusMediation>;
-  getMediation(id: string): Promise<ByusMediation | undefined>;
+  getMediation(id: string): Promise<(ByusMediation & { professionalReview?: ByusProfessionalReview; therapist?: ByusTherapist }) | undefined>;
   updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined>;
   getMediationsByUser(userId: string): Promise<ByusMediation[]>;
 
@@ -612,6 +618,21 @@ export interface IStorage {
   // BYUS Mediation Categories operations
   getMediationCategories(): Promise<any[]>;
   createMediationCategory(category: any): Promise<any>;
+  
+  // BYUS Therapist operations
+  createTherapist(therapist: InsertByusTherapist): Promise<ByusTherapist>;
+  getTherapist(id: string): Promise<ByusTherapist | undefined>;
+  getTherapistByEmail(email: string): Promise<ByusTherapist | undefined>;
+  getActiveTherapists(limit?: number, offset?: number): Promise<ByusTherapist[]>;
+  updateTherapist(id: string, therapist: Partial<InsertByusTherapist>): Promise<ByusTherapist | undefined>;
+  
+  // BYUS Professional Review operations
+  createProfessionalReview(review: InsertByusProfessionalReview): Promise<ByusProfessionalReview>;
+  getProfessionalReview(id: string): Promise<ByusProfessionalReview | undefined>;
+  getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined>;
+  getReviewsByTherapist(therapistId: string, limit?: number, offset?: number): Promise<ByusProfessionalReview[]>;
+  getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]>;
+  updateReviewStatus(id: string, status: string, therapistNotes?: string, professionalRecommendations?: string, validationScore?: number): Promise<ByusProfessionalReview | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3078,9 +3099,29 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getMediation(id: string): Promise<ByusMediation | undefined> {
+  async getMediation(id: string): Promise<(ByusMediation & { professionalReview?: ByusProfessionalReview; therapist?: ByusTherapist }) | undefined> {
     const [mediation] = await db.select().from(byusMediations).where(eq(byusMediations.id, id));
-    return mediation || undefined;
+    
+    if (mediation) {
+      // Get professional review if exists
+      const [review] = await db.select().from(byusProfessionalReviews)
+        .where(eq(byusProfessionalReviews.mediationId, id));
+      
+      let therapist;
+      if (review) {
+        const [therapistData] = await db.select().from(byusTherapists)
+          .where(eq(byusTherapists.id, review.therapistId));
+        therapist = therapistData;
+      }
+      
+      return {
+        ...mediation,
+        professionalReview: review,
+        therapist,
+      };
+    }
+    
+    return undefined;
   }
 
   async updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined> {
@@ -3139,6 +3180,125 @@ export class DatabaseStorage implements IStorage {
   async createMediationCategory(category: any): Promise<any> {
     // Categories are hardcoded for now, just return the category
     return { ...category, id: String(Date.now()) };
+  }
+  
+  // BYUS Therapist operations
+  async createTherapist(therapist: InsertByusTherapist): Promise<ByusTherapist> {
+    const [created] = await db.insert(byusTherapists).values(therapist).returning();
+    return created;
+  }
+  
+  async getTherapist(id: string): Promise<ByusTherapist | undefined> {
+    const [therapist] = await db.select().from(byusTherapists).where(eq(byusTherapists.id, id));
+    return therapist || undefined;
+  }
+  
+  async getTherapistByEmail(email: string): Promise<ByusTherapist | undefined> {
+    const [therapist] = await db.select().from(byusTherapists).where(eq(byusTherapists.email, email));
+    return therapist || undefined;
+  }
+  
+  async getActiveTherapists(limit: number = 50, offset: number = 0): Promise<ByusTherapist[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(byusTherapists)
+      .where(eq(byusTherapists.isActive, true))
+      .orderBy(desc(byusTherapists.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+  
+  async updateTherapist(id: string, therapist: Partial<InsertByusTherapist>): Promise<ByusTherapist | undefined> {
+    const [updated] = await db.update(byusTherapists)
+      .set({
+        ...therapist,
+        updatedAt: new Date(),
+      })
+      .where(eq(byusTherapists.id, id))
+      .returning();
+    return updated || undefined;
+  }
+  
+  // BYUS Professional Review operations
+  async createProfessionalReview(review: InsertByusProfessionalReview): Promise<ByusProfessionalReview> {
+    const [created] = await db.insert(byusProfessionalReviews).values(review).returning();
+    
+    // Update mediation status
+    await db.update(byusMediations)
+      .set({ 
+        professionalReviewStatus: 'pending',
+        updatedAt: new Date() 
+      })
+      .where(eq(byusMediations.id, review.mediationId));
+    
+    return created;
+  }
+  
+  async getProfessionalReview(id: string): Promise<ByusProfessionalReview | undefined> {
+    const [review] = await db.select().from(byusProfessionalReviews).where(eq(byusProfessionalReviews.id, id));
+    return review || undefined;
+  }
+  
+  async getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined> {
+    const [review] = await db.select().from(byusProfessionalReviews)
+      .where(eq(byusProfessionalReviews.mediationId, mediationId));
+    return review || undefined;
+  }
+  
+  async getReviewsByTherapist(therapistId: string, limit: number = 50, offset: number = 0): Promise<ByusProfessionalReview[]> {
+    const effectiveLimit = Math.min(limit, 200);
+    return await db.select().from(byusProfessionalReviews)
+      .where(eq(byusProfessionalReviews.therapistId, therapistId))
+      .orderBy(desc(byusProfessionalReviews.createdAt))
+      .limit(effectiveLimit)
+      .offset(offset);
+  }
+  
+  async getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]> {
+    return await db.select().from(byusProfessionalReviews)
+      .where(
+        and(
+          eq(byusProfessionalReviews.therapistId, therapistId),
+          eq(byusProfessionalReviews.reviewStatus, 'pending')
+        )
+      )
+      .orderBy(byusProfessionalReviews.createdAt);
+  }
+  
+  async updateReviewStatus(
+    id: string, 
+    status: string, 
+    therapistNotes?: string, 
+    professionalRecommendations?: string, 
+    validationScore?: number
+  ): Promise<ByusProfessionalReview | undefined> {
+    const [updated] = await db.update(byusProfessionalReviews)
+      .set({
+        reviewStatus: status,
+        therapistNotes,
+        professionalRecommendations,
+        validationScore,
+        reviewedAt: new Date(),
+      })
+      .where(eq(byusProfessionalReviews.id, id))
+      .returning();
+    
+    if (updated) {
+      // Update mediation professional review status
+      const reviewStatusMap: Record<string, string> = {
+        'approved': 'approved',
+        'needs_revision': 'reviewed',
+        'reviewing': 'pending',
+      };
+      
+      await db.update(byusMediations)
+        .set({ 
+          professionalReviewStatus: reviewStatusMap[status] || 'pending',
+          updatedAt: new Date() 
+        })
+        .where(eq(byusMediations.id, updated.mediationId));
+    }
+    
+    return updated || undefined;
   }
 }
 

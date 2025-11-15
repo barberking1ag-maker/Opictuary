@@ -5122,6 +5122,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // ============= BYUS Professional Review Routes =============
+  
+  // Register therapist
+  app.post("/api/byus/therapists", async (req, res) => {
+    try {
+      const data = insertByusTherapistSchema.parse(req.body);
+      
+      // Check if therapist already exists
+      const existingTherapist = await storage.getTherapistByEmail(data.email);
+      if (existingTherapist) {
+        return res.status(400).json({ error: "Therapist with this email already exists" });
+      }
+      
+      const therapist = await storage.createTherapist(data);
+      res.status(201).json(therapist);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error registering therapist:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get therapist profile
+  app.get("/api/byus/therapists/:id", async (req, res) => {
+    try {
+      const therapist = await storage.getTherapist(req.params.id);
+      if (!therapist) {
+        return res.status(404).json({ error: "Therapist not found" });
+      }
+      res.json(therapist);
+    } catch (error: any) {
+      console.error("Error getting therapist:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get active therapists list
+  app.get("/api/byus/therapists", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const therapists = await storage.getActiveTherapists(limit, offset);
+      res.json(therapists);
+    } catch (error: any) {
+      console.error("Error getting therapists:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Request professional review for a mediation
+  app.post("/api/byus/mediations/:id/request-review", async (req, res) => {
+    try {
+      const mediationId = req.params.id;
+      const { therapistId } = req.body;
+      
+      if (!therapistId) {
+        return res.status(400).json({ error: "Therapist ID is required" });
+      }
+      
+      // Check if mediation exists
+      const mediation = await storage.getMediation(mediationId);
+      if (!mediation) {
+        return res.status(404).json({ error: "Mediation not found" });
+      }
+      
+      // Check if therapist exists
+      const therapist = await storage.getTherapist(therapistId);
+      if (!therapist) {
+        return res.status(404).json({ error: "Therapist not found" });
+      }
+      
+      // Check if review already exists
+      const existingReview = await storage.getProfessionalReviewByMediationId(mediationId);
+      if (existingReview) {
+        return res.status(400).json({ error: "Review already requested for this mediation" });
+      }
+      
+      // Create review request
+      const review = await storage.createProfessionalReview({
+        id: crypto.randomUUID(),
+        mediationId,
+        therapistId,
+        reviewStatus: 'pending',
+        createdAt: new Date(),
+      });
+      
+      res.status(201).json(review);
+    } catch (error: any) {
+      console.error("Error requesting review:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get pending reviews for therapist
+  app.get("/api/byus/therapist/pending-reviews", async (req, res) => {
+    try {
+      const { therapistId } = req.query;
+      
+      if (!therapistId || typeof therapistId !== 'string') {
+        return res.status(400).json({ error: "Therapist ID is required" });
+      }
+      
+      const pendingReviews = await storage.getPendingReviewsForTherapist(therapistId);
+      
+      // Get mediation details for each review
+      const reviewsWithMediations = await Promise.all(
+        pendingReviews.map(async (review) => {
+          const mediation = await storage.getMediation(review.mediationId);
+          return {
+            ...review,
+            mediation,
+          };
+        })
+      );
+      
+      res.json(reviewsWithMediations);
+    } catch (error: any) {
+      console.error("Error getting pending reviews:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Submit professional review
+  app.post("/api/byus/reviews", async (req, res) => {
+    try {
+      const { reviewId, status, therapistNotes, professionalRecommendations, validationScore } = req.body;
+      
+      if (!reviewId || !status) {
+        return res.status(400).json({ error: "Review ID and status are required" });
+      }
+      
+      // Validate status
+      if (!['reviewing', 'approved', 'needs_revision'].includes(status)) {
+        return res.status(400).json({ error: "Invalid review status" });
+      }
+      
+      // Validate score if provided
+      if (validationScore !== undefined) {
+        const score = parseInt(validationScore);
+        if (isNaN(score) || score < 0 || score > 100) {
+          return res.status(400).json({ error: "Validation score must be between 0 and 100" });
+        }
+      }
+      
+      const updatedReview = await storage.updateReviewStatus(
+        reviewId,
+        status,
+        therapistNotes,
+        professionalRecommendations,
+        validationScore
+      );
+      
+      if (!updatedReview) {
+        return res.status(404).json({ error: "Review not found" });
+      }
+      
+      res.json(updatedReview);
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Get professional review for a mediation
+  app.get("/api/byus/mediations/:id/review", async (req, res) => {
+    try {
+      const review = await storage.getProfessionalReviewByMediationId(req.params.id);
+      
+      if (!review) {
+        return res.status(404).json({ error: "No professional review found for this mediation" });
+      }
+      
+      // Get therapist info
+      const therapist = await storage.getTherapist(review.therapistId);
+      
+      res.json({
+        ...review,
+        therapist,
+      });
+    } catch (error: any) {
+      console.error("Error getting professional review:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
