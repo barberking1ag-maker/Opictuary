@@ -80,6 +80,11 @@ import {
   insertMemorialSlideshowSchema,
   insertVideoCondolenceSchema,
   type QRCode,
+  insertByusUserSchema,
+  insertByusMediationSchema,
+  insertByusMediationCategorySchema,
+  insertByusMediationHistorySchema,
+  insertByusFeedbackSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -4764,6 +4769,327 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error deleting chat messages:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================
+  // BYUS MEDIATOR APP API ROUTES
+  // ============================================
+
+  // Register new BYUS user
+  app.post("/api/byus/auth/register", async (req, res) => {
+    try {
+      const data = insertByusUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getByusUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists with this email" });
+      }
+      
+      const user = await storage.createByusUser(data);
+      res.status(201).json(user);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error registering BYUS user:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Login to BYUS
+  app.post("/api/byus/auth/login", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      const user = await storage.getByusUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error: any) {
+      console.error("Error logging in BYUS user:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get BYUS user profile
+  app.get("/api/byus/profile/:userId", async (req, res) => {
+    try {
+      const user = await storage.getByusUser(req.params.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(user);
+    } catch (error: any) {
+      console.error("Error fetching BYUS user profile:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create new mediation case
+  app.post("/api/byus/mediations", async (req, res) => {
+    try {
+      const data = insertByusMediationSchema.parse(req.body);
+      const mediation = await storage.createMediation(data);
+      
+      // Record history
+      await storage.recordMediationHistory({
+        mediationId: mediation.id,
+        userId: data.userId,
+        action: "created",
+        details: "Mediation case created",
+      });
+      
+      res.status(201).json(mediation);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating mediation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get specific mediation
+  app.get("/api/byus/mediations/:id", async (req, res) => {
+    try {
+      const mediation = await storage.getMediation(req.params.id);
+      if (!mediation) {
+        return res.status(404).json({ error: "Mediation not found" });
+      }
+      res.json(mediation);
+    } catch (error: any) {
+      console.error("Error fetching mediation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update mediation with perspectives
+  app.put("/api/byus/mediations/:id", async (req, res) => {
+    try {
+      const data = insertByusMediationSchema.partial().parse(req.body);
+      const mediation = await storage.updateMediation(req.params.id, data);
+      
+      if (!mediation) {
+        return res.status(404).json({ error: "Mediation not found" });
+      }
+      
+      // Record history
+      if (data.userId) {
+        await storage.recordMediationHistory({
+          mediationId: req.params.id,
+          userId: data.userId,
+          action: "updated_perspective",
+          details: JSON.stringify({ 
+            partyA: !!data.partyAPerspective,
+            partyB: !!data.partyBPerspective 
+          }),
+        });
+      }
+      
+      res.json(mediation);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error updating mediation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Trigger AI analysis for mediation
+  app.post("/api/byus/mediations/:id/analyze", async (req, res) => {
+    try {
+      const mediation = await storage.getMediation(req.params.id);
+      if (!mediation) {
+        return res.status(404).json({ error: "Mediation not found" });
+      }
+      
+      // Check if both perspectives are provided
+      if (!mediation.partyAPerspective || !mediation.partyBPerspective) {
+        return res.status(400).json({ 
+          error: "Both party perspectives must be provided before analysis" 
+        });
+      }
+      
+      // Import OpenAI
+      const { openai } = await import("./openai");
+      
+      // Get category for prompt template if applicable
+      const categories = await storage.getMediationCategories();
+      const category = categories.find(c => c.name === mediation.type);
+      
+      // Create AI prompt
+      const systemPrompt = category?.promptTemplate || 
+        "You are an unbiased mediator helping to resolve conflicts. Analyze both perspectives fairly and provide constructive solutions.";
+      
+      const userPrompt = `
+        Mediation Type: ${mediation.type}
+        Title: ${mediation.title}
+        
+        Party A (${mediation.partyAName})'s Perspective:
+        ${mediation.partyAPerspective}
+        
+        Party B (${mediation.partyBName})'s Perspective:
+        ${mediation.partyBPerspective}
+        
+        Please provide:
+        1. An unbiased analysis of the situation
+        2. A fair solution that considers both perspectives
+        3. A fairness score from 0-100 indicating how balanced the proposed solution is
+        
+        Format your response as JSON with fields: analysis, solution, fairnessScore
+      `;
+      
+      // Get AI response
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      });
+      
+      const aiResponse = JSON.parse(completion.choices[0].message.content || "{}");
+      
+      // Update mediation with AI analysis
+      const updated = await storage.updateMediation(req.params.id, {
+        aiAnalysis: aiResponse.analysis,
+        aiSolution: aiResponse.solution,
+        fairnessScore: aiResponse.fairnessScore,
+        status: "complete",
+      });
+      
+      // Record history
+      await storage.recordMediationHistory({
+        mediationId: req.params.id,
+        userId: mediation.userId,
+        action: "analyzed",
+        details: "AI analysis completed",
+      });
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error analyzing mediation:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // List user's mediations
+  app.get("/api/byus/mediations", async (req, res) => {
+    try {
+      const { userId } = req.query;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId query parameter is required" });
+      }
+      
+      const mediations = await storage.getMediationsByUser(userId as string);
+      res.json(mediations);
+    } catch (error: any) {
+      console.error("Error listing mediations:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Submit feedback
+  app.post("/api/byus/feedback", async (req, res) => {
+    try {
+      const data = insertByusFeedbackSchema.parse(req.body);
+      const feedback = await storage.addFeedback(data);
+      res.status(201).json(feedback);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get feedback for mediation
+  app.get("/api/byus/mediations/:id/feedback", async (req, res) => {
+    try {
+      const feedback = await storage.getFeedbackByMediation(req.params.id);
+      res.json(feedback);
+    } catch (error: any) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get mediation categories
+  app.get("/api/byus/categories", async (req, res) => {
+    try {
+      const categories = await storage.getMediationCategories();
+      
+      // If no categories exist, create default ones
+      if (categories.length === 0) {
+        const defaultCategories = [
+          {
+            name: "relationship",
+            description: "Romantic and interpersonal relationship conflicts",
+            icon: "heart",
+            promptTemplate: "You are a relationship counselor helping couples and individuals resolve conflicts with empathy and understanding.",
+          },
+          {
+            name: "business",
+            description: "Business and professional disagreements",
+            icon: "briefcase",
+            promptTemplate: "You are a business mediator helping resolve professional conflicts with focus on mutual benefit and sustainable solutions.",
+          },
+          {
+            name: "family",
+            description: "Family disputes and disagreements",
+            icon: "users",
+            promptTemplate: "You are a family mediator helping resolve conflicts with sensitivity to family dynamics and long-term relationships.",
+          },
+          {
+            name: "legal",
+            description: "Legal and contractual disputes",
+            icon: "scale",
+            promptTemplate: "You are a legal mediator helping resolve disputes with focus on fairness, legal principles, and mutual agreement.",
+          },
+          {
+            name: "other",
+            description: "Other types of conflicts",
+            icon: "help-circle",
+            promptTemplate: "You are an unbiased mediator helping to resolve conflicts fairly and constructively.",
+          },
+        ];
+        
+        for (const cat of defaultCategories) {
+          await storage.createMediationCategory(cat);
+        }
+        
+        const newCategories = await storage.getMediationCategories();
+        return res.json(newCategories);
+      }
+      
+      res.json(categories);
+    } catch (error: any) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get mediation history
+  app.get("/api/byus/mediations/:id/history", async (req, res) => {
+    try {
+      const history = await storage.getMediationHistory(req.params.id);
+      res.json(history);
+    } catch (error: any) {
+      console.error("Error fetching mediation history:", error);
       res.status(500).json({ error: error.message });
     }
   });

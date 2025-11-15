@@ -61,6 +61,11 @@ import {
   memorialPlaylists,
   memorialSlideshows,
   videoCondolences,
+  byusUsers,
+  byusMediations,
+  byusMediationCategories,
+  byusMediationHistory,
+  byusFeedback,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -189,6 +194,16 @@ import {
   type InsertMemorialSlideshow,
   type VideoCondolence,
   type InsertVideoCondolence,
+  type ByusUser,
+  type InsertByusUser,
+  type ByusMediation,
+  type InsertByusMediation,
+  type ByusMediationCategory,
+  type InsertByusMediationCategory,
+  type ByusMediationHistory,
+  type InsertByusMediationHistory,
+  type ByusFeedback,
+  type InsertByusFeedback,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -573,6 +588,31 @@ export interface IStorage {
   getChatMessages(userId: string, limit?: number): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   deleteChatMessages(userId: string): Promise<void>;
+
+  // ============= BYUS Mediator App Methods =============
+  // BYUS User operations
+  createByusUser(user: InsertByusUser): Promise<ByusUser>;
+  getByusUser(id: string): Promise<ByusUser | undefined>;
+  getByusUserByEmail(email: string): Promise<ByusUser | undefined>;
+  updateByusSubscription(userId: string, tier: string, status: string, trialEndDate?: Date): Promise<ByusUser | undefined>;
+
+  // BYUS Mediation operations
+  createMediation(mediation: InsertByusMediation): Promise<ByusMediation>;
+  getMediation(id: string): Promise<ByusMediation | undefined>;
+  updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined>;
+  getMediationsByUser(userId: string): Promise<ByusMediation[]>;
+
+  // BYUS Mediation History operations
+  recordMediationHistory(history: InsertByusMediationHistory): Promise<ByusMediationHistory>;
+  getMediationHistory(mediationId: string): Promise<ByusMediationHistory[]>;
+
+  // BYUS Feedback operations
+  addFeedback(feedback: InsertByusFeedback): Promise<ByusFeedback>;
+  getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]>;
+
+  // BYUS Mediation Categories operations
+  getMediationCategories(): Promise<ByusMediationCategory[]>;
+  createMediationCategory(category: InsertByusMediationCategory): Promise<ByusMediationCategory>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2995,6 +3035,105 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChatMessages(userId: string): Promise<void> {
     await db.delete(chatMessages).where(eq(chatMessages.userId, userId));
+  }
+
+  // ============= BYUS Mediator App Methods Implementation =============
+  
+  // BYUS User operations
+  async createByusUser(user: InsertByusUser): Promise<ByusUser> {
+    const [created] = await db.insert(byusUsers).values(user).returning();
+    return created;
+  }
+
+  async getByusUser(id: string): Promise<ByusUser | undefined> {
+    const [user] = await db.select().from(byusUsers).where(eq(byusUsers.id, id));
+    return user || undefined;
+  }
+
+  async getByusUserByEmail(email: string): Promise<ByusUser | undefined> {
+    const [user] = await db.select().from(byusUsers).where(eq(byusUsers.email, email));
+    return user || undefined;
+  }
+
+  async updateByusSubscription(
+    userId: string, 
+    tier: string, 
+    status: string, 
+    trialEndDate?: Date
+  ): Promise<ByusUser | undefined> {
+    const [updated] = await db.update(byusUsers)
+      .set({
+        subscriptionTier: tier,
+        subscriptionStatus: status,
+        trialEndDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(byusUsers.id, userId))
+      .returning();
+    return updated || undefined;
+  }
+
+  // BYUS Mediation operations
+  async createMediation(mediation: InsertByusMediation): Promise<ByusMediation> {
+    const [created] = await db.insert(byusMediations).values(mediation).returning();
+    return created;
+  }
+
+  async getMediation(id: string): Promise<ByusMediation | undefined> {
+    const [mediation] = await db.select().from(byusMediations).where(eq(byusMediations.id, id));
+    return mediation || undefined;
+  }
+
+  async updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined> {
+    const [updated] = await db.update(byusMediations)
+      .set({
+        ...mediation,
+        updatedAt: new Date(),
+      })
+      .where(eq(byusMediations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getMediationsByUser(userId: string): Promise<ByusMediation[]> {
+    return await db.select().from(byusMediations)
+      .where(eq(byusMediations.userId, userId))
+      .orderBy(desc(byusMediations.createdAt));
+  }
+
+  // BYUS Mediation History operations
+  async recordMediationHistory(history: InsertByusMediationHistory): Promise<ByusMediationHistory> {
+    const [created] = await db.insert(byusMediationHistory).values(history).returning();
+    return created;
+  }
+
+  async getMediationHistory(mediationId: string): Promise<ByusMediationHistory[]> {
+    return await db.select().from(byusMediationHistory)
+      .where(eq(byusMediationHistory.mediationId, mediationId))
+      .orderBy(desc(byusMediationHistory.createdAt));
+  }
+
+  // BYUS Feedback operations
+  async addFeedback(feedback: InsertByusFeedback): Promise<ByusFeedback> {
+    const [created] = await db.insert(byusFeedback).values(feedback).returning();
+    return created;
+  }
+
+  async getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]> {
+    return await db.select().from(byusFeedback)
+      .where(eq(byusFeedback.mediationId, mediationId))
+      .orderBy(desc(byusFeedback.createdAt));
+  }
+
+  // BYUS Mediation Categories operations
+  async getMediationCategories(): Promise<ByusMediationCategory[]> {
+    return await db.select().from(byusMediationCategories)
+      .orderBy(byusMediationCategories.name);
+  }
+
+  async createMediationCategory(category: InsertByusMediationCategory): Promise<ByusMediationCategory> {
+    const [created] = await db.insert(byusMediationCategories).values(category).returning();
+    return created;
   }
 }
 
