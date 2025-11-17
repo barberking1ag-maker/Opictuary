@@ -4,6 +4,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import Home from "@/pages/Home";
 import Landing from "@/pages/Landing";
 import About from "@/pages/About";
@@ -52,7 +59,7 @@ import UpcomingMessages from "@/pages/UpcomingMessages";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { FileText, Image, Layout, Bell, Calendar } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -106,18 +113,70 @@ function Router() {
                   Create Memorial
                 </Button>
               </Link>
-              <Link href="/upcoming-messages">
-                <Button variant="ghost" size="sm" data-testid="nav-future-messages" className="text-sm">
-                  <Calendar className="w-4 h-4 mr-1.5" />
-                  Future Messages
-                </Button>
-              </Link>
-              <Link href="/qr-code">
-                <Button variant="ghost" size="sm" data-testid="nav-qr-memorials" className="text-sm">
-                  <Layout className="w-4 h-4 mr-1.5" />
-                  QR Memorials
-                </Button>
-              </Link>
+              
+              {/* Features Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" data-testid="nav-features-dropdown" className="text-sm">
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    Features
+                    <ChevronDown className="w-3 h-3 ml-1.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-future-messages">
+                    <Link href="/upcoming-messages">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>Future Messages</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-qr-memorials">
+                    <Link href="/qr-code">
+                      <Layout className="w-4 h-4 mr-2" />
+                      <span>QR Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-celebrity-memorials">
+                    <Link href="/celebrity-memorials">
+                      <Crown className="w-4 h-4 mr-2" />
+                      <span>Celebrity Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-alumni-memorials">
+                    <Link href="/alumni-memorials">
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      <span>Alumni Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-essential-workers">
+                    <Link href="/essential-workers">
+                      <Shield className="w-4 h-4 mr-2" />
+                      <span>Essential Workers</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-hood-memorials">
+                    <Link href="/hood-memorials">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span>Hood Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-neighborhoods">
+                    <Link href="/neighborhoods">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>Neighborhoods</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-prison-access">
+                    <Link href="/prison-access">
+                      <Lock className="w-4 h-4 mr-2" />
+                      <span>Prison Access</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               <Link href="/about">
                 <Button variant="ghost" size="sm" data-testid="nav-about" className="text-sm">
                   About
@@ -146,12 +205,70 @@ function Router() {
               {/* User Menu */}
               <UserMenu />
 
-              {/* Mobile About Button */}
-              <Link href="/about">
-                <Button variant="ghost" size="sm" className="lg:hidden" data-testid="nav-mobile-about">
-                  About
-                </Button>
-              </Link>
+              {/* Mobile Features Dropdown */}
+              <div className="lg:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" data-testid="nav-mobile-features-dropdown" className="text-sm">
+                      <Sparkles className="w-4 h-4 mr-1.5" />
+                      Features
+                      <ChevronDown className="w-3 h-3 ml-1.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-future-messages">
+                      <Link href="/upcoming-messages">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>Future Messages</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-qr-memorials">
+                      <Link href="/qr-code">
+                        <Layout className="w-4 h-4 mr-2" />
+                        <span>QR Memorials</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-celebrity-memorials">
+                      <Link href="/celebrity-memorials">
+                        <Crown className="w-4 h-4 mr-2" />
+                        <span>Celebrity Memorials</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-alumni-memorials">
+                      <Link href="/alumni-memorials">
+                        <GraduationCap className="w-4 h-4 mr-2" />
+                        <span>Alumni Memorials</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-essential-workers">
+                      <Link href="/essential-workers">
+                        <Shield className="w-4 h-4 mr-2" />
+                        <span>Essential Workers</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-hood-memorials">
+                      <Link href="/hood-memorials">
+                        <Users className="w-4 h-4 mr-2" />
+                        <span>Hood Memorials</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-neighborhoods">
+                      <Link href="/neighborhoods">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>Neighborhoods</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-prison-access">
+                      <Link href="/prison-access">
+                        <Lock className="w-4 h-4 mr-2" />
+                        <span>Prison Access</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               {/* Mobile Create Button */}
               <Link href="/create-memorial">

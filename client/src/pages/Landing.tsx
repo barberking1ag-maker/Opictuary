@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Smartphone, Calendar, QrCode, Video } from "lucide-react";
+import { Heart, Smartphone, Calendar, QrCode, Video, Crown, GraduationCap, Shield, Users, MapPin, Lock } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 
 export default function Landing() {
@@ -192,6 +192,140 @@ export default function Landing() {
               </Card>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Specialized Memorial Types Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground mb-4" data-testid="text-specialized-title">
+            Specialized Memorial Experiences
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-specialized-description">
+            Honor every life with memorial types designed for unique legacies
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Celebrity Memorials */}
+          <Link href="/celebrity-memorials" className="block" data-testid="link-celebrity-memorials">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Celebrity Memorials</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Honor icons and public figures with estate-managed content, charity integrations, and verified family submissions
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  Explore Celebrities →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Alumni Memorials */}
+          <Link href="/alumni-memorials" className="block" data-testid="link-alumni-memorials">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Alumni Memorials</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Remember classmates and fellow alumni with school-themed tributes, graduation year filters, and campus memories
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  Browse Alumni →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Essential Workers */}
+          <Link href="/essential-workers" className="block" data-testid="link-essential-workers">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Essential Workers</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Honor first responders, healthcare heroes, and essential workers who served their communities with courage
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  Honor Heroes →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Hood Memorials */}
+          <Link href="/hood-memorials" className="block" data-testid="link-hood-memorials">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Hood Memorials</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Community-focused tributes celebrating local legends and neighbors who shaped their neighborhoods
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  See Community →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Neighborhoods */}
+          <Link href="/neighborhoods" className="block" data-testid="link-neighborhoods">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Neighborhoods</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Organize memorials by location, connecting families and friends in specific communities and areas
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  Explore Areas →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Prison Access */}
+          <Link href="/prison-access" className="block" data-testid="link-prison-access">
+            <Card className="hover-elevate h-full">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Lock className="w-6 h-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Prison Access</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Secure, monitored memorial access for incarcerated individuals to stay connected with loved ones' legacies
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full">
+                  Learn More →
+                </Button>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
 

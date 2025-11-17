@@ -19,14 +19,35 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Our Features */}
           <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
+            <h3 className="font-semibold mb-4">Our Features</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link href="/upcoming-messages">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-future-messages">
+                    Future Messages
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/qr-code">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-qr-memorials">
+                    QR Memorials
+                  </span>
+                </Link>
+              </li>
               <li>
                 <Link href="/celebrity-memorials">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-celebrity">
                     Celebrity Memorials
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/alumni-memorials">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-alumni">
+                    Alumni Memorials
                   </span>
                 </Link>
               </li>
@@ -52,9 +73,37 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/self-obituary">
+                <Link href="/prison-access">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-prison-access">
+                    Prison Access
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link href="/create-memorial">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-create">
                     Create Memorial
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/about">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-about">
+                    About Us
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/support">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-support">
+                    Support Hub
                   </span>
                 </Link>
               </li>
@@ -65,31 +114,10 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
                   </span>
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h3 className="font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>
-                <Link href="/support">
-                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-support">
-                    Support Hub
-                  </span>
-                </Link>
-              </li>
               <li>
                 <Link href="/advertising">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-advertising">
-                    Advertising Opportunities
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/badge-preview">
-                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-badges">
-                    App Badges
+                    Advertising
                   </span>
                 </Link>
               </li>
