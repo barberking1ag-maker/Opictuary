@@ -732,22 +732,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scannerType = (isCreator || isAdmin) ? "family" : "visitor";
       }
 
-      // Create scan record (IP address set to null for privacy)
+      // Privacy: Only store geolocation if explicit consent given
+      const hasGeolocationConsent = validatedBody.geolocationConsent === true;
+      
+      // Create scan record with consent-aware data collection
       const scanData = {
         qrCodeId: qrCode.id,
         memorialId: qrCode.memorialId,
         userId,
         scannerType,
-        latitude: validatedBody.latitude || null,
-        longitude: validatedBody.longitude || null,
-        city: validatedBody.city || null,
-        region: validatedBody.region || null,
-        country: validatedBody.country || null,
+        // Audit trail: Store consent flag for compliance
+        geolocationConsent: hasGeolocationConsent,
+        // Geolocation stored only with explicit consent (check for undefined/null, not truthiness, to preserve 0 values)
+        latitude: hasGeolocationConsent && (validatedBody.latitude !== undefined && validatedBody.latitude !== null) 
+          ? String(validatedBody.latitude) : null,
+        longitude: hasGeolocationConsent && (validatedBody.longitude !== undefined && validatedBody.longitude !== null)
+          ? String(validatedBody.longitude) : null,
+        city: hasGeolocationConsent ? validatedBody.city : null,
+        region: hasGeolocationConsent ? validatedBody.region : null,
+        country: hasGeolocationConsent ? validatedBody.country : null,
+        // Device information (non-sensitive)
         userAgent: req.headers['user-agent'] || null,
         deviceType: validatedBody.deviceType || null,
         browser: validatedBody.browser || null,
         operatingSystem: validatedBody.operatingSystem || null,
-        ipAddress: null, // Privacy: IP addresses not stored
+        // Privacy: IP addresses never stored
+        ipAddress: null,
         action: validatedBody.action || "view_memorial",
       };
 

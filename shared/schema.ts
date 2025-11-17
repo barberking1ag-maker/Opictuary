@@ -141,6 +141,7 @@ export const qrScans = pgTable("qr_scans", {
   city: text("city"),
   region: text("region"),
   country: text("country"),
+  geolocationConsent: boolean("geolocation_consent").default(false).notNull(),
   // Device & technical data
   userAgent: text("user_agent"),
   deviceType: text("device_type"), // 'mobile', 'tablet', 'desktop'
@@ -1944,6 +1945,7 @@ export const insertQRScanSchema = createInsertSchema(qrScans).omit({
 });
 
 export const qrScanRequestSchema = z.object({
+  geolocationConsent: z.coerce.boolean().default(false),
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
   city: z.string().optional().nullable(),

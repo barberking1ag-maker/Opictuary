@@ -77,37 +77,68 @@ export default function MemorialUpload() {
 
   const scanMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest(`/api/qr-codes/${code}/scan`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest("POST", `/api/qr-codes/${code}/scan`, data);
     },
   });
 
   useEffect(() => {
     if (code) {
-      // Get device info
-      const deviceType = /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+      // Detect device info
+      const ua = navigator.userAgent;
+      const deviceType = /Mobile|Android|iPhone/i.test(ua) ? 'mobile' : 
+                        /Tablet|iPad/i.test(ua) ? 'tablet' : 'desktop';
       
-      // Track scan with optional geolocation
+      // Detect browser
+      let browser = 'Unknown';
+      if (ua.includes('Chrome')) browser = 'Chrome';
+      else if (ua.includes('Safari')) browser = 'Safari';
+      else if (ua.includes('Firefox')) browser = 'Firefox';
+      else if (ua.includes('Edge')) browser = 'Edge';
+      
+      // Detect OS
+      let operatingSystem = 'Unknown';
+      if (ua.includes('Windows')) operatingSystem = 'Windows';
+      else if (ua.includes('Mac')) operatingSystem = 'macOS';
+      else if (ua.includes('Linux')) operatingSystem = 'Linux';
+      else if (ua.includes('Android')) operatingSystem = 'Android';
+      else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) operatingSystem = 'iOS';
+      
+      // Track scan with geolocation consent
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            // User granted geolocation permission
             scanMutation.mutate({
+              geolocationConsent: true,
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
               deviceType,
+              browser,
+              operatingSystem,
+              action: 'view_memorial',
             });
           },
           (error) => {
-            // Geolocation denied or failed - track scan without location
-            console.log('Geolocation unavailable:', error.message);
-            scanMutation.mutate({ deviceType });
+            // User denied permission or geolocation unavailable
+            console.log('Geolocation denied or unavailable:', error.message);
+            scanMutation.mutate({ 
+              geolocationConsent: false,
+              deviceType,
+              browser,
+              operatingSystem,
+              action: 'view_memorial',
+            });
           }
         );
       } else {
-        // Geolocation API not available - track scan without location
-        scanMutation.mutate({ deviceType });
+        // Geolocation API not supported - no consent given
+        scanMutation.mutate({ 
+          geolocationConsent: false,
+          deviceType,
+          browser,
+          operatingSystem,
+          action: 'view_memorial',
+        });
       }
     }
   }, [code]);
