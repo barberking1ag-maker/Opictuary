@@ -17,6 +17,12 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform follows a "Dignity in Digital" design philosophy, employing a respectful and timeless aesthetic with multi-faith theming (rich purple backgrounds, gold accents). It utilizes Radix UI primitives, shadcn/ui, a custom component library, and specific typography (Crimson Text, Inter). The frontend is a production-ready Progressive Web App (PWA) with smart install prompts, offline support, service worker caching, and standalone mode.
 
+**Navigation & Discoverability:** The platform features comprehensive navigation designed for maximum feature discoverability:
+- **Landing Page**: Specialized Memorial Types showcase section highlighting all 6 specialized memorial categories (Celebrity, Alumni, Essential Workers, Hood Memorials, Neighborhoods, Prison Access) with dedicated feature cards
+- **Main Navigation**: Features dropdown menu (desktop & mobile) consolidating all 8 platform innovations: Future Messages, QR Memorials, Celebrity Memorials, Alumni Memorials, Essential Workers, Hood Memorials, Neighborhoods, and Prison Access
+- **Footer**: Organized into "Our Features" (all 8 platform features) and "Quick Links" (Create Memorial, About, Support, Partner Program, Advertising, Privacy) sections for comprehensive site-wide access
+- **Accessibility**: All dropdown menu items use proper `asChild` prop implementation to avoid nested interactive elements, maintaining WCAG compliance
+
 ### Technical Implementations
 **Frontend:** Built with React 18, TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS. It includes over 30 reusable components and 18+ distinct pages for core functionalities.
 **Backend:** Developed using Express.js with Node.js and TypeScript, designed as a RESTful API with over 80 endpoints across 14 feature areas.
