@@ -1,0 +1,207 @@
+PROVISIONAL PATENT APPLICATION
+
+TITLE OF INVENTION:
+System and Method for Secure Memorial Access by Incarcerated Individuals
+
+DOCKET NUMBER: OPICT-001
+
+CROSS-REFERENCE TO RELATED APPLICATIONS:
+Not Applicable
+
+STATEMENT REGARDING FEDERALLY SPONSORED RESEARCH:
+Not Applicable
+
+FIELD OF THE INVENTION
+
+This invention relates to secure digital access control systems, specifically methods and systems for providing monitored, time-limited access to digital memorial content for individuals in correctional facilities while maintaining security protocols and generating revenue for memorial platforms.
+
+BACKGROUND OF THE INVENTION
+
+The United States has approximately 2.3 million incarcerated individuals who are largely cut off from digital services. Currently, these individuals cannot access digital memorials when family members or friends pass away, creating emotional distress and preventing closure. Existing prison communication systems (JPay, ConnectNetwork, GTL) only provide basic messaging and video calls without specialized memorial access. This represents a $500M untapped market with zero competition.
+
+The problem is significant: when a family member or friend passes away, incarcerated individuals have no way to view memorial content, pay respects digitally, or participate in the grieving process. This creates psychological distress and severs important family connections that are critical for rehabilitation and reducing recidivism.
+
+Current solutions are inadequate:
+1. Prison communication systems do not provide memorial-specific access
+2. General internet access is prohibited for security reasons
+3. No existing system combines secure access with payment integration
+4. Correctional facilities lack revenue incentives to adopt new technologies
+5. No existing system provides the monitoring and compliance features required by facilities
+
+SUMMARY OF THE INVENTION
+
+The present invention provides a comprehensive system for secure memorial access within correctional facilities comprising:
+
+1. Multi-factor identity verification using DOC numbers and biometric data
+2. Payment integration with commissary accounts or external family payments
+3. Time-limited access tokens with automatic session termination
+4. Content filtering and monitoring with automated flagging
+5. Revenue sharing with correctional facilities
+6. Audit trail generation for regulatory compliance
+
+The system addresses the technical challenges of providing controlled internet access in secure facilities while maintaining safety, security, and regulatory compliance. The invention generates revenue for both the platform operator and the correctional facility, creating economic incentives for adoption.
+
+DETAILED DESCRIPTION OF THE INVENTION
+
+The system operates through a specialized portal integrated with existing prison networks and comprises four primary modules:
+
+AUTHENTICATION MODULE (100)
+
+The Authentication Module provides multi-factor identity verification:
+- DOC number verification against facility database
+- Biometric verification using fingerprint and/or facial recognition
+- Two-factor authentication using facility-issued kiosk PIN
+- Session initialization with unique encrypted token
+- Real-time validation against facility security systems
+
+The authentication process ensures that only authorized inmates can access the system and creates a complete audit trail of all access attempts.
+
+PAYMENT PROCESSING MODULE (200)
+
+The Payment Processing Module handles financial transactions:
+- Integration with commissary account systems (JPay, Access Corrections, etc.)
+- External payment gateway for family members to purchase access
+- Tiered pricing structure: $19.99 for 30-minute session
+- Automatic refund processing on technical failure
+- Revenue distribution: 70% platform, 15% facility, 15% payment processing
+
+The payment system is designed to work with existing prison financial infrastructure while providing fair revenue sharing that incentivizes facility adoption.
+
+ACCESS CONTROL MODULE (300)
+
+The Access Control Module manages session permissions and content delivery:
+- Time-limited JWT tokens with 30-minute expiration
+- Read-only access with disabled download and sharing functionality
+- Watermarked content with inmate ID and timestamp overlay
+- Automatic logout on session expiration
+- Geographic IP restriction to facility networks only
+- Content rendering in secure, sandboxed browser environment
+
+All memorial content is presented in a controlled environment that prevents data exfiltration while allowing meaningful memorial viewing.
+
+MONITORING MODULE (400)
+
+The Monitoring Module ensures security and compliance:
+- Real-time session recording and analytics
+- Automated content analysis for security flags
+- Communication attempt detection and blocking
+- Report generation for facility administrators
+- Compliance logging for regulatory requirements
+- Suspicious activity alerts to facility security staff
+
+The monitoring system provides complete transparency to correctional facilities while protecting the privacy and dignity of the memorial viewing experience.
+
+TECHNICAL IMPLEMENTATION
+
+The system is implemented as a web-based application with the following technical specifications:
+
+Server Infrastructure:
+- Cloud-hosted on secure, redundant servers
+- 99.9% uptime guarantee with automatic failover
+- Database encryption at rest using AES-256
+- TLS 1.3 encryption for all data in transit
+
+Authentication:
+- OAuth 2.0 integration with facility identity systems
+- FIDO2/WebAuthn biometric authentication
+- Session tokens with cryptographic signing
+- Automatic token revocation on security events
+
+Payment Processing:
+- PCI DSS Level 1 compliant payment gateway
+- Integration with major prison payment providers
+- Escrow system for automatic refunds
+- Real-time settlement reporting
+
+Content Delivery:
+- Watermarking using dynamic image manipulation
+- Video streaming with DRM protection
+- Right-click and download prevention via JavaScript
+- Screenshot detection and warning systems
+
+Monitoring:
+- Real-time activity logging to immutable ledger
+- Machine learning-based content analysis
+- Integration with facility security information systems
+- Automated reporting and alert generation
+
+OPERATIONAL WORKFLOW
+
+A typical usage session proceeds as follows:
+
+1. Inmate approaches facility kiosk or terminal
+2. Inmate enters DOC number and facility-issued PIN
+3. System verifies identity against facility database
+4. Biometric verification (fingerprint or facial recognition)
+5. Inmate or family member completes payment transaction
+6. System generates time-limited access token (30 minutes)
+7. Inmate can view memorial content in secure environment
+8. All activity is monitored and logged in real-time
+9. Session automatically terminates after 30 minutes
+10. Facility receives security report and revenue share
+
+CLAIMS
+
+1. A method for providing secure digital memorial access to incarcerated individuals comprising:
+   - Verifying identity through multiple authentication factors including DOC numbers and biometric data;
+   - Processing payment through integrated commissary systems or external payment gateways;
+   - Generating time-limited access tokens with automatic session termination;
+   - Monitoring and recording all session activities in real-time;
+   - Automatically terminating sessions upon expiration;
+   - Distributing revenue between platform operator, correctional facility, and payment processor.
+
+2. The system of claim 1, wherein biometric verification includes fingerprint and facial recognition matched against correctional facility databases.
+
+3. The system of claim 1, wherein content is watermarked with inmate identification and timestamp data to prevent unauthorized sharing.
+
+4. The system of claim 1, wherein revenue is automatically distributed between platform operator, correctional facility, and payment processor according to predetermined percentages.
+
+5. The system of claim 1, wherein all memorial content is rendered read-only with disabled right-click, print, and download functionality.
+
+6. A non-transitory computer-readable medium storing instructions that, when executed by a processor, perform the method of claim 1.
+
+7. The system of claim 1, further comprising integration with ConnectNetwork, GTL, ViaPath Technologies, and Securus Technologies APIs for payment processing and identity verification.
+
+8. The system of claim 1, wherein access tokens are implemented using JWT (JSON Web Tokens) with cryptographic signing and 30-minute expiration.
+
+9. The system of claim 1, wherein monitoring includes automated content analysis for security flags, communication attempt detection, and report generation for facility administrators.
+
+10. The system of claim 1, wherein geographic IP restrictions ensure access is only available from within correctional facility networks.
+
+COMMERCIAL ADVANTAGES
+
+The invention provides significant commercial and social benefits:
+
+Market Opportunity:
+- First-mover advantage in $500M untapped market
+- 2.3 million potential users in United States alone
+- 10 million+ potential users in global prison population
+- Zero direct competition in memorial access space
+
+Revenue Generation:
+- $19.99 per 30-minute session generates substantial revenue
+- Revenue sharing incentivizes facility adoption
+- Scalable business model with minimal marginal costs
+- Multiple revenue streams (platform fees, facility fees)
+
+Social Impact:
+- Maintains family connections during incarceration
+- Provides grief counseling access through memorial viewing
+- Reduces recidivism through maintained social bonds
+- Respects dignity of incarcerated individuals
+
+Technical Advantages:
+- Compliant with all federal and state regulations
+- Integrates with existing facility infrastructure
+- Provides required security and monitoring features
+- Scalable to international markets
+
+Facility Benefits:
+- Revenue generation for correctional budgets
+- Enhanced inmate services without security compromise
+- Reduced administrative burden through automation
+- Complete audit trails for regulatory compliance
+
+CONCLUSION
+
+This invention solves a significant unmet need in the correctional system by providing secure, monitored access to digital memorial content for incarcerated individuals. The system balances the emotional needs of inmates with the security requirements of correctional facilities while generating revenue for all stakeholders. The invention is technically novel, commercially viable, and socially beneficial.
