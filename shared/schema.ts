@@ -93,7 +93,8 @@ export const qrCodes = pgTable("qr_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   code: text("code").notNull(),
-  purpose: text("purpose").notNull().default("tombstone"),
+  purpose: text("purpose").notNull().default("tombstone"), // 'tombstone', 'memorial_card', 'event', 'general_upload'
+  qrType: text("qr_type").default("standard"), // 'standard', 'premium', 'custom'
   issuedToEmail: text("issued_to_email"),
   expiresAt: timestamp("expires_at"),
   status: text("status").notNull().default("active"),
@@ -103,10 +104,14 @@ export const qrCodes = pgTable("qr_codes", {
   videoUrl: text("video_url"),
   imageUrl: text("image_url"),
   mediaType: text("media_type"), // 'video', 'image', 'message', 'mixed'
+  // Analytics metadata
+  totalScans: integer("total_scans").default(0),
+  lastScannedAt: timestamp("last_scanned_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_qr_codes_memorial_id").on(table.memorialId),
   index("idx_qr_codes_status").on(table.status),
+  index("idx_qr_codes_purpose").on(table.purpose),
 ]);
 
 export const memories = pgTable("memories", {
@@ -120,6 +125,38 @@ export const memories = pgTable("memories", {
 }, (table) => [
   index("idx_memories_memorial_id").on(table.memorialId),
   index("idx_memories_is_approved").on(table.isApproved),
+]);
+
+// QR Code scan analytics tracking
+export const qrScans = pgTable("qr_scans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  qrCodeId: varchar("qr_code_id").notNull().references(() => qrCodes.id, { onDelete: "cascade" }),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  // Scan context
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  scannerType: text("scanner_type").default("visitor"), // 'visitor', 'family', 'admin'
+  // Location data
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  city: text("city"),
+  region: text("region"),
+  country: text("country"),
+  // Device & technical data
+  userAgent: text("user_agent"),
+  deviceType: text("device_type"), // 'mobile', 'tablet', 'desktop'
+  browser: text("browser"),
+  operatingSystem: text("operating_system"),
+  ipAddress: text("ip_address"),
+  // Scan outcome
+  action: text("action"), // 'view_memorial', 'upload_photo', 'view_gallery', 'share'
+  uploadedMediaId: varchar("uploaded_media_id").references(() => memories.id, { onDelete: "set null" }),
+  sessionDuration: integer("session_duration"), // in seconds
+  scannedAt: timestamp("scanned_at").defaultNow(),
+}, (table) => [
+  index("idx_qr_scans_qr_code_id").on(table.qrCodeId),
+  index("idx_qr_scans_memorial_id").on(table.memorialId),
+  index("idx_qr_scans_scanned_at").on(table.scannedAt),
+  index("idx_qr_scans_scanner_type").on(table.scannerType),
 ]);
 
 // Religious and spiritual symbols library
@@ -1897,6 +1934,13 @@ export const insertMemorialAdminSchema = createInsertSchema(memorialAdmins).omit
 export const insertQRCodeSchema = createInsertSchema(qrCodes).omit({
   id: true,
   createdAt: true,
+  totalScans: true,
+  lastScannedAt: true,
+});
+
+export const insertQRScanSchema = createInsertSchema(qrScans).omit({
+  id: true,
+  scannedAt: true,
 });
 
 export const insertPageViewSchema = createInsertSchema(pageViews).omit({
@@ -2119,6 +2163,9 @@ export type MemorialAdmin = typeof memorialAdmins.$inferSelect;
 
 export type InsertQRCode = z.infer<typeof insertQRCodeSchema>;
 export type QRCode = typeof qrCodes.$inferSelect;
+
+export type InsertQRScan = z.infer<typeof insertQRScanSchema>;
+export type QRScan = typeof qrScans.$inferSelect;
 
 export type InsertPageView = z.infer<typeof insertPageViewSchema>;
 export type PageView = typeof pageViews.$inferSelect;
