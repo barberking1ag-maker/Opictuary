@@ -63,6 +63,7 @@ import {
   insertPushTokenSchema,
   insertMemorialAdminSchema,
   insertQRCodeSchema,
+  qrScanRequestSchema,
   insertPageViewSchema,
   insertAnalyticsEventSchema,
   insertSupportArticleSchema,
@@ -695,6 +696,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const memory = await storage.createMemory(data);
       res.status(201).json(memory);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // QR Code scan tracking endpoint (public, optional auth)
+  app.post("/api/qr-codes/:code/scan", async (req: any, res) => {
+    try {
+      const qrCode = await storage.getQRCodeByCode(req.params.code);
+      if (!qrCode) {
+        return res.status(404).json({ error: "Invalid QR code" });
+      }
+
+      const memorial = await storage.getMemorial(qrCode.memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Validate request body
+      const validatedBody = qrScanRequestSchema.parse(req.body);
+
+      // Detect user context
+      let scannerType = "visitor";
+      let userId = null;
+      if (req.user?.claims?.sub) {
+        userId = req.user.claims.sub;
+        const userEmail = req.user.claims.email;
+        const admins = await storage.getMemorialAdmins(qrCode.memorialId);
+        const isCreator = memorial.creatorEmail === userEmail;
+        const isAdmin = admins.some(admin => admin.email === userEmail);
+        scannerType = (isCreator || isAdmin) ? "family" : "visitor";
+      }
+
+      // Create scan record (IP address set to null for privacy)
+      const scanData = {
+        qrCodeId: qrCode.id,
+        memorialId: qrCode.memorialId,
+        userId,
+        scannerType,
+        latitude: validatedBody.latitude || null,
+        longitude: validatedBody.longitude || null,
+        city: validatedBody.city || null,
+        region: validatedBody.region || null,
+        country: validatedBody.country || null,
+        userAgent: req.headers['user-agent'] || null,
+        deviceType: validatedBody.deviceType || null,
+        browser: validatedBody.browser || null,
+        operatingSystem: validatedBody.operatingSystem || null,
+        ipAddress: null, // Privacy: IP addresses not stored
+        action: validatedBody.action || "view_memorial",
+      };
+
+      await storage.createQRScan(scanData);
+      await storage.updateQRCodeScanStats(qrCode.id);
+
+      // Return context-aware action menu
+      const actions = scannerType === "family" ? 
+        ["upload_photo", "edit_memorial", "view_analytics", "share"] :
+        ["view_memorial", "upload_photo", "sign_guestbook", "donate"];
+
+      res.json({
+        success: true,
+        qrCode,
+        memorial: {
+          id: memorial.id,
+          firstName: memorial.firstName,
+          lastName: memorial.lastName,
+          imageUrl: memorial.imageUrl,
+        },
+        scannerType,
+        availableActions: actions,
+      });
     } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });

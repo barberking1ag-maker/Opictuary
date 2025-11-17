@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +74,43 @@ export default function MemorialUpload() {
       });
     },
   });
+
+  const scanMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest(`/api/qr-codes/${code}/scan`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (code) {
+      // Get device info
+      const deviceType = /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+      
+      // Track scan with optional geolocation
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            scanMutation.mutate({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              deviceType,
+            });
+          },
+          (error) => {
+            // Geolocation denied or failed - track scan without location
+            console.log('Geolocation unavailable:', error.message);
+            scanMutation.mutate({ deviceType });
+          }
+        );
+      } else {
+        // Geolocation API not available - track scan without location
+        scanMutation.mutate({ deviceType });
+      }
+    }
+  }, [code]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -4,6 +4,7 @@ import {
   memorials,
   memorialAdmins,
   qrCodes,
+  qrScans,
   memories,
   memoryComments,
   memoryCondolences,
@@ -83,6 +84,8 @@ import {
   type InsertMemorialAdmin,
   type QRCode,
   type InsertQRCode,
+  type QRScan,
+  type InsertQRScan,
   type Memory,
   type InsertMemory,
   type MemoryComment,
@@ -270,6 +273,10 @@ export interface IStorage {
   ): Promise<QRCode>;
   updateQRCode(id: string, data: Partial<Pick<QRCode, 'title' | 'description' | 'videoUrl' | 'imageUrl' | 'mediaType'>>): Promise<QRCode | undefined>;
   deleteQRCode(id: string): Promise<void>;
+
+  // QR Scan Analytics operations
+  createQRScan(scan: InsertQRScan): Promise<QRScan>;
+  updateQRCodeScanStats(qrCodeId: string): Promise<void>;
 
   // Memory operations
   getMemoriesByMemorialId(memorialId: string): Promise<Memory[]>;
@@ -907,6 +914,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQRCode(id: string): Promise<void> {
     await db.delete(qrCodes).where(eq(qrCodes.id, id));
+  }
+
+  async createQRScan(scan: InsertQRScan): Promise<QRScan> {
+    const [created] = await db.insert(qrScans).values(scan).returning();
+    return created;
+  }
+
+  async updateQRCodeScanStats(qrCodeId: string): Promise<void> {
+    const [updated] = await db.update(qrCodes)
+      .set({
+        totalScans: sql`${qrCodes.totalScans} + 1`,
+        lastScannedAt: new Date(),
+      })
+      .where(eq(qrCodes.id, qrCodeId))
+      .returning();
   }
 
   // Memory operations

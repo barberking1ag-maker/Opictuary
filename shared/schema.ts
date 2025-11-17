@@ -1943,6 +1943,18 @@ export const insertQRScanSchema = createInsertSchema(qrScans).omit({
   scannedAt: true,
 });
 
+export const qrScanRequestSchema = z.object({
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  city: z.string().optional().nullable(),
+  region: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+  deviceType: z.enum(['mobile', 'tablet', 'desktop']).optional().nullable(),
+  browser: z.string().optional().nullable(),
+  operatingSystem: z.string().optional().nullable(),
+  action: z.string().default('view_memorial'),
+});
+
 export const insertPageViewSchema = createInsertSchema(pageViews).omit({
   id: true,
   createdAt: true,
