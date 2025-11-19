@@ -80,6 +80,8 @@ import {
   insertMemorialPlaylistSchema,
   insertMemorialSlideshowSchema,
   insertVideoCondolenceSchema,
+  insertVideoTimeCapsuleSchema,
+  insertVideoTimeCapsuleViewSchema,
   type QRCode,
   insertByusUserSchema,
   insertByusMediationSchema,
@@ -769,6 +771,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ["upload_photo", "edit_memorial", "view_analytics", "share"] :
         ["view_memorial", "upload_photo", "sign_guestbook", "donate"];
 
+      // Fetch released video time capsules for this memorial
+      const releasedCapsules = await storage.getReleasedVideoTimeCapsulesByMemorialId(qrCode.memorialId);
+
       res.json({
         success: true,
         qrCode,
@@ -780,6 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         scannerType,
         availableActions: actions,
+        releasedVideoTimeCapsules: releasedCapsules,
       });
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -2044,6 +2050,250 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteScheduledMessage(req.params.id);
       res.status(204).send();
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Utility function to compute next release date in UTC
+  function computeNextReleaseDate(releaseDate: string, releaseTime: string = '00:00:00', timezone: string = 'UTC'): Date {
+    // Combine date and time into ISO string with explicit UTC timezone
+    // Format: YYYY-MM-DDTHH:MM:SSZ (the Z ensures UTC interpretation)
+    const isoString = `${releaseDate}T${releaseTime}Z`;
+    const date = new Date(isoString);
+    
+    // Validate the date
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid date/time combination: ${releaseDate} ${releaseTime}`);
+    }
+    
+    return date;
+  }
+
+  // Video Time Capsule routes
+  app.get("/api/memorials/:memorialId/video-time-capsules", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view video time capsules for this memorial" });
+      }
+      
+      const capsules = await storage.getVideoTimeCapsulesByMemorialId(req.params.memorialId);
+      res.json(capsules);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/video-time-capsules/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const capsule = await storage.getVideoTimeCapsule(req.params.id);
+      
+      if (!capsule) {
+        return res.status(404).json({ error: "Video time capsule not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(capsule.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(capsule.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to view this video time capsule" });
+      }
+      
+      res.json(capsule);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/memorials/:memorialId/video-time-capsules", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const memorial = await storage.getMemorial(req.params.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(req.params.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to create video time capsules for this memorial" });
+      }
+      
+      // Validate request body
+      const validatedData = insertVideoTimeCapsuleSchema.parse(req.body);
+      
+      // Compute nextReleaseDate from releaseDate + releaseTime in UTC
+      const nextReleaseDate = computeNextReleaseDate(
+        validatedData.releaseDate,
+        validatedData.releaseTime || '00:00:00'
+      );
+      
+      // Create the capsule with computed nextReleaseDate
+      const capsule = await storage.createVideoTimeCapsule({
+        ...validatedData,
+        memorialId: req.params.memorialId,
+        nextReleaseDate, // Set the UTC timestamp for scheduler
+      });
+      
+      res.status(201).json(capsule);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/video-time-capsules/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const capsule = await storage.getVideoTimeCapsule(req.params.id);
+      
+      if (!capsule) {
+        return res.status(404).json({ error: "Video time capsule not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(capsule.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(capsule.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to update this video time capsule" });
+      }
+      
+      // Validate request body (partial update)
+      const validatedData = insertVideoTimeCapsuleSchema.partial().parse(req.body);
+      
+      // If releaseDate or releaseTime is being updated, recompute nextReleaseDate
+      let updateData = { ...validatedData };
+      if (validatedData.releaseDate !== undefined || validatedData.releaseTime !== undefined) {
+        const releaseDate = validatedData.releaseDate || capsule.releaseDate;
+        const releaseTime = validatedData.releaseTime || capsule.releaseTime || '00:00:00';
+        updateData.nextReleaseDate = computeNextReleaseDate(releaseDate, releaseTime);
+      }
+      
+      // Update the capsule
+      const updated = await storage.updateVideoTimeCapsule(req.params.id, updateData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Video time capsule not found" });
+      }
+      
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/video-time-capsules/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const capsule = await storage.getVideoTimeCapsule(req.params.id);
+      
+      if (!capsule) {
+        return res.status(404).json({ error: "Video time capsule not found" });
+      }
+      
+      // Get the memorial to verify the creator
+      const memorial = await storage.getMemorial(capsule.memorialId);
+      
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const admins = await storage.getMemorialAdmins(capsule.memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some(admin => admin.email === userEmail);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission to delete this video time capsule" });
+      }
+      
+      await storage.deleteVideoTimeCapsule(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/memorials/:memorialId/video-time-capsules/released", async (req, res) => {
+    try {
+      // Public route - anyone can view released capsules
+      const capsules = await storage.getReleasedVideoTimeCapsulesByMemorialId(req.params.memorialId);
+      res.json(capsules);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/video-time-capsules/:id/view", async (req: any, res) => {
+    try {
+      const capsule = await storage.getVideoTimeCapsule(req.params.id);
+      
+      if (!capsule) {
+        return res.status(404).json({ error: "Video time capsule not found" });
+      }
+      
+      // Only allow viewing released capsules
+      if (!capsule.isReleased) {
+        return res.status(403).json({ error: "This video time capsule has not been released yet" });
+      }
+      
+      // Validate request body
+      const validatedData = insertVideoTimeCapsuleViewSchema.parse(req.body);
+      
+      // Get user ID if authenticated
+      const userId = req.user?.claims?.sub || null;
+      
+      // Record the view
+      const view = await storage.recordVideoTimeCapsuleView({
+        ...validatedData,
+        capsuleId: req.params.id,
+        userId,
+      });
+      
+      res.status(201).json(view);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       res.status(500).json({ error: error.message });
     }
   });

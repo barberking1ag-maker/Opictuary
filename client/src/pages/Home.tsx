@@ -25,6 +25,7 @@ import { MemorialCondolenceBar } from "@/components/MemorialCondolenceBar";
 import { ReligiousSymbolGallery } from "@/components/ReligiousSymbolGallery";
 import { SlideshowPlayer } from "@/components/SlideshowPlayer";
 import { VideoCondolence } from "@/components/VideoCondolence";
+import VideoTimeCapsuleViewer from "@/components/VideoTimeCapsuleViewer";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
@@ -1419,6 +1420,11 @@ export default function Home() {
             memorialName={memorial.name}
             canCreate={isAuthenticated && (memorial.creatorEmail === user?.email)}
           />
+        </div>
+
+        {/* Video Time Capsules Section */}
+        <div id="video-time-capsules-section" className="mt-16 pt-16 border-t border-border/30" role="region" aria-label="Video time capsules">
+          <VideoTimeCapsuleViewer memorialId={memorialId!} />
         </div>
       </div>
 

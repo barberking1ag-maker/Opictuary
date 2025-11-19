@@ -56,6 +56,7 @@ import FuneralProgramCreator from "@/pages/FuneralProgramCreator";
 import CelebrityEstateContent from "@/pages/CelebrityEstateContent";
 import FutureMessages from "@/pages/FutureMessages";
 import UpcomingMessages from "@/pages/UpcomingMessages";
+import VideoTimeCapsules from "@/pages/VideoTimeCapsules";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -322,6 +323,7 @@ function Router() {
         <Route path="/memorial/:id/events" component={MemorialEvents} />
         <Route path="/memorial/:id/funeral-program" component={FuneralProgramCreator} />
         <Route path="/memorial/:id/future-messages" component={FutureMessages} />
+        <Route path="/memorial/:id/video-time-capsules" component={VideoTimeCapsules} />
         <Route path="/upcoming-messages" component={UpcomingMessages} />
         <Route path="/celebrity/:id/estate-content" component={CelebrityEstateContent} />
         <Route path="/admin" component={AdminDashboard} />

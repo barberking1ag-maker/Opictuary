@@ -23,6 +23,15 @@ interface FutureMessageData {
   mediaType?: string;
 }
 
+interface VideoTimeCapsuleReleaseData {
+  recipientEmail: string;
+  memorialName: string;
+  capsuleTitle: string;
+  milestoneType: string;
+  recipientName: string;
+  memorialUrl: string;
+}
+
 class EmailService {
   private transporter: Transporter | null = null;
   private isConfigured: boolean = false;
@@ -214,6 +223,118 @@ class EmailService {
     
     const html = this.generateFutureMessageHTML(data);
     const text = this.generateFutureMessageText(data);
+
+    const emailOptions: EmailOptions = {
+      to: recipientEmail,
+      subject,
+      html,
+      text,
+    };
+
+    return this.sendEmail(emailOptions);
+  }
+
+  /**
+   * Send video time capsule release notification
+   */
+  async sendVideoTimeCapsuleReleaseNotification(data: VideoTimeCapsuleReleaseData): Promise<boolean> {
+    const { recipientEmail, memorialName, capsuleTitle, milestoneType, recipientName, memorialUrl } = data;
+
+    const subject = `Video Time Capsule Released: ${capsuleTitle}`;
+    
+    const milestoneLabels: Record<string, string> = {
+      birthday: 'Birthday',
+      graduation: 'Graduation',
+      wedding: 'Wedding',
+      anniversary: 'Anniversary',
+      baby_birth: 'Baby Birth',
+      holiday: 'Holiday',
+      custom: 'Special Milestone',
+    };
+
+    const milestoneLabel = milestoneLabels[milestoneType] || 'Special Milestone';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Video Time Capsule Released</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F3F4F6;">
+        <div style="max-width: 600px; margin: 40px auto; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%); padding: 40px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">
+              🎥 Video Time Capsule Released
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">
+              ${memorialName}
+            </p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+              A video time capsule has been released for ${memorialName}.
+            </p>
+            
+            <div style="background-color: #F9FAFB; border-left: 4px solid #7C3AED; padding: 20px; margin: 20px 0; border-radius: 4px;">
+              <h2 style="color: #1F2937; margin: 0 0 10px 0; font-size: 18px;">
+                ${capsuleTitle}
+              </h2>
+              <p style="color: #6B7280; margin: 5px 0; font-size: 14px;">
+                <strong>Milestone:</strong> ${milestoneLabel}
+              </p>
+              <p style="color: #6B7280; margin: 5px 0; font-size: 14px;">
+                <strong>For:</strong> ${recipientName}
+              </p>
+            </div>
+            
+            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 20px 0;">
+              This pre-recorded video message is now available to view on the memorial page.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${memorialUrl}" style="display: inline-block; padding: 14px 32px; background-color: #7C3AED; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Video Capsule
+              </a>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #F9FAFB; padding: 30px; text-align: center; border-top: 1px solid #E5E7EB;">
+            <p style="color: #6B7280; font-size: 14px; margin: 0 0 10px 0;">
+              This is an automated notification from Opictuary
+            </p>
+            <p style="color: #9CA3AF; font-size: 12px; margin: 0;">
+              Preserving memories with dignity in the digital age
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Video Time Capsule Released
+
+A video time capsule has been released for ${memorialName}.
+
+Title: ${capsuleTitle}
+Milestone: ${milestoneLabel}
+For: ${recipientName}
+
+This pre-recorded video message is now available to view on the memorial page.
+
+View it here: ${memorialUrl}
+
+---
+This is an automated notification from Opictuary
+Preserving memories with dignity in the digital age
+    `;
 
     const emailOptions: EmailOptions = {
       to: recipientEmail,

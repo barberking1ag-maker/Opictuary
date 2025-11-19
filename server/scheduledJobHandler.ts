@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { scheduledMessages, memorials } from "@shared/schema";
+import { scheduledMessages, memorials, videoTimeCapsules } from "@shared/schema";
 import { eq, and, or, lte, isNull } from "drizzle-orm";
 import { emailService } from "./emailService";
 
@@ -220,18 +220,155 @@ export async function processScheduledMessages() {
   }
 }
 
-// Run the job every minute (in production, you might want to use a proper job scheduler)
+// Function to check and release video time capsules
+export async function checkAndReleaseVideoTimeCapsules() {
+  console.log('[SCHEDULED JOB] Checking for video time capsules to release...');
+  
+  const now = new Date();
+  
+  try {
+    // Find capsules that should be released now
+    const allScheduledCapsules = await db
+      .select()
+      .from(videoTimeCapsules)
+      .where(
+        and(
+          eq(videoTimeCapsules.isReleased, false),
+          eq(videoTimeCapsules.status, 'scheduled')
+        )
+      );
+    
+    // Filter capsules where nextReleaseDate is set and in the past
+    // Note: nextReleaseDate is now set by create/update routes for all capsules (one-time and recurring)
+    const capsulesToRelease = allScheduledCapsules.filter(capsule => {
+      if (!capsule.nextReleaseDate) {
+        // Skip capsules without nextReleaseDate (should not happen with new system)
+        console.warn(`[SCHEDULED JOB] Capsule ${capsule.id} missing nextReleaseDate - skipping`);
+        return false;
+      }
+      return new Date(capsule.nextReleaseDate) <= now;
+    });
+    
+    console.log(`[SCHEDULED JOB] Found ${capsulesToRelease.length} video time capsules to release`);
+    
+    for (const capsule of capsulesToRelease) {
+      try {
+        console.log(`[SCHEDULED JOB] Releasing video time capsule ${capsule.id} - ${capsule.title}`);
+        
+        // Get memorial details for notification
+        const memorial = await db.query.memorials.findFirst({
+          where: eq(memorials.id, capsule.memorialId),
+        });
+        
+        if (!memorial) {
+          console.error(`[SCHEDULED JOB] Memorial not found for capsule ${capsule.id}`);
+          continue;
+        }
+        
+        if (capsule.isRecurring) {
+          // Calculate next release date
+          const currentDate = capsule.nextReleaseDate || new Date(capsule.releaseDate);
+          const nextReleaseDate = calculateNextSendDate(currentDate, capsule.recurrenceInterval || 'yearly');
+          
+          // Check if we should continue recurring
+          let shouldContinue = true;
+          
+          // Check end date
+          if (capsule.recurrenceEndDate && nextReleaseDate > capsule.recurrenceEndDate) {
+            shouldContinue = false;
+          }
+          
+          if (shouldContinue) {
+            // Update for next occurrence - keep scheduled for future releases
+            // NOTE: For recurring capsules, we keep isReleased=false and status='scheduled'
+            // so they can be processed again in the next cycle
+            await db
+              .update(videoTimeCapsules)
+              .set({
+                isReleased: false, // Keep false for recurring releases
+                releasedAt: now, // Track when last released
+                status: 'scheduled', // Keep scheduled for next release
+                nextReleaseDate: nextReleaseDate,
+                releasedCount: (capsule.releasedCount || 0) + 1,
+                lastViewedAt: now, // Track activity
+                updatedAt: now
+              })
+              .where(eq(videoTimeCapsules.id, capsule.id));
+              
+            console.log(`[SCHEDULED JOB] Released recurring capsule ${capsule.id}, next release on ${nextReleaseDate}`);
+          } else {
+            // Final occurrence
+            await db
+              .update(videoTimeCapsules)
+              .set({
+                isReleased: true,
+                releasedAt: now,
+                status: 'released',
+                releasedCount: (capsule.releasedCount || 0) + 1,
+                updatedAt: now
+              })
+              .where(eq(videoTimeCapsules.id, capsule.id));
+              
+            console.log(`[SCHEDULED JOB] Released final recurring capsule ${capsule.id}`);
+          }
+        } else {
+          // One-time release
+          await db
+            .update(videoTimeCapsules)
+            .set({
+              isReleased: true,
+              releasedAt: now,
+              status: 'released',
+              releasedCount: 1,
+              updatedAt: now
+            })
+            .where(eq(videoTimeCapsules.id, capsule.id));
+            
+          console.log(`[SCHEDULED JOB] Released one-time capsule ${capsule.id}`);
+        }
+        
+        // Send email notification to memorial creator
+        try {
+          await emailService.sendVideoTimeCapsuleReleaseNotification({
+            recipientEmail: memorial.creatorEmail,
+            memorialName: memorial.name,
+            capsuleTitle: capsule.title,
+            milestoneType: capsule.milestoneType,
+            recipientName: capsule.recipientName || 'Unknown',
+            memorialUrl: `${process.env.REPL_SLUG || ''}/memorials/${memorial.id}`,
+          });
+          console.log(`[SCHEDULED JOB] Sent release notification for capsule ${capsule.id}`);
+        } catch (error) {
+          console.error(`[SCHEDULED JOB] Failed to send notification for capsule ${capsule.id}:`, error);
+          // Don't fail the release if notification fails
+        }
+        
+      } catch (error) {
+        console.error(`[SCHEDULED JOB] Error processing capsule ${capsule.id}:`, error);
+      }
+    }
+    
+    console.log('[SCHEDULED JOB] Finished processing video time capsules');
+    
+  } catch (error) {
+    console.error('[SCHEDULED JOB] Error in checkAndReleaseVideoTimeCapsules:', error);
+  }
+}
+
+// Run the jobs every minute (in production, you might want to use a proper job scheduler)
 let jobInterval: NodeJS.Timeout | null = null;
 
 export function startScheduledMessageJob() {
-  console.log('[SCHEDULED JOB] Starting scheduled message job (runs every minute)');
+  console.log('[SCHEDULED JOB] Starting scheduled jobs (runs every minute)');
   
   // Run immediately on startup
   processScheduledMessages();
+  checkAndReleaseVideoTimeCapsules();
   
   // Then run every minute
   jobInterval = setInterval(() => {
     processScheduledMessages();
+    checkAndReleaseVideoTimeCapsules();
   }, 60000); // 60 seconds
 }
 
@@ -239,6 +376,6 @@ export function stopScheduledMessageJob() {
   if (jobInterval) {
     clearInterval(jobInterval);
     jobInterval = null;
-    console.log('[SCHEDULED JOB] Stopped scheduled message job');
+    console.log('[SCHEDULED JOB] Stopped scheduled jobs');
   }
 }
