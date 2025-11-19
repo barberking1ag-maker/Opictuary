@@ -448,6 +448,11 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   status: text("status").default("pending"), // 'draft', 'pending', 'sent', 'failed', 'completed'
   isSent: boolean("is_sent").default(false),
   sentAt: timestamp("sent_at"),
+  // Email delivery tracking
+  deliveryStatus: text("delivery_status").default("pending"), // 'pending', 'sent', 'failed', 'bounced'
+  deliveryError: text("delivery_error"), // Error message if delivery failed
+  deliveryAttempts: integer("delivery_attempts").default(0), // Number of delivery attempts
+  lastDeliveryAttempt: timestamp("last_delivery_attempt"), // Timestamp of last delivery attempt
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -455,6 +460,7 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   index("idx_scheduled_messages_status").on(table.status),
   index("idx_scheduled_messages_event_date").on(table.eventDate),
   index("idx_scheduled_messages_next_send_date").on(table.nextSendDate),
+  index("idx_scheduled_messages_delivery_status").on(table.deliveryStatus),
 ]);
 
 export const fundraisers = pgTable("fundraisers", {

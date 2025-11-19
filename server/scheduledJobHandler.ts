@@ -1,6 +1,7 @@
 import { db } from "./db";
-import { scheduledMessages } from "@shared/schema";
+import { scheduledMessages, memorials } from "@shared/schema";
 import { eq, and, or, lte, isNull } from "drizzle-orm";
+import { emailService } from "./emailService";
 
 // Helper function to calculate next send date based on recurrence
 function calculateNextSendDate(baseDate: Date, interval: string): Date {
@@ -60,11 +61,64 @@ export async function processScheduledMessages() {
     
     for (const message of messagesToSend) {
       try {
-        // TODO: Actually send the message via email/SMS here
-        console.log(`[SCHEDULED JOB] Sending message ${message.id} to ${message.recipientEmail || message.recipientName}`);
+        console.log(`[SCHEDULED JOB] Processing message ${message.id} to ${message.recipientEmail || message.recipientName}`);
         
-        // For now, just log the message
-        console.log(`[SCHEDULED JOB] Message content: ${message.message}`);
+        // Get memorial details for sender name
+        const memorial = await db.query.memorials.findFirst({
+          where: eq(memorials.id, message.memorialId),
+        });
+        
+        if (!memorial) {
+          console.error(`[SCHEDULED JOB] Memorial not found for message ${message.id}`);
+          // Mark as failed with error
+          await db
+            .update(scheduledMessages)
+            .set({
+              status: 'failed',
+              deliveryStatus: 'failed',
+              deliveryError: 'Memorial not found',
+              deliveryAttempts: (message.deliveryAttempts || 0) + 1,
+              lastDeliveryAttempt: now,
+              updatedAt: now
+            })
+            .where(eq(scheduledMessages.id, message.id));
+          continue;
+        }
+        
+        // Send email if recipient email is provided
+        let deliveryStatus = 'pending';
+        let deliveryError = null;
+        
+        if (message.recipientEmail) {
+          try {
+            const emailSent = await emailService.sendFutureMessage({
+              recipientName: message.recipientName,
+              recipientEmail: message.recipientEmail,
+              message: message.message,
+              eventType: message.eventType,
+              senderName: memorial.name,
+              mediaUrl: message.mediaUrl || undefined,
+              mediaType: message.mediaType || undefined,
+            });
+            
+            if (emailSent) {
+              console.log(`[SCHEDULED JOB] Email sent successfully for message ${message.id}`);
+              deliveryStatus = 'sent';
+            } else {
+              console.error(`[SCHEDULED JOB] Failed to send email for message ${message.id}`);
+              deliveryStatus = 'failed';
+              deliveryError = 'Email delivery failed - SMTP not configured or error occurred';
+            }
+          } catch (error) {
+            console.error(`[SCHEDULED JOB] Error sending email for message ${message.id}:`, error);
+            deliveryStatus = 'failed';
+            deliveryError = error instanceof Error ? error.message : 'Unknown error';
+          }
+        } else {
+          console.warn(`[SCHEDULED JOB] No recipient email for message ${message.id}`);
+          deliveryStatus = 'failed';
+          deliveryError = 'No recipient email provided';
+        }
         
         if (message.isRecurring) {
           // Calculate next send date
@@ -88,46 +142,61 @@ export async function processScheduledMessages() {
           }
           
           if (shouldContinue) {
-            // Update for next occurrence
+            // Update for next occurrence - keep status as 'pending' for retry
             await db
               .update(scheduledMessages)
               .set({
+                status: 'pending', // Keep pending for future retry attempts
                 nextSendDate: nextSendDate,
-                lastSentAt: now,
-                sentCount: (message.sentCount || 0) + 1,
+                lastSentAt: deliveryStatus === 'sent' ? now : message.lastSentAt,
+                sentCount: deliveryStatus === 'sent' ? (message.sentCount || 0) + 1 : message.sentCount,
+                deliveryStatus: deliveryStatus,
+                deliveryError: deliveryError,
+                deliveryAttempts: (message.deliveryAttempts || 0) + 1,
+                lastDeliveryAttempt: now,
                 updatedAt: now
               })
               .where(eq(scheduledMessages.id, message.id));
               
-            console.log(`[SCHEDULED JOB] Updated message ${message.id} for next send on ${nextSendDate}`);
+            console.log(`[SCHEDULED JOB] Updated recurring message ${message.id} for next send on ${nextSendDate} (delivery: ${deliveryStatus})`);
           } else {
-            // Mark as completed
+            // Final occurrence - mark as completed or failed based on delivery
+            const finalStatus = deliveryStatus === 'sent' ? 'completed' : 'failed';
             await db
               .update(scheduledMessages)
               .set({
-                status: 'completed',
-                isSent: true,
-                sentAt: now,
-                lastSentAt: now,
+                status: finalStatus,
+                isSent: deliveryStatus === 'sent',
+                sentAt: deliveryStatus === 'sent' ? now : message.sentAt,
+                lastSentAt: deliveryStatus === 'sent' ? now : message.lastSentAt,
+                deliveryStatus: deliveryStatus,
+                deliveryError: deliveryError,
+                deliveryAttempts: (message.deliveryAttempts || 0) + 1,
+                lastDeliveryAttempt: now,
                 updatedAt: now
               })
               .where(eq(scheduledMessages.id, message.id));
               
-            console.log(`[SCHEDULED JOB] Marked recurring message ${message.id} as completed`);
+            console.log(`[SCHEDULED JOB] Marked final recurring message ${message.id} as ${finalStatus}`);
           }
         } else {
-          // One-time message - mark as sent
+          // One-time message - mark status based on delivery outcome
+          const finalStatus = deliveryStatus === 'sent' ? 'sent' : 'failed';
           await db
             .update(scheduledMessages)
             .set({
-              status: 'sent',
-              isSent: true,
-              sentAt: now,
+              status: finalStatus,
+              isSent: deliveryStatus === 'sent',
+              sentAt: deliveryStatus === 'sent' ? now : null,
+              deliveryStatus: deliveryStatus,
+              deliveryError: deliveryError,
+              deliveryAttempts: (message.deliveryAttempts || 0) + 1,
+              lastDeliveryAttempt: now,
               updatedAt: now
             })
             .where(eq(scheduledMessages.id, message.id));
             
-          console.log(`[SCHEDULED JOB] Marked one-time message ${message.id} as sent`);
+          console.log(`[SCHEDULED JOB] Marked one-time message ${message.id} as ${finalStatus}`);
         }
         
       } catch (error) {
