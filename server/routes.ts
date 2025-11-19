@@ -1846,6 +1846,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to calculate next send date based on recurrence
+  function calculateNextSendDate(baseDate: Date, interval: string): Date {
+    const nextDate = new Date(baseDate);
+    
+    switch (interval) {
+      case 'daily':
+        nextDate.setDate(nextDate.getDate() + 1);
+        break;
+      case 'weekly':
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case 'monthly':
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case 'yearly':
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      default:
+        // For custom intervals, default to yearly
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+    }
+    
+    return nextDate;
+  }
+
   // Scheduled Messages routes
   app.get("/api/memorials/:memorialId/scheduled-messages", isAuthenticated, async (req: any, res) => {
     try {
@@ -1906,12 +1931,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventDate: req.body.eventDate || undefined,
         mediaUrl: req.body.mediaUrl || undefined,
         mediaType: req.body.mediaType || undefined,
+        recurrenceInterval: req.body.recurrenceInterval || undefined,
+        recurrenceCount: req.body.recurrenceCount || undefined,
+        recurrenceEndDate: req.body.recurrenceEndDate || undefined,
       };
       console.log('[CREATE SCHEDULED MESSAGE] Cleaned body:', JSON.stringify(cleanedBody, null, 2));
+
+      // Calculate nextSendDate if this is a recurring message
+      let nextSendDate = undefined;
+      if (cleanedBody.isRecurring && cleanedBody.eventDate && cleanedBody.recurrenceInterval) {
+        const firstDate = new Date(cleanedBody.eventDate);
+        nextSendDate = firstDate; // First send is on the event date
+      }
 
       const dataToValidate = {
         ...cleanedBody,
         memorialId: req.params.memorialId,
+        nextSendDate: nextSendDate,
       };
       console.log('[CREATE SCHEDULED MESSAGE] Data to validate:', JSON.stringify(dataToValidate, null, 2));
 

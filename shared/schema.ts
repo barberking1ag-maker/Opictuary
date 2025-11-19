@@ -439,8 +439,13 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   mediaType: text("media_type").default("text"), // 'text', 'video', 'image', 'mixed'
   attachmentUrls: text("attachment_urls").array(), // Multiple media attachments
   isRecurring: boolean("is_recurring").default(false),
-  recurrenceInterval: text("recurrence_interval"), // 'yearly', 'monthly', 'custom'
-  status: text("status").default("pending"), // 'draft', 'pending', 'sent', 'failed'
+  recurrenceInterval: text("recurrence_interval"), // 'daily', 'weekly', 'monthly', 'yearly', 'custom'
+  recurrenceCount: integer("recurrence_count"), // Number of times to repeat (null = forever)
+  recurrenceEndDate: timestamp("recurrence_end_date"), // When to stop recurring
+  nextSendDate: timestamp("next_send_date"), // When to send next occurrence
+  lastSentAt: timestamp("last_sent_at"), // Track when last sent for recurring messages
+  sentCount: integer("sent_count").default(0), // Track how many times sent for recurring messages
+  status: text("status").default("pending"), // 'draft', 'pending', 'sent', 'failed', 'completed'
   isSent: boolean("is_sent").default(false),
   sentAt: timestamp("sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -449,6 +454,7 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   index("idx_scheduled_messages_memorial_id").on(table.memorialId),
   index("idx_scheduled_messages_status").on(table.status),
   index("idx_scheduled_messages_event_date").on(table.eventDate),
+  index("idx_scheduled_messages_next_send_date").on(table.nextSendDate),
 ]);
 
 export const fundraisers = pgTable("fundraisers", {

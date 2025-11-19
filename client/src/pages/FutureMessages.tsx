@@ -43,6 +43,8 @@ const messageSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
   isRecurring: z.boolean().default(false),
   recurrencePattern: z.string().optional(),
+  recurrenceCount: z.number().optional(),
+  recurrenceEndDate: z.string().optional(),
   mediaAttachmentUrl: z.string().optional(),
 });
 
@@ -60,9 +62,10 @@ const occasions = [
 ];
 
 const recurrencePatterns = [
-  { value: "yearly", label: "Every Year" },
+  { value: "daily", label: "Every Day" },
+  { value: "weekly", label: "Every Week" },
   { value: "monthly", label: "Every Month" },
-  { value: "quarterly", label: "Every 3 Months" },
+  { value: "yearly", label: "Every Year" },
 ];
 
 const messageTemplates: Record<string, string> = {
@@ -96,6 +99,8 @@ export default function FutureMessages() {
       message: "",
       isRecurring: false,
       recurrencePattern: "",
+      recurrenceCount: undefined,
+      recurrenceEndDate: "",
       mediaAttachmentUrl: "",
     },
   });
@@ -111,7 +116,9 @@ export default function FutureMessages() {
         sendTime: data.scheduledDate.split('T')[1], // Extract time part
         message: data.message,
         isRecurring: data.isRecurring,
-        recurrenceInterval: data.recurrencePattern as 'yearly' | 'monthly' | 'custom' | undefined,
+        recurrenceInterval: data.recurrencePattern as 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined,
+        recurrenceCount: data.recurrenceCount,
+        recurrenceEndDate: data.recurrenceEndDate || undefined,
         attachmentUrls: data.mediaAttachmentUrl ? [data.mediaAttachmentUrl] : undefined,
         status: 'pending' as const,
       };
@@ -330,30 +337,80 @@ export default function FutureMessages() {
                 />
 
                 {form.watch("isRecurring") && (
-                  <FormField
-                    control={form.control}
-                    name="recurrencePattern"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recurrence Pattern</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-recurrence">
-                              <SelectValue placeholder="Select pattern" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {recurrencePatterns.map((pattern) => (
-                              <SelectItem key={pattern.value} value={pattern.value}>
-                                {pattern.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="recurrencePattern"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recurrence Pattern</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-recurrence">
+                                <SelectValue placeholder="Select pattern" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {recurrencePatterns.map((pattern) => (
+                                <SelectItem key={pattern.value} value={pattern.value}>
+                                  {pattern.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="recurrenceCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Occurrences</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="1"
+                                placeholder="Leave empty for forever"
+                                {...field}
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                data-testid="input-recurrence-count"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              How many times to repeat
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="recurrenceEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>End Date (Optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                data-testid="input-recurrence-end-date"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              When to stop recurring
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="flex justify-end gap-3">
