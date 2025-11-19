@@ -514,14 +514,14 @@ export default function ProductCustomize() {
                 <div className="space-y-2">
                   <Label>Link to Memorial (Optional)</Label>
                   <Select
-                    value={customization.memorialId || ""}
-                    onValueChange={(value) => setCustomization({ ...customization, memorialId: value || null })}
+                    value={customization.memorialId || "none"}
+                    onValueChange={(value) => setCustomization({ ...customization, memorialId: value === "none" ? null : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a memorial to link" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No memorial</SelectItem>
+                      <SelectItem value="none">No memorial</SelectItem>
                       {memorials.map((memorial) => (
                         <SelectItem key={memorial.id} value={memorial.id}>
                           {memorial.name}

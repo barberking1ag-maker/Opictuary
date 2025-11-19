@@ -958,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Content moderation
-      const moderated = moderateContent(data.caption);
+      const moderated = await moderateContent(data.caption);
       if (!moderated.isClean) {
         return res.status(400).json({ 
           error: "Your caption contains inappropriate language. Please revise and try again.",
@@ -1024,7 +1024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Content moderation
-      const moderated = moderateContent(data.comment);
+      const moderated = await moderateContent(data.comment);
       if (!moderated.isClean) {
         return res.status(400).json({ 
           error: "Your comment contains inappropriate language. Please revise and try again.",
@@ -1187,7 +1187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Content moderation
-      const moderated = moderateContent(data.message);
+      const moderated = await moderateContent(data.message);
       if (!moderated.isClean) {
         return res.status(400).json({ 
           error: "Your message contains inappropriate language. Please revise and try again.",
@@ -1271,7 +1271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Content moderation
-      const moderated = moderateContent(data.comment);
+      const moderated = await moderateContent(data.comment);
       if (!moderated.isClean) {
         return res.status(400).json({ 
           error: "Your comment contains inappropriate language. Please revise and try again.",
@@ -2619,7 +2619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Content moderation for transcription
       if (data.transcription) {
-        const moderated = moderateContent(data.transcription);
+        const moderated = await moderateContent(data.transcription);
         if (!moderated.isClean) {
           return res.status(400).json({ 
             error: "Your message contains inappropriate language. Please revise and try again.",
@@ -5758,22 +5758,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TODO: Add rate limiting middleware (e.g., express-rate-limit) to prevent abuse
   app.post("/api/products/generate-ai-design", isAuthenticated, async (req: any, res) => {
     try {
-      const { prompt, style, deceasedName } = req.body;
+      const userId = req.user.claims.sub;
+      const { prompt, style, deceasedName, orderId } = req.body;
       
-      if (!prompt || !style) {
-        return res.status(400).json({ error: "Prompt and style are required" });
+      if (!prompt || !style || !orderId) {
+        return res.status(400).json({ error: "Prompt, style, and orderId are required" });
+      }
+
+      // Fetch order and verify it belongs to the caller
+      const order = await storage.getProductOrder(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      if (order.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden: You don't have permission to modify this order" });
       }
 
       // CRITICAL SECURITY: Content moderation check BEFORE calling OpenAI
-      try {
-        await moderateContent(prompt);
-      } catch (moderationError: any) {
-        console.warn("[AI Design] Content moderation rejected prompt:", moderationError.message);
+      // MUST await this async call - moderation won't run otherwise!
+      const moderationResult = await moderateContent(prompt);
+      if (!moderationResult.isClean) {
+        console.warn("[AI Design] Prompt failed moderation:", moderationResult.categories);
         return res.status(400).json({ 
-          error: "Your prompt contains inappropriate content. Please revise and try again.",
-          details: "Content moderation failed"
+          error: "Prompt failed moderation",
+          categories: moderationResult.categories ?? []
         });
       }
+
+      // Use sanitized text for DALL-E
+      const sanitizedPrompt = moderationResult.filteredText.trim();
 
       // Build enhanced prompt based on style
       const stylePrompts: Record<string, string> = {
@@ -5786,8 +5801,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const styleDescription = stylePrompts[style] || stylePrompts.realistic;
       
-      // Construct full prompt for DALL-E
-      const fullPrompt = `Memorial card design for ${deceasedName || 'a loved one'}. ${prompt}. Style: ${styleDescription}. Beautiful, respectful, and dignified memorial artwork suitable for a memorial card.`;
+      // Construct full prompt for DALL-E using sanitized text
+      const fullPrompt = `Memorial card design for ${deceasedName || 'a loved one'}. ${sanitizedPrompt}. Style: ${styleDescription}. Beautiful, respectful, and dignified memorial artwork suitable for a memorial card.`;
 
       console.log("[AI Design] Generating image with prompt:", fullPrompt);
 
@@ -5834,8 +5849,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[AI Design] Image generated successfully:", imageUrl);
 
-      // Return normalized response
-      res.json({ imageUrl });
+      // After DALL-E generates image, attach AI design to order and lock fields
+      await storage.attachAIDesign(orderId, {
+        prompt: sanitizedPrompt,
+        style,
+        imageUrl,
+        premium: 15.00
+      });
+
+      // Return normalized response with all required fields
+      res.json({ 
+        imageUrl,
+        prompt: sanitizedPrompt,
+        style
+      });
     } catch (error: any) {
       console.error("[AI Design] Unexpected error:", error);
       res.status(500).json({ 
@@ -6190,10 +6217,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isOwner && !isUserAdmin) {
         return res.status(403).json({ error: "Forbidden: You don't have permission to update this order" });
       }
+
+      // CRITICAL SECURITY: If order has AI design, prevent modifications
+      if (order.aiDesignImageUrl) {
+        return res.status(409).json({ 
+          error: "Cannot modify order with AI design already generated" 
+        });
+      }
       
       // SECURITY FIX: Use whitelist schema instead of insertProductOrderSchema.partial()
       // This prevents clients from modifying subtotal, tax, total, shipping, quantity, productId
       const validatedData = updateOrderSchema.parse(req.body);
+      
+      // CRITICAL SECURITY FIX: Preserve existing AI design fields from database
+      // Clients CANNOT modify or remove these fields once set
+      const preservedAIFields: any = {};
+      if (order.aiDesignImageUrl) {
+        preservedAIFields.aiDesignImageUrl = order.aiDesignImageUrl;
+      }
+      if (order.aiDesignPremium !== null && order.aiDesignPremium !== undefined) {
+        preservedAIFields.aiDesignPremium = order.aiDesignPremium;
+      }
+      if (order.aiDesignPrompt) {
+        preservedAIFields.aiDesignPrompt = order.aiDesignPrompt;
+      }
+      if (order.aiDesignStyle) {
+        preservedAIFields.aiDesignStyle = order.aiDesignStyle;
+      }
+      
+      // Merge validated data with preserved AI fields (AI fields take precedence)
+      const safeUpdateData = {
+        ...validatedData,
+        ...preservedAIFields
+      };
       
       // Issue 3: Prevent updates to already-paid orders (idempotent lock)
       if (order.paymentStatus === 'paid') {
@@ -6259,8 +6315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Update only whitelisted fields
-      const updatedOrder = await storage.updateProductOrder(id, validatedData);
+      // Update only whitelisted fields + preserved AI fields
+      const updatedOrder = await storage.updateProductOrder(id, safeUpdateData);
       
       if (!updatedOrder) {
         return res.status(404).json({ error: "Order not found" });

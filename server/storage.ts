@@ -738,6 +738,7 @@ export interface IStorage {
   updateOrderStatus(id: string, status: string): Promise<ProductOrder | undefined>;
   updateOrderPaymentStatus(id: string, paymentStatus: string, paymentIntentId?: string): Promise<ProductOrder | undefined>;
   addOrderTracking(id: string, trackingNumber: string, carrier: string, estimatedDelivery?: Date): Promise<ProductOrder | undefined>;
+  attachAIDesign(orderId: string, aiData: { prompt: string; style: string; imageUrl: string; premium: number }): Promise<ProductOrder | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3786,8 +3787,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProductOrder(id: string, order: Partial<InsertProductOrder>): Promise<ProductOrder | undefined> {
+    // Load current order from database first
+    const currentOrder = await this.getProductOrder(id);
+    
+    if (!currentOrder) {
+      return undefined;
+    }
+
+    // Merge AI fields from existing order (preserve them)
+    const preservedAIFields: any = {};
+    if (currentOrder.aiDesignImageUrl) {
+      preservedAIFields.aiDesignImageUrl = currentOrder.aiDesignImageUrl;
+    }
+    if (currentOrder.aiDesignPrompt) {
+      preservedAIFields.aiDesignPrompt = currentOrder.aiDesignPrompt;
+    }
+    if (currentOrder.aiDesignStyle) {
+      preservedAIFields.aiDesignStyle = currentOrder.aiDesignStyle;
+    }
+
+    // Merge update data with preserved AI fields (AI fields take precedence)
+    const mergedData = {
+      ...order,
+      ...preservedAIFields
+    };
+
+    // Recalculate aiDesignPremium based on whether AI design exists
+    mergedData.aiDesignPremium = mergedData.aiDesignImageUrl ? "15.00" : "0";
+
     const [updated] = await db.update(productOrders)
-      .set({ ...order, updatedAt: new Date() })
+      .set({ ...mergedData, updatedAt: new Date() })
       .where(eq(productOrders.id, id))
       .returning();
     return updated || undefined;
@@ -3821,6 +3850,21 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(productOrders)
       .set(updateData)
       .where(eq(productOrders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async attachAIDesign(orderId: string, aiData: { prompt: string; style: string; imageUrl: string; premium: number }): Promise<ProductOrder | undefined> {
+    // Lock AI fields and set premium to $15.00
+    const [updated] = await db.update(productOrders)
+      .set({
+        aiDesignPrompt: aiData.prompt,
+        aiDesignStyle: aiData.style,
+        aiDesignImageUrl: aiData.imageUrl,
+        aiDesignPremium: "15.00", // Store as decimal string
+        updatedAt: new Date()
+      })
+      .where(eq(productOrders.id, orderId))
       .returning();
     return updated || undefined;
   }
