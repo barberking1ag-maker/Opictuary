@@ -48,7 +48,22 @@ The platform follows a "Dignity in Digital" design philosophy, employing a respe
 **Cemetery Location Mapping:** Storage of cemetery coordinates and information for future map integration.
 **Alumni Memorial System:** Comprehensive system for honoring deceased alumni with university-themed design (deep blue #1E3A8A, gold #F59E0B accents). Features a 4-step creation wizard (personal info, education, activities/achievements, review) with school name autocomplete, degree type selection (BA, BS, MA, MS, MBA, PhD, JD, MD), major/field of study tracking, campus activities and involvement history, notable achievements, and class notes. Browse page offers filtering by school name, graduation year, and major with pagination. Detail pages display full alumni profiles with professional formatting. Supports both public and private memorial settings. Designed for potential B2B partnerships with alumni associations and educational institutions.
 **AI Chat Assistant:** Intelligent chat assistant powered by OpenAI (via Replit AI Integrations) that helps users navigate the platform, create memorials, and understand features. Features include real-time streaming responses, persistent message history, and empathetic support tailored to the memorial platform context. Accessible via floating button on all pages.
-**Revenue Model:** Configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials.
+**QR-Activated Physical Memorial Products System:** Full-stack e-commerce platform for physical memorial products (plaques, headstone markers, memorial cards, urns, keepsakes) with embedded QR codes linking to digital memorials. Designed for B2B partnerships with funeral homes and direct-to-consumer sales. Features include:
+- **Product Catalog**: 5 categories (plaques, headstone-markers, memorial-cards, urns, keepsakes) with category filters, product cards, pricing, and detailed product information
+- **Customization Wizard**: 4-step multi-step form (product selection → customization → shipping → payment) with engraving options, font selection, material choices, size options, and QR code placement customization
+- **Order Management**: Complete order lifecycle tracking (pending → in production → shipped → delivered) with order history, status updates, and detailed order tracking
+- **Admin Dashboard**: Partner fulfillment interface for managing orders, updating status, adding tracking numbers, and viewing order analytics with status-based filtering and search
+- **QR Code Integration**: Automatic generation of product-specific QR codes linking to memorials with product tracking metadata embedded
+- **Secure Payment Processing**: Stripe integration with comprehensive security features:
+  - Server-side pricing calculation (subtotal = basePrice × quantity, shipping = $15, tax = 8%)
+  - Strict field whitelisting prevents client-side price manipulation
+  - Stripe PaymentIntent verification (status, amount_received, userId, orderId)
+  - Idempotent locking prevents replay attacks on paid orders
+  - All payment confirmations verified against Stripe API before database update
+- **Database Schema**: Products table (name, description, basePrice, category, customizationOptions, images, dimensions, material, stockStatus) and ProductOrders table (orderNumber, userId, memorialId, productId, quantity, customization, pricing, shippingAddress, status, paymentStatus, trackingNumber, qrCodeId)
+- **Navigation**: Accessible via main nav "Products" link and footer "Products" link, admin access via user menu "Product Orders"
+- **Revenue Model**: Direct-to-consumer sales (15-30% markup) and B2B funeral home partnerships (wholesale pricing + referral fees)
+**Revenue Model:** Configurable platform fees (2.5%-5%) on fundraisers and donations, with higher fees for celebrity memorials. Physical memorial products generate revenue through direct sales markup and B2B partnership fees.
 
 ### System Design Choices
 The system prioritizes privacy with an invite code system for private memorials, optional public settings, and role-based admin permissions. It is built for scalability and maintainability with a clear separation of concerns between frontend and backend.
