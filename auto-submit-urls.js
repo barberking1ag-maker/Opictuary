@@ -60,7 +60,9 @@ async function submitToIndexNow() {
   const apiKey = 'opictuary-' + Date.now();
   
   console.log('\n📋 IndexNow Submission:');
-  console.log(`   Note: To complete IndexNow setup, create an API key file on your server`);
+  console.log(`   Note: To complete IndexNow setup, create file at:`);
+  console.log(`   ${SITE_URL}/${apiKey}.txt`);
+  console.log(`   With contents: ${apiKey}`);
   
   // For now, just inform the user
   console.log('   (Skipping IndexNow - requires API key file setup)');
