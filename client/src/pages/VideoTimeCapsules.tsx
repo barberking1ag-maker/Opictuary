@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Video, Trash2, Edit, Eye, Clock, User } from "lucide-react";
-import { format } from "date-fns";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -88,6 +89,10 @@ export default function VideoTimeCapsules() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [capsuleToDelete, setCapsuleToDelete] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const { data: memorial } = useQuery<{ timezone?: string }>({
+    queryKey: [`/api/memorials/${memorialId}`],
+  });
 
   const { data: capsules = [], isLoading } = useQuery<VideoTimeCapsule[]>({
     queryKey: ["/api/memorials", memorialId, "video-time-capsules"],
@@ -242,6 +247,24 @@ export default function VideoTimeCapsules() {
   const getMilestoneLabel = (type: string) => {
     const milestone = milestoneTypes.find(m => m.value === type);
     return milestone?.label || type;
+  };
+
+  const formatTimezoneDate = (utcTimestamp: string | null, includeTime: boolean = true): string => {
+    if (!utcTimestamp) return 'Not set';
+    
+    const tz = memorial?.timezone || 'America/New_York';
+    const pattern = includeTime ? 'MMM d, yyyy h:mm a zzz' : 'MMM d, yyyy';
+    
+    return formatInTimeZone(utcTimestamp, tz, pattern);
+  };
+
+  const constructUtcTimestamp = (dateString: string, timeString: string): string => {
+    // For fallback: Construct timestamp without forcing UTC
+    // Note: This is best-effort display; nextReleaseDate should be the authoritative UTC timestamp
+    const localTimeString = `${dateString}T${timeString}:00`;
+    // Parse as ISO date and return as UTC (browser's interpretation)
+    const date = parseISO(localTimeString);
+    return date.toISOString();
   };
 
   return (
@@ -693,7 +716,9 @@ export default function VideoTimeCapsules() {
                     <p className="text-muted-foreground mb-1">Release Date</p>
                     <p className="font-medium flex items-center gap-2" data-testid={`release-date-${capsule.id}`}>
                       <Clock className="w-4 h-4" />
-                      {capsule.releaseDate}
+                      {capsule.nextReleaseDate 
+                        ? formatTimezoneDate(capsule.nextReleaseDate)
+                        : formatTimezoneDate(fromZonedTime(`${capsule.releaseDate}T${capsule.releaseTime || '00:00:00'}`, memorial?.timezone || 'America/New_York').toISOString())}
                     </p>
                   </div>
                   {capsule.recipientName && (
@@ -718,7 +743,7 @@ export default function VideoTimeCapsules() {
                   <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950 rounded-md">
                     <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
                       Recurring Release: Every year
-                      {capsule.recurrenceEndDate && ` until ${capsule.recurrenceEndDate}`}
+                      {capsule.recurrenceEndDate && ` until ${formatTimezoneDate(capsule.recurrenceEndDate, false)}`}
                       {capsule.releasedCount > 0 && ` (Released ${capsule.releasedCount} times)`}
                     </p>
                   </div>

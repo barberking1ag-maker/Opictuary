@@ -2,7 +2,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Video, Calendar, User, Eye, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { parseISO } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useEffect, useRef, useState } from "react";
 
@@ -140,9 +141,31 @@ function VideoPlayer({ capsule }: { capsule: VideoTimeCapsule }) {
 }
 
 export default function VideoTimeCapsuleViewer({ memorialId }: VideoTimeCapsuleViewerProps) {
+  const { data: memorial } = useQuery<{ timezone?: string }>({
+    queryKey: [`/api/memorials/${memorialId}`],
+  });
+
   const { data: capsules = [], isLoading } = useQuery<VideoTimeCapsule[]>({
     queryKey: ["/api/memorials", memorialId, "video-time-capsules", "released"],
   });
+
+  const formatTimezoneDate = (utcTimestamp: string | null, includeTime: boolean = true): string => {
+    if (!utcTimestamp) return 'Not set';
+    
+    const tz = memorial?.timezone || 'America/New_York';
+    const pattern = includeTime ? 'MMM d, yyyy h:mm a zzz' : 'MMM d, yyyy';
+    
+    return formatInTimeZone(utcTimestamp, tz, pattern);
+  };
+
+  const constructUtcTimestamp = (dateString: string, timeString: string): string => {
+    // For fallback: Construct timestamp without forcing UTC
+    // Note: This is best-effort display; releasedAt should be the authoritative UTC timestamp
+    const localTimeString = `${dateString}T${timeString}:00`;
+    // Parse as ISO date and return as UTC (browser's interpretation)
+    const date = parseISO(localTimeString);
+    return date.toISOString();
+  };
 
   if (isLoading) {
     return (
@@ -219,8 +242,8 @@ export default function VideoTimeCapsuleViewer({ memorialId }: VideoTimeCapsuleV
                   <p className="font-medium flex items-center gap-2" data-testid={`released-date-${capsule.id}`}>
                     <Clock className="w-4 h-4" />
                     {capsule.releasedAt
-                      ? format(new Date(capsule.releasedAt), 'MMM d, yyyy')
-                      : format(new Date(capsule.releaseDate), 'MMM d, yyyy')}
+                      ? formatTimezoneDate(capsule.releasedAt)
+                      : formatTimezoneDate(fromZonedTime(`${capsule.releaseDate}T${capsule.releaseTime || '00:00:00'}`, memorial?.timezone || 'America/New_York').toISOString())}
                   </p>
                 </div>
                 <div>

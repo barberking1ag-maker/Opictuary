@@ -2,27 +2,83 @@ import { db } from "./db";
 import { scheduledMessages, memorials, videoTimeCapsules } from "@shared/schema";
 import { eq, and, or, lte, isNull } from "drizzle-orm";
 import { emailService } from "./emailService";
+import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { addDays, addWeeks, addMonths, addYears, format as dateFormat } from "date-fns";
 
-// Helper function to calculate next send date based on recurrence
+// Utility function to compute next release date in UTC (mirrored from routes.ts)
+// Takes a date and time in the memorial's timezone and converts to UTC
+function computeNextReleaseDate(releaseDate: string, releaseTime: string = '00:00:00', timezone: string = 'UTC'): Date {
+  // Ensure releaseTime has seconds (HH:mm:ss format)
+  let normalizedTime = releaseTime;
+  if (releaseTime && releaseTime.split(':').length === 2) {
+    normalizedTime = `${releaseTime}:00`;
+  }
+  
+  // Combine date and time into ISO datetime string
+  const isoDateTimeString = `${releaseDate}T${normalizedTime}`;
+  
+  // Parse as a date in the memorial's timezone, then convert to UTC
+  const utcDate = fromZonedTime(isoDateTimeString, timezone);
+  
+  // Validate the date
+  if (isNaN(utcDate.getTime())) {
+    throw new Error(`Invalid date/time combination: ${releaseDate}T${normalizedTime} in timezone ${timezone}`);
+  }
+  
+  return utcDate;
+}
+
+// Helper to calculate next local occurrence date for recurring capsules
+// Converts UTC to memorial timezone, adds interval, returns new date string
+function calculateNextLocalDate(currentUtcDate: Date, interval: string, timezone: string): string {
+  // Convert current UTC date to memorial's local time
+  const zonedDate = toZonedTime(currentUtcDate, timezone);
+  
+  // Add the appropriate interval in local time
+  let nextLocalDate: Date;
+  switch (interval) {
+    case 'daily':
+      nextLocalDate = addDays(zonedDate, 1);
+      break;
+    case 'weekly':
+      nextLocalDate = addWeeks(zonedDate, 1);
+      break;
+    case 'monthly':
+      nextLocalDate = addMonths(zonedDate, 1);
+      break;
+    case 'yearly':
+      nextLocalDate = addYears(zonedDate, 1);
+      break;
+    default:
+      // For custom intervals, default to yearly
+      nextLocalDate = addYears(zonedDate, 1);
+  }
+  
+  // Format as YYYY-MM-DD for use with computeNextReleaseDate
+  return dateFormat(nextLocalDate, 'yyyy-MM-dd');
+}
+
+// Legacy function kept for scheduled messages
+// Uses UTC-safe date math to prevent timezone drift in recurring releases
 function calculateNextSendDate(baseDate: Date, interval: string): Date {
   const nextDate = new Date(baseDate);
   
   switch (interval) {
     case 'daily':
-      nextDate.setDate(nextDate.getDate() + 1);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
       break;
     case 'weekly':
-      nextDate.setDate(nextDate.getDate() + 7);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 7);
       break;
     case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + 1);
+      nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
       break;
     case 'yearly':
-      nextDate.setFullYear(nextDate.getFullYear() + 1);
+      nextDate.setUTCFullYear(nextDate.getUTCFullYear() + 1);
       break;
     default:
       // For custom intervals, default to yearly
-      nextDate.setFullYear(nextDate.getFullYear() + 1);
+      nextDate.setUTCFullYear(nextDate.getUTCFullYear() + 1);
   }
   
   return nextDate;
@@ -266,16 +322,47 @@ export async function checkAndReleaseVideoTimeCapsules() {
         }
         
         if (capsule.isRecurring) {
-          // Calculate next release date
-          const currentDate = capsule.nextReleaseDate || new Date(capsule.releaseDate);
-          const nextReleaseDate = calculateNextSendDate(currentDate, capsule.recurrenceInterval || 'yearly');
+          // Calculate next release date using timezone-aware logic
+          const memorialTimezone = memorial.timezone || 'America/New_York';
+          
+          // 1. Get the current release date in UTC
+          // Use nextReleaseDate if available, otherwise compute from releaseDate+releaseTime with timezone
+          let currentUtcDate: Date;
+          if (capsule.nextReleaseDate) {
+            currentUtcDate = capsule.nextReleaseDate;
+          } else {
+            // First occurrence: compute UTC from releaseDate+releaseTime in memorial timezone
+            currentUtcDate = computeNextReleaseDate(
+              capsule.releaseDate,
+              capsule.releaseTime || '00:00:00',
+              memorialTimezone
+            );
+          }
+          
+          // 2. Calculate next local occurrence date in memorial's timezone
+          const nextLocalDateString = calculateNextLocalDate(
+            currentUtcDate,
+            capsule.recurrenceInterval || 'yearly',
+            memorialTimezone
+          );
+          
+          // 3. Convert next local date+time back to UTC using memorial timezone
+          const nextReleaseDate = computeNextReleaseDate(
+            nextLocalDateString,
+            capsule.releaseTime || '00:00:00',
+            memorialTimezone
+          );
           
           // Check if we should continue recurring
           let shouldContinue = true;
           
-          // Check end date
-          if (capsule.recurrenceEndDate && nextReleaseDate > capsule.recurrenceEndDate) {
-            shouldContinue = false;
+          // Check end date (convert recurrenceEndDate to UTC for comparison if needed)
+          if (capsule.recurrenceEndDate) {
+            // recurrenceEndDate might be a date string, so convert it properly
+            const endDate = new Date(capsule.recurrenceEndDate);
+            if (nextReleaseDate > endDate) {
+              shouldContinue = false;
+            }
           }
           
           if (shouldContinue) {
@@ -288,14 +375,14 @@ export async function checkAndReleaseVideoTimeCapsules() {
                 isReleased: false, // Keep false for recurring releases
                 releasedAt: now, // Track when last released
                 status: 'scheduled', // Keep scheduled for next release
-                nextReleaseDate: nextReleaseDate,
+                nextReleaseDate: nextReleaseDate, // Drizzle handles Date to timestamp conversion
                 releasedCount: (capsule.releasedCount || 0) + 1,
                 lastViewedAt: now, // Track activity
                 updatedAt: now
               })
               .where(eq(videoTimeCapsules.id, capsule.id));
               
-            console.log(`[SCHEDULED JOB] Released recurring capsule ${capsule.id}, next release on ${nextReleaseDate}`);
+            console.log(`[SCHEDULED JOB] Released recurring capsule ${capsule.id}, next release on ${nextReleaseDate.toISOString()} (${memorialTimezone})`);
           } else {
             // Final occurrence
             await db
@@ -330,7 +417,7 @@ export async function checkAndReleaseVideoTimeCapsules() {
         // Send email notification to memorial creator
         try {
           await emailService.sendVideoTimeCapsuleReleaseNotification({
-            recipientEmail: memorial.creatorEmail,
+            recipientEmail: memorial.creatorEmail || '',
             memorialName: memorial.name,
             capsuleTitle: capsule.title,
             milestoneType: capsule.milestoneType,

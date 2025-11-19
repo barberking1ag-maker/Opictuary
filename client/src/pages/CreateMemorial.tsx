@@ -28,6 +28,7 @@ const createMemorialSchema = z.object({
   religion: z.string().optional(),
   cemeteryName: z.string().optional(),
   cemeteryLocation: z.string().optional(),
+  timezone: z.string().optional(),
   fontFamily: z.string().optional(),
   symbol: z.string().optional(),
   isPublic: z.boolean().default(false),
@@ -43,6 +44,9 @@ export default function CreateMemorial() {
   const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
 
+  // Detect browser timezone
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
+
   const form = useForm<CreateMemorialForm>({
     resolver: zodResolver(createMemorialSchema),
     defaultValues: {
@@ -56,6 +60,7 @@ export default function CreateMemorial() {
       religion: "",
       cemeteryName: "",
       cemeteryLocation: "",
+      timezone: browserTimezone,
       fontFamily: "crimson",
       symbol: "cross",
       isPublic: false,
@@ -414,6 +419,42 @@ export default function CreateMemorial() {
                         )}
                       />
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="timezone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timezone</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-timezone">
+                                <SelectValue placeholder="Select timezone" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
+                              <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
+                              <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
+                              <SelectItem value="America/Phoenix">Arizona (MST)</SelectItem>
+                              <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                              <SelectItem value="America/Anchorage">Alaska (AKT)</SelectItem>
+                              <SelectItem value="Pacific/Honolulu">Hawaii (HST)</SelectItem>
+                              <SelectItem value="Europe/London">London (GMT/BST)</SelectItem>
+                              <SelectItem value="Europe/Paris">Central Europe (CET)</SelectItem>
+                              <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
+                              <SelectItem value="Asia/Shanghai">Beijing (CST)</SelectItem>
+                              <SelectItem value="Australia/Sydney">Sydney (AEDT)</SelectItem>
+                              <SelectItem value="UTC">UTC</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Used for scheduling future messages and video time capsules
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}

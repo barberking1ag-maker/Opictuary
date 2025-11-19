@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
 import { moderateContent } from "./contentModeration";
+import { fromZonedTime, toZonedTime, format } from "date-fns-tz";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -2055,18 +2056,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Utility function to compute next release date in UTC
+  // Takes a date and time in the memorial's timezone and converts to UTC
   function computeNextReleaseDate(releaseDate: string, releaseTime: string = '00:00:00', timezone: string = 'UTC'): Date {
-    // Combine date and time into ISO string with explicit UTC timezone
-    // Format: YYYY-MM-DDTHH:MM:SSZ (the Z ensures UTC interpretation)
-    const isoString = `${releaseDate}T${releaseTime}Z`;
-    const date = new Date(isoString);
-    
-    // Validate the date
-    if (isNaN(date.getTime())) {
-      throw new Error(`Invalid date/time combination: ${releaseDate} ${releaseTime}`);
+    // Ensure releaseTime has seconds (HH:mm:ss format)
+    // If it's HH:mm, append :00 for seconds
+    let normalizedTime = releaseTime;
+    if (releaseTime && releaseTime.split(':').length === 2) {
+      normalizedTime = `${releaseTime}:00`;
     }
     
-    return date;
+    // Combine date and time into ISO datetime string
+    // Format: YYYY-MM-DDTHH:MM:SS (ISO 8601 without timezone)
+    const isoDateTimeString = `${releaseDate}T${normalizedTime}`;
+    
+    // Parse as a date in the memorial's timezone, then convert to UTC
+    // fromZonedTime treats the input as being in the specified timezone and converts to UTC
+    const utcDate = fromZonedTime(isoDateTimeString, timezone);
+    
+    // Validate the date
+    if (isNaN(utcDate.getTime())) {
+      throw new Error(`Invalid date/time combination: ${releaseDate}T${normalizedTime} in timezone ${timezone}`);
+    }
+    
+    return utcDate;
   }
 
   // Video Time Capsule routes
@@ -2147,17 +2159,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body
       const validatedData = insertVideoTimeCapsuleSchema.parse(req.body);
       
-      // Compute nextReleaseDate from releaseDate + releaseTime in UTC
-      const nextReleaseDate = computeNextReleaseDate(
+      // Compute nextReleaseDate from releaseDate + releaseTime in memorial's timezone, converted to UTC
+      const nextReleaseDateObj = computeNextReleaseDate(
         validatedData.releaseDate,
-        validatedData.releaseTime || '00:00:00'
+        validatedData.releaseTime || '00:00:00',
+        memorial.timezone || 'America/New_York' // Use memorial's timezone for accurate scheduling
       );
       
-      // Create the capsule with computed nextReleaseDate
+      // Create the capsule with computed nextReleaseDate (convert Date to ISO string for Zod)
       const capsule = await storage.createVideoTimeCapsule({
         ...validatedData,
         memorialId: req.params.memorialId,
-        nextReleaseDate, // Set the UTC timestamp for scheduler
+        nextReleaseDate: nextReleaseDateObj.toISOString(), // Convert Date to ISO string for Zod validation
       });
       
       res.status(201).json(capsule);
@@ -2202,7 +2215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validatedData.releaseDate !== undefined || validatedData.releaseTime !== undefined) {
         const releaseDate = validatedData.releaseDate || capsule.releaseDate;
         const releaseTime = validatedData.releaseTime || capsule.releaseTime || '00:00:00';
-        updateData.nextReleaseDate = computeNextReleaseDate(releaseDate, releaseTime);
+        const nextReleaseDateObj = computeNextReleaseDate(
+          releaseDate,
+          releaseTime,
+          memorial.timezone || 'America/New_York' // Use memorial's timezone for accurate scheduling
+        );
+        updateData.nextReleaseDate = nextReleaseDateObj.toISOString(); // Convert Date to ISO string for Zod validation
       }
       
       // Update the capsule
