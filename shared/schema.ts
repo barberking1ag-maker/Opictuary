@@ -463,6 +463,76 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   index("idx_scheduled_messages_delivery_status").on(table.deliveryStatus),
 ]);
 
+// Video Time Capsules - Pre-recorded videos that release on milestones
+export const videoTimeCapsules = pgTable("video_time_capsules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  qrCodeId: varchar("qr_code_id").references(() => qrCodes.id, { onDelete: "set null" }), // Optional link to QR code
+  
+  // Video information
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(), // The pre-recorded video URL
+  thumbnailUrl: text("thumbnail_url"), // Video thumbnail
+  
+  // Recipient/viewer information
+  recipientName: text("recipient_name"), // Who the video is intended for (optional)
+  recipientRelationship: text("recipient_relationship"), // e.g., "daughter", "son", "friend"
+  
+  // Milestone scheduling
+  milestoneType: text("milestone_type").notNull(), // 'birthday', 'graduation', 'wedding', 'anniversary', 'baby_birth', 'holiday', 'custom'
+  customMilestoneName: text("custom_milestone_name"), // For custom milestones
+  releaseDate: text("release_date").notNull(), // When to unlock the video
+  releaseTime: text("release_time").default("00:00"), // Time of day to release (HH:MM format)
+  
+  // Recurrence support (for annual milestones like birthdays)
+  isRecurring: boolean("is_recurring").default(false),
+  recurrenceInterval: text("recurrence_interval"), // 'yearly', 'custom'
+  recurrenceEndDate: timestamp("recurrence_end_date"), // When to stop recurring
+  nextReleaseDate: timestamp("next_release_date"), // When to release next occurrence
+  releasedCount: integer("released_count").default(0), // Track how many times released
+  
+  // Release status
+  status: text("status").default("scheduled"), // 'scheduled', 'released', 'viewed', 'expired'
+  isReleased: boolean("is_released").default(false),
+  releasedAt: timestamp("released_at"),
+  
+  // Visibility controls
+  isPublic: boolean("is_public").default(false), // Whether visible to all memorial visitors
+  requiresQRScan: boolean("requires_qr_scan").default(false), // Only accessible via QR code
+  
+  // Analytics
+  viewCount: integer("view_count").default(0),
+  uniqueViewers: integer("unique_viewers").default(0),
+  lastViewedAt: timestamp("last_viewed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_video_time_capsules_memorial_id").on(table.memorialId),
+  index("idx_video_time_capsules_qr_code_id").on(table.qrCodeId),
+  index("idx_video_time_capsules_status").on(table.status),
+  index("idx_video_time_capsules_release_date").on(table.releaseDate),
+  index("idx_video_time_capsules_next_release_date").on(table.nextReleaseDate),
+  index("idx_video_time_capsules_is_released").on(table.isReleased),
+]);
+
+// Track individual views of video time capsules
+export const videoTimeCapsuleViews = pgTable("video_time_capsule_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  capsuleId: varchar("capsule_id").notNull().references(() => videoTimeCapsules.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  viewerName: text("viewer_name"),
+  viewerEmail: text("viewer_email"),
+  viewDuration: integer("view_duration"), // Seconds watched
+  completedVideo: boolean("completed_video").default(false), // Whether they watched to the end
+  viewedAt: timestamp("viewed_at").defaultNow(),
+}, (table) => [
+  index("idx_video_time_capsule_views_capsule_id").on(table.capsuleId),
+  index("idx_video_time_capsule_views_user_id").on(table.userId),
+  index("idx_video_time_capsule_views_viewed_at").on(table.viewedAt),
+]);
+
 export const fundraisers = pgTable("fundraisers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
@@ -1761,6 +1831,29 @@ export const insertScheduledMessageSchema = createInsertSchema(scheduledMessages
   status: z.enum(['draft', 'pending', 'sent', 'failed']).optional(),
 });
 
+export const insertVideoTimeCapsuleSchema = createInsertSchema(videoTimeCapsules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isReleased: true,
+  releasedAt: true,
+  viewCount: true,
+  uniqueViewers: true,
+  lastViewedAt: true,
+  releasedCount: true,
+}).extend({
+  customMilestoneName: z.string().optional(),
+  releaseTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (use HH:MM)").optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceInterval: z.enum(['yearly']).optional(),
+  status: z.enum(['scheduled', 'released', 'viewed', 'expired']).optional(),
+});
+
+export const insertVideoTimeCapsuleViewSchema = createInsertSchema(videoTimeCapsuleViews).omit({
+  id: true,
+  viewedAt: true,
+});
+
 export const insertFundraiserSchema = createInsertSchema(fundraisers).omit({
   id: true,
   createdAt: true,
@@ -2093,6 +2186,12 @@ export type MemorialLiveStreamViewer = typeof memorialLiveStreamViewers.$inferSe
 
 export type InsertScheduledMessage = z.infer<typeof insertScheduledMessageSchema>;
 export type ScheduledMessage = typeof scheduledMessages.$inferSelect;
+
+export type InsertVideoTimeCapsule = z.infer<typeof insertVideoTimeCapsuleSchema>;
+export type VideoTimeCapsule = typeof videoTimeCapsules.$inferSelect;
+
+export type InsertVideoTimeCapsuleView = z.infer<typeof insertVideoTimeCapsuleViewSchema>;
+export type VideoTimeCapsuleView = typeof videoTimeCapsuleViews.$inferSelect;
 
 export type InsertFundraiser = z.infer<typeof insertFundraiserSchema>;
 export type Fundraiser = typeof fundraisers.$inferSelect;
