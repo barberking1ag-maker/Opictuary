@@ -17,6 +17,8 @@ import {
   memorialLiveStreams,
   memorialLiveStreamViewers,
   scheduledMessages,
+  videoTimeCapsules,
+  videoTimeCapsuleViews,
   fundraisers,
   donations,
   celebrityMemorials,
@@ -110,6 +112,10 @@ import {
   type InsertMemorialLiveStreamViewer,
   type ScheduledMessage,
   type InsertScheduledMessage,
+  type VideoTimeCapsule,
+  type InsertVideoTimeCapsule,
+  type VideoTimeCapsuleView,
+  type InsertVideoTimeCapsuleView,
   type Fundraiser,
   type InsertFundraiser,
   type Donation,
@@ -366,6 +372,16 @@ export interface IStorage {
   createScheduledMessage(message: InsertScheduledMessage): Promise<ScheduledMessage>;
   updateScheduledMessage(id: string, message: Partial<InsertScheduledMessage>): Promise<ScheduledMessage | undefined>;
   deleteScheduledMessage(id: string): Promise<void>;
+
+  // Video Time Capsule operations
+  getVideoTimeCapsulesByMemorialId(memorialId: string): Promise<VideoTimeCapsule[]>;
+  getVideoTimeCapsule(id: string): Promise<VideoTimeCapsule | undefined>;
+  createVideoTimeCapsule(capsule: InsertVideoTimeCapsule): Promise<VideoTimeCapsule>;
+  updateVideoTimeCapsule(id: string, capsule: Partial<InsertVideoTimeCapsule>): Promise<VideoTimeCapsule | undefined>;
+  deleteVideoTimeCapsule(id: string): Promise<void>;
+  getReleasedVideoTimeCapsulesByMemorialId(memorialId: string): Promise<VideoTimeCapsule[]>;
+  recordVideoTimeCapsuleView(view: InsertVideoTimeCapsuleView): Promise<VideoTimeCapsuleView>;
+  getVideoTimeCapsuleViewsByCapsuleId(capsuleId: string): Promise<VideoTimeCapsuleView[]>;
 
   // Fundraiser operations
   getFundraisersByMemorialId(memorialId: string): Promise<Fundraiser[]>;
@@ -1300,6 +1316,59 @@ export class DatabaseStorage implements IStorage {
 
   async deleteScheduledMessage(id: string): Promise<void> {
     await db.delete(scheduledMessages).where(eq(scheduledMessages.id, id));
+  }
+
+  // Video Time Capsule operations
+  async getVideoTimeCapsulesByMemorialId(memorialId: string): Promise<VideoTimeCapsule[]> {
+    return await db.select().from(videoTimeCapsules).where(eq(videoTimeCapsules.memorialId, memorialId)).orderBy(desc(videoTimeCapsules.createdAt));
+  }
+
+  async getVideoTimeCapsule(id: string): Promise<VideoTimeCapsule | undefined> {
+    const [capsule] = await db.select().from(videoTimeCapsules).where(eq(videoTimeCapsules.id, id));
+    return capsule || undefined;
+  }
+
+  async createVideoTimeCapsule(capsule: InsertVideoTimeCapsule): Promise<VideoTimeCapsule> {
+    const [created] = await db.insert(videoTimeCapsules).values(capsule).returning();
+    return created;
+  }
+
+  async updateVideoTimeCapsule(id: string, capsule: Partial<InsertVideoTimeCapsule>): Promise<VideoTimeCapsule | undefined> {
+    const [updated] = await db.update(videoTimeCapsules).set(capsule).where(eq(videoTimeCapsules.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteVideoTimeCapsule(id: string): Promise<void> {
+    await db.delete(videoTimeCapsules).where(eq(videoTimeCapsules.id, id));
+  }
+
+  async getReleasedVideoTimeCapsulesByMemorialId(memorialId: string): Promise<VideoTimeCapsule[]> {
+    return await db.select().from(videoTimeCapsules)
+      .where(and(
+        eq(videoTimeCapsules.memorialId, memorialId),
+        eq(videoTimeCapsules.isReleased, true)
+      ))
+      .orderBy(desc(videoTimeCapsules.releasedAt));
+  }
+
+  async recordVideoTimeCapsuleView(view: InsertVideoTimeCapsuleView): Promise<VideoTimeCapsuleView> {
+    const [created] = await db.insert(videoTimeCapsuleViews).values(view).returning();
+    
+    // Increment view count on the capsule
+    await db.update(videoTimeCapsules)
+      .set({ 
+        viewCount: sql`${videoTimeCapsules.viewCount} + 1`,
+        lastViewedAt: new Date()
+      })
+      .where(eq(videoTimeCapsules.id, view.capsuleId));
+    
+    return created;
+  }
+
+  async getVideoTimeCapsuleViewsByCapsuleId(capsuleId: string): Promise<VideoTimeCapsuleView[]> {
+    return await db.select().from(videoTimeCapsuleViews)
+      .where(eq(videoTimeCapsuleViews.capsuleId, capsuleId))
+      .orderBy(desc(videoTimeCapsuleViews.viewedAt));
   }
 
   // Fundraiser operations
