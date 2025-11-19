@@ -65,6 +65,7 @@ export const memorials = pgTable("memorials", {
   cemeteryCoordinates: json("cemetery_coordinates").$type<{ lat: number; lng: number }>(),
   fontFamily: text("font_family"),
   symbol: text("symbol"),
+  timezone: varchar("timezone").default("America/New_York"),
   isPublic: boolean("is_public").default(false),
   creatorEmail: text("creator_email"),
   ownershipType: text("ownership_type").default("family_created"),
