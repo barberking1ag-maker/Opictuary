@@ -6,6 +6,7 @@ import { ZodError } from "zod";
 import { z } from "zod";
 import { moderateContent } from "./contentModeration";
 import { fromZonedTime, toZonedTime, format } from "date-fns-tz";
+import { openai } from "./openai";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -5753,7 +5754,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 3. POST /api/product-orders - Create new product order (SERVER-SIDE PRICING)
+  // 3. POST /api/products/generate-ai-design - Generate AI card design using DALL-E
+  // TODO: Add rate limiting middleware (e.g., express-rate-limit) to prevent abuse
+  app.post("/api/products/generate-ai-design", isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, style, deceasedName } = req.body;
+      
+      if (!prompt || !style) {
+        return res.status(400).json({ error: "Prompt and style are required" });
+      }
+
+      // CRITICAL SECURITY: Content moderation check BEFORE calling OpenAI
+      try {
+        await moderateContent(prompt);
+      } catch (moderationError: any) {
+        console.warn("[AI Design] Content moderation rejected prompt:", moderationError.message);
+        return res.status(400).json({ 
+          error: "Your prompt contains inappropriate content. Please revise and try again.",
+          details: "Content moderation failed"
+        });
+      }
+
+      // Build enhanced prompt based on style
+      const stylePrompts: Record<string, string> = {
+        realistic: "photorealistic, detailed, lifelike",
+        watercolor: "watercolor painting, soft colors, artistic brushstrokes",
+        oil_painting: "oil painting, classical art style, rich colors, textured",
+        digital_art: "modern digital art, clean lines, vibrant colors",
+        sketch: "pencil sketch, hand-drawn, artistic, delicate lines"
+      };
+
+      const styleDescription = stylePrompts[style] || stylePrompts.realistic;
+      
+      // Construct full prompt for DALL-E
+      const fullPrompt = `Memorial card design for ${deceasedName || 'a loved one'}. ${prompt}. Style: ${styleDescription}. Beautiful, respectful, and dignified memorial artwork suitable for a memorial card.`;
+
+      console.log("[AI Design] Generating image with prompt:", fullPrompt);
+
+      // Generate image using OpenAI DALL-E
+      let response;
+      try {
+        response = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: fullPrompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard"
+        });
+      } catch (openaiError: any) {
+        console.error("[AI Design] OpenAI API error:", openaiError);
+        
+        // Provide user-friendly error messages
+        if (openaiError.code === 'content_policy_violation') {
+          return res.status(400).json({ 
+            error: "The image content violates OpenAI's usage policies. Please try a different description." 
+          });
+        } else if (openaiError.status === 429) {
+          return res.status(429).json({ 
+            error: "Too many requests. Please try again in a few moments." 
+          });
+        } else if (openaiError.status === 500 || openaiError.status === 503) {
+          return res.status(503).json({ 
+            error: "The AI service is temporarily unavailable. Please try again later." 
+          });
+        }
+        
+        throw openaiError; // Re-throw for general error handler
+      }
+
+      // Normalize response - ALWAYS return {imageUrl: string}
+      const imageUrl = response.data[0]?.url;
+      
+      if (!imageUrl) {
+        console.error("[AI Design] No image URL in OpenAI response:", response);
+        return res.status(500).json({ 
+          error: "Failed to generate image. The AI service did not return an image URL." 
+        });
+      }
+
+      console.log("[AI Design] Image generated successfully:", imageUrl);
+
+      // Return normalized response
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("[AI Design] Unexpected error:", error);
+      res.status(500).json({ 
+        error: "An unexpected error occurred while generating the AI design. Please try again." 
+      });
+    }
+  });
+
+  // 4. POST /api/product-orders - Create new product order (SERVER-SIDE PRICING)
   app.post("/api/product-orders", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -5766,15 +5857,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // CRITICAL SECURITY: Validate aiDesignImageUrl is a valid URL if provided
+      if (orderData.aiDesignImageUrl) {
+        try {
+          const url = new URL(orderData.aiDesignImageUrl);
+          // Ensure it's HTTP or HTTPS
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return res.status(400).json({ 
+              error: "Invalid AI design image URL: Must be an HTTP or HTTPS URL" 
+            });
+          }
+        } catch (urlError) {
+          return res.status(400).json({ 
+            error: "Invalid AI design image URL format" 
+          });
+        }
+      }
+      
       // CRITICAL SECURITY FIX: Fetch product from database to get authentic pricing
       const product = await storage.getProduct(orderData.productId);
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
       }
       
-      // CRITICAL SECURITY FIX: Calculate pricing server-side (never trust client)
+      // CRITICAL SECURITY FIX: Calculate AI premium server-side (NEVER trust client)
+      // This ensures users cannot manipulate the AI design premium pricing
       const quantity = orderData.quantity || 1;
-      const subtotal = Number(product.basePrice) * quantity;
+      let subtotal = Number(product.basePrice) * quantity;
+      
+      // AI Design Premium: $15 for AI-generated memorial card designs
+      const aiDesignPremium = orderData.aiDesignImageUrl ? 15.00 : 0;
+      subtotal += aiDesignPremium;
+      
       const shipping = 15.00; // Fixed shipping rate
       const tax = subtotal * 0.08; // 8% tax rate
       const total = subtotal + shipping + tax;
@@ -5791,6 +5905,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customization: orderData.customization || {},
         shippingAddress: orderData.shippingAddress,
         memorialId: orderData.memorialId || null,
+        // AI Design fields (if provided)
+        aiDesignPrompt: orderData.aiDesignPrompt || null,
+        aiDesignStyle: orderData.aiDesignStyle || null,
+        aiDesignImageUrl: orderData.aiDesignImageUrl || null,
+        aiDesignPremium: aiDesignPremium.toFixed(2),
         // Server-calculated pricing (override any client values)
         subtotal: subtotal.toFixed(2),
         shipping: shipping.toFixed(2),

@@ -19,7 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Package, ArrowLeft, ArrowRight, Check, Loader2, CreditCard, MapPin, Sparkles } from "lucide-react";
+import { Package, ArrowLeft, ArrowRight, Check, Loader2, CreditCard, MapPin, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Product, Memorial } from "@shared/schema";
 
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
@@ -151,6 +152,13 @@ export default function ProductCustomize() {
   const [shippingAddress, setShippingAddress] = useState<ShippingFormData | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  
+  // AI Design state
+  const [aiDesignEnabled, setAiDesignEnabled] = useState(false);
+  const [aiDesignPrompt, setAiDesignPrompt] = useState("");
+  const [aiDesignStyle, setAiDesignStyle] = useState("realistic");
+  const [aiDesignImageUrl, setAiDesignImageUrl] = useState<string | null>(null);
+  const [generatingDesign, setGeneratingDesign] = useState(false);
 
   const form = useForm<ShippingFormData>({
     resolver: zodResolver(shippingSchema),
@@ -211,13 +219,44 @@ export default function ProductCustomize() {
     },
   });
 
+  const generateAiDesignMutation = useMutation({
+    mutationFn: async (designData: { prompt: string; style: string; deceasedName?: string }) => {
+      const res = await apiRequest("POST", "/api/products/generate-ai-design", designData);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setAiDesignImageUrl(data.imageUrl);
+      setGeneratingDesign(false);
+      toast({
+        title: "Design Generated",
+        description: "Your AI-generated design is ready!",
+      });
+    },
+    onError: (error: any) => {
+      setGeneratingDesign(false);
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate AI design",
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (currentStep === 4 && !pendingOrderId && product && shippingAddress) {
       // SECURITY FIX: Don't send pricing to server, let server calculate it
+      const orderCustomization = {
+        ...customization,
+        aiDesignEnabled,
+        aiDesignPrompt: aiDesignEnabled ? aiDesignPrompt : undefined,
+        aiDesignStyle: aiDesignEnabled ? aiDesignStyle : undefined,
+        aiDesignImageUrl: aiDesignEnabled ? aiDesignImageUrl : undefined,
+      };
+      
       createOrderMutation.mutate({
         productId: product.id,
         quantity,
-        customization,
+        customization: orderCustomization,
         shippingAddress,
         memorialId: customization.memorialId || null,
       });
@@ -288,12 +327,42 @@ export default function ProductCustomize() {
   const calculateTotal = () => {
     // Match server-side calculation for display purposes
     const subtotal = parseFloat(product.basePrice) * quantity;
+    const aiDesignPremium = aiDesignEnabled ? 15.00 : 0;
     const shipping = 15.00; // Fixed shipping rate (matches server)
-    const tax = subtotal * 0.08; // 8% tax rate (matches server)
-    return subtotal + shipping + tax;
+    const tax = (subtotal + aiDesignPremium) * 0.08; // 8% tax rate (matches server)
+    return subtotal + aiDesignPremium + shipping + tax;
+  };
+
+  const handleGenerateDesign = () => {
+    if (!aiDesignPrompt.trim()) {
+      toast({
+        title: "Prompt Required",
+        description: "Please enter a design prompt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingDesign(true);
+    const selectedMemorial = memorials.find(m => m.id === customization.memorialId);
+    generateAiDesignMutation.mutate({
+      prompt: aiDesignPrompt,
+      style: aiDesignStyle,
+      deceasedName: selectedMemorial?.name,
+    });
   };
 
   const handleNext = () => {
+    // Check if AI design is enabled but not generated (step 2 only)
+    if (currentStep === 2 && aiDesignEnabled && !aiDesignImageUrl) {
+      toast({
+        title: "AI Design Required",
+        description: "Please generate your AI design before continuing",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (currentStep === 3) {
       form.handleSubmit((data) => {
         setShippingAddress(data);
@@ -568,6 +637,132 @@ export default function ProductCustomize() {
                   </div>
                 )}
 
+                {/* AI Design Feature - Only for Memorial Cards */}
+                {product.category === 'memorial-cards' && (
+                  <>
+                    <Separator />
+                    
+                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 space-y-4 border border-primary/20">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="ai-design"
+                          checked={aiDesignEnabled}
+                          onCheckedChange={(checked) => {
+                            setAiDesignEnabled(checked as boolean);
+                            if (!checked) {
+                              setAiDesignImageUrl(null);
+                              setAiDesignPrompt("");
+                            }
+                          }}
+                          data-testid="checkbox-ai-design"
+                        />
+                        <div className="flex-1">
+                          <label
+                            htmlFor="ai-design"
+                            className="text-sm font-semibold cursor-pointer flex items-center gap-2"
+                          >
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            Add Custom AI-Generated Design
+                            <Badge variant="secondary" className="ml-2">+$15</Badge>
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Create a unique, personalized design using AI
+                          </p>
+                        </div>
+                      </div>
+
+                      {aiDesignEnabled && (
+                        <div className="space-y-4 pl-7">
+                          {/* Design Prompt */}
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-prompt">Design Description</Label>
+                            <Textarea
+                              id="ai-prompt"
+                              placeholder="Describe the design you envision..."
+                              value={aiDesignPrompt}
+                              onChange={(e) => setAiDesignPrompt(e.target.value)}
+                              rows={3}
+                              data-testid="input-ai-prompt"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Example: "Peaceful garden scene with butterflies and roses at sunset"
+                            </p>
+                          </div>
+
+                          {/* Style Selector */}
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-style">Art Style</Label>
+                            <Select
+                              value={aiDesignStyle}
+                              onValueChange={setAiDesignStyle}
+                            >
+                              <SelectTrigger id="ai-style" data-testid="select-ai-style">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="realistic">Realistic</SelectItem>
+                                <SelectItem value="watercolor">Watercolor</SelectItem>
+                                <SelectItem value="oil_painting">Oil Painting</SelectItem>
+                                <SelectItem value="digital_art">Digital Art</SelectItem>
+                                <SelectItem value="sketch">Sketch</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Generate Button */}
+                          {!aiDesignImageUrl && (
+                            <Button
+                              type="button"
+                              onClick={handleGenerateDesign}
+                              disabled={generatingDesign || !aiDesignPrompt.trim()}
+                              className="w-full"
+                              data-testid="button-generate-design"
+                            >
+                              {generatingDesign ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Generating Design...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-4 h-4 mr-2" />
+                                  Generate Design
+                                </>
+                              )}
+                            </Button>
+                          )}
+
+                          {/* Image Preview */}
+                          {aiDesignImageUrl && (
+                            <div className="space-y-3">
+                              <div className="relative rounded-lg overflow-hidden border border-primary/20">
+                                <img
+                                  src={aiDesignImageUrl}
+                                  alt="AI Generated Design"
+                                  className="w-full h-64 object-cover"
+                                  data-testid="img-ai-design-preview"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  setAiDesignImageUrl(null);
+                                }}
+                                className="w-full"
+                                data-testid="button-regenerate-design"
+                              >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Regenerate Design
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
                 <Separator />
 
                 {/* Price Calculation */}
@@ -577,8 +772,17 @@ export default function ProductCustomize() {
                       <span className="text-muted-foreground">Base Price ({quantity}× ${parseFloat(product.basePrice).toFixed(2)})</span>
                       <span className="font-semibold">${(parseFloat(product.basePrice) * quantity).toFixed(2)}</span>
                     </div>
+                    {aiDesignEnabled && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          AI Design Premium
+                        </span>
+                        <span className="font-semibold">$15.00</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Customization Fees</span>
+                      <span className="text-muted-foreground">Other Customization</span>
                       <span className="font-semibold">$0.00</span>
                     </div>
                     <Separator />
@@ -762,7 +966,36 @@ export default function ProductCustomize() {
                         <span className="font-medium">{customization.engravingText.substring(0, 30)}...</span>
                       </div>
                     )}
+                    {aiDesignEnabled && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          AI Design
+                        </span>
+                        <span className="font-medium">Included</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* AI Design Preview */}
+                  {aiDesignEnabled && aiDesignImageUrl && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm">AI-Generated Design Preview</h4>
+                        <div className="relative rounded-lg overflow-hidden border border-primary/20">
+                          <img
+                            src={aiDesignImageUrl}
+                            alt="AI Generated Design Preview"
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Style: {aiDesignStyle.replace('_', ' ')} • {aiDesignPrompt.substring(0, 50)}...
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   <Separator />
 
@@ -787,13 +1020,22 @@ export default function ProductCustomize() {
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium">${(parseFloat(product.basePrice) * quantity).toFixed(2)}</span>
                     </div>
+                    {aiDesignEnabled && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          AI Design Premium
+                        </span>
+                        <span className="font-medium">$15.00</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span className="font-medium">$0.00</span>
+                      <span className="font-medium">$15.00</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span className="font-medium">$0.00</span>
+                      <span className="text-muted-foreground">Tax (8%)</span>
+                      <span className="font-medium">${((parseFloat(product.basePrice) * quantity + (aiDesignEnabled ? 15 : 0)) * 0.08).toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg">

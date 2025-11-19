@@ -2482,6 +2482,11 @@ export const productOrders = pgTable("product_orders", {
   deliveredAt: timestamp("delivered_at"),
   // QR code reference (generated when order is processed)
   qrCodeId: varchar("qr_code_id").references(() => qrCodes.id),
+  // AI Design customization (for memorial cards)
+  aiDesignPrompt: text("ai_design_prompt"),
+  aiDesignStyle: text("ai_design_style"), // 'realistic', 'watercolor', 'oil_painting', 'digital_art', 'sketch'
+  aiDesignImageUrl: text("ai_design_image_url"),
+  aiDesignPremium: decimal("ai_design_premium", { precision: 10, scale: 2 }).default("0"),
   // Notes
   customerNotes: text("customer_notes"),
   internalNotes: text("internal_notes"),
