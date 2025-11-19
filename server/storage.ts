@@ -75,6 +75,8 @@ import {
   byusPrescriptions,
   byusCrisisEvents,
   byusCrisisCompanion,
+  products,
+  productOrders,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -199,6 +201,10 @@ import {
   chatMessages,
   type ChatMessage,
   type InsertChatMessage,
+  type Product,
+  type InsertProduct,
+  type ProductOrder,
+  type InsertProductOrder,
   type ReligiousSymbol,
   type InsertReligiousSymbol,
   type MemorialSymbol,
@@ -713,6 +719,25 @@ export interface IStorage {
   getActiveCrisisCompanions(): Promise<ByusCrisisCompanion[]>;
   updateCrisisCompanion(id: string, companion: Partial<InsertByusCrisisCompanion>): Promise<ByusCrisisCompanion | undefined>;
   deleteCrisisCompanion(id: string): Promise<void>;
+  
+  // Physical Product operations
+  createProduct(product: InsertProduct): Promise<Product>;
+  getProduct(id: string): Promise<Product | undefined>;
+  getProducts(category?: string, isActive?: boolean): Promise<Product[]>;
+  updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined>;
+  deleteProduct(id: string): Promise<void>;
+  
+  // Product Order operations
+  createProductOrder(order: InsertProductOrder): Promise<ProductOrder>;
+  getProductOrder(id: string): Promise<ProductOrder | undefined>;
+  getProductOrderByOrderNumber(orderNumber: string): Promise<ProductOrder | undefined>;
+  getAllProductOrders(): Promise<ProductOrder[]>;
+  getProductOrdersByUser(userId: string): Promise<ProductOrder[]>;
+  getProductOrdersByMemorial(memorialId: string): Promise<ProductOrder[]>;
+  updateProductOrder(id: string, order: Partial<InsertProductOrder>): Promise<ProductOrder | undefined>;
+  updateOrderStatus(id: string, status: string): Promise<ProductOrder | undefined>;
+  updateOrderPaymentStatus(id: string, paymentStatus: string, paymentIntentId?: string): Promise<ProductOrder | undefined>;
+  addOrderTracking(id: string, trackingNumber: string, carrier: string, estimatedDelivery?: Date): Promise<ProductOrder | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3675,6 +3700,129 @@ export class DatabaseStorage implements IStorage {
       .from(byusProfessionalReviews)
       .where(eq(byusProfessionalReviews.crisisEventId, crisisEventId))
       .orderBy(desc(byusProfessionalReviews.createdAt));
+  }
+
+  // Physical Product operations
+  async createProduct(product: InsertProduct): Promise<Product> {
+    const [created] = await db.insert(products).values(product).returning();
+    return created;
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [product] = await db.select()
+      .from(products)
+      .where(eq(products.id, id));
+    return product || undefined;
+  }
+
+  async getProducts(category?: string, isActive?: boolean): Promise<Product[]> {
+    let query = db.select().from(products);
+    
+    const conditions = [];
+    if (category) {
+      conditions.push(eq(products.category, category));
+    }
+    if (isActive !== undefined) {
+      conditions.push(eq(products.isActive, isActive));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(products.createdAt));
+  }
+
+  async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined> {
+    const [updated] = await db.update(products)
+      .set({ ...product, updatedAt: new Date() })
+      .where(eq(products.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
+  }
+
+  // Product Order operations
+  async createProductOrder(order: InsertProductOrder): Promise<ProductOrder> {
+    const [created] = await db.insert(productOrders).values(order).returning();
+    return created;
+  }
+
+  async getProductOrder(id: string): Promise<ProductOrder | undefined> {
+    const [order] = await db.select()
+      .from(productOrders)
+      .where(eq(productOrders.id, id));
+    return order || undefined;
+  }
+
+  async getProductOrderByOrderNumber(orderNumber: string): Promise<ProductOrder | undefined> {
+    const [order] = await db.select()
+      .from(productOrders)
+      .where(eq(productOrders.orderNumber, orderNumber));
+    return order || undefined;
+  }
+
+  async getAllProductOrders(): Promise<ProductOrder[]> {
+    return await db.select()
+      .from(productOrders)
+      .orderBy(desc(productOrders.createdAt));
+  }
+
+  async getProductOrdersByUser(userId: string): Promise<ProductOrder[]> {
+    return await db.select()
+      .from(productOrders)
+      .where(eq(productOrders.userId, userId))
+      .orderBy(desc(productOrders.createdAt));
+  }
+
+  async getProductOrdersByMemorial(memorialId: string): Promise<ProductOrder[]> {
+    return await db.select()
+      .from(productOrders)
+      .where(eq(productOrders.memorialId, memorialId))
+      .orderBy(desc(productOrders.createdAt));
+  }
+
+  async updateProductOrder(id: string, order: Partial<InsertProductOrder>): Promise<ProductOrder | undefined> {
+    const [updated] = await db.update(productOrders)
+      .set({ ...order, updatedAt: new Date() })
+      .where(eq(productOrders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<ProductOrder | undefined> {
+    const [updated] = await db.update(productOrders)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(productOrders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateOrderPaymentStatus(id: string, paymentStatus: string, paymentIntentId?: string): Promise<ProductOrder | undefined> {
+    const updateData: any = { paymentStatus, updatedAt: new Date() };
+    if (paymentIntentId) {
+      updateData.paymentIntentId = paymentIntentId;
+    }
+    const [updated] = await db.update(productOrders)
+      .set(updateData)
+      .where(eq(productOrders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async addOrderTracking(id: string, trackingNumber: string, carrier: string, estimatedDelivery?: Date): Promise<ProductOrder | undefined> {
+    const updateData: any = { trackingNumber, carrier, updatedAt: new Date() };
+    if (estimatedDelivery) {
+      updateData.estimatedDelivery = estimatedDelivery;
+    }
+    const [updated] = await db.update(productOrders)
+      .set(updateData)
+      .where(eq(productOrders.id, id))
+      .returning();
+    return updated || undefined;
   }
 }
 

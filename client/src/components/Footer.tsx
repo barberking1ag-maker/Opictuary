@@ -24,6 +24,13 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
             <h3 className="font-semibold mb-4">Our Features</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
+                <Link href="/products">
+                  <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-products">
+                    Products
+                  </span>
+                </Link>
+              </li>
+              <li>
                 <Link href="/upcoming-messages">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-future-messages">
                     Future Messages

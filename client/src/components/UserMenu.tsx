@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3, Calendar, Image } from "lucide-react";
+import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3, Calendar, Image, ShoppingBag } from "lucide-react";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -115,6 +115,12 @@ export function UserMenu() {
               <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-admin">
                 <BarChart3 className="mr-2 h-4 w-4" />
                 <span>Admin Dashboard</span>
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/admin/product-orders">
+              <DropdownMenuItem className="cursor-pointer" data-testid="menu-item-admin-orders">
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                <span>Product Orders</span>
               </DropdownMenuItem>
             </Link>
           </>

@@ -42,6 +42,7 @@ import UserProfile from "@/pages/UserProfile";
 import MyMemorials from "@/pages/MyMemorials";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminScreenshots from "@/pages/AdminScreenshots";
+import AdminProductOrders from "@/pages/AdminProductOrders";
 import Privacy from "@/pages/Privacy";
 import ChildSafety from "@/pages/ChildSafety";
 import SupportHub from "@/pages/SupportHub";
@@ -57,10 +58,14 @@ import CelebrityEstateContent from "@/pages/CelebrityEstateContent";
 import FutureMessages from "@/pages/FutureMessages";
 import UpcomingMessages from "@/pages/UpcomingMessages";
 import VideoTimeCapsules from "@/pages/VideoTimeCapsules";
+import Products from "@/pages/Products";
+import ProductCustomize from "@/pages/ProductCustomize";
+import MyOrders from "@/pages/MyOrders";
+import OrderTracking from "@/pages/OrderTracking";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -112,6 +117,12 @@ function Router() {
                 <Button variant="ghost" size="sm" data-testid="nav-create-memorial" className="text-sm">
                   <FileText className="w-4 h-4 mr-1.5" />
                   Create Memorial
+                </Button>
+              </Link>
+              <Link href="/products">
+                <Button variant="ghost" size="sm" data-testid="nav-products" className="text-sm">
+                  <ShoppingBag className="w-4 h-4 mr-1.5" />
+                  Products
                 </Button>
               </Link>
               
@@ -326,8 +337,16 @@ function Router() {
         <Route path="/memorial/:id/video-time-capsules" component={VideoTimeCapsules} />
         <Route path="/upcoming-messages" component={UpcomingMessages} />
         <Route path="/celebrity/:id/estate-content" component={CelebrityEstateContent} />
+        
+        {/* Product Routes */}
+        <Route path="/products" component={Products} />
+        <Route path="/products/:productId/customize" component={ProductCustomize} />
+        <Route path="/orders" component={MyOrders} />
+        <Route path="/orders/:orderId" component={OrderTracking} />
+        
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/screenshots" component={AdminScreenshots} />
+        <Route path="/admin/product-orders" component={AdminProductOrders} />
         <Route path="/admin/qr-code" component={QRCodeGenerator} />
         <Route path="/qr-code" component={QRCodeGenerator} />
         <Route path="/privacy" component={Privacy} />

@@ -89,6 +89,8 @@ import {
   insertByusMediationCategorySchema,
   insertByusMediationHistorySchema,
   insertByusFeedbackSchema,
+  insertProductSchema,
+  insertProductOrderSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -107,6 +109,13 @@ const qrCodeMediaSchema = z.object({
 });
 
 const qrCodeMediaUpdateSchema = qrCodeMediaSchema.partial();
+
+// Product order update whitelist schema - only allow safe fields to prevent pricing manipulation
+const updateOrderSchema = z.object({
+  paymentIntentId: z.string().optional(),
+  paymentStatus: z.enum(['pending', 'paid', 'failed', 'refunded']).optional(),
+  customerNotes: z.string().optional(), // Safe field for customer messages
+}).strict(); // Reject any extra fields not in whitelist
 
 // Lazy-load Stripe only when needed to avoid boot crashes if not configured
 let stripe: Stripe | null = null;
@@ -5697,6 +5706,456 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error getting professional review:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Physical Memorial Products Routes
+
+  // 1. GET /api/products - List all products with optional filters
+  app.get("/api/products", async (req, res) => {
+    try {
+      const { category, isActive } = req.query;
+      
+      // Parse isActive filter
+      let isActiveFilter: boolean | undefined;
+      if (isActive === 'true') {
+        isActiveFilter = true;
+      } else if (isActive === 'false') {
+        isActiveFilter = false;
+      }
+      
+      const products = await storage.getProducts(
+        category as string | undefined,
+        isActiveFilter
+      );
+      
+      res.json(products);
+    } catch (error: any) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 2. GET /api/products/:id - Get single product details
+  app.get("/api/products/:id", async (req, res) => {
+    try {
+      const product = await storage.getProduct(req.params.id);
+      
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      res.json(product);
+    } catch (error: any) {
+      console.error("Error fetching product:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 3. POST /api/product-orders - Create new product order (SERVER-SIDE PRICING)
+  app.post("/api/product-orders", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const orderData = req.body;
+      
+      // Validate required fields
+      if (!orderData.productId || !orderData.shippingAddress) {
+        return res.status(400).json({ 
+          error: "Missing required fields: productId and shippingAddress are required" 
+        });
+      }
+      
+      // CRITICAL SECURITY FIX: Fetch product from database to get authentic pricing
+      const product = await storage.getProduct(orderData.productId);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
+      // CRITICAL SECURITY FIX: Calculate pricing server-side (never trust client)
+      const quantity = orderData.quantity || 1;
+      const subtotal = Number(product.basePrice) * quantity;
+      const shipping = 15.00; // Fixed shipping rate
+      const tax = subtotal * 0.08; // 8% tax rate
+      const total = subtotal + shipping + tax;
+      
+      // Generate unique order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      
+      // Validate the order data with schema, using server-calculated pricing
+      const validatedData = insertProductOrderSchema.parse({
+        productId: orderData.productId,
+        userId,
+        orderNumber,
+        quantity,
+        customization: orderData.customization || {},
+        shippingAddress: orderData.shippingAddress,
+        memorialId: orderData.memorialId || null,
+        // Server-calculated pricing (override any client values)
+        subtotal: subtotal.toFixed(2),
+        shipping: shipping.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2),
+        paymentStatus: 'pending',
+        status: 'pending',
+      });
+      
+      // Create the order
+      const order = await storage.createProductOrder(validatedData);
+      
+      // Create QR code if memorialId is provided
+      if (orderData.memorialId) {
+        try {
+          // Determine QR purpose based on product category
+          let qrPurpose = 'memorial_card';
+          if (product.category === 'plaques') {
+            qrPurpose = 'plaque';
+          } else if (product.category === 'headstone-markers') {
+            qrPurpose = 'tombstone';
+          }
+          
+          const createdQRCode = await storage.generateQRCode(
+            orderData.memorialId,
+            qrPurpose,
+            undefined,
+            product.name,
+            `QR code for ${product.name} - Order ${orderNumber}`,
+            undefined,
+            undefined,
+            undefined
+          );
+          
+          // Update order with QR code reference
+          await storage.updateProductOrder(order.id, {
+            qrCodeId: createdQRCode.id,
+          });
+        } catch (qrError: any) {
+          console.error("Error creating QR code for product order:", qrError);
+        }
+      }
+      
+      res.status(201).json(order);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid order data", 
+          details: error.errors 
+        });
+      }
+      console.error("Error creating product order:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 4. GET /api/admin/product-orders - Admin only, returns all orders
+  app.get("/api/admin/product-orders", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orders = await storage.getAllProductOrders();
+      res.json(orders);
+    } catch (error: any) {
+      console.error("Error fetching all product orders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 5. GET /api/product-orders/user - Get all orders for logged-in user
+  app.get("/api/product-orders/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const orders = await storage.getProductOrdersByUser(userId);
+      res.json(orders);
+    } catch (error: any) {
+      console.error("Error fetching user orders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 5. GET /api/product-orders/:id - Get single order details with ownership verification
+  app.get("/api/product-orders/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const order = await storage.getProductOrder(req.params.id);
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // Check if user owns this order or is admin
+      const user = await storage.getUser(userId);
+      const isOwner = order.userId === userId;
+      const isUserAdmin = user?.isAdmin || false;
+      
+      if (!isOwner && !isUserAdmin) {
+        return res.status(403).json({ error: "Access denied: You don't have permission to view this order" });
+      }
+      
+      res.json(order);
+    } catch (error: any) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 6. PATCH /api/product-orders/:id/status - Update order status (admin only)
+  app.patch("/api/product-orders/:id/status", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+      }
+      
+      // Validate status value
+      const validStatuses = ['pending', 'processing', 'in_production', 'shipped', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
+        });
+      }
+      
+      const updatedOrder = await storage.updateProductOrder(req.params.id, { status });
+      
+      if (!updatedOrder) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      res.json(updatedOrder);
+    } catch (error: any) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 7. PATCH /api/product-orders/:id/tracking - Add tracking info (admin only)
+  app.patch("/api/product-orders/:id/tracking", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { trackingNumber, carrier, estimatedDelivery } = req.body;
+      
+      if (!trackingNumber || !carrier) {
+        return res.status(400).json({ error: "Tracking number and carrier are required" });
+      }
+      
+      const updateData: any = {
+        trackingNumber,
+        carrier,
+      };
+      
+      if (estimatedDelivery) {
+        updateData.estimatedDelivery = new Date(estimatedDelivery);
+      }
+      
+      const updatedOrder = await storage.updateProductOrder(req.params.id, updateData);
+      
+      if (!updatedOrder) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      res.json(updatedOrder);
+    } catch (error: any) {
+      console.error("Error updating tracking info:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 8. GET /api/memorials/:memorialId/product-orders - Get orders for specific memorial
+  app.get("/api/memorials/:memorialId/product-orders", isAuthenticated, async (req: any, res) => {
+    try {
+      const { memorialId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify memorial exists
+      const memorial = await storage.getMemorial(memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+      
+      // Get orders for this memorial
+      const orders = await storage.getProductOrdersByMemorial(memorialId);
+      
+      // Filter to only show orders owned by the user unless they're admin
+      const user = await storage.getUser(userId);
+      const isUserAdmin = user?.isAdmin || false;
+      
+      if (!isUserAdmin) {
+        // Non-admin users only see their own orders
+        const filteredOrders = orders.filter(order => order.userId === userId);
+        return res.json(filteredOrders);
+      }
+      
+      res.json(orders);
+    } catch (error: any) {
+      console.error("Error fetching memorial orders:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // 9. POST /api/product-orders/:id/payment-intent - Create Stripe PaymentIntent for order
+  app.post("/api/product-orders/:id/payment-intent", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      // 1. Fetch order from database
+      const order = await storage.getProductOrder(id);
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // 2. Verify user owns order (or is admin)
+      const user = await storage.getUser(userId);
+      const isOwner = order.userId === userId;
+      const isUserAdmin = user?.isAdmin || false;
+      
+      if (!isOwner && !isUserAdmin) {
+        return res.status(403).json({ error: "Forbidden: You don't have permission to create payment for this order" });
+      }
+      
+      // 3. Check if PaymentIntent already exists
+      if (order.paymentIntentId) {
+        try {
+          const stripe = getStripe();
+          const paymentIntent = await stripe.paymentIntents.retrieve(order.paymentIntentId);
+          return res.json({ clientSecret: paymentIntent.client_secret });
+        } catch (stripeError: any) {
+          console.error("Error retrieving existing PaymentIntent:", stripeError);
+          // If retrieval fails, we'll create a new one below
+        }
+      }
+      
+      // 4. Create new Stripe PaymentIntent
+      const stripe = getStripe();
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(Number(order.total) * 100), // Convert dollars to cents
+        currency: 'usd',
+        metadata: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          userId: order.userId,
+          memorialId: order.memorialId || '',
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      
+      // 5. Store paymentIntentId in order
+      await storage.updateOrderPaymentStatus(id, 'pending', paymentIntent.id);
+      
+      // 6. Return clientSecret for frontend
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ error: error.message || "Failed to create payment intent" });
+    }
+  });
+
+  // 10. PATCH /api/product-orders/:id - Update order (payment confirmation, etc.)
+  app.patch("/api/product-orders/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      // Fetch existing order
+      const order = await storage.getProductOrder(id);
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // Verify user owns order (or is admin)
+      const user = await storage.getUser(userId);
+      const isOwner = order.userId === userId;
+      const isUserAdmin = user?.isAdmin || false;
+      
+      if (!isOwner && !isUserAdmin) {
+        return res.status(403).json({ error: "Forbidden: You don't have permission to update this order" });
+      }
+      
+      // SECURITY FIX: Use whitelist schema instead of insertProductOrderSchema.partial()
+      // This prevents clients from modifying subtotal, tax, total, shipping, quantity, productId
+      const validatedData = updateOrderSchema.parse(req.body);
+      
+      // Issue 3: Prevent updates to already-paid orders (idempotent lock)
+      if (order.paymentStatus === 'paid') {
+        // Allow idempotent calls only (same paymentIntentId)
+        if (validatedData.paymentIntentId && validatedData.paymentIntentId !== order.paymentIntentId) {
+          return res.status(400).json({ 
+            error: 'Order already paid. Cannot change payment intent.'
+          });
+        }
+        // If trying to update with same intentId, return success without re-verification
+        if (validatedData.paymentIntentId === order.paymentIntentId) {
+          return res.json(order); // Idempotent response
+        }
+      }
+      
+      // SECURITY FIX: Verify payment with Stripe when marking as paid
+      if (validatedData.paymentStatus === 'paid' && validatedData.paymentIntentId) {
+        const stripe = getStripe();
+        
+        try {
+          // Retrieve PaymentIntent from Stripe
+          const paymentIntent = await stripe.paymentIntents.retrieve(validatedData.paymentIntentId);
+          
+          // Verify payment succeeded
+          if (paymentIntent.status !== 'succeeded') {
+            return res.status(400).json({ 
+              error: 'Payment not successful', 
+              status: paymentIntent.status 
+            });
+          }
+          
+          // Issue 1: Check amount_received (actual settlement) instead of amount (intended)
+          const orderAmountInCents = Math.round(Number(order.total) * 100);
+          if (paymentIntent.amount_received !== orderAmountInCents) {
+            return res.status(400).json({ 
+              error: 'Payment amount mismatch',
+              expected: orderAmountInCents,
+              received: paymentIntent.amount_received,
+              note: 'Partial captures or canceled payments are not accepted'
+            });
+          }
+          
+          // Verify order ID matches
+          if (paymentIntent.metadata.orderId !== order.id) {
+            return res.status(400).json({ 
+              error: 'Payment intent does not match this order'
+            });
+          }
+          
+          // Issue 2: Verify userId matches
+          if (paymentIntent.metadata.userId !== order.userId) {
+            return res.status(400).json({ 
+              error: 'Payment intent does not belong to this user',
+              security: 'Potential fraud attempt detected'
+            });
+          }
+        } catch (stripeError: any) {
+          console.error("Stripe verification error:", stripeError);
+          return res.status(400).json({ 
+            error: 'Failed to verify payment with Stripe',
+            details: stripeError.message
+          });
+        }
+      }
+      
+      // Update only whitelisted fields
+      const updatedOrder = await storage.updateProductOrder(id, validatedData);
+      
+      if (!updatedOrder) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      res.json(updatedOrder);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid update data", 
+          details: error.errors 
+        });
+      }
+      console.error("Error updating product order:", error);
       res.status(500).json({ error: error.message });
     }
   });

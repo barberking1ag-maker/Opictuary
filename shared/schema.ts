@@ -2413,6 +2413,95 @@ export type ByusTherapist = typeof byusTherapists.$inferSelect;
 export type InsertByusProfessionalReview = z.infer<typeof insertByusProfessionalReviewSchema>;
 export type ByusProfessionalReview = typeof byusProfessionalReviews.$inferSelect;
 
+// Physical Memorial Products
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // 'plaques', 'headstone-markers', 'memorial-cards', 'urns', 'keepsakes'
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
+  images: json("images").$type<string[]>().default([]),
+  customizationOptions: json("customization_options").$type<{
+    engraving?: { maxCharacters: number; fonts: string[] };
+    materials?: string[];
+    sizes?: string[];
+    qrPlacement?: string[];
+  }>(),
+  dimensions: text("dimensions"), // e.g., "12x8 inches"
+  material: text("material"), // e.g., "Bronze", "Granite", "Stainless Steel"
+  isActive: boolean("is_active").default(true),
+  stockStatus: text("stock_status").default("in_stock"), // 'in_stock', 'low_stock', 'out_of_stock', 'pre_order'
+  estimatedDeliveryDays: integer("estimated_delivery_days").default(14),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_products_category").on(table.category),
+  index("idx_products_is_active").on(table.isActive),
+]);
+
+// Product Orders
+export const productOrders = pgTable("product_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderNumber: text("order_number").notNull().unique(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  memorialId: varchar("memorial_id").references(() => memorials.id),
+  productId: varchar("product_id").notNull().references(() => products.id),
+  quantity: integer("quantity").default(1),
+  // Customization details
+  customization: json("customization").$type<{
+    engravingText?: string;
+    font?: string;
+    material?: string;
+    size?: string;
+    qrPlacement?: string;
+  }>(),
+  // Pricing
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  shipping: decimal("shipping", { precision: 10, scale: 2 }).default("0"),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0"),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  // Shipping address
+  shippingAddress: json("shipping_address").$type<{
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+    phone: string;
+  }>().notNull(),
+  // Order status
+  status: text("status").default("pending"), // 'pending', 'processing', 'in_production', 'shipped', 'delivered', 'cancelled'
+  paymentStatus: text("payment_status").default("pending"), // 'pending', 'paid', 'failed', 'refunded'
+  paymentIntentId: text("payment_intent_id"),
+  // Fulfillment
+  trackingNumber: text("tracking_number"),
+  carrier: text("carrier"),
+  estimatedDelivery: timestamp("estimated_delivery"),
+  deliveredAt: timestamp("delivered_at"),
+  // QR code reference (generated when order is processed)
+  qrCodeId: varchar("qr_code_id").references(() => qrCodes.id),
+  // Notes
+  customerNotes: text("customer_notes"),
+  internalNotes: text("internal_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_product_orders_user_id").on(table.userId),
+  index("idx_product_orders_memorial_id").on(table.memorialId),
+  index("idx_product_orders_status").on(table.status),
+  index("idx_product_orders_created_at").on(table.createdAt),
+]);
+
+export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertProductOrderSchema = createInsertSchema(productOrders).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertProductOrder = z.infer<typeof insertProductOrderSchema>;
+export type ProductOrder = typeof productOrders.$inferSelect;
+
 // AI Chat Messages
 export const chatMessages = pgTable("chat_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
