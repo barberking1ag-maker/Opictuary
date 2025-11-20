@@ -34,22 +34,21 @@ jobs:
         run: npm ci
       
       - name: Build production frontend
-        run: npm run build
+        run: npm run build:client
       
       - name: Sync Capacitor
         run: npx cap sync android
       
       - name: Decode keystore
         run: |
-          mkdir -p keystores
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystores/opictuary-upload.jks
+          mkdir -p android/keystores
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/keystores/opictuary-upload.jks
         working-directory: ./
       
       - name: Create key.properties
         run: |
-          mkdir -p android
           cat > android/key.properties << EOF
-          storeFile=../keystores/opictuary-upload.jks
+          storeFile=keystores/opictuary-upload.jks
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
@@ -61,10 +60,19 @@ jobs:
           chmod +x ./gradlew
           ./gradlew bundleRelease
       
+      - name: Get version info
+        id: version
+        run: |
+          VERSION_CODE=$(grep "versionCode" android/app/build.gradle | awk '{print $2}')
+          VERSION_NAME=$(grep "versionName" android/app/build.gradle | awk '{print $2}' | tr -d '"')
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "Built version: $VERSION_NAME (code: $VERSION_CODE)"
+      
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: app-release-v${{ steps.version.outputs.version_code }}
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
       
@@ -72,12 +80,15 @@ jobs:
         run: |
           echo "### ✅ Android App Bundle Built Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version Code:** ${{ steps.version.outputs.version_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version Name:** ${{ steps.version.outputs.version_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Download your app:**" >> $GITHUB_STEP_SUMMARY
           echo "1. Go to the 'Actions' tab" >> $GITHUB_STEP_SUMMARY
           echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
-          echo "3. Download the 'app-release' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "3. Download the 'app-release-v${{ steps.version.outputs.version_code }}' artifact" >> $GITHUB_STEP_SUMMARY
           echo "4. Extract the ZIP to get your .aab file" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
           echo "- Upload app-release.aab to Google Play Console" >> $GITHUB_STEP_SUMMARY
-          echo "- Submit for review" >> $GITHUB_STEP_SUMMARY
+          echo "- Submit for internal testing" >> $GITHUB_STEP_SUMMARY
