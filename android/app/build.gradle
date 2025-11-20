@@ -7,10 +7,10 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.opictuary.app"
+    namespace "com.opictuary.memorial"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.opictuary.app"
+        applicationId "com.opictuary.memorial"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2025111410

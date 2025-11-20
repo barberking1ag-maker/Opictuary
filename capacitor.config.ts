@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.opictuary.app',
+  appId: 'com.opictuary.memorial',
   appName: 'Opictuary',
   webDir: 'dist/public',
   server: {
