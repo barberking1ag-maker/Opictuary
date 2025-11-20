@@ -14,7 +14,7 @@
     <!-- Team ID - Replace with your Apple Developer Team ID -->
     <!-- Find it at: https://developer.apple.com/account/#/membership -->
     <key>teamID</key>
-    <string>WAITING_FOR_YOUR_TEAM_ID</string>
+    <string>CRPD7WHX8V</string>
     
     <!-- Bundle ID -->
     <key>signingCertificate</key>
