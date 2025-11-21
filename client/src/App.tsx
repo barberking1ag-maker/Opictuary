@@ -63,10 +63,11 @@ import ProductCustomize from "@/pages/ProductCustomize";
 import MyOrders from "@/pages/MyOrders";
 import OrderTracking from "@/pages/OrderTracking";
 import EventPlanner from "@/pages/EventPlanner";
+import SportsMemorials from "@/pages/SportsMemorials";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -168,6 +169,12 @@ function Router() {
                       <span>Alumni Memorials</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-sports-memorials">
+                    <Link href="/sports-memorials">
+                      <Trophy className="w-4 h-4 mr-2" />
+                      <span>Sports Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-essential-workers">
                     <Link href="/essential-workers">
                       <Shield className="w-4 h-4 mr-2" />
@@ -266,6 +273,12 @@ function Router() {
                         <span>Alumni Memorials</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-sports-memorials">
+                      <Link href="/sports-memorials">
+                        <Trophy className="w-4 h-4 mr-2" />
+                        <span>Sports Memorials</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-essential-workers">
                       <Link href="/essential-workers">
                         <Shield className="w-4 h-4 mr-2" />
@@ -327,6 +340,7 @@ function Router() {
         <Route path="/alumni-memorials" component={BrowseAlumniMemorials} />
         <Route path="/alumni-memorials/create" component={CreateAlumniMemorial} />
         <Route path="/alumni-memorials/:id" component={AlumniMemorialDetail} />
+        <Route path="/sports-memorials" component={SportsMemorials} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
