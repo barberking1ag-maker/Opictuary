@@ -92,6 +92,17 @@ import {
   insertByusFeedbackSchema,
   insertProductSchema,
   insertProductOrderSchema,
+  // Event Planner schemas
+  insertMemorialEventPlanSchema,
+  insertEventTaskSchema,
+  insertVendorListingSchema,
+  insertVendorBookingSchema,
+  // Sports Memorial schemas
+  insertAthleteProfileSchema,
+  insertAthleteStatSchema,
+  insertTeamMemorialSchema,
+  insertAthleticLegacyScoreSchema,
+  insertJerseyRetirementSchema,
 } from "@shared/schema";
 
 const inviteCodeSchema = z.object({
@@ -6332,6 +6343,375 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating product order:", error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============================================================================
+  // Memorial Event Planner API Routes
+  // ============================================================================
+
+  // Create memorial event plan
+  app.post('/api/memorial-event-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertMemorialEventPlanSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const eventPlan = await storage.createMemorialEventPlan(validatedData);
+      res.status(201).json(eventPlan);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid event plan data", errors: error.errors });
+      }
+      console.error("Error creating event plan:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // List memorial event plans
+  app.get('/api/memorial-event-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventPlans = await storage.listMemorialEventPlans(userId);
+      res.json(eventPlans);
+    } catch (error: any) {
+      console.error("Error fetching event plans:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get specific memorial event plan
+  app.get('/api/memorial-event-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const eventPlan = await storage.getMemorialEventPlan(req.params.id);
+      if (!eventPlan) {
+        return res.status(404).json({ message: "Event plan not found" });
+      }
+      res.json(eventPlan);
+    } catch (error: any) {
+      console.error("Error fetching event plan:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update memorial event plan
+  app.patch('/api/memorial-event-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const eventPlan = await storage.updateMemorialEventPlan(req.params.id, req.body);
+      if (!eventPlan) {
+        return res.status(404).json({ message: "Event plan not found" });
+      }
+      res.json(eventPlan);
+    } catch (error: any) {
+      console.error("Error updating event plan:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create vendor booking
+  app.post('/api/vendor-bookings', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertVendorBookingSchema.parse(req.body);
+      const booking = await storage.createVendorBooking(validatedData);
+      res.status(201).json(booking);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid booking data", errors: error.errors });
+      }
+      console.error("Error creating vendor booking:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get vendor bookings by event
+  app.get('/api/vendor-bookings/event/:eventId', isAuthenticated, async (req: any, res) => {
+    try {
+      const bookings = await storage.getVendorBookingsByEvent(req.params.eventId);
+      res.json(bookings);
+    } catch (error: any) {
+      console.error("Error fetching vendor bookings:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get event tasks
+  app.get('/api/event-tasks/:eventPlanId', isAuthenticated, async (req: any, res) => {
+    try {
+      const tasks = await storage.getEventTasks(req.params.eventPlanId);
+      res.json(tasks);
+    } catch (error: any) {
+      console.error("Error fetching event tasks:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create event task
+  app.post('/api/event-tasks', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertEventTaskSchema.parse(req.body);
+      const task = await storage.createEventTask(validatedData);
+      res.status(201).json(task);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      console.error("Error creating event task:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update event task
+  app.patch('/api/event-tasks/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const task = await storage.updateEventTask(req.params.id, req.body);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      res.json(task);
+    } catch (error: any) {
+      console.error("Error updating event task:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get vendor listings
+  app.get('/api/vendor-listings', async (req: any, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const vendors = await storage.listVendorListings(category);
+      res.json(vendors);
+    } catch (error: any) {
+      console.error("Error fetching vendor listings:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============================================================================
+  // Sports Memorial API Routes
+  // ============================================================================
+
+  // Create athlete profile
+  app.post('/api/athlete-profiles', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertAthleteProfileSchema.parse(req.body);
+      const profile = await storage.createAthleteProfile(validatedData);
+      
+      // Calculate initial legacy score
+      await storage.calculateAthleticLegacyScore(profile.id);
+      
+      res.status(201).json(profile);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid athlete profile data", errors: error.errors });
+      }
+      console.error("Error creating athlete profile:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // List athlete profiles
+  app.get('/api/athlete-profiles', async (req: any, res) => {
+    try {
+      const filters = {
+        sport: req.query.sport as string | undefined,
+        level: req.query.level as string | undefined,
+        teamId: req.query.teamId as string | undefined,
+      };
+      
+      const profiles = await storage.listAthleteProfiles(filters);
+      res.json(profiles);
+    } catch (error: any) {
+      console.error("Error fetching athlete profiles:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get specific athlete profile with legacy score
+  app.get('/api/athlete-profiles/:id', async (req: any, res) => {
+    try {
+      const profile = await storage.getAthleteProfile(req.params.id);
+      if (!profile) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      // Include legacy score if available
+      const legacyScore = await storage.getAthleticLegacyScore(req.params.id);
+      
+      res.json({ ...profile, legacyScore });
+    } catch (error: any) {
+      console.error("Error fetching athlete profile:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update athlete profile
+  app.patch('/api/athlete-profiles/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const profile = await storage.updateAthleteProfile(req.params.id, req.body);
+      if (!profile) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      // Recalculate legacy score
+      await storage.calculateAthleticLegacyScore(req.params.id);
+      
+      res.json(profile);
+    } catch (error: any) {
+      console.error("Error updating athlete profile:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create athlete stats
+  app.post('/api/athlete-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertAthleteStatSchema.parse(req.body);
+      const stat = await storage.createAthleteStat(validatedData);
+      
+      // Recalculate legacy score when new stats are added
+      await storage.calculateAthleticLegacyScore(validatedData.athleteProfileId);
+      
+      res.status(201).json(stat);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid stat data", errors: error.errors });
+      }
+      console.error("Error creating athlete stat:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get athlete stats
+  app.get('/api/athlete-stats/:athleteProfileId', async (req: any, res) => {
+    try {
+      const stats = await storage.getAthleteStats(req.params.athleteProfileId);
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching athlete stats:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create team memorial
+  app.post('/api/team-memorials', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertTeamMemorialSchema.parse(req.body);
+      const team = await storage.createTeamMemorial(validatedData);
+      res.status(201).json(team);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid team memorial data", errors: error.errors });
+      }
+      console.error("Error creating team memorial:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // List team memorials
+  app.get('/api/team-memorials', async (req: any, res) => {
+    try {
+      const filters = {
+        sport: req.query.sport as string | undefined,
+        level: req.query.level as string | undefined,
+      };
+      
+      const teams = await storage.listTeamMemorials(filters);
+      res.json(teams);
+    } catch (error: any) {
+      console.error("Error fetching team memorials:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get team memorial
+  app.get('/api/team-memorials/:id', async (req: any, res) => {
+    try {
+      const team = await storage.getTeamMemorial(req.params.id);
+      if (!team) {
+        return res.status(404).json({ message: "Team memorial not found" });
+      }
+      res.json(team);
+    } catch (error: any) {
+      console.error("Error fetching team memorial:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Calculate/recalculate athletic legacy score
+  app.post('/api/athletic-legacy-scores/:athleteId/calculate', isAuthenticated, async (req: any, res) => {
+    try {
+      const score = await storage.calculateAthleticLegacyScore(req.params.athleteId);
+      res.json(score);
+    } catch (error: any) {
+      console.error("Error calculating athletic legacy score:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get athletic legacy score
+  app.get('/api/athletic-legacy-scores/:athleteId', async (req: any, res) => {
+    try {
+      const score = await storage.getAthleticLegacyScore(req.params.athleteId);
+      if (!score) {
+        return res.status(404).json({ message: "Legacy score not found" });
+      }
+      res.json(score);
+    } catch (error: any) {
+      console.error("Error fetching athletic legacy score:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Add Hall of Fame entry
+  app.post('/api/hall-of-fame', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertJerseyRetirementSchema.parse(req.body);
+      const entry = await storage.addHallOfFameEntry(validatedData);
+      
+      // Recalculate legacy score when Hall of Fame status changes
+      if (validatedData.athleteProfileId) {
+        await storage.calculateAthleticLegacyScore(validatedData.athleteProfileId);
+      }
+      
+      res.status(201).json(entry);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid Hall of Fame entry data", errors: error.errors });
+      }
+      console.error("Error creating Hall of Fame entry:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get Hall of Fame entries
+  app.get('/api/hall-of-fame', async (req: any, res) => {
+    try {
+      const filters = {
+        athleteId: req.query.athleteId as string | undefined,
+        teamId: req.query.teamId as string | undefined,
+      };
+      
+      const entries = await storage.getHallOfFameEntries(filters);
+      res.json(entries);
+    } catch (error: any) {
+      console.error("Error fetching Hall of Fame entries:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update Hall of Fame entry
+  app.patch('/api/hall-of-fame/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const entry = await storage.updateHallOfFameEntry(req.params.id, req.body);
+      if (!entry) {
+        return res.status(404).json({ message: "Hall of Fame entry not found" });
+      }
+      res.json(entry);
+    } catch (error: any) {
+      console.error("Error updating Hall of Fame entry:", error);
+      res.status(500).json({ message: error.message });
     }
   });
 

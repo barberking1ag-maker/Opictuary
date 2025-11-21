@@ -239,6 +239,35 @@ import {
   byusProfessionalReviews,
   type ByusProfessionalReview,
   type InsertByusProfessionalReview,
+  // Event Planner tables and types
+  memorialEventPlans,
+  eventTasks,
+  vendorListings,
+  vendorBookings,
+  type MemorialEventPlan,
+  type InsertMemorialEventPlan,
+  type EventTask,
+  type InsertEventTask,
+  type VendorListing,
+  type InsertVendorListing,
+  type VendorBooking,
+  type InsertVendorBooking,
+  // Sports Memorial tables and types
+  athleteProfiles,
+  athleteStats,
+  teamMemorials,
+  athleticLegacyScores,
+  jerseyRetirements,
+  type AthleteProfile,
+  type InsertAthleteProfile,
+  type AthleteStat,
+  type InsertAthleteStat,
+  type TeamMemorial,
+  type InsertTeamMemorial,
+  type AthleticLegacyScore,
+  type InsertAthleticLegacyScore,
+  type JerseyRetirement,
+  type InsertJerseyRetirement,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -739,6 +768,59 @@ export interface IStorage {
   updateOrderPaymentStatus(id: string, paymentStatus: string, paymentIntentId?: string): Promise<ProductOrder | undefined>;
   addOrderTracking(id: string, trackingNumber: string, carrier: string, estimatedDelivery?: Date): Promise<ProductOrder | undefined>;
   attachAIDesign(orderId: string, aiData: { prompt: string; style: string; imageUrl: string; premium: number }): Promise<ProductOrder | undefined>;
+  
+  // Memorial Event Planner operations
+  createMemorialEventPlan(data: InsertMemorialEventPlan): Promise<MemorialEventPlan>;
+  getMemorialEventPlan(id: string): Promise<MemorialEventPlan | undefined>;
+  updateMemorialEventPlan(id: string, data: Partial<InsertMemorialEventPlan>): Promise<MemorialEventPlan | undefined>;
+  listMemorialEventPlans(userId?: string): Promise<MemorialEventPlan[]>;
+  deleteMemorialEventPlan(id: string): Promise<void>;
+  
+  // Event Task operations
+  createEventTask(task: InsertEventTask): Promise<EventTask>;
+  getEventTasks(eventPlanId: string): Promise<EventTask[]>;
+  updateEventTask(taskId: string, data: Partial<InsertEventTask>): Promise<EventTask | undefined>;
+  deleteEventTask(taskId: string): Promise<void>;
+  
+  // Vendor operations
+  createVendorListing(vendor: InsertVendorListing): Promise<VendorListing>;
+  getVendorListing(id: string): Promise<VendorListing | undefined>;
+  listVendorListings(category?: string): Promise<VendorListing[]>;
+  updateVendorListing(id: string, data: Partial<InsertVendorListing>): Promise<VendorListing | undefined>;
+  
+  // Vendor Booking operations
+  createVendorBooking(booking: InsertVendorBooking): Promise<VendorBooking>;
+  getVendorBooking(id: string): Promise<VendorBooking | undefined>;
+  getVendorBookingsByEvent(eventId: string): Promise<VendorBooking[]>;
+  updateVendorBookingStatus(id: string, status: string): Promise<VendorBooking | undefined>;
+  
+  // Sports Memorial - Athlete Profile operations
+  createAthleteProfile(data: InsertAthleteProfile): Promise<AthleteProfile>;
+  getAthleteProfile(id: string): Promise<AthleteProfile | undefined>;
+  listAthleteProfiles(filters?: { sport?: string; level?: string; teamId?: string }): Promise<AthleteProfile[]>;
+  updateAthleteProfile(id: string, data: Partial<InsertAthleteProfile>): Promise<AthleteProfile | undefined>;
+  deleteAthleteProfile(id: string): Promise<void>;
+  
+  // Athlete Stats operations
+  createAthleteStat(stat: InsertAthleteStat): Promise<AthleteStat>;
+  getAthleteStats(athleteProfileId: string): Promise<AthleteStat[]>;
+  updateAthleteStat(id: string, data: Partial<InsertAthleteStat>): Promise<AthleteStat | undefined>;
+  
+  // Team Memorial operations
+  createTeamMemorial(data: InsertTeamMemorial): Promise<TeamMemorial>;
+  getTeamMemorial(id: string): Promise<TeamMemorial | undefined>;
+  listTeamMemorials(filters?: { sport?: string; level?: string }): Promise<TeamMemorial[]>;
+  updateTeamMemorial(id: string, data: Partial<InsertTeamMemorial>): Promise<TeamMemorial | undefined>;
+  
+  // Athletic Legacy Score operations
+  calculateAthleticLegacyScore(athleteId: string): Promise<AthleticLegacyScore>;
+  getAthleticLegacyScore(athleteId: string): Promise<AthleticLegacyScore | undefined>;
+  updateAthleticLegacyScore(athleteId: string, scores: Partial<InsertAthleticLegacyScore>): Promise<AthleticLegacyScore | undefined>;
+  
+  // Hall of Fame / Jersey Retirement operations
+  addHallOfFameEntry(data: InsertJerseyRetirement): Promise<JerseyRetirement>;
+  getHallOfFameEntries(filters?: { athleteId?: string; teamId?: string }): Promise<JerseyRetirement[]>;
+  updateHallOfFameEntry(id: string, data: Partial<InsertJerseyRetirement>): Promise<JerseyRetirement | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3865,6 +3947,402 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(productOrders.id, orderId))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Memorial Event Planner implementations
+  async createMemorialEventPlan(data: InsertMemorialEventPlan): Promise<MemorialEventPlan> {
+    const [created] = await db.insert(memorialEventPlans).values(data).returning();
+    return created;
+  }
+
+  async getMemorialEventPlan(id: string): Promise<MemorialEventPlan | undefined> {
+    const [plan] = await db.select()
+      .from(memorialEventPlans)
+      .where(eq(memorialEventPlans.id, id));
+    return plan || undefined;
+  }
+
+  async updateMemorialEventPlan(id: string, data: Partial<InsertMemorialEventPlan>): Promise<MemorialEventPlan | undefined> {
+    const [updated] = await db.update(memorialEventPlans)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(memorialEventPlans.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async listMemorialEventPlans(userId?: string): Promise<MemorialEventPlan[]> {
+    if (userId) {
+      return await db.select()
+        .from(memorialEventPlans)
+        .where(eq(memorialEventPlans.userId, userId))
+        .orderBy(desc(memorialEventPlans.eventDate));
+    }
+    return await db.select()
+      .from(memorialEventPlans)
+      .orderBy(desc(memorialEventPlans.eventDate));
+  }
+
+  async deleteMemorialEventPlan(id: string): Promise<void> {
+    await db.delete(memorialEventPlans).where(eq(memorialEventPlans.id, id));
+  }
+
+  // Event Task implementations
+  async createEventTask(task: InsertEventTask): Promise<EventTask> {
+    const [created] = await db.insert(eventTasks).values(task).returning();
+    return created;
+  }
+
+  async getEventTasks(eventPlanId: string): Promise<EventTask[]> {
+    return await db.select()
+      .from(eventTasks)
+      .where(eq(eventTasks.eventId, eventPlanId))
+      .orderBy(eventTasks.dueDate);
+  }
+
+  async updateEventTask(taskId: string, data: Partial<InsertEventTask>): Promise<EventTask | undefined> {
+    const [updated] = await db.update(eventTasks)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(eventTasks.id, taskId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteEventTask(taskId: string): Promise<void> {
+    await db.delete(eventTasks).where(eq(eventTasks.id, taskId));
+  }
+
+  // Vendor operations
+  async createVendorListing(vendor: InsertVendorListing): Promise<VendorListing> {
+    const [created] = await db.insert(vendorListings).values(vendor).returning();
+    return created;
+  }
+
+  async getVendorListing(id: string): Promise<VendorListing | undefined> {
+    const [vendor] = await db.select()
+      .from(vendorListings)
+      .where(eq(vendorListings.id, id));
+    return vendor || undefined;
+  }
+
+  async listVendorListings(category?: string): Promise<VendorListing[]> {
+    if (category) {
+      return await db.select()
+        .from(vendorListings)
+        .where(and(
+          eq(vendorListings.category, category),
+          eq(vendorListings.isActive, true)
+        ))
+        .orderBy(desc(vendorListings.rating));
+    }
+    return await db.select()
+      .from(vendorListings)
+      .where(eq(vendorListings.isActive, true))
+      .orderBy(desc(vendorListings.rating));
+  }
+
+  async updateVendorListing(id: string, data: Partial<InsertVendorListing>): Promise<VendorListing | undefined> {
+    const [updated] = await db.update(vendorListings)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(vendorListings.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Vendor Booking operations
+  async createVendorBooking(booking: InsertVendorBooking): Promise<VendorBooking> {
+    const [created] = await db.insert(vendorBookings).values(booking).returning();
+    return created;
+  }
+
+  async getVendorBooking(id: string): Promise<VendorBooking | undefined> {
+    const [booking] = await db.select()
+      .from(vendorBookings)
+      .where(eq(vendorBookings.id, id));
+    return booking || undefined;
+  }
+
+  async getVendorBookingsByEvent(eventId: string): Promise<VendorBooking[]> {
+    return await db.select()
+      .from(vendorBookings)
+      .where(eq(vendorBookings.eventId, eventId))
+      .orderBy(vendorBookings.bookingDate);
+  }
+
+  async updateVendorBookingStatus(id: string, status: string): Promise<VendorBooking | undefined> {
+    const [updated] = await db.update(vendorBookings)
+      .set({
+        status,
+        updatedAt: new Date(),
+      })
+      .where(eq(vendorBookings.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Sports Memorial - Athlete Profile implementations
+  async createAthleteProfile(data: InsertAthleteProfile): Promise<AthleteProfile> {
+    const [created] = await db.insert(athleteProfiles).values(data).returning();
+    return created;
+  }
+
+  async getAthleteProfile(id: string): Promise<AthleteProfile | undefined> {
+    const [profile] = await db.select()
+      .from(athleteProfiles)
+      .where(eq(athleteProfiles.id, id));
+    return profile || undefined;
+  }
+
+  async listAthleteProfiles(filters?: { sport?: string; level?: string; teamId?: string }): Promise<AthleteProfile[]> {
+    let query = db.select().from(athleteProfiles);
+    const conditions = [];
+    
+    if (filters?.sport) {
+      conditions.push(eq(athleteProfiles.sport, filters.sport));
+    }
+    if (filters?.level) {
+      conditions.push(eq(athleteProfiles.level, filters.level));
+    }
+    if (filters?.teamId) {
+      // This would need a join with team members or a JSON contains check
+      // For simplicity, we'll return all profiles for now
+    }
+    
+    if (conditions.length > 0) {
+      return await query.where(and(...conditions)).orderBy(desc(athleteProfiles.createdAt));
+    }
+    
+    return await query.orderBy(desc(athleteProfiles.createdAt));
+  }
+
+  async updateAthleteProfile(id: string, data: Partial<InsertAthleteProfile>): Promise<AthleteProfile | undefined> {
+    const [updated] = await db.update(athleteProfiles)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(athleteProfiles.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteAthleteProfile(id: string): Promise<void> {
+    await db.delete(athleteProfiles).where(eq(athleteProfiles.id, id));
+  }
+
+  // Athlete Stats implementations
+  async createAthleteStat(stat: InsertAthleteStat): Promise<AthleteStat> {
+    const [created] = await db.insert(athleteStats).values(stat).returning();
+    return created;
+  }
+
+  async getAthleteStats(athleteProfileId: string): Promise<AthleteStat[]> {
+    return await db.select()
+      .from(athleteStats)
+      .where(eq(athleteStats.athleteProfileId, athleteProfileId))
+      .orderBy(desc(athleteStats.season));
+  }
+
+  async updateAthleteStat(id: string, data: Partial<InsertAthleteStat>): Promise<AthleteStat | undefined> {
+    const [updated] = await db.update(athleteStats)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(athleteStats.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Team Memorial implementations
+  async createTeamMemorial(data: InsertTeamMemorial): Promise<TeamMemorial> {
+    const [created] = await db.insert(teamMemorials).values(data).returning();
+    return created;
+  }
+
+  async getTeamMemorial(id: string): Promise<TeamMemorial | undefined> {
+    const [team] = await db.select()
+      .from(teamMemorials)
+      .where(eq(teamMemorials.id, id));
+    return team || undefined;
+  }
+
+  async listTeamMemorials(filters?: { sport?: string; level?: string }): Promise<TeamMemorial[]> {
+    let query = db.select().from(teamMemorials);
+    const conditions = [];
+    
+    if (filters?.sport) {
+      conditions.push(eq(teamMemorials.sport, filters.sport));
+    }
+    if (filters?.level) {
+      conditions.push(eq(teamMemorials.level, filters.level));
+    }
+    
+    if (conditions.length > 0) {
+      return await query.where(and(...conditions)).orderBy(desc(teamMemorials.createdAt));
+    }
+    
+    return await query.orderBy(desc(teamMemorials.createdAt));
+  }
+
+  async updateTeamMemorial(id: string, data: Partial<InsertTeamMemorial>): Promise<TeamMemorial | undefined> {
+    const [updated] = await db.update(teamMemorials)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(teamMemorials.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Athletic Legacy Score implementations
+  async calculateAthleticLegacyScore(athleteId: string): Promise<AthleticLegacyScore> {
+    // Get athlete profile and stats
+    const profile = await this.getAthleteProfile(athleteId);
+    if (!profile) {
+      throw new Error("Athlete profile not found");
+    }
+
+    const stats = await this.getAthleteStats(athleteId);
+    
+    // Calculate career statistics score (40% weight)
+    let careerScore = 0;
+    if (stats.length > 0) {
+      // Base score on number of seasons and overall stats
+      const seasons = stats.length;
+      const totalStats = stats.reduce((acc, stat) => {
+        // Count meaningful stats entries
+        const statCount = stat.stats ? Object.keys(stat.stats).length : 0;
+        return acc + statCount;
+      }, 0);
+      
+      careerScore = Math.min(100, (seasons * 5) + (totalStats * 2));
+    }
+    
+    // Calculate championships score (30% weight)
+    let championshipScore = 0;
+    if (profile.championships) {
+      // Each championship is worth 20 points, max 100
+      championshipScore = Math.min(100, profile.championships.length * 20);
+    }
+    
+    // Calculate Hall of Fame score (20% weight)
+    let hallOfFameScore = 0;
+    if (profile.hallOfFameInductions) {
+      // Hall of Fame induction is worth 100 points
+      hallOfFameScore = profile.hallOfFameInductions.inducted ? 100 : 0;
+    }
+    
+    // Calculate impact/fan engagement score (10% weight)
+    let impactScore = 50; // Default middle score
+    if (profile.achievements) {
+      // Each achievement adds 10 points, max 100
+      impactScore = Math.min(100, profile.achievements.length * 10);
+    }
+    
+    // Calculate weighted overall score
+    const overallScore = Math.round(
+      (careerScore * 0.4) +
+      (championshipScore * 0.3) +
+      (hallOfFameScore * 0.2) +
+      (impactScore * 0.1)
+    );
+    
+    // Check if legacy score already exists
+    const [existing] = await db.select()
+      .from(athleticLegacyScores)
+      .where(eq(athleticLegacyScores.athleteProfileId, athleteId));
+    
+    if (existing) {
+      // Update existing score
+      const [updated] = await db.update(athleticLegacyScores)
+        .set({
+          careerScore,
+          championshipScore,
+          hallOfFameScore,
+          impactScore,
+          overallScore,
+          updatedAt: new Date(),
+        })
+        .where(eq(athleticLegacyScores.athleteProfileId, athleteId))
+        .returning();
+      return updated;
+    } else {
+      // Create new score
+      const [created] = await db.insert(athleticLegacyScores)
+        .values({
+          athleteProfileId: athleteId,
+          careerScore,
+          championshipScore,
+          hallOfFameScore,
+          impactScore,
+          overallScore,
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async getAthleticLegacyScore(athleteId: string): Promise<AthleticLegacyScore | undefined> {
+    const [score] = await db.select()
+      .from(athleticLegacyScores)
+      .where(eq(athleticLegacyScores.athleteProfileId, athleteId));
+    return score || undefined;
+  }
+
+  async updateAthleticLegacyScore(athleteId: string, scores: Partial<InsertAthleticLegacyScore>): Promise<AthleticLegacyScore | undefined> {
+    const [updated] = await db.update(athleticLegacyScores)
+      .set({
+        ...scores,
+        updatedAt: new Date(),
+      })
+      .where(eq(athleticLegacyScores.athleteProfileId, athleteId))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Hall of Fame / Jersey Retirement implementations
+  async addHallOfFameEntry(data: InsertJerseyRetirement): Promise<JerseyRetirement> {
+    const [created] = await db.insert(jerseyRetirements).values(data).returning();
+    return created;
+  }
+
+  async getHallOfFameEntries(filters?: { athleteId?: string; teamId?: string }): Promise<JerseyRetirement[]> {
+    let query = db.select().from(jerseyRetirements);
+    const conditions = [];
+    
+    if (filters?.athleteId) {
+      conditions.push(eq(jerseyRetirements.athleteProfileId, filters.athleteId));
+    }
+    if (filters?.teamId) {
+      conditions.push(eq(jerseyRetirements.teamMemorialId, filters.teamId));
+    }
+    
+    if (conditions.length > 0) {
+      return await query.where(and(...conditions)).orderBy(desc(jerseyRetirements.retirementDate));
+    }
+    
+    return await query.orderBy(desc(jerseyRetirements.retirementDate));
+  }
+
+  async updateHallOfFameEntry(id: string, data: Partial<InsertJerseyRetirement>): Promise<JerseyRetirement | undefined> {
+    const [updated] = await db.update(jerseyRetirements)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(jerseyRetirements.id, id))
       .returning();
     return updated || undefined;
   }
