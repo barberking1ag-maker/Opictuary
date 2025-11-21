@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 // Event planning schema
 const eventSchema = z.object({
@@ -224,6 +226,8 @@ export default function EventPlanner() {
   const [checklistProgress, setChecklistProgress] = useState<Record<string, boolean>>({});
   const [selectedVendorCategory, setSelectedVendorCategory] = useState("all");
   const [activeTab, setActiveTab] = useState("wizard");
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<typeof vendorData[0] | null>(null);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -330,6 +334,22 @@ export default function EventPlanner() {
   const filteredVendors = selectedVendorCategory === "all" 
     ? vendorData 
     : vendorData.filter(v => v.category === selectedVendorCategory);
+
+  const handleVendorBooking = (vendor: typeof vendorData[0]) => {
+    setSelectedVendor(vendor);
+    setBookingModalOpen(true);
+  };
+
+  const confirmBooking = () => {
+    if (selectedVendor) {
+      toast({
+        title: "Booking Request Sent",
+        description: `Your booking request has been sent to ${selectedVendor.name}. They will contact you within 24 hours.`,
+      });
+      setBookingModalOpen(false);
+      setSelectedVendor(null);
+    }
+  };
 
   const totalBudget = taskTimelineData.reduce((sum, task) => sum + task.budgetAllocated, 0);
   const totalSpent = taskTimelineData.reduce((sum, task) => sum + task.actualCost, 0);
@@ -1116,6 +1136,7 @@ export default function EventPlanner() {
                       <Button 
                         className="flex-1"
                         data-testid={`button-book-${vendor.id}`}
+                        onClick={() => handleVendorBooking(vendor)}
                       >
                         Book Now
                       </Button>
@@ -1227,6 +1248,72 @@ export default function EventPlanner() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Vendor Booking Modal */}
+      <Dialog open={bookingModalOpen} onOpenChange={setBookingModalOpen}>
+        <DialogContent data-testid="modal-booking">
+          <DialogHeader>
+            <DialogTitle>Book {selectedVendor?.name}</DialogTitle>
+            <DialogDescription>
+              Complete the form below to send a booking request to {selectedVendor?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedVendor && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Vendor Details</h3>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Category:</strong> {selectedVendor.category}</p>
+                  <p><strong>Service Area:</strong> {selectedVendor.serviceArea}</p>
+                  <p><strong>Specialization:</strong> {selectedVendor.specialization}</p>
+                  <p><strong>Rating:</strong> ⭐ {selectedVendor.rating} ({selectedVendor.reviews} reviews)</p>
+                  <p><strong>Price Range:</strong> {selectedVendor.priceRange}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="booking-date">Service Date</Label>
+                  <Input
+                    id="booking-date"
+                    type="date"
+                    data-testid="input-booking-date"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="booking-message">Special Requirements</Label>
+                  <Textarea
+                    id="booking-message"
+                    placeholder="Any special requirements or notes for the vendor..."
+                    data-testid="textarea-booking-message"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="booking-budget">Estimated Budget</Label>
+                  <Input
+                    id="booking-budget"
+                    type="text"
+                    placeholder="e.g., $500-$1000"
+                    data-testid="input-booking-budget"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setBookingModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={confirmBooking} data-testid="button-confirm-booking">
+                  Send Booking Request
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
