@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -150,64 +150,18 @@ const checklistCategories = [
   },
 ];
 
-// Sample vendors data
-const vendorData = [
-  {
-    id: "1",
-    name: "Eternal Rest Funeral Home",
-    category: "Funeral Home",
-    rating: 4.8,
-    reviews: 127,
-    priceRange: "$$$",
-    serviceArea: "Metro Area",
-    specialization: "Traditional & Modern Services",
-    contact: { phone: "(555) 123-4567", email: "info@eternalrest.com", website: "www.eternalrest.com" },
-  },
-  {
-    id: "2",
-    name: "Bloom & Blossom Florists",
-    category: "Florist",
-    rating: 4.9,
-    reviews: 89,
-    priceRange: "$$",
-    serviceArea: "City-wide",
-    specialization: "Sympathy Arrangements",
-    contact: { phone: "(555) 234-5678", email: "orders@bloomblossom.com", website: "www.bloomblossom.com" },
-  },
-  {
-    id: "3",
-    name: "Comfort Catering Co.",
-    category: "Caterer",
-    rating: 4.7,
-    reviews: 156,
-    priceRange: "$$",
-    serviceArea: "Regional",
-    specialization: "Memorial Receptions",
-    contact: { phone: "(555) 345-6789", email: "events@comfortcatering.com", website: "www.comfortcatering.com" },
-  },
-  {
-    id: "4",
-    name: "Memories in Motion",
-    category: "Photographer",
-    rating: 5.0,
-    reviews: 43,
-    priceRange: "$$$",
-    serviceArea: "State-wide",
-    specialization: "Memorial Photography & Video",
-    contact: { phone: "(555) 456-7890", email: "book@memoriesinmotion.com", website: "www.memoriesinmotion.com" },
-  },
-  {
-    id: "5",
-    name: "Dignified Transport Services",
-    category: "Transportation",
-    rating: 4.6,
-    reviews: 78,
-    priceRange: "$$",
-    serviceArea: "Metro Area",
-    specialization: "Funeral Processions",
-    contact: { phone: "(555) 567-8901", email: "dispatch@dignifiedtransport.com", website: "www.dignifiedtransport.com" },
-  },
-];
+// Define vendor type
+interface VendorListing {
+  id: string;
+  name: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  priceRange: string;
+  serviceArea: string;
+  specialization: string;
+  contact: { phone: string; email: string; website: string };
+}
 
 // Task timeline data
 const taskTimelineData = [
@@ -227,7 +181,8 @@ export default function EventPlanner() {
   const [selectedVendorCategory, setSelectedVendorCategory] = useState("all");
   const [activeTab, setActiveTab] = useState("wizard");
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState<typeof vendorData[0] | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<VendorListing | null>(null);
+  const [eventPlanId, setEventPlanId] = useState<string | null>(null);
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -251,16 +206,58 @@ export default function EventPlanner() {
     },
   });
 
+  // Fetch vendors data
+  const { data: vendorData = [], isLoading: vendorsLoading } = useQuery({
+    queryKey: ['/api/vendor-listings'],
+    enabled: activeTab === "vendors",
+  });
+
+  // Fetch event tasks if we have an event plan ID
+  const { data: eventTasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: [`/api/event-tasks/${eventPlanId}`],
+    enabled: !!eventPlanId && activeTab === "tasks",
+  });
+
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      const response = await apiRequest("POST", "/api/memorial-events", data);
+      const response = await apiRequest("POST", "/api/event-plans", {
+        eventName: data.eventName,
+        eventType: data.eventType,
+        eventDate: new Date(data.eventDate).toISOString(),
+        eventTime: data.eventTime,
+        venue: {
+          name: data.venue,
+          address: data.venueAddress || "",
+          city: "",
+          state: "",
+          zipCode: "",
+        },
+        expectedAttendees: data.expectedAttendees,
+        budget: data.budget.toString(),
+        liveStream: data.liveStreamUrl ? {
+          platform: data.liveStreamPlatform || "Other",
+          url: data.liveStreamUrl,
+        } : undefined,
+        rsvpSettings: {
+          enabled: data.enableRsvp,
+          deadline: data.rsvpDeadline ? new Date(data.rsvpDeadline).toISOString() : undefined,
+        },
+        contactInfo: {
+          name: data.contactName,
+          email: data.contactEmail,
+          phone: data.contactPhone || "",
+        },
+        additionalNotes: data.additionalNotes || "",
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setEventPlanId(data.id);
       toast({
         title: "Event Created",
         description: "Your memorial event has been created successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/event-plans'] });
       // Reset form or redirect
       form.reset();
       setCurrentStep(1);
@@ -269,6 +266,40 @@ export default function EventPlanner() {
       toast({
         title: "Error",
         description: error.message || "Failed to create event. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createVendorBookingMutation = useMutation({
+    mutationFn: async (vendorId: string) => {
+      if (!eventPlanId) {
+        throw new Error("Please create an event plan first");
+      }
+      const response = await apiRequest("POST", "/api/vendor-bookings", {
+        eventId: eventPlanId,
+        vendorId,
+        serviceType: selectedVendor?.category || "General",
+        bookingDate: new Date().toISOString(),
+        serviceDetails: {
+          description: `Booking request for ${selectedVendor?.name}`,
+        },
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Booking Request Sent",
+        description: `Your booking request has been sent to ${selectedVendor?.name}. They will contact you within 24 hours.`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/vendor-bookings/${eventPlanId}`] });
+      setBookingModalOpen(false);
+      setSelectedVendor(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send booking request.",
         variant: "destructive",
       });
     },
@@ -333,21 +364,16 @@ export default function EventPlanner() {
 
   const filteredVendors = selectedVendorCategory === "all" 
     ? vendorData 
-    : vendorData.filter(v => v.category === selectedVendorCategory);
+    : vendorData.filter((v: VendorListing) => v.category === selectedVendorCategory);
 
-  const handleVendorBooking = (vendor: typeof vendorData[0]) => {
+  const handleVendorBooking = (vendor: VendorListing) => {
     setSelectedVendor(vendor);
     setBookingModalOpen(true);
   };
 
   const confirmBooking = () => {
     if (selectedVendor) {
-      toast({
-        title: "Booking Request Sent",
-        description: `Your booking request has been sent to ${selectedVendor.name}. They will contact you within 24 hours.`,
-      });
-      setBookingModalOpen(false);
-      setSelectedVendor(null);
+      createVendorBookingMutation.mutate(selectedVendor.id);
     }
   };
 
@@ -1110,18 +1136,27 @@ export default function EventPlanner() {
                       <Separator />
 
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span>{vendor.contact.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                          <span className="truncate">{vendor.contact.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Globe className="w-4 h-4 text-muted-foreground" />
-                          <span>{vendor.contact.website}</span>
-                        </div>
+                        {vendor.contact?.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="w-4 h-4 text-muted-foreground" />
+                            <span>{vendor.contact.phone}</span>
+                          </div>
+                        )}
+                        {vendor.contact?.email && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <span className="truncate">{vendor.contact.email}</span>
+                          </div>
+                        )}
+                        {vendor.contact?.website && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Globe className="w-4 h-4 text-muted-foreground" />
+                            <span>{vendor.contact.website}</span>
+                          </div>
+                        )}
+                        {!vendor.contact && (
+                          <p className="text-sm text-muted-foreground italic">Contact information not available</p>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="gap-2">

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { moderateContent } from "./contentModeration";
 import { fromZonedTime, toZonedTime, format } from "date-fns-tz";
 import { openai } from "./openai";
+import { registerExtendedRoutes } from "./extendedRoutes";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -6350,8 +6351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Memorial Event Planner API Routes
   // ============================================================================
 
-  // Create memorial event plan
-  app.post('/api/memorial-event-plans', isAuthenticated, async (req: any, res) => {
+  // Create memorial event plan (with both route aliases for compatibility)
+  const createEventPlanHandler = async (req: any, res: any) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertMemorialEventPlanSchema.parse({
@@ -6368,10 +6369,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating event plan:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.post('/api/memorial-event-plans', isAuthenticated, createEventPlanHandler);
+  app.post('/api/event-plans', isAuthenticated, createEventPlanHandler);
 
-  // List memorial event plans
-  app.get('/api/memorial-event-plans', isAuthenticated, async (req: any, res) => {
+  // List memorial event plans (with route aliases)
+  const listEventPlansHandler = async (req: any, res: any) => {
     try {
       const userId = req.user.claims.sub;
       const eventPlans = await storage.listMemorialEventPlans(userId);
@@ -6380,10 +6384,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching event plans:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.get('/api/memorial-event-plans', isAuthenticated, listEventPlansHandler);
+  app.get('/api/event-plans', isAuthenticated, listEventPlansHandler);
 
-  // Get specific memorial event plan
-  app.get('/api/memorial-event-plans/:id', isAuthenticated, async (req: any, res) => {
+  // Get specific memorial event plan (with route aliases)
+  const getEventPlanHandler = async (req: any, res: any) => {
     try {
       const eventPlan = await storage.getMemorialEventPlan(req.params.id);
       if (!eventPlan) {
@@ -6394,10 +6401,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching event plan:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.get('/api/memorial-event-plans/:id', isAuthenticated, getEventPlanHandler);
+  app.get('/api/event-plans/:id', isAuthenticated, getEventPlanHandler);
 
-  // Update memorial event plan
-  app.patch('/api/memorial-event-plans/:id', isAuthenticated, async (req: any, res) => {
+  // Update memorial event plan (with route aliases for PATCH and PUT)
+  const updateEventPlanHandler = async (req: any, res: any) => {
     try {
       const eventPlan = await storage.updateMemorialEventPlan(req.params.id, req.body);
       if (!eventPlan) {
@@ -6408,7 +6418,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating event plan:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.patch('/api/memorial-event-plans/:id', isAuthenticated, updateEventPlanHandler);
+  app.patch('/api/event-plans/:id', isAuthenticated, updateEventPlanHandler);
+  app.put('/api/event-plans/:id', isAuthenticated, updateEventPlanHandler);
 
   // Create vendor booking
   app.post('/api/vendor-bookings', isAuthenticated, async (req: any, res) => {
@@ -6425,8 +6439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get vendor bookings by event
-  app.get('/api/vendor-bookings/event/:eventId', isAuthenticated, async (req: any, res) => {
+  // Get vendor bookings by event (with route alias)
+  const getVendorBookingsHandler = async (req: any, res: any) => {
     try {
       const bookings = await storage.getVendorBookingsByEvent(req.params.eventId);
       res.json(bookings);
@@ -6434,7 +6448,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching vendor bookings:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.get('/api/vendor-bookings/event/:eventId', isAuthenticated, getVendorBookingsHandler);
+  app.get('/api/vendor-bookings/:eventId', isAuthenticated, getVendorBookingsHandler);
 
   // Get event tasks
   app.get('/api/event-tasks/:eventPlanId', isAuthenticated, async (req: any, res) => {
@@ -6650,19 +6667,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get athletic legacy score
-  app.get('/api/athletic-legacy-scores/:athleteId', async (req: any, res) => {
+  // Get athletic legacy score (with route alias)
+  const getLegacyScoreHandler = async (req: any, res: any) => {
     try {
-      const score = await storage.getAthleticLegacyScore(req.params.athleteId);
+      // First try to get existing score
+      let score = await storage.getAthleticLegacyScore(req.params.athleteId);
+      
+      // If no score exists, calculate it
       if (!score) {
-        return res.status(404).json({ message: "Legacy score not found" });
+        score = await storage.calculateAthleticLegacyScore(req.params.athleteId);
       }
+      
       res.json(score);
     } catch (error: any) {
       console.error("Error fetching athletic legacy score:", error);
       res.status(500).json({ message: error.message });
     }
-  });
+  };
+  
+  app.get('/api/athletic-legacy-scores/:athleteId', getLegacyScoreHandler);
+  app.get('/api/legacy-score/:athleteId', getLegacyScoreHandler);
 
   // Add Hall of Fame entry
   app.post('/api/hall-of-fame', isAuthenticated, async (req: any, res) => {
@@ -6714,6 +6738,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
+
+  // ===== MISSING CRITICAL ENDPOINTS =====
+  
+  // Get all users (admin only)
+  app.get("/api/users", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
+  // Get all QR codes
+  app.get("/api/qr-codes", async (req, res) => {
+    try {
+      const qrCodes = await storage.getQRCodes();
+      res.json(qrCodes);
+    } catch (error) {
+      console.error('Error fetching QR codes:', error);
+      res.status(500).json({ error: 'Failed to fetch QR codes' });
+    }
+  });
+
+  // Get all memorial photos
+  app.get("/api/memorial-photos", async (req, res) => {
+    try {
+      const photos = await storage.getMemorialPhotos();
+      res.json(photos);
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+      res.status(500).json({ error: 'Failed to fetch photos' });
+    }
+  });
+
+  // Get all memorial videos
+  app.get("/api/memorial-videos", async (req, res) => {
+    try {
+      const videos = await storage.getMemorialVideos();
+      res.json(videos);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      res.status(500).json({ error: 'Failed to fetch videos' });
+    }
+  });
+
+  // Get all memories
+  app.get("/api/memories", async (req, res) => {
+    try {
+      const memories = await storage.getMemories();
+      res.json(memories);
+    } catch (error) {
+      console.error('Error fetching memories:', error);
+      res.status(500).json({ error: 'Failed to fetch memories' });
+    }
+  });
+
+  // Get all condolences
+  app.get("/api/condolences", async (req, res) => {
+    try {
+      const condolences = await storage.getCondolences();
+      res.json(condolences);
+    } catch (error) {
+      console.error('Error fetching condolences:', error);
+      res.status(500).json({ error: 'Failed to fetch condolences' });
+    }
+  });
+
+  // Get all future messages
+  app.get("/api/future-messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const messages = await storage.getFutureMessages(req.user.id);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching future messages:', error);
+      res.status(500).json({ error: 'Failed to fetch future messages' });
+    }
+  });
+
+  // Get all scheduled messages
+  app.get("/api/scheduled-messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const messages = await storage.getScheduledMessages(req.user.id);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching scheduled messages:', error);
+      res.status(500).json({ error: 'Failed to fetch scheduled messages' });
+    }
+  });
+
+  // Get all video time capsules
+  app.get("/api/video-time-capsules", async (req, res) => {
+    try {
+      const capsules = await storage.getVideoTimeCapsules();
+      res.json(capsules);
+    } catch (error) {
+      console.error('Error fetching video time capsules:', error);
+      res.status(500).json({ error: 'Failed to fetch video time capsules' });
+    }
+  });
+
+  // Get all prison access sessions
+  app.get("/api/prison-access-sessions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const sessions = await storage.getPrisonAccessSessions();
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching prison access sessions:', error);
+      res.status(500).json({ error: 'Failed to fetch prison access sessions' });
+    }
+  });
+
+  // Get all celebrity donations
+  app.get("/api/celebrity-donations", async (req, res) => {
+    try {
+      const donations = await storage.getCelebrityDonations();
+      res.json(donations);
+    } catch (error) {
+      console.error('Error fetching celebrity donations:', error);
+      res.status(500).json({ error: 'Failed to fetch celebrity donations' });
+    }
+  });
+
+  // Get all celebrity fan content
+  app.get("/api/celebrity-fan-content", async (req, res) => {
+    try {
+      const content = await storage.getCelebrityFanContent();
+      res.json(content);
+    } catch (error) {
+      console.error('Error fetching fan content:', error);
+      res.status(500).json({ error: 'Failed to fetch fan content' });
+    }
+  });
+
+  // Get all donations
+  app.get("/api/donations", async (req, res) => {
+    try {
+      const donations = await storage.getDonations();
+      res.json(donations);
+    } catch (error) {
+      console.error('Error fetching donations:', error);
+      res.status(500).json({ error: 'Failed to fetch donations' });
+    }
+  });
+
+  // Get all fundraisers
+  app.get("/api/fundraisers", async (req, res) => {
+    try {
+      const fundraisers = await storage.getFundraisers();
+      res.json(fundraisers);
+    } catch (error) {
+      console.error('Error fetching fundraisers:', error);
+      res.status(500).json({ error: 'Failed to fetch fundraisers' });
+    }
+  });
+
+  // Get all live streams
+  app.get("/api/memorial-live-streams", async (req, res) => {
+    try {
+      const streams = await storage.getMemorialLiveStreams();
+      res.json(streams);
+    } catch (error) {
+      console.error('Error fetching live streams:', error);
+      res.status(500).json({ error: 'Failed to fetch live streams' });
+    }
+  });
+
+  // Get all grief support sessions
+  app.get("/api/grief-support", async (req, res) => {
+    try {
+      const sessions = await storage.getGriefSupport();
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching grief support:', error);
+      res.status(500).json({ error: 'Failed to fetch grief support' });
+    }
+  });
+
+  // Get all essential worker memorials
+  app.get("/api/essential-worker-memorials", async (req, res) => {
+    try {
+      const memorials = await storage.getEssentialWorkerMemorials();
+      res.json(memorials);
+    } catch (error) {
+      console.error('Error fetching essential worker memorials:', error);
+      res.status(500).json({ error: 'Failed to fetch essential worker memorials' });
+    }
+  });
+
+  // Register extended routes for payment processing, verification, and fulfillment
+  registerExtendedRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

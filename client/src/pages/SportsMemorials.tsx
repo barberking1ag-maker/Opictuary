@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -144,15 +146,15 @@ const sampleAthletes = [
   }
 ];
 
-// Sample team data
-const sampleTeams = [
+// Sample team data (replaced by API - keeping for reference structure)
+const sampleTeamsStructure = [
   {
     id: "t1",
     name: "1985 Chicago Bears",
     sport: "Football",
     level: "Professional",
     season: "1985-1986",
-    logo: "🐻",
+    logo: null, // Removed emoji
     record: "15-1",
     championship: "Super Bowl XX Champions",
     achievements: [
@@ -169,7 +171,7 @@ const sampleTeams = [
     sport: "Basketball",
     level: "Professional",
     season: "1995-1996",
-    logo: "🐂",
+    logo: null, // Removed emoji
     record: "72-10",
     championship: "NBA Champions",
     achievements: [
@@ -186,7 +188,7 @@ const sampleTeams = [
     sport: "Basketball",
     level: "College",
     season: "1967-1973",
-    logo: "🐻",
+    logo: null, // Removed emoji
     record: "205-5",
     championship: "7 Consecutive NCAA Championships",
     achievements: [
@@ -236,19 +238,19 @@ const statsToStories = [
     athlete: "Michael Jordan",
     stat: "32,292 career points",
     story: "That's enough to score 30 points in every game for 32 straight seasons, or the equivalent of scoring every single point in 403 complete NBA games where the final score was 80-0.",
-    visual: "📊"
+    visual: null
   },
   {
     athlete: "Tom Brady",
     stat: "649 touchdown passes",
     story: "If Tom Brady threw one touchdown pass every Sunday, it would take over 12 years of non-stop Sunday football to match his career total.",
-    visual: "🏈"
+    visual: null
   },
   {
     athlete: "Serena Williams",
     stat: "23 Grand Slam singles titles",
     story: "That's more Grand Slams than Roger Federer (20) and almost enough to win every Grand Slam tournament for 6 straight years.",
-    visual: "🎾"
+    visual: null
   }
 ];
 
@@ -258,8 +260,30 @@ export default function SportsMemorials() {
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [selectedAthlete, setSelectedAthlete] = useState<typeof sampleAthletes[0] | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<any | null>(null);
   const { toast } = useToast();
+
+  // Fetch athletes from API
+  const { data: athletes = [], isLoading: athletesLoading } = useQuery({
+    queryKey: ['/api/athlete-profiles'],
+    enabled: activeTab === "athletes",
+  });
+
+  // Fetch teams from API
+  const { data: teams = [], isLoading: teamsLoading } = useQuery({
+    queryKey: ['/api/team-memorials'],
+    enabled: activeTab === "teams",
+  });
+
+  // Fetch hall of fame entries from API
+  const { data: hallOfFameEntries = [], isLoading: hallOfFameLoading } = useQuery({
+    queryKey: ['/api/hall-of-fame'],
+    enabled: activeTab === "hall-of-fame",
+  });
+
+  // Use sample data as fallback if API is empty
+  const displayAthletes = athletes.length > 0 ? athletes : sampleAthletes;
+  const displayTeams = teams.length > 0 ? teams : [];
 
   // Form state for creating athlete memorial
   const [formData, setFormData] = useState({
@@ -274,23 +298,72 @@ export default function SportsMemorials() {
     achievements: [] as string[]
   });
 
+  // Create athlete profile mutation
+  const createAthleteMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("POST", "/api/athlete-profiles", {
+        memorialId: "", // This should be linked to an existing memorial
+        sport: data.sport,
+        level: "professional",
+        position: data.position,
+        jerseyNumber: data.jerseyNumber,
+        teams: data.teams.map(team => ({
+          teamName: team,
+          startYear: new Date().getFullYear() - 10,
+          endYear: new Date().getFullYear(),
+        })),
+        careerStart: data.birthDate ? new Date(data.birthDate).toISOString() : undefined,
+        careerEnd: data.retiredDate ? new Date(data.retiredDate).toISOString() : undefined,
+        achievements: data.achievements,
+        biography: data.biography,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Memorial Created",
+        description: `Athletic memorial for ${formData.name} has been created successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/athlete-profiles'] });
+      // Trigger legacy score calculation
+      if (data.id) {
+        calculateLegacyScoreMutation.mutate(data.id);
+      }
+      setCreateModalOpen(false);
+      setFormData({
+        name: "",
+        sport: "",
+        position: "",
+        jerseyNumber: "",
+        birthDate: "",
+        retiredDate: "",
+        biography: "",
+        teams: [],
+        achievements: []
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create athletic memorial.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Calculate legacy score mutation
+  const calculateLegacyScoreMutation = useMutation({
+    mutationFn: async (athleteId: string) => {
+      const response = await apiRequest("GET", `/api/legacy-score/${athleteId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/athlete-profiles'] });
+    },
+  });
+
   const handleCreateMemorial = () => {
-    toast({
-      title: "Memorial Created",
-      description: `Athletic memorial for ${formData.name} has been created successfully.`,
-    });
-    setCreateModalOpen(false);
-    setFormData({
-      name: "",
-      sport: "",
-      position: "",
-      jerseyNumber: "",
-      birthDate: "",
-      retiredDate: "",
-      biography: "",
-      teams: [],
-      achievements: []
-    });
+    createAthleteMutation.mutate(formData);
   };
 
   const calculateLegacyScore = (stats: Record<string, string>) => {
@@ -432,7 +505,7 @@ export default function SportsMemorials() {
                           <span className="text-muted-foreground">({team.years})</span>
                           {team.championships > 0 && (
                             <Badge variant="secondary" className="text-xs">
-                              {team.championships} 🏆
+                              {team.championships} Championships
                             </Badge>
                           )}
                         </div>
