@@ -1,87 +1,24 @@
 name: Build iOS App
-
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-
 jobs:
   build:
-    name: Build iOS IPA
     runs-on: macos-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build production frontend
-        run: npm run build:client
-      
-      - name: Sync Capacitor
-        run: npx cap sync ios
-      
-      - name: Install Pods
-        run: |
-          cd ios/App
-          pod install --repo-update
-      
-      - name: Build iOS App
-        run: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -derivedDataPath build \
-            -arch arm64 \
-            build
-      
-      - name: Create IPA
-        run: |
-          cd ios/App/build
-          mkdir -p Payload
-          cp -r "Release-iphoneos/App.app" Payload/
-          cd Payload
-          zip -r ../App.ipa App.app
-          cd ..
-          ls -lh App.ipa
-      
-      - name: Check IPA exists
-        run: |
-          if [ -f ios/App/build/App.ipa ]; then
-            echo "✅ IPA file created successfully"
-            ls -lh ios/App/build/App.ipa
-          else
-            echo "❌ IPA file not found!"
-            exit 1
-          fi
-      
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+          node-version: 20
+      - run: npm install
+      - run: npm run build:client
+      - run: npx cap sync ios
+      - run: cd ios/App && pod install --repo-update
+      - run: cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -derivedDataPath build -arch arm64 build
+      - uses: actions/upload-artifact@v4
         with:
-          name: ios-release
-          path: ios/App/build/App.ipa
+          name: ios-build
+          path: ios/App/build/Release-iphoneos/
           retention-days: 30
-          if-no-files-found: error
-      
-      - name: Build summary
-        run: |
-          echo "### ✅ iOS App Built Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Download your app:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Go to the 'Actions' tab" >> $GITHUB_STEP_SUMMARY
-          echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
-          echo "3. Download the 'ios-release' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "4. Extract the ZIP to get your .ipa file" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Upload App.ipa to Apple TestFlight" >> $GITHUB_STEP_SUMMARY
