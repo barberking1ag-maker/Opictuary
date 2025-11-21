@@ -1,0 +1,116 @@
+name: Build Android Complete for Google Play
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Version code (e.g., 2025112101)'
+        required: true
+        default: '2025112101'
+      version_name:
+        description: 'Version name (e.g., 2.1.0)'
+        required: true
+        default: '2.1.0'
+
+jobs:
+  build:
+    name: Build Complete Android App Bundle
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+            android/build
+            node_modules
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      
+      - name: Install Node dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: Build production frontend with all features
+        run: npm run build:client
+        env:
+          NODE_ENV: production
+          VITE_API_URL: ''
+          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY || 'pk_test_51234567890abcdefghijklmnopqrstuvwxyz' }}
+      
+      - name: Sync Capacitor with Android
+        run: npx cap sync android
+      
+      - name: Update version in build.gradle
+        if: github.event.inputs.version_code
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.event.inputs.version_code }}/g" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ github.event.inputs.version_name }}\"/g" android/app/build.gradle
+      
+      - name: Build Android App Bundle (AAB)
+        working-directory: ./android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean
+          ./gradlew bundleRelease --no-daemon --stacktrace
+      
+      - name: Build Android APK (for testing)
+        working-directory: ./android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      
+      - name: Upload AAB (for Google Play)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-bundle-v${{ github.event.inputs.version_name }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+      
+      - name: Upload APK (for testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk-v${{ github.event.inputs.version_name }}
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+      
+      - name: Generate build summary
+        run: |
+          echo "## 🎉 Android Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Information:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Code:** ${{ github.event.inputs.version_code }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Name:** ${{ github.event.inputs.version_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **App ID:** com.opictuary.memorial" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+          echo "1. **app-release.aab** - Upload this to Google Play Console" >> $GITHUB_STEP_SUMMARY
+          echo "2. **app-release.apk** - Use for direct testing" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps for Google Play:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the AAB artifact" >> $GITHUB_STEP_SUMMARY
+          echo "2. Go to Google Play Console" >> $GITHUB_STEP_SUMMARY
+          echo "3. Create a new release in your testing track" >> $GITHUB_STEP_SUMMARY
+          echo "4. Upload the AAB file" >> $GITHUB_STEP_SUMMARY
+          echo "5. Add release notes and publish" >> $GITHUB_STEP_SUMMARY
