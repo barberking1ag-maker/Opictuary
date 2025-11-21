@@ -1,9 +1,8 @@
-name: Build Android App Bundle
+name: Build Android
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,9 +19,8 @@ jobs:
       - run: npm install
       - run: npm run build:client
       - run: npx cap sync android
-      - run: cd android && chmod +x ./gradlew && ./gradlew assembleRelease
+      - run: cd android && chmod +x gradlew && ./gradlew assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          path: android/app/build/outputs/apk/release/
