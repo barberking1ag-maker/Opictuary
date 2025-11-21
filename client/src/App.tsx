@@ -62,6 +62,7 @@ import Products from "@/pages/Products";
 import ProductCustomize from "@/pages/ProductCustomize";
 import MyOrders from "@/pages/MyOrders";
 import OrderTracking from "@/pages/OrderTracking";
+import EventPlanner from "@/pages/EventPlanner";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -136,6 +137,12 @@ function Router() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-event-planner">
+                    <Link href="/event-planner">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>Event Planner</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-future-messages">
                     <Link href="/upcoming-messages">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -228,6 +235,12 @@ function Router() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-event-planner">
+                      <Link href="/event-planner">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>Event Planner</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-future-messages">
                       <Link href="/upcoming-messages">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -336,6 +349,7 @@ function Router() {
         <Route path="/memorial/:id/future-messages" component={FutureMessages} />
         <Route path="/memorial/:id/video-time-capsules" component={VideoTimeCapsules} />
         <Route path="/upcoming-messages" component={UpcomingMessages} />
+        <Route path="/event-planner" component={EventPlanner} />
         <Route path="/celebrity/:id/estate-content" component={CelebrityEstateContent} />
         
         {/* Product Routes */}
