@@ -64,17 +64,6 @@ import {
   memorialPlaylists,
   memorialSlideshows,
   videoCondolences,
-  byusUsers,
-  byusMediations,
-  byusAnalysis,
-  byusMediationHistory,
-  byusMediationComments,
-  byusFeedback,
-  byusHealthProfiles,
-  byusDiagnoses,
-  byusPrescriptions,
-  byusCrisisEvents,
-  byusCrisisCompanion,
   products,
   productOrders,
   type User,
@@ -215,30 +204,6 @@ import {
   type InsertMemorialSlideshow,
   type VideoCondolence,
   type InsertVideoCondolence,
-  type ByusUser,
-  type InsertByusUser,
-  type ByusMediation,
-  type InsertByusMediation,
-  type ByusMediationHistory,
-  type InsertByusMediationHistory,
-  type ByusFeedback,
-  type InsertByusFeedback,
-  type ByusHealthProfile,
-  type InsertByusHealthProfile,
-  type ByusDiagnosis,
-  type InsertByusDiagnosis,
-  type ByusPrescription,
-  type InsertByusPrescription,
-  type ByusCrisisEvent,
-  type InsertByusCrisisEvent,
-  type ByusCrisisCompanion,
-  type InsertByusCrisisCompanion,
-  byusTherapists,
-  type ByusTherapist,
-  type InsertByusTherapist,
-  byusProfessionalReviews,
-  type ByusProfessionalReview,
-  type InsertByusProfessionalReview,
   // Event Planner tables and types
   memorialEventPlans,
   eventTasks,
@@ -667,88 +632,6 @@ export interface IStorage {
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   deleteChatMessages(userId: string): Promise<void>;
 
-  // ============= BYUS Mediator App Methods =============
-  // BYUS User operations
-  createByusUser(user: InsertByusUser): Promise<ByusUser>;
-  getByusUser(id: string): Promise<ByusUser | undefined>;
-  getByusUserByEmail(email: string): Promise<ByusUser | undefined>;
-  updateByusSubscription(userId: string, tier: string, status: string, trialEndDate?: Date): Promise<ByusUser | undefined>;
-
-  // BYUS Mediation operations
-  createMediation(mediation: InsertByusMediation): Promise<ByusMediation>;
-  getMediation(id: string): Promise<(ByusMediation & { professionalReview?: ByusProfessionalReview; therapist?: ByusTherapist }) | undefined>;
-  updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined>;
-  getMediationsByUser(userId: string): Promise<ByusMediation[]>;
-
-  // BYUS Mediation History operations
-  recordMediationHistory(history: InsertByusMediationHistory): Promise<ByusMediationHistory>;
-  getMediationHistory(mediationId: string): Promise<ByusMediationHistory[]>;
-
-  // BYUS Feedback operations
-  addFeedback(feedback: InsertByusFeedback): Promise<ByusFeedback>;
-  getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]>;
-
-  // BYUS Mediation Categories operations
-  getMediationCategories(): Promise<any[]>;
-  createMediationCategory(category: any): Promise<any>;
-  
-  // BYUS Therapist operations
-  createTherapist(therapist: InsertByusTherapist): Promise<ByusTherapist>;
-  getTherapist(id: string): Promise<ByusTherapist | undefined>;
-  getTherapistByEmail(email: string): Promise<ByusTherapist | undefined>;
-  getActiveTherapists(limit?: number, offset?: number): Promise<ByusTherapist[]>;
-  updateTherapist(id: string, therapist: Partial<InsertByusTherapist>): Promise<ByusTherapist | undefined>;
-  
-  // BYUS Professional Review operations
-  createProfessionalReview(review: InsertByusProfessionalReview): Promise<ByusProfessionalReview>;
-  getProfessionalReview(id: string): Promise<ByusProfessionalReview | undefined>;
-  getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined>;
-  getReviewsByCrisisEventId(crisisEventId: string): Promise<ByusProfessionalReview[]>;
-  getReviewsByTherapist(therapistId: string, limit?: number, offset?: number): Promise<ByusProfessionalReview[]>;
-  getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]>;
-  updateReviewStatus(id: string, status: string, therapistNotes?: string, professionalRecommendations?: string, validationScore?: number): Promise<ByusProfessionalReview | undefined>;
-  
-  // BYUS Health Profile operations (anonymized)
-  createHealthProfile(profile: InsertByusHealthProfile): Promise<ByusHealthProfile>;
-  getHealthProfile(pseudonymousId: string): Promise<ByusHealthProfile | undefined>;
-  updateHealthProfile(id: string, profile: Partial<InsertByusHealthProfile>): Promise<ByusHealthProfile | undefined>;
-  getHealthStatistics(ageGroup?: string, region?: string): Promise<{
-    totalProfiles: number;
-    ageDistribution: Record<string, number>;
-    regionDistribution: Record<string, number>;
-  }>;
-  
-  // BYUS Diagnosis operations
-  createDiagnosis(diagnosis: InsertByusDiagnosis): Promise<ByusDiagnosis>;
-  getDiagnosesByHealthProfile(healthProfileId: string): Promise<ByusDiagnosis[]>;
-  updateDiagnosisStatus(id: string, isActive: boolean): Promise<ByusDiagnosis | undefined>;
-  
-  // BYUS Prescription operations
-  createPrescription(prescription: InsertByusPrescription): Promise<ByusPrescription>;
-  getPrescriptionsByHealthProfile(healthProfileId: string): Promise<ByusPrescription[]>;
-  updatePrescriptionEffectiveness(id: string, effectiveness: number, sideEffectsSeverity: number): Promise<ByusPrescription | undefined>;
-  getActivePrescriptions(healthProfileId: string): Promise<ByusPrescription[]>;
-  
-  // BYUS Crisis Event operations
-  recordCrisisEvent(event: InsertByusCrisisEvent): Promise<ByusCrisisEvent>;
-  getCrisisEventsByHealthProfile(healthProfileId: string): Promise<ByusCrisisEvent[]>;
-  getCrisisEventById(id: string): Promise<ByusCrisisEvent | undefined>;
-  updateCrisisEventOutcome(id: string, outcome: string): Promise<ByusCrisisEvent | undefined>;
-  getCrisisStatistics(timeRange?: { start: Date; end: Date }): Promise<{
-    totalEvents: number;
-    byEventType: Record<string, number>;
-    bySeverity: Record<number, number>;
-    byOutcome: Record<string, number>;
-    averageResponseTime: number;
-  }>;
-  
-  // BYUS Crisis Companion operations
-  createCrisisCompanion(companion: InsertByusCrisisCompanion): Promise<ByusCrisisCompanion>;
-  getCrisisCompanionsByCategory(category: string): Promise<ByusCrisisCompanion[]>;
-  getActiveCrisisCompanions(): Promise<ByusCrisisCompanion[]>;
-  updateCrisisCompanion(id: string, companion: Partial<InsertByusCrisisCompanion>): Promise<ByusCrisisCompanion | undefined>;
-  deleteCrisisCompanion(id: string): Promise<void>;
-  
   // Physical Product operations
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: string): Promise<Product | undefined>;
@@ -1383,12 +1266,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialDocumentary(documentary: InsertMemorialDocumentary): Promise<MemorialDocumentary> {
-    const [created] = await db.insert(memorialDocumentaries).values(documentary as any).returning();
+    // Ensure photoIds is properly formatted as an array for JSON storage
+    const documentaryData = {
+      ...documentary,
+      photoIds: documentary.photoIds || []
+    };
+    const [created] = await db.insert(memorialDocumentaries).values(documentaryData).returning();
     return created;
   }
 
   async updateMemorialDocumentary(id: string, documentary: Partial<InsertMemorialDocumentary>): Promise<MemorialDocumentary | undefined> {
-    const [updated] = await db.update(memorialDocumentaries).set(documentary as any).where(eq(memorialDocumentaries.id, id)).returning();
+    // Ensure photoIds is properly formatted if provided
+    const updateData = documentary.photoIds !== undefined
+      ? { ...documentary, photoIds: documentary.photoIds || [] }
+      : documentary;
+    const [updated] = await db.update(memorialDocumentaries).set(updateData).where(eq(memorialDocumentaries.id, id)).returning();
     return updated || undefined;
   }
 
@@ -1733,12 +1625,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialPlaylist(playlist: InsertMemorialPlaylist): Promise<MemorialPlaylist> {
-    const [created] = await db.insert(memorialPlaylists).values(playlist).returning();
+    // Ensure songs is properly formatted as an array for JSON storage
+    const playlistData = {
+      ...playlist,
+      songs: playlist.songs || []
+    };
+    const [created] = await db.insert(memorialPlaylists).values(playlistData).returning();
     return created;
   }
 
   async updateMemorialPlaylist(id: string, playlist: Partial<InsertMemorialPlaylist>): Promise<MemorialPlaylist | undefined> {
-    const [updated] = await db.update(memorialPlaylists).set(playlist).where(eq(memorialPlaylists.id, id)).returning();
+    // Ensure songs is properly formatted if provided
+    const updateData = playlist.songs !== undefined 
+      ? { ...playlist, songs: playlist.songs || [] }
+      : playlist;
+    const [updated] = await db.update(memorialPlaylists).set(updateData).where(eq(memorialPlaylists.id, id)).returning();
     return updated || undefined;
   }
 
@@ -1771,12 +1672,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialSlideshow(slideshow: InsertMemorialSlideshow): Promise<MemorialSlideshow> {
-    const [created] = await db.insert(memorialSlideshows).values(slideshow).returning();
+    // Ensure photoIds is properly formatted as an array for JSON storage
+    const slideshowData = {
+      ...slideshow,
+      photoIds: slideshow.photoIds || []
+    };
+    const [created] = await db.insert(memorialSlideshows).values(slideshowData).returning();
     return created;
   }
 
   async updateMemorialSlideshow(id: string, slideshow: Partial<InsertMemorialSlideshow>): Promise<MemorialSlideshow | undefined> {
-    const [updated] = await db.update(memorialSlideshows).set(slideshow).where(eq(memorialSlideshows.id, id)).returning();
+    // Ensure photoIds is properly formatted if provided
+    const updateData = slideshow.photoIds !== undefined
+      ? { ...slideshow, photoIds: slideshow.photoIds || [] }
+      : slideshow;
+    const [updated] = await db.update(memorialSlideshows).set(updateData).where(eq(memorialSlideshows.id, id)).returning();
     return updated || undefined;
   }
 
@@ -3259,13 +3169,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFuneralProgram(program: InsertFuneralProgram): Promise<FuneralProgram> {
-    const [created] = await db.insert(funeralPrograms).values(program).returning();
+    // Ensure songs is properly formatted as an array for JSON storage
+    const programData = {
+      ...program,
+      songs: program.songs || []
+    };
+    const [created] = await db.insert(funeralPrograms).values(programData).returning();
     return created;
   }
 
   async updateFuneralProgram(memorialId: string, program: Partial<InsertFuneralProgram>): Promise<FuneralProgram | undefined> {
+    // Ensure songs is properly formatted if provided
+    const updateData = program.songs !== undefined
+      ? { ...program, songs: program.songs || [], updatedAt: new Date() }
+      : { ...program, updatedAt: new Date() };
     const [updated] = await db.update(funeralPrograms)
-      .set({ ...program, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(funeralPrograms.memorialId, memorialId))
       .returning();
     return updated || undefined;
@@ -3311,478 +3230,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChatMessages(userId: string): Promise<void> {
     await db.delete(chatMessages).where(eq(chatMessages.userId, userId));
-  }
-
-  // ============= BYUS Mediator App Methods Implementation =============
-  
-  // BYUS User operations
-  async createByusUser(user: InsertByusUser): Promise<ByusUser> {
-    const [created] = await db.insert(byusUsers).values(user).returning();
-    return created;
-  }
-
-  async getByusUser(id: string): Promise<ByusUser | undefined> {
-    const [user] = await db.select().from(byusUsers).where(eq(byusUsers.id, id));
-    return user || undefined;
-  }
-
-  async getByusUserByEmail(email: string): Promise<ByusUser | undefined> {
-    const [user] = await db.select().from(byusUsers).where(eq(byusUsers.email, email));
-    return user || undefined;
-  }
-
-  async updateByusSubscription(
-    userId: string, 
-    tier: string, 
-    status: string, 
-    trialEndDate?: Date
-  ): Promise<ByusUser | undefined> {
-    const [updated] = await db.update(byusUsers)
-      .set({
-        subscriptionTier: tier,
-        subscriptionStatus: status,
-        trialEndDate,
-        updatedAt: new Date(),
-      })
-      .where(eq(byusUsers.id, userId))
-      .returning();
-    return updated || undefined;
-  }
-
-  // BYUS Mediation operations
-  async createMediation(mediation: InsertByusMediation): Promise<ByusMediation> {
-    const [created] = await db.insert(byusMediations).values(mediation).returning();
-    return created;
-  }
-
-  async getMediation(id: string): Promise<(ByusMediation & { professionalReview?: ByusProfessionalReview; therapist?: ByusTherapist }) | undefined> {
-    const [mediation] = await db.select().from(byusMediations).where(eq(byusMediations.id, id));
-    
-    if (mediation) {
-      // Get professional review if exists
-      const [review] = await db.select().from(byusProfessionalReviews)
-        .where(eq(byusProfessionalReviews.mediationId, id));
-      
-      let therapist;
-      if (review) {
-        const [therapistData] = await db.select().from(byusTherapists)
-          .where(eq(byusTherapists.id, review.therapistId));
-        therapist = therapistData;
-      }
-      
-      return {
-        ...mediation,
-        professionalReview: review,
-        therapist,
-      };
-    }
-    
-    return undefined;
-  }
-
-  async updateMediation(id: string, mediation: Partial<InsertByusMediation>): Promise<ByusMediation | undefined> {
-    const [updated] = await db.update(byusMediations)
-      .set({
-        ...mediation,
-        updatedAt: new Date(),
-      })
-      .where(eq(byusMediations.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async getMediationsByUser(userId: string): Promise<ByusMediation[]> {
-    return await db.select().from(byusMediations)
-      .where(eq(byusMediations.userId, userId))
-      .orderBy(desc(byusMediations.createdAt));
-  }
-
-  // BYUS Mediation History operations
-  async recordMediationHistory(history: InsertByusMediationHistory): Promise<ByusMediationHistory> {
-    const [created] = await db.insert(byusMediationHistory).values(history).returning();
-    return created;
-  }
-
-  async getMediationHistory(mediationId: string): Promise<ByusMediationHistory[]> {
-    return await db.select().from(byusMediationHistory)
-      .where(eq(byusMediationHistory.mediationId, mediationId))
-      .orderBy(desc(byusMediationHistory.createdAt));
-  }
-
-  // BYUS Feedback operations
-  async addFeedback(feedback: InsertByusFeedback): Promise<ByusFeedback> {
-    const [created] = await db.insert(byusFeedback).values(feedback).returning();
-    return created;
-  }
-
-  async getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]> {
-    return await db.select().from(byusFeedback)
-      .where(eq(byusFeedback.mediationId, mediationId))
-      .orderBy(desc(byusFeedback.createdAt));
-  }
-
-  // BYUS Mediation Categories operations
-  async getMediationCategories(): Promise<ByusMediationCategory[]> {
-    // For now return hardcoded categories since we don't have a separate categories table
-    return [
-      { id: '1', name: 'relationship', description: 'Relationship conflicts', icon: 'heart' },
-      { id: '2', name: 'business', description: 'Business disputes', icon: 'briefcase' },
-      { id: '3', name: 'family', description: 'Family matters', icon: 'home' },
-      { id: '4', name: 'legal', description: 'Legal disagreements', icon: 'gavel' },
-      { id: '5', name: 'other', description: 'Other conflicts', icon: 'help' }
-    ];
-  }
-
-  async createMediationCategory(category: any): Promise<any> {
-    // Categories are hardcoded for now, just return the category
-    return { ...category, id: String(Date.now()) };
-  }
-  
-  // BYUS Therapist operations
-  async createTherapist(therapist: InsertByusTherapist): Promise<ByusTherapist> {
-    const [created] = await db.insert(byusTherapists).values(therapist).returning();
-    return created;
-  }
-  
-  async getTherapist(id: string): Promise<ByusTherapist | undefined> {
-    const [therapist] = await db.select().from(byusTherapists).where(eq(byusTherapists.id, id));
-    return therapist || undefined;
-  }
-  
-  async getTherapistByEmail(email: string): Promise<ByusTherapist | undefined> {
-    const [therapist] = await db.select().from(byusTherapists).where(eq(byusTherapists.email, email));
-    return therapist || undefined;
-  }
-  
-  async getActiveTherapists(limit: number = 50, offset: number = 0): Promise<ByusTherapist[]> {
-    const effectiveLimit = Math.min(limit, 200);
-    return await db.select().from(byusTherapists)
-      .where(eq(byusTherapists.isActive, true))
-      .orderBy(desc(byusTherapists.createdAt))
-      .limit(effectiveLimit)
-      .offset(offset);
-  }
-  
-  async updateTherapist(id: string, therapist: Partial<InsertByusTherapist>): Promise<ByusTherapist | undefined> {
-    const [updated] = await db.update(byusTherapists)
-      .set({
-        ...therapist,
-        updatedAt: new Date(),
-      })
-      .where(eq(byusTherapists.id, id))
-      .returning();
-    return updated || undefined;
-  }
-  
-  // BYUS Professional Review operations
-  async createProfessionalReview(review: InsertByusProfessionalReview): Promise<ByusProfessionalReview> {
-    const [created] = await db.insert(byusProfessionalReviews).values(review).returning();
-    
-    // Update mediation status
-    await db.update(byusMediations)
-      .set({ 
-        professionalReviewStatus: 'pending',
-        updatedAt: new Date() 
-      })
-      .where(eq(byusMediations.id, review.mediationId));
-    
-    return created;
-  }
-  
-  async getProfessionalReview(id: string): Promise<ByusProfessionalReview | undefined> {
-    const [review] = await db.select().from(byusProfessionalReviews).where(eq(byusProfessionalReviews.id, id));
-    return review || undefined;
-  }
-  
-  async getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined> {
-    const [review] = await db.select().from(byusProfessionalReviews)
-      .where(eq(byusProfessionalReviews.mediationId, mediationId));
-    return review || undefined;
-  }
-  
-  async getReviewsByTherapist(therapistId: string, limit: number = 50, offset: number = 0): Promise<ByusProfessionalReview[]> {
-    const effectiveLimit = Math.min(limit, 200);
-    return await db.select().from(byusProfessionalReviews)
-      .where(eq(byusProfessionalReviews.therapistId, therapistId))
-      .orderBy(desc(byusProfessionalReviews.createdAt))
-      .limit(effectiveLimit)
-      .offset(offset);
-  }
-  
-  async getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]> {
-    return await db.select().from(byusProfessionalReviews)
-      .where(
-        and(
-          eq(byusProfessionalReviews.therapistId, therapistId),
-          eq(byusProfessionalReviews.reviewStatus, 'pending')
-        )
-      )
-      .orderBy(byusProfessionalReviews.createdAt);
-  }
-  
-  async updateReviewStatus(
-    id: string, 
-    status: string, 
-    therapistNotes?: string, 
-    professionalRecommendations?: string, 
-    validationScore?: number
-  ): Promise<ByusProfessionalReview | undefined> {
-    const [updated] = await db.update(byusProfessionalReviews)
-      .set({
-        reviewStatus: status,
-        therapistNotes,
-        professionalRecommendations,
-        validationScore,
-        reviewedAt: new Date(),
-      })
-      .where(eq(byusProfessionalReviews.id, id))
-      .returning();
-    
-    if (updated) {
-      // Update mediation professional review status
-      const reviewStatusMap: Record<string, string> = {
-        'approved': 'approved',
-        'needs_revision': 'reviewed',
-        'reviewing': 'pending',
-      };
-      
-      await db.update(byusMediations)
-        .set({ 
-          professionalReviewStatus: reviewStatusMap[status] || 'pending',
-          updatedAt: new Date() 
-        })
-        .where(eq(byusMediations.id, updated.mediationId));
-    }
-    
-    return updated || undefined;
-  }
-
-  // BYUS Health Profile operations (anonymized)
-  async createHealthProfile(profile: InsertByusHealthProfile): Promise<ByusHealthProfile> {
-    const [created] = await db.insert(byusHealthProfiles).values(profile).returning();
-    return created;
-  }
-
-  async getHealthProfile(pseudonymousId: string): Promise<ByusHealthProfile | undefined> {
-    const [profile] = await db.select()
-      .from(byusHealthProfiles)
-      .where(eq(byusHealthProfiles.pseudonymousId, pseudonymousId));
-    return profile || undefined;
-  }
-
-  async updateHealthProfile(id: string, profile: Partial<InsertByusHealthProfile>): Promise<ByusHealthProfile | undefined> {
-    const [updated] = await db.update(byusHealthProfiles)
-      .set({ ...profile, updatedAt: new Date() })
-      .where(eq(byusHealthProfiles.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async getHealthStatistics(ageGroup?: string, region?: string): Promise<{
-    totalProfiles: number;
-    ageDistribution: Record<string, number>;
-    regionDistribution: Record<string, number>;
-  }> {
-    let query = db.select().from(byusHealthProfiles);
-    
-    if (ageGroup) {
-      query = query.where(eq(byusHealthProfiles.ageGroup, ageGroup));
-    }
-    if (region) {
-      query = query.where(eq(byusHealthProfiles.region, region));
-    }
-
-    const profiles = await query;
-    
-    const ageDistribution: Record<string, number> = {};
-    const regionDistribution: Record<string, number> = {};
-    
-    profiles.forEach(profile => {
-      ageDistribution[profile.ageGroup] = (ageDistribution[profile.ageGroup] || 0) + 1;
-      if (profile.region) {
-        regionDistribution[profile.region] = (regionDistribution[profile.region] || 0) + 1;
-      }
-    });
-
-    return {
-      totalProfiles: profiles.length,
-      ageDistribution,
-      regionDistribution
-    };
-  }
-
-  // BYUS Diagnosis operations
-  async createDiagnosis(diagnosis: InsertByusDiagnosis): Promise<ByusDiagnosis> {
-    const [created] = await db.insert(byusDiagnoses).values(diagnosis).returning();
-    return created;
-  }
-
-  async getDiagnosesByHealthProfile(healthProfileId: string): Promise<ByusDiagnosis[]> {
-    return await db.select()
-      .from(byusDiagnoses)
-      .where(eq(byusDiagnoses.healthProfileId, healthProfileId))
-      .orderBy(desc(byusDiagnoses.reportedDate));
-  }
-
-  async updateDiagnosisStatus(id: string, isActive: boolean): Promise<ByusDiagnosis | undefined> {
-    const [updated] = await db.update(byusDiagnoses)
-      .set({ isActive })
-      .where(eq(byusDiagnoses.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  // BYUS Prescription operations
-  async createPrescription(prescription: InsertByusPrescription): Promise<ByusPrescription> {
-    const [created] = await db.insert(byusPrescriptions).values(prescription).returning();
-    return created;
-  }
-
-  async getPrescriptionsByHealthProfile(healthProfileId: string): Promise<ByusPrescription[]> {
-    return await db.select()
-      .from(byusPrescriptions)
-      .where(eq(byusPrescriptions.healthProfileId, healthProfileId))
-      .orderBy(desc(byusPrescriptions.startDate));
-  }
-
-  async updatePrescriptionEffectiveness(
-    id: string, 
-    effectiveness: number, 
-    sideEffectsSeverity: number
-  ): Promise<ByusPrescription | undefined> {
-    const [updated] = await db.update(byusPrescriptions)
-      .set({ effectiveness, sideEffectsSeverity })
-      .where(eq(byusPrescriptions.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async getActivePrescriptions(healthProfileId: string): Promise<ByusPrescription[]> {
-    return await db.select()
-      .from(byusPrescriptions)
-      .where(
-        and(
-          eq(byusPrescriptions.healthProfileId, healthProfileId),
-          sql`${byusPrescriptions.endDate} IS NULL OR ${byusPrescriptions.endDate} > NOW()`
-        )
-      )
-      .orderBy(desc(byusPrescriptions.startDate));
-  }
-
-  // BYUS Crisis Event operations
-  async recordCrisisEvent(event: InsertByusCrisisEvent): Promise<ByusCrisisEvent> {
-    const [created] = await db.insert(byusCrisisEvents).values(event).returning();
-    return created;
-  }
-
-  async getCrisisEventsByHealthProfile(healthProfileId: string): Promise<ByusCrisisEvent[]> {
-    return await db.select()
-      .from(byusCrisisEvents)
-      .where(eq(byusCrisisEvents.healthProfileId, healthProfileId))
-      .orderBy(desc(byusCrisisEvents.createdAt));
-  }
-
-  async getCrisisEventById(id: string): Promise<ByusCrisisEvent | undefined> {
-    const [event] = await db.select()
-      .from(byusCrisisEvents)
-      .where(eq(byusCrisisEvents.id, id));
-    return event || undefined;
-  }
-
-  async updateCrisisEventOutcome(id: string, outcome: string): Promise<ByusCrisisEvent | undefined> {
-    const [updated] = await db.update(byusCrisisEvents)
-      .set({ outcome })
-      .where(eq(byusCrisisEvents.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async getCrisisStatistics(timeRange?: { start: Date; end: Date }): Promise<{
-    totalEvents: number;
-    byEventType: Record<string, number>;
-    bySeverity: Record<number, number>;
-    byOutcome: Record<string, number>;
-    averageResponseTime: number;
-  }> {
-    let query = db.select().from(byusCrisisEvents);
-    
-    if (timeRange) {
-      query = query.where(
-        and(
-          sql`${byusCrisisEvents.createdAt} >= ${timeRange.start}`,
-          sql`${byusCrisisEvents.createdAt} <= ${timeRange.end}`
-        )
-      );
-    }
-
-    const events = await query;
-    
-    const byEventType: Record<string, number> = {};
-    const bySeverity: Record<number, number> = {};
-    const byOutcome: Record<string, number> = {};
-    
-    events.forEach(event => {
-      byEventType[event.eventType] = (byEventType[event.eventType] || 0) + 1;
-      bySeverity[event.severity] = (bySeverity[event.severity] || 0) + 1;
-      byOutcome[event.outcome] = (byOutcome[event.outcome] || 0) + 1;
-    });
-
-    // Calculate average response time (placeholder - would need more data)
-    const averageResponseTime = 15; // minutes
-
-    return {
-      totalEvents: events.length,
-      byEventType,
-      bySeverity,
-      byOutcome,
-      averageResponseTime
-    };
-  }
-
-  // BYUS Crisis Companion operations
-  async createCrisisCompanion(companion: InsertByusCrisisCompanion): Promise<ByusCrisisCompanion> {
-    const [created] = await db.insert(byusCrisisCompanion).values(companion).returning();
-    return created;
-  }
-
-  async getCrisisCompanionsByCategory(category: string): Promise<ByusCrisisCompanion[]> {
-    return await db.select()
-      .from(byusCrisisCompanion)
-      .where(
-        and(
-          eq(byusCrisisCompanion.category, category),
-          eq(byusCrisisCompanion.isActive, true)
-        )
-      )
-      .orderBy(desc(byusCrisisCompanion.priority));
-  }
-
-  async getActiveCrisisCompanions(): Promise<ByusCrisisCompanion[]> {
-    return await db.select()
-      .from(byusCrisisCompanion)
-      .where(eq(byusCrisisCompanion.isActive, true))
-      .orderBy(desc(byusCrisisCompanion.priority));
-  }
-
-  async updateCrisisCompanion(id: string, companion: Partial<InsertByusCrisisCompanion>): Promise<ByusCrisisCompanion | undefined> {
-    const [updated] = await db.update(byusCrisisCompanion)
-      .set(companion)
-      .where(eq(byusCrisisCompanion.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async deleteCrisisCompanion(id: string): Promise<void> {
-    await db.delete(byusCrisisCompanion)
-      .where(eq(byusCrisisCompanion.id, id));
-  }
-
-  // BYUS Professional Review - additional method for crisis events
-  async getReviewsByCrisisEventId(crisisEventId: string): Promise<ByusProfessionalReview[]> {
-    return await db.select()
-      .from(byusProfessionalReviews)
-      .where(eq(byusProfessionalReviews.crisisEventId, crisisEventId))
-      .orderBy(desc(byusProfessionalReviews.createdAt));
   }
 
   // Physical Product operations
