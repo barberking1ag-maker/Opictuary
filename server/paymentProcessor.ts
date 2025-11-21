@@ -13,10 +13,22 @@ import {
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia'
-});
+// Initialize Stripe with secret key - gracefully handle missing configuration
+let stripe: Stripe | null = null;
+
+if (process.env.STRIPE_SECRET_KEY) {
+  try {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16'  // Use valid Stripe API version
+    });
+    console.log('[PAYMENT PROCESSOR] Stripe initialized successfully');
+  } catch (error) {
+    console.warn('[PAYMENT PROCESSOR] Failed to initialize Stripe:', error);
+    console.warn('[PAYMENT PROCESSOR] Payment features will be disabled');
+  }
+} else {
+  console.warn('[PAYMENT PROCESSOR] Stripe secret key not configured. Payment features will be disabled');
+}
 
 // Platform fee percentage (10% for Opictuary)
 const PLATFORM_FEE_PERCENTAGE = 0.10;
@@ -48,6 +60,11 @@ class PaymentProcessor {
    * Create a Stripe checkout session for various payment types
    */
   async createCheckoutSession(data: CreateCheckoutSessionData): Promise<Stripe.Checkout.Session> {
+    if (!stripe) {
+      console.error('[PAYMENT PROCESSOR] Cannot create checkout session - Stripe not initialized');
+      throw new Error('Payment processing is not available. Please configure Stripe.');
+    }
+    
     const { type, successUrl, cancelUrl, customerEmail, metadata = {} } = data;
 
     try {
@@ -115,13 +132,13 @@ class PaymentProcessor {
                 description: product.description || undefined,
                 images: product.images ? [product.images[0]] : undefined,
               },
-              unit_amount: Math.round(product.price * 100),
+              unit_amount: Math.round(parseFloat(product.basePrice) * 100),
             },
             quantity: data.quantity,
           }];
 
           // Add platform fee
-          const productTotal = product.price * data.quantity;
+          const productTotal = parseFloat(product.basePrice) * data.quantity;
           paymentIntentData = {
             application_fee_amount: Math.round(productTotal * PLATFORM_FEE_PERCENTAGE * 100),
             metadata: {
@@ -230,6 +247,11 @@ class PaymentProcessor {
    */
   async processWebhook(signature: string, payload: string | Buffer): Promise<any> {
     try {
+      if (!stripe) {
+        console.warn('[PAYMENT PROCESSOR] Cannot process webhook - Stripe not initialized');
+        return { received: true, warning: 'Stripe not configured' };
+      }
+      
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
       if (!webhookSecret) {
@@ -322,13 +344,10 @@ class PaymentProcessor {
       await db.insert(donations).values({
         fundraiserId: metadata.fundraiserId,
         donorName: session.customer_details?.name || 'Anonymous',
-        donorEmail: session.customer_details?.email || null,
         amount: amount.toString(),
-        currency: session.currency || 'usd',
-        paymentMethod: 'stripe',
-        paymentIntentId: session.payment_intent?.toString(),
+        platformFeeAmount: (amount * PLATFORM_FEE_PERCENTAGE).toString(),
         isAnonymous: false,
-        message: null,
+        stripePaymentId: session.payment_intent?.toString(),
       });
 
       // Update fundraiser total
@@ -336,14 +355,13 @@ class PaymentProcessor {
         where: eq(fundraisers.id, metadata.fundraiserId)
       });
 
-      if (fundraiser) {
+      if (fundraiser && fundraiser.currentAmount) {
         const currentRaised = parseFloat(fundraiser.currentAmount);
         const newTotal = currentRaised + amount;
 
         await db.update(fundraisers)
           .set({ 
-            currentAmount: newTotal.toString(),
-            updatedAt: new Date()
+            currentAmount: newTotal.toString()
           })
           .where(eq(fundraisers.id, metadata.fundraiserId));
       }
@@ -361,27 +379,47 @@ class PaymentProcessor {
     try {
       const amount = session.amount_total ? session.amount_total / 100 : 0;
       
+      // Generate unique order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      // Get product details to calculate pricing
+      const product = await db.query.products.findFirst({
+        where: eq(products.id, metadata.productId)
+      });
+      
+      if (!product) {
+        throw new Error('Product not found for order creation');
+      }
+      
+      const quantity = parseInt(metadata.quantity) || 1;
+      const subtotal = parseFloat(product.basePrice) * quantity;
+      
       await db.insert(productOrders).values({
+        orderNumber: orderNumber,
+        userId: metadata.userId || 'guest', // Would need to pass userId in metadata
         productId: metadata.productId,
-        quantity: parseInt(metadata.quantity),
-        totalPrice: amount.toString(),
-        status: 'confirmed',
+        quantity: quantity,
+        customization: metadata.customization ? JSON.parse(metadata.customization) : undefined,
+        subtotal: subtotal.toString(),
+        shipping: '0', // Could calculate based on location
+        tax: '0', // Could calculate based on location
+        total: amount.toString(),
+        shippingAddress: {
+          fullName: session.customer_details?.name || '',
+          addressLine1: session.shipping_details?.address?.line1 || '',
+          addressLine2: session.shipping_details?.address?.line2,
+          city: session.shipping_details?.address?.city || '',
+          state: session.shipping_details?.address?.state || '',
+          zipCode: session.shipping_details?.address?.postal_code || '',
+          country: session.shipping_details?.address?.country || 'US',
+          phone: session.customer_details?.phone || '',
+        },
+        status: 'processing',
         paymentStatus: 'paid',
         paymentIntentId: session.payment_intent?.toString(),
-        customerEmail: session.customer_details?.email || '',
-        customerName: session.customer_details?.name || '',
-        shippingAddress: session.shipping_details ? {
-          line1: session.shipping_details.address?.line1,
-          line2: session.shipping_details.address?.line2,
-          city: session.shipping_details.address?.city,
-          state: session.shipping_details.address?.state,
-          postalCode: session.shipping_details.address?.postal_code,
-          country: session.shipping_details.address?.country,
-        } : null,
-        customizationDetails: metadata.customization ? JSON.parse(metadata.customization) : null,
       });
 
-      console.log(`[PAYMENT PROCESSOR] Created product order for product ${metadata.productId}`);
+      console.log(`[PAYMENT PROCESSOR] Created product order ${orderNumber} for product ${metadata.productId}`);
     } catch (error) {
       console.error('[PAYMENT PROCESSOR] Error creating product order:', error);
     }
@@ -409,15 +447,16 @@ class PaymentProcessor {
   private async recordCelebrityDonation(session: Stripe.Checkout.Session, metadata: any) {
     try {
       const amount = session.amount_total ? session.amount_total / 100 : 0;
+      const platformAmount = amount * PLATFORM_FEE_PERCENTAGE;
+      const charityAmount = amount - platformAmount;
       
       await db.insert(celebrityDonations).values({
         celebrityMemorialId: metadata.celebrityMemorialId,
-        donorName: session.customer_details?.name || 'Anonymous',
-        donorEmail: session.customer_details?.email || null,
+        email: session.customer_details?.email || 'anonymous@example.com',
         amount: amount.toString(),
-        currency: session.currency || 'usd',
-        isAnonymous: false,
-        message: null,
+        charityAmount: charityAmount.toString(),
+        platformAmount: platformAmount.toString(),
+        stripePaymentId: session.payment_intent?.toString(),
       });
 
       console.log(`[PAYMENT PROCESSOR] Recorded celebrity donation of $${amount}`);
@@ -468,8 +507,13 @@ class PaymentProcessor {
   /**
    * Verify payment status for an order or donation
    */
-  async verifyPaymentStatus(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+  async verifyPaymentStatus(paymentIntentId: string): Promise<Stripe.PaymentIntent | null> {
     try {
+      if (!stripe) {
+        console.warn('[PAYMENT PROCESSOR] Stripe not initialized - cannot verify payment status');
+        return null;
+      }
+      
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       return paymentIntent;
     } catch (error) {
