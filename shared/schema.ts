@@ -2522,3 +2522,381 @@ export const chatMessages = pgTable("chat_messages", {
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// Memorial Event Planner Tables
+
+// Event Templates for different memorial types
+export const eventTemplates = pgTable("event_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // 'Funeral', 'Memorial Service', 'Celebration of Life', etc.
+  description: text("description"),
+  category: text("category").notNull(), // 'traditional', 'celebration', 'religious', 'military'
+  defaultDuration: integer("default_duration"), // in minutes
+  suggestedTimeline: json("suggested_timeline").$type<{
+    daysBeforeEvent: number;
+    taskName: string;
+    description: string;
+  }[]>(),
+  defaultBudgetRange: json("default_budget_range").$type<{
+    min: number;
+    max: number;
+    currency: string;
+  }>(),
+  culturalConsiderations: json("cultural_considerations").$type<{
+    religion?: string;
+    customs?: string[];
+    restrictions?: string[];
+  }>(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_event_templates_category").on(table.category),
+]);
+
+// Predefined checklists for event planning
+export const eventChecklists = pgTable("event_checklists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: varchar("template_id").references(() => eventTemplates.id, { onDelete: "cascade" }),
+  category: text("category").notNull(), // 'venue', 'catering', 'flowers', 'transportation', 'documentation'
+  itemName: text("item_name").notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(false),
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  sortOrder: integer("sort_order").default(0),
+  tips: text("tips"), // Helpful tips for this checklist item
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_event_checklists_template_id").on(table.templateId),
+  index("idx_event_checklists_category").on(table.category),
+]);
+
+// Actual memorial events being planned
+export const memorialEventPlans = pgTable("memorial_event_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").references(() => eventTemplates.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  eventName: text("event_name").notNull(),
+  eventType: text("event_type").notNull(), // 'funeral', 'memorial_service', 'celebration_of_life'
+  eventDate: timestamp("event_date").notNull(),
+  eventTime: text("event_time"), // Store as string for flexibility
+  venue: json("venue").$type<{
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    capacity?: number;
+    coordinates?: { lat: number; lng: number };
+  }>(),
+  expectedAttendees: integer("expected_attendees"),
+  budget: decimal("budget", { precision: 10, scale: 2 }),
+  status: text("status").default("planning"), // 'planning', 'confirmed', 'in_progress', 'completed', 'cancelled'
+  // Live streaming details
+  isLiveStreaming: boolean("is_live_streaming").default(false),
+  streamingUrl: text("streaming_url"),
+  streamingPlatform: text("streaming_platform"), // 'youtube', 'zoom', 'facebook', 'custom'
+  // Guest management
+  rsvpEnabled: boolean("rsvp_enabled").default(true),
+  guestListPublic: boolean("guest_list_public").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_memorial_event_plans_memorial_id").on(table.memorialId),
+  index("idx_memorial_event_plans_user_id").on(table.userId),
+  index("idx_memorial_event_plans_event_date").on(table.eventDate),
+  index("idx_memorial_event_plans_status").on(table.status),
+]);
+
+// Tasks within each memorial event
+export const eventTasks = pgTable("event_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => memorialEventPlans.id, { onDelete: "cascade" }),
+  checklistId: varchar("checklist_id").references(() => eventChecklists.id),
+  taskName: text("task_name").notNull(),
+  description: text("description"),
+  category: text("category"), // 'venue', 'catering', 'flowers', etc.
+  dueDate: timestamp("due_date"),
+  assignedTo: varchar("assigned_to").references(() => users.id),
+  status: text("status").default("pending"), // 'pending', 'in_progress', 'completed', 'cancelled'
+  priority: text("priority").default("medium"), // 'low', 'medium', 'high', 'urgent'
+  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }),
+  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }),
+  vendorId: varchar("vendor_id").references(() => vendorListings.id),
+  notes: text("notes"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_event_tasks_event_id").on(table.eventId),
+  index("idx_event_tasks_status").on(table.status),
+  index("idx_event_tasks_due_date").on(table.dueDate),
+]);
+
+// Service provider/vendor listings
+export const vendorListings = pgTable("vendor_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessName: text("business_name").notNull(),
+  category: text("category").notNull(), // 'florist', 'caterer', 'funeral_home', 'photographer', 'musician'
+  description: text("description"),
+  contactName: text("contact_name"),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  address: json("address").$type<{
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  }>(),
+  serviceArea: json("service_area").$type<string[]>(), // List of zip codes or cities served
+  pricing: json("pricing").$type<{
+    startingPrice?: number;
+    priceRange?: { min: number; max: number };
+    priceUnit?: string; // 'per_person', 'per_hour', 'per_event'
+  }>(),
+  rating: decimal("rating", { precision: 2, scale: 1 }), // Average rating out of 5
+  reviewCount: integer("review_count").default(0),
+  certifications: json("certifications").$type<string[]>(),
+  specializations: json("specializations").$type<string[]>(), // e.g., 'Jewish ceremonies', 'Military honors'
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  partnerSince: timestamp("partner_since"),
+  commissionRate: decimal("commission_rate", { precision: 4, scale: 2 }), // Platform commission percentage
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_vendor_listings_category").on(table.category),
+  index("idx_vendor_listings_is_active").on(table.isActive),
+]);
+
+// Vendor bookings for events
+export const vendorBookings = pgTable("vendor_bookings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().references(() => memorialEventPlans.id, { onDelete: "cascade" }),
+  vendorId: varchar("vendor_id").notNull().references(() => vendorListings.id),
+  taskId: varchar("task_id").references(() => eventTasks.id),
+  serviceType: text("service_type").notNull(),
+  bookingDate: timestamp("booking_date").notNull(),
+  serviceDetails: json("service_details").$type<{
+    description: string;
+    duration?: number;
+    quantity?: number;
+    specialRequests?: string;
+  }>(),
+  quotedPrice: decimal("quoted_price", { precision: 10, scale: 2 }),
+  finalPrice: decimal("final_price", { precision: 10, scale: 2 }),
+  status: text("status").default("requested"), // 'requested', 'quoted', 'confirmed', 'completed', 'cancelled'
+  paymentStatus: text("payment_status").default("pending"), // 'pending', 'deposit_paid', 'paid', 'refunded'
+  depositAmount: decimal("deposit_amount", { precision: 10, scale: 2 }),
+  contractUrl: text("contract_url"),
+  notes: text("notes"),
+  confirmedAt: timestamp("confirmed_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_vendor_bookings_event_id").on(table.eventId),
+  index("idx_vendor_bookings_vendor_id").on(table.vendorId),
+  index("idx_vendor_bookings_status").on(table.status),
+]);
+
+// Sports Memorial Tables
+
+// Athlete profiles for sports memorials
+export const athleteProfiles = pgTable("athlete_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }).unique(),
+  sport: text("sport").notNull(), // 'football', 'basketball', 'baseball', 'soccer', etc.
+  level: text("level").notNull(), // 'professional', 'college', 'high_school', 'olympic'
+  position: text("position"),
+  jerseyNumber: text("jersey_number"),
+  teams: json("teams").$type<{
+    teamName: string;
+    startYear: number;
+    endYear?: number;
+    league?: string;
+    achievements?: string[];
+  }[]>(),
+  careerHighlights: json("career_highlights").$type<string[]>(),
+  awards: json("awards").$type<{
+    name: string;
+    year: number;
+    description?: string;
+  }[]>(),
+  hallOfFameInductions: json("hall_of_fame_inductions").$type<{
+    organization: string;
+    year: number;
+    location?: string;
+  }[]>(),
+  nicknames: json("nicknames").$type<string[]>(),
+  rivalries: json("rivalries").$type<string[]>(),
+  coachingCareer: json("coaching_career").$type<{
+    team: string;
+    role: string;
+    startYear: number;
+    endYear?: number;
+    achievements?: string[];
+  }[]>(),
+  mediaLinks: json("media_links").$type<{
+    type: string; // 'highlight_reel', 'interview', 'documentary'
+    url: string;
+    title: string;
+  }[]>(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_athlete_profiles_sport").on(table.sport),
+  index("idx_athlete_profiles_level").on(table.level),
+]);
+
+// Career statistics for athletes
+export const athleteStats = pgTable("athlete_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  athleteProfileId: varchar("athlete_profile_id").notNull().references(() => athleteProfiles.id, { onDelete: "cascade" }),
+  season: text("season"), // '2023-24', '2023', etc.
+  team: text("team"),
+  league: text("league"),
+  category: text("category").notNull(), // 'career', 'season', 'playoffs', 'single_game'
+  statType: text("stat_type").notNull(), // 'offensive', 'defensive', 'pitching', 'batting', etc.
+  stats: json("stats").$type<Record<string, any>>().notNull(), // Flexible JSON for sport-specific stats
+  gamesPlayed: integer("games_played"),
+  isCareerTotal: boolean("is_career_total").default(false),
+  source: text("source"), // 'ESPN', 'Official League Stats', etc.
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_athlete_stats_athlete_profile_id").on(table.athleteProfileId),
+  index("idx_athlete_stats_category").on(table.category),
+  index("idx_athlete_stats_season").on(table.season),
+]);
+
+// Team memorial walls
+export const teamMemorials = pgTable("team_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamName: text("team_name").notNull(),
+  sport: text("sport").notNull(),
+  level: text("level").notNull(), // 'professional', 'college', 'high_school'
+  league: text("league"),
+  season: text("season"), // For championship teams
+  description: text("description"),
+  bannerImageUrl: text("banner_image_url"),
+  logoUrl: text("logo_url"),
+  achievements: json("achievements").$type<string[]>(),
+  roster: json("roster").$type<{
+    memorialId?: string;
+    playerName: string;
+    position: string;
+    jerseyNumber: string;
+    role?: string; // 'captain', 'mvp', etc.
+  }[]>(),
+  coaches: json("coaches").$type<{
+    name: string;
+    role: string;
+    memorialId?: string;
+  }[]>(),
+  championshipDetails: json("championship_details").$type<{
+    title: string;
+    year: number;
+    opponent?: string;
+    score?: string;
+    venue?: string;
+  }>(),
+  isPublic: boolean("is_public").default(true),
+  creatorId: varchar("creator_id").references(() => users.id),
+  organizationApproved: boolean("organization_approved").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_team_memorials_sport").on(table.sport),
+  index("idx_team_memorials_team_name").on(table.teamName),
+  index("idx_team_memorials_season").on(table.season),
+]);
+
+// Athletic Legacy Score tracking
+export const athleticLegacyScores = pgTable("athletic_legacy_scores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  athleteProfileId: varchar("athlete_profile_id").notNull().references(() => athleteProfiles.id, { onDelete: "cascade" }).unique(),
+  // Component scores (0-100 each)
+  statisticalScore: integer("statistical_score").default(0), // Based on career stats
+  achievementScore: integer("achievement_score").default(0), // Championships, awards
+  impactScore: integer("impact_score").default(0), // Influence on sport
+  fanEngagementScore: integer("fan_engagement_score").default(0), // Memorial interactions
+  mediaPresenceScore: integer("media_presence_score").default(0), // Coverage, documentaries
+  // Overall legacy score (weighted average)
+  overallScore: integer("overall_score").default(0),
+  scoreHistory: json("score_history").$type<{
+    date: string;
+    score: number;
+    reason?: string;
+  }[]>().default([]),
+  lastCalculated: timestamp("last_calculated"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_athletic_legacy_scores_overall_score").on(table.overallScore),
+]);
+
+// Jersey retirement and hall of fame tracking
+export const jerseyRetirements = pgTable("jersey_retirements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  athleteProfileId: varchar("athlete_profile_id").notNull().references(() => athleteProfiles.id, { onDelete: "cascade" }),
+  teamMemorialId: varchar("team_memorial_id").references(() => teamMemorials.id),
+  organization: text("organization").notNull(),
+  jerseyNumber: text("jersey_number").notNull(),
+  retirementDate: timestamp("retirement_date"),
+  ceremonyDetails: json("ceremony_details").$type<{
+    location?: string;
+    attendees?: string[];
+    speechTranscript?: string;
+    videoUrl?: string;
+    photoUrls?: string[];
+  }>(),
+  isVirtual: boolean("is_virtual").default(false), // For virtual ceremonies on the platform
+  bannerLocation: text("banner_location"), // Physical location of retired jersey
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_jersey_retirements_athlete_profile_id").on(table.athleteProfileId),
+  index("idx_jersey_retirements_organization").on(table.organization),
+]);
+
+// Export schemas and types for Memorial Event Planner
+export const insertEventTemplateSchema = createInsertSchema(eventTemplates).omit({ id: true, createdAt: true });
+export const insertEventChecklistSchema = createInsertSchema(eventChecklists).omit({ id: true, createdAt: true });
+export const insertMemorialEventPlanSchema = createInsertSchema(memorialEventPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertEventTaskSchema = createInsertSchema(eventTasks).omit({ id: true, createdAt: true });
+export const insertVendorListingSchema = createInsertSchema(vendorListings).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertVendorBookingSchema = createInsertSchema(vendorBookings).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type InsertEventTemplate = z.infer<typeof insertEventTemplateSchema>;
+export type EventTemplate = typeof eventTemplates.$inferSelect;
+export type InsertEventChecklist = z.infer<typeof insertEventChecklistSchema>;
+export type EventChecklist = typeof eventChecklists.$inferSelect;
+export type InsertMemorialEventPlan = z.infer<typeof insertMemorialEventPlanSchema>;
+export type MemorialEventPlan = typeof memorialEventPlans.$inferSelect;
+export type InsertEventTask = z.infer<typeof insertEventTaskSchema>;
+export type EventTask = typeof eventTasks.$inferSelect;
+export type InsertVendorListing = z.infer<typeof insertVendorListingSchema>;
+export type VendorListing = typeof vendorListings.$inferSelect;
+export type InsertVendorBooking = z.infer<typeof insertVendorBookingSchema>;
+export type VendorBooking = typeof vendorBookings.$inferSelect;
+
+// Export schemas and types for Sports Memorials
+export const insertAthleteProfileSchema = createInsertSchema(athleteProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAthleteStatSchema = createInsertSchema(athleteStats).omit({ id: true, createdAt: true });
+export const insertTeamMemorialSchema = createInsertSchema(teamMemorials).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAthleticLegacyScoreSchema = createInsertSchema(athleticLegacyScores).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertJerseyRetirementSchema = createInsertSchema(jerseyRetirements).omit({ id: true, createdAt: true });
+
+export type InsertAthleteProfile = z.infer<typeof insertAthleteProfileSchema>;
+export type AthleteProfile = typeof athleteProfiles.$inferSelect;
+export type InsertAthleteStat = z.infer<typeof insertAthleteStatSchema>;
+export type AthleteStat = typeof athleteStats.$inferSelect;
+export type InsertTeamMemorial = z.infer<typeof insertTeamMemorialSchema>;
+export type TeamMemorial = typeof teamMemorials.$inferSelect;
+export type InsertAthleticLegacyScore = z.infer<typeof insertAthleticLegacyScoreSchema>;
+export type AthleticLegacyScore = typeof athleticLegacyScores.$inferSelect;
+export type InsertJerseyRetirement = z.infer<typeof insertJerseyRetirementSchema>;
+export type JerseyRetirement = typeof jerseyRetirements.$inferSelect;
