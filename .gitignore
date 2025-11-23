@@ -13,3 +13,6 @@ android/*.keystore
 *.keystore
 keystore.base64.txt
 keystores/
+
+# Android local configuration
+android/local.properties

@@ -9,46 +9,73 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Fix SSL issues and checkout code
-      - name: Disable SSL verification and checkout
-        run: |
-          git config --global http.sslVerify false
-          git config --global http.postBuffer 524288000
-      
-      - uses: actions/checkout@v4
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
       
-      - uses: actions/setup-node@v4
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
       
-      - uses: actions/setup-java@v4
+      # Setup Java
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       
+      # Setup Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;34.0.0
+      
+      # Install dependencies
       - name: Install dependencies
         run: |
-          npm cache clean --force
-          npm install --legacy-peer-deps --force
+          echo "📦 Installing npm packages..."
+          npm install --legacy-peer-deps
       
+      # Build application
       - name: Build application
-        run: npm run build
+        run: |
+          echo "🔨 Building React application..."
+          npm run build
       
+      # Sync Capacitor
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: |
+          echo "📱 Syncing Capacitor with Android..."
+          npx cap sync android
       
+      # Create local.properties
+      - name: Create local.properties
+        run: |
+          echo "🔧 Creating local.properties file..."
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          echo "Local.properties created with SDK path: $ANDROID_HOME"
+          cat android/local.properties
+      
+      # Build Android Bundle
       - name: Build Android Bundle
         run: |
+          echo "📱 Building Android App Bundle..."
           cd android
           chmod +x ./gradlew
           ./gradlew bundleRelease --info
-          echo "✅ Build completed! Finding .aab file..."
+          echo ""
+          echo "✅ Build completed! Checking for .aab file..."
           ls -la app/build/outputs/bundle/release/
       
+      # Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -56,11 +83,24 @@ jobs:
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
       
+      # Build Status
       - name: Build Status
         if: success()
         run: |
+          echo ""
           echo "✅ ============================================"
           echo "✅ Android Build Successful!"
-          echo "✅ Download your .aab file from the Actions tab"
-          echo "✅ File: app-release.aab"
+          echo "✅ ============================================"
+          echo "✅"
+          echo "✅ Your .aab file is ready!"
+          echo "✅"
+          echo "✅ To download:"
+          echo "✅ 1. Click the 'Summary' link at the top"
+          echo "✅ 2. Look for 'Artifacts' section"
+          echo "✅ 3. Download 'app-release-bundle'"
+          echo "✅"
+          echo "✅ File name: app-release.aab"
+          echo "✅ Size: ~50-70 MB"
+          echo "✅"
+          echo "✅ Upload this file to Google Play Console!"
           echo "✅ ============================================"
