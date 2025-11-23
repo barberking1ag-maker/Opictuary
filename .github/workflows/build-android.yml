@@ -41,7 +41,7 @@ jobs:
       # Decode and setup keystore
       - name: Decode and setup keystore
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
           echo "🔐 Setting up signing keystore..."
           mkdir -p keystores
