@@ -28,9 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
       
-      - name: Build web app
-        run: npm run build
-      
+- name: Build web app
+  run: |
+    cd client
+    npx vite build --outDir ../dist/public
       - name: Add Android platform
         run: npx cap add android
       
