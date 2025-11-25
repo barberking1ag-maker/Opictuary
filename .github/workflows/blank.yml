@@ -10,54 +10,52 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      
+
       - name: Install dependencies
         run: npm install --legacy-peer-deps
-      
-- name: Build web app
-  run: |
-    cd client
-    npx vite build --outDir ../dist/public
+
+      - name: Build web app
+        run: |
+          cd client
+          npx vite build --outDir ../dist/public
+
       - name: Add Android platform
         run: npx cap add android
-      
+
       - name: Sync Capacitor
         run: npx cap sync android
-      
+
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-      
+
       - name: Decode keystore
-        run: |
-          mkdir -p android/keystores
-          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > android/keystores/opictuary-upload.jks
-      
+        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > android/app/keystore.jks
+
       - name: Build signed AAB
-        working-directory: android
         run: |
-          chmod +x ./gradlew
+          cd android
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=${{ github.workspace }}/android/keystores/opictuary-upload.jks \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/android/app/keystore.jks \
             -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
-      
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: opictuary-release-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          name: opictuary-release
+          path: android/app/build/outputs/bundle/release/*.aab
