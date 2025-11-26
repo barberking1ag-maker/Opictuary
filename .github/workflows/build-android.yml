@@ -34,26 +34,19 @@ jobs:
             platforms;android-34
             build-tools;34.0.0
       
-      - name: Decode keystore and create key.properties
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Setup keystore and key.properties
         run: |
-          echo "Setting up signing keystore..."
-          echo "$KEYSTORE_BASE64" | base64 -d > android/signing.keystore
-          ls -lh android/signing.keystore
+          echo "Setting up signing configuration..."
+          cp signing.keystore android/signing.keystore
           
-          echo "Creating key.properties..."
           cat > android/key.properties << EOF
           storeFile=signing.keystore
-          storePassword=$KEYSTORE_PASSWORD
-          keyAlias=$KEY_ALIAS
-          keyPassword=$KEY_PASSWORD
+          storePassword=GXGr2ENYo1Xc
+          keyAlias=my-key-alias
+          keyPassword=GXGr2ENYo1Xc
           EOF
           
-          echo "Keystore and key.properties created successfully"
+          echo "Keystore and key.properties created"
       
       - name: Install dependencies
         run: |
