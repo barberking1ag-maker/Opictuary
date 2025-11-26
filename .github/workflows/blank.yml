@@ -32,7 +32,7 @@ jobs:
         run: cd client && npm init -y && npm install vite @vitejs/plugin-react react react-dom
 
       - name: Build web app
-        run: cd client && npx vite build
+        run: cd client && npx vite build --outDir ../dist/public
 
       - name: Add Android platform
         run: npx cap add android || true
