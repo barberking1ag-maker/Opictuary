@@ -29,10 +29,7 @@ jobs:
         run: npm install
 
       - name: Setup client
-        run: |
-          cd client
-          npm init -y
-          npm install vite @vitejs/plugin-react react react-dom
+        run: cd client && npm init -y && npm install vite @vitejs/plugin-react react react-dom
 
       - name: Build web app
         run: cd client && npx vite build
@@ -50,14 +47,7 @@ jobs:
         run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > android/app/keystore.jks
 
       - name: Build signed AAB
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=$(pwd)/app/keystore.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+        run: cd android && chmod +x gradlew && ./gradlew bundleRelease -Pandroid.injected.signing.store.file=$(pwd)/app/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
