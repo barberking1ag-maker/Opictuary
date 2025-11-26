@@ -28,8 +28,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Setup client
+        run: |
+          cd client
+          npm init -y
+          npm install vite @vitejs/plugin-react react react-dom
+
       - name: Build web app
-        run: npm run build --prefix client
+        run: cd client && npx vite build
 
       - name: Add Android platform
         run: npx cap add android || true
