@@ -1,65 +1,85 @@
-name: Build Android App Bundle
-
+name: Build Android
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          cache: 'npm'
+      
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
+      
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Setup client
-        run: cd client && npm init -y && npm install vite @vitejs/plugin-react react react-dom
-
-      - name: Build web app
-        run: cd client && npx vite build --outDir ../dist/public
-
-      - name: Add Android platform
-        run: npx cap add android || true
-
-      - name: Sync Capacitor
-        run: npx cap sync android
-
-      - name: Create local properties
-        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-
-      - name: Build unsigned AAB
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew bundleRelease
-
-      - name: Sign AAB
-        uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/bundle/release
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Upload AAB artifact
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;34.0.0
+      
+      - name: Setup keystore and key.properties
+        run: |
+          echo "Setting up signing configuration..."
+          cp signing.keystore android/signing.keystore
+          
+          cat > android/key.properties << EOF
+          storeFile=signing.keystore
+          storePassword=GXGr2ENYo1Xc
+          keyAlias=my-key-alias
+          keyPassword=GXGr2ENYo1Xc
+          EOF
+          
+          echo "Keystore and key.properties created"
+      
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+      
+      - name: Build application
+        run: |
+          npm run build
+      
+      - name: Sync Capacitor
+        run: |
+          npx cap sync android
+      
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      
+      - name: Build Android Bundle
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease --info
+          ls -la app/build/outputs/bundle/release/
+      
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          name: app-release-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+      
+      - name: Build Status
+        if: success()
+        run: |
+          echo "Android Build Successful!"
+          echo "Your .aab file is ready for download"
