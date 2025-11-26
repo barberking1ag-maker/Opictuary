@@ -9,27 +9,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
-      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
       
-      # Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       
-      # Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -38,54 +34,50 @@ jobs:
             platforms;android-34
             build-tools;34.0.0
       
-      # Decode and setup keystore
-      - name: Decode and setup keystore
+      - name: Decode keystore and create key.properties
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "🔐 Setting up signing keystore..."
-          mkdir -p keystores
-          echo "$KEYSTORE_BASE64" | base64 -d > keystores/opictuary-upload.jks
-          ls -lh keystores/opictuary-upload.jks
-          echo "✅ Keystore decoded successfully"
+          echo "Setting up signing keystore..."
+          echo "$KEYSTORE_BASE64" | base64 -d > android/signing.keystore
+          ls -lh android/signing.keystore
+          
+          echo "Creating key.properties..."
+          cat > android/key.properties << EOF
+          storeFile=signing.keystore
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          
+          echo "Keystore and key.properties created successfully"
       
-      # Install dependencies
       - name: Install dependencies
         run: |
-          echo "📦 Installing npm packages..."
           npm install --legacy-peer-deps
       
-      # Build application
       - name: Build application
         run: |
-          echo "🔨 Building React application..."
           npm run build
       
-      # Sync Capacitor
       - name: Sync Capacitor
         run: |
-          echo "📱 Syncing Capacitor with Android..."
           npx cap sync android
       
-      # Create local.properties
       - name: Create local.properties
         run: |
-          echo "🔧 Creating local.properties file..."
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          echo "Local.properties created"
       
-      # Build Android Bundle
       - name: Build Android Bundle
         run: |
-          echo "📱 Building Android App Bundle..."
           cd android
           chmod +x ./gradlew
           ./gradlew bundleRelease --info
-          echo ""
-          echo "✅ Build completed!"
           ls -la app/build/outputs/bundle/release/
       
-      # Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -93,14 +85,8 @@ jobs:
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
       
-      # Build Status
       - name: Build Status
         if: success()
         run: |
-          echo ""
-          echo "✅ ============================================"
-          echo "✅ Android Build Successful!"
-          echo "✅ ============================================"
-          echo "✅ Your .aab file is ready!"
-          echo "✅ Download it from the Actions tab"
-          echo "✅ ============================================"
+          echo "Android Build Successful!"
+          echo "Your .aab file is ready for download"
