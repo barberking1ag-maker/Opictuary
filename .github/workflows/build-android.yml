@@ -32,12 +32,12 @@ jobs:
           cp "$KEYSTORE" android/app/signing.keystore
           ls -la android/app/
           
-          # Create key.properties with correct password
+          # Create key.properties using GitHub Secrets
           cat > android/key.properties << EOF
           storeFile=signing.keystore
-          storePassword=GXGr2CNYeJXc
-          keyAlias=my-key-alias
-          keyPassword=GXGr2CNYeJXc
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
           
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
