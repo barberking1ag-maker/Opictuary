@@ -19,10 +19,6 @@ jobs:
           java-version: '17'
       
       - name: Create Android project and setup signing
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           mkdir -p android/app/src/main/assets/public
           mkdir -p android/app/src/main/res/values
@@ -36,12 +32,12 @@ jobs:
           cp "$KEYSTORE" android/app/signing.keystore
           ls -la android/app/
           
-          # Create key.properties using GitHub Secrets
+          # Create key.properties with correct password
           cat > android/key.properties << EOF
           storeFile=signing.keystore
-          storePassword=${KEYSTORE_PASSWORD}
-          keyAlias=${KEY_ALIAS}
-          keyPassword=${KEY_PASSWORD}
+          storePassword=GXGr2CNYeJXc
+          keyAlias=my-key-alias
+          keyPassword=GXGr2CNYeJXc
           EOF
           
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
