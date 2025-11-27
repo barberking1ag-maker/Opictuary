@@ -35,15 +35,7 @@ jobs:
           # Create key.properties pointing to keystore in app folder
           cat > android/key.properties << EOF
           storeFile=signing.keystore
-          storePassword=GXGr2ENYo1Xc
-          keyAlias=my-key-alias
-          keyPassword=GXGr2ENYo1Xc
-          EOF
-          
-          cat > android/app/src/main/AndroidManifest.xml << 'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application
+          storePassword=${{secrets.KEYSTORE_PASSWORD }}
               android:allowBackup="true"
               android:icon="@mipmap/ic_launcher"
               android:label="@string/app_name"
