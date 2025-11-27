@@ -25,14 +25,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platform-tools
-            platforms;android-34
-            build-tools;34.0.0
-      
       - name: Setup keystore and key.properties
         run: |
           echo "Setting up signing configuration..."
@@ -61,13 +53,13 @@ jobs:
       
       - name: Create local.properties
         run: |
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
       
       - name: Build Android Bundle
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew bundleRelease --info
+          ./gradlew bundleRelease
           ls -la app/build/outputs/bundle/release/
       
       - name: Upload artifact
