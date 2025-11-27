@@ -25,10 +25,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Setup keystore and key.properties
+      - name: Find and setup keystore
         run: |
-          echo "Setting up signing configuration..."
-          cp signing.keystore android/signing.keystore
+          echo "Looking for keystore file..."
+          find . -name "*.keystore" -o -name "signing.keystore" 2>/dev/null
+          
+          KEYSTORE=$(find . -name "signing.keystore" 2>/dev/null | head -1)
+          if [ -z "$KEYSTORE" ]; then
+            KEYSTORE=$(find . -name "*.keystore" 2>/dev/null | head -1)
+          fi
+          
+          if [ -z "$KEYSTORE" ]; then
+            echo "No keystore found!"
+            exit 1
+          fi
+          
+          echo "Found keystore at: $KEYSTORE"
+          cp "$KEYSTORE" android/signing.keystore
           
           cat > android/key.properties << EOF
           storeFile=signing.keystore
@@ -73,4 +86,3 @@ jobs:
         if: success()
         run: |
           echo "Android Build Successful!"
-          echo "Your .aab file is ready for download"
