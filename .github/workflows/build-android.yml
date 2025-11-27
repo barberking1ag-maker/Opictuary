@@ -19,6 +19,10 @@ jobs:
           java-version: '17'
       
       - name: Create Android project and setup signing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           mkdir -p android/app/src/main/assets/public
           mkdir -p android/app/src/main/res/values
@@ -26,18 +30,18 @@ jobs:
           mkdir -p android/app/src/main/java/com/opictuary/memorial
           mkdir -p android/app/src/main/res/mipmap-hdpi
           
-          # Copy keystore to android/app folder (where build.gradle expects it)
+          # Copy keystore to android/app folder
           KEYSTORE=$(find . -name "signing.keystore" -not -path "./android/*" 2>/dev/null | head -1)
           echo "Found keystore at: $KEYSTORE"
           cp "$KEYSTORE" android/app/signing.keystore
           ls -la android/app/
           
-          # Create key.properties pointing to keystore in app folder
+          # Create key.properties using GitHub Secrets
           cat > android/key.properties << EOF
           storeFile=signing.keystore
-          storePassword=GXGr2ENYo1Xc
-          keyAlias=my-key-alias
-          keyPassword=GXGr2ENYo1Xc
+          storePassword=${KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS}
+          keyPassword=${KEY_PASSWORD}
           EOF
           
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
@@ -112,7 +116,6 @@ jobs:
           </resources>
           EOF
           
-          # build.gradle looks for keystore in app folder
           cat > android/app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
           def keystorePropertiesFile = rootProject.file('key.properties')
