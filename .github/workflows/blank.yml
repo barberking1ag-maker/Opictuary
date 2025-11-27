@@ -11,13 +11,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
       
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -25,28 +18,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Install dependencies
-        run: |
-          npm install --legacy-peer-deps
-      
-      - name: Build application
-        run: |
-          npm run build
-      
-      - name: Add Capacitor Android
-        run: |
-          npx cap add android || true
-          npx cap sync android
-      
       - name: Setup keystore
         run: |
-          echo "Looking for keystore file..."
           KEYSTORE=$(find . -name "signing.keystore" 2>/dev/null | head -1)
-          if [ -z "$KEYSTORE" ]; then
-            KEYSTORE=$(find . -name "*.keystore" 2>/dev/null | head -1)
-          fi
-          
           echo "Found keystore at: $KEYSTORE"
+          mkdir -p android
           cp "$KEYSTORE" android/signing.keystore
           
           cat > android/key.properties << EOF
@@ -55,18 +31,139 @@ jobs:
           keyAlias=my-key-alias
           keyPassword=GXGr2ENYo1Xc
           EOF
-          
-          echo "Keystore setup complete"
       
-      - name: Create local.properties
+      - name: Create minimal Android project
         run: |
+          mkdir -p android/app/src/main/assets/public
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/gradle/wrapper
+          mkdir -p android/app/src/main/java/com/opictuary/memorial
+          
+          cat > android/app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application
+              android:allowBackup="true"
+              android:icon="@mipmap/ic_launcher"
+              android:label="@string/app_name"
+              android:roundIcon="@mipmap/ic_launcher_round"
+              android:supportsRtl="true"
+              android:theme="@style/AppTheme"
+              android:usesCleartextTraffic="true">
+              <activity
+                android:name=".MainActivity"
+                android:exported="true"
+                android:launchMode="singleTask"
+                android:theme="@style/AppTheme.NoActionBarLaunch">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+              </activity>
+            </application>
+            <uses-permission android:name="android.permission.INTERNET"/>
+          </manifest>
+          EOF
+          
+          cat > android/app/src/main/java/com/opictuary/memorial/MainActivity.java << 'EOF'
+          package com.opictuary.memorial;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebSettings;
+          import androidx.appcompat.app.AppCompatActivity;
+          
+          public class MainActivity extends AppCompatActivity {
+              private WebView webView;
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
+                  setContentView(webView);
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.loadUrl("https://opictuary.replit.app");
+              }
+              @Override
+              public void onBackPressed() {
+                  if (webView.canGoBack()) { webView.goBack(); }
+                  else { super.onBackPressed(); }
+              }
+          }
+          EOF
+          
+          cat > android/app/src/main/res/values/strings.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources><string name="app_name">Opictuary</string></resources>
+          EOF
+          
+          cat > android/app/src/main/res/values/styles.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+              <item name="colorPrimary">#2C1810</item>
+            </style>
+            <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar">
+              <item name="android:background">#2C1810</item>
+            </style>
+          </resources>
+          EOF
+          
+          cat > android/app/build.gradle << 'EOF'
+          apply plugin: 'com.android.application'
+          def keystorePropertiesFile = rootProject.file('key.properties')
+          def keystoreProperties = new Properties()
+          if (keystorePropertiesFile.exists()) { keystoreProperties.load(new FileInputStream(keystorePropertiesFile)) }
+          android {
+              namespace "com.opictuary.memorial"
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.opictuary.memorial"
+                  minSdk 22
+                  targetSdk 34
+                  versionCode 2025112700
+                  versionName "2.1.0"
+              }
+              signingConfigs {
+                  release {
+                      if (keystorePropertiesFile.exists()) {
+                          keyAlias keystoreProperties['keyAlias']
+                          keyPassword keystoreProperties['keyPassword']
+                          storeFile file(keystoreProperties['storeFile'])
+                          storePassword keystoreProperties['storePassword']
+                      }
+                  }
+              }
+              buildTypes { release { signingConfig signingConfigs.release } }
+          }
+          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
+          EOF
+          
+          cat > android/build.gradle << 'EOF'
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          EOF
+          
+          echo "include ':app'" > android/settings.gradle
+          echo -e "android.useAndroidX=true\norg.gradle.jvmargs=-Xmx2048m" > android/gradle.properties
+          echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.0-bin.zip" > android/gradle/wrapper/gradle-wrapper.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          curl -sL "https://placehold.co/192x192/2C1810/D4AF37/png?text=O" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || touch android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
       
       - name: Build Android Bundle
         run: |
           cd android
-          chmod +x ./gradlew
-          ./gradlew bundleRelease
+          curl -sL https://services.gradle.org/distributions/gradle-8.0-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          ./gradle-8.0/bin/gradle bundleRelease --no-daemon
           ls -la app/build/outputs/bundle/release/
       
       - name: Upload artifact
@@ -75,8 +172,3 @@ jobs:
           name: app-release-bundle
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
-      
-      - name: Build Status
-        if: success()
-        run: |
-          echo "Android Build Successful!"
