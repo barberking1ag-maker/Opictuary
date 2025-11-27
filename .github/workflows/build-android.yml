@@ -18,52 +18,28 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Setup keystore
+      - name: Create Android project and setup signing
         run: |
-          KEYSTORE=$(find . -name "signing.keystore" 2>/dev/null | head -1)
-          echo "Found keystore at: $KEYSTORE"
-          mkdir -p android
-          cp "$KEYSTORE" android/signing.keystore
+          mkdir -p android/app/src/main/assets/public
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/gradle/wrapper
+          mkdir -p android/app/src/main/java/com/opictuary/memorial
+          mkdir -p android/app/src/main/res/mipmap-hdpi
           
+          # Copy keystore to android/app folder (where build.gradle expects it)
+          KEYSTORE=$(find . -name "signing.keystore" -not -path "./android/*" 2>/dev/null | head -1)
+          echo "Found keystore at: $KEYSTORE"
+          cp "$KEYSTORE" android/app/signing.keystore
+          ls -la android/app/
+          
+          # Create key.properties pointing to keystore in app folder
           cat > android/key.properties << EOF
           storeFile=signing.keystore
           storePassword=GXGr2ENYo1Xc
           keyAlias=my-key-alias
           keyPassword=GXGr2ENYo1Xc
           EOF
-      
-      - name: Create minimal Android project
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          mkdir -p android/app/src/main/res/values
-          mkdir -p android/gradle/wrapper
           
-          # Create minimal index.html
-          cat > android/app/src/main/assets/public/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Opictuary</title>
-            <style>
-              body { font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #2C1810; color: white; }
-              .container { text-align: center; }
-              h1 { font-size: 2em; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>Opictuary</h1>
-              <p>Digital Memorial Platform</p>
-              <p>Loading...</p>
-              <script>window.location.href = 'https://opictuary.replit.app';</script>
-            </div>
-          </body>
-          </html>
-          EOF
-          
-          # Create AndroidManifest.xml
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -90,8 +66,6 @@ jobs:
           </manifest>
           EOF
           
-          # Create MainActivity.java
-          mkdir -p android/app/src/main/java/com/opictuary/memorial
           cat > android/app/src/main/java/com/opictuary/memorial/MainActivity.java << 'EOF'
           package com.opictuary.memorial;
           import android.os.Bundle;
@@ -102,48 +76,35 @@ jobs:
           
           public class MainActivity extends AppCompatActivity {
               private WebView webView;
-              
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   webView = new WebView(this);
                   setContentView(webView);
-                  
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-                  
                   webView.setWebViewClient(new WebViewClient());
                   webView.loadUrl("https://opictuary.replit.app");
               }
-              
               @Override
               public void onBackPressed() {
-                  if (webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
+                  if (webView.canGoBack()) { webView.goBack(); }
+                  else { super.onBackPressed(); }
               }
           }
           EOF
           
-          # Create strings.xml
           cat > android/app/src/main/res/values/strings.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-            <string name="app_name">Opictuary</string>
-          </resources>
+          <resources><string name="app_name">Opictuary</string></resources>
           EOF
           
-          # Create styles.xml
           cat > android/app/src/main/res/values/styles.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
               <item name="colorPrimary">#2C1810</item>
-              <item name="colorPrimaryDark">#1a0f0a</item>
-              <item name="colorAccent">#D4AF37</item>
             </style>
             <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar">
               <item name="android:background">#2C1810</item>
@@ -151,20 +112,15 @@ jobs:
           </resources>
           EOF
           
-          # Create build.gradle (app)
+          # build.gradle looks for keystore in app folder
           cat > android/app/build.gradle << 'EOF'
           apply plugin: 'com.android.application'
-          
           def keystorePropertiesFile = rootProject.file('key.properties')
           def keystoreProperties = new Properties()
-          if (keystorePropertiesFile.exists()) {
-              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-          }
-          
+          if (keystorePropertiesFile.exists()) { keystoreProperties.load(new FileInputStream(keystorePropertiesFile)) }
           android {
               namespace "com.opictuary.memorial"
               compileSdk 34
-              
               defaultConfig {
                   applicationId "com.opictuary.memorial"
                   minSdk 22
@@ -172,7 +128,6 @@ jobs:
                   versionCode 2025112700
                   versionName "2.1.0"
               }
-              
               signingConfigs {
                   release {
                       if (keystorePropertiesFile.exists()) {
@@ -183,84 +138,38 @@ jobs:
                       }
                   }
               }
-              
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                      minifyEnabled false
-                  }
-              }
+              buildTypes { release { signingConfig signingConfigs.release } }
           }
-          
-          dependencies {
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'androidx.webkit:webkit:1.8.0'
-          }
+          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
           EOF
           
-          # Create build.gradle (project)
           cat > android/build.gradle << 'EOF'
           buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.0'
-              }
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.0' }
           }
-          
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+          allprojects { repositories { google(); mavenCentral() } }
           EOF
           
-          # Create settings.gradle
-          cat > android/settings.gradle << 'EOF'
-          include ':app'
-          EOF
-          
-          # Create gradle.properties
-          cat > android/gradle.properties << 'EOF'
-          android.useAndroidX=true
-          org.gradle.jvmargs=-Xmx2048m
-          EOF
-          
-          # Create gradle wrapper properties
-          cat > android/gradle/wrapper/gradle-wrapper.properties << 'EOF'
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
-          EOF
-          
-          # Create local.properties
+          echo "include ':app'" > android/settings.gradle
+          echo -e "android.useAndroidX=true\norg.gradle.jvmargs=-Xmx2048m" > android/gradle.properties
+          echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.0-bin.zip" > android/gradle/wrapper/gradle-wrapper.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
           
-          # Create default icons
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          
-          # Download a simple icon placeholder
-          curl -sL "https://via.placeholder.com/192/2C1810/D4AF37?text=O" -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png || echo "Icon download failed, continuing..."
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png 2>/dev/null || true
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png 2>/dev/null || true
+          # Create placeholder icons
+          curl -sL "https://placehold.co/192x192/2C1810/D4AF37/png?text=O" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || touch android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
       
       - name: Build Android Bundle
         run: |
           cd android
-          chmod +x ./gradlew 2>/dev/null || curl -sL https://services.gradle.org/distributions/gradle-8.0-bin.zip -o gradle.zip && unzip -q gradle.zip && mv gradle-8.0/bin/gradle ./gradlew && chmod +x ./gradlew
-          ./gradlew bundleRelease --no-daemon
+          echo "=== Verifying keystore location ==="
+          ls -la app/signing.keystore
+          echo "=== Building ==="
+          curl -sL https://services.gradle.org/distributions/gradle-8.0-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          ./gradle-8.0/bin/gradle bundleRelease --no-daemon
+          echo "=== Build complete ==="
           ls -la app/build/outputs/bundle/release/
       
       - name: Upload artifact
