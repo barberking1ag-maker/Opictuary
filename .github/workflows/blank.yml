@@ -18,26 +18,27 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Setup keystore
+      - name: Create Android project and setup signing
         run: |
-          KEYSTORE=$(find . -name "signing.keystore" 2>/dev/null | head -1)
-          echo "Found keystore at: $KEYSTORE"
-          mkdir -p android
-          cp "$KEYSTORE" android/signing.keystore
+          mkdir -p android/app/src/main/assets/public
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/gradle/wrapper
+          mkdir -p android/app/src/main/java/com/opictuary/memorial
+          mkdir -p android/app/src/main/res/mipmap-hdpi
           
+          # Copy keystore to android/app folder (where build.gradle expects it)
+          KEYSTORE=$(find . -name "signing.keystore" -not -path "./android/*" 2>/dev/null | head -1)
+          echo "Found keystore at: $KEYSTORE"
+          cp "$KEYSTORE" android/app/signing.keystore
+          ls -la android/app/
+          
+          # Create key.properties pointing to keystore in app folder
           cat > android/key.properties << EOF
           storeFile=signing.keystore
           storePassword=GXGr2ENYo1Xc
           keyAlias=my-key-alias
           keyPassword=GXGr2ENYo1Xc
           EOF
-      
-      - name: Create minimal Android project
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          mkdir -p android/app/src/main/res/values
-          mkdir -p android/gradle/wrapper
-          mkdir -p android/app/src/main/java/com/opictuary/memorial
           
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -154,16 +155,19 @@ jobs:
           echo "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.0-bin.zip" > android/gradle/wrapper/gradle-wrapper.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
           
-          mkdir -p android/app/src/main/res/mipmap-hdpi
           curl -sL "https://placehold.co/192x192/2C1810/D4AF37/png?text=O" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || touch android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
       
       - name: Build Android Bundle
         run: |
           cd android
+          echo "=== Verifying keystore location ==="
+          ls -la app/signing.keystore
+          echo "=== Building ==="
           curl -sL https://services.gradle.org/distributions/gradle-8.0-bin.zip -o gradle.zip
           unzip -q gradle.zip
           ./gradle-8.0/bin/gradle bundleRelease --no-daemon
+          echo "=== Build complete ==="
           ls -la app/build/outputs/bundle/release/
       
       - name: Upload artifact
