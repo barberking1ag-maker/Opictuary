@@ -25,19 +25,25 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       
-      - name: Find and setup keystore
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+      
+      - name: Build application
+        run: |
+          npm run build
+      
+      - name: Add Capacitor Android
+        run: |
+          npx cap add android || true
+          npx cap sync android
+      
+      - name: Setup keystore
         run: |
           echo "Looking for keystore file..."
-          find . -name "*.keystore" -o -name "signing.keystore" 2>/dev/null
-          
           KEYSTORE=$(find . -name "signing.keystore" 2>/dev/null | head -1)
           if [ -z "$KEYSTORE" ]; then
             KEYSTORE=$(find . -name "*.keystore" 2>/dev/null | head -1)
-          fi
-          
-          if [ -z "$KEYSTORE" ]; then
-            echo "No keystore found!"
-            exit 1
           fi
           
           echo "Found keystore at: $KEYSTORE"
@@ -50,19 +56,7 @@ jobs:
           keyPassword=GXGr2ENYo1Xc
           EOF
           
-          echo "Keystore and key.properties created"
-      
-      - name: Install dependencies
-        run: |
-          npm install --legacy-peer-deps
-      
-      - name: Build application
-        run: |
-          npm run build
-      
-      - name: Sync Capacitor
-        run: |
-          npx cap sync android
+          echo "Keystore setup complete"
       
       - name: Create local.properties
         run: |
