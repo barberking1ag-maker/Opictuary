@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.opictuary.app",
+        "sha256_cert_fingerprints": ["5E:FF:7E:D0:9E:1C:61:47:DF:25:38:E7:83:2E:92:71:93:5F:92:8E:8B:80:D3:7A:A8:F2:7D:27:02:16:8E:6B"]
+      }
+    }]
