@@ -16,3 +16,18 @@ keystores/
 
 # Android local configuration
 android/local.properties
+
+# iOS sensitive files
+ios/**/*.mobileprovision
+ios/**/*.p8
+ios/**/*.p12
+ios/**/*.cer
+ios/**/*.pem
+ios/**/*.key
+ios/App/build/
+ios/App/.derived/
+ios/App/DerivedData/
+ios/**/*.xcarchive
+ios/**/DerivedData/
+ios/Pods/
+ios/Podfile.lock
