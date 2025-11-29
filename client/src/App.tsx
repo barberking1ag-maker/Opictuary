@@ -64,10 +64,16 @@ import MyOrders from "@/pages/MyOrders";
 import OrderTracking from "@/pages/OrderTracking";
 import EventPlanner from "@/pages/EventPlanner";
 import SportsMemorials from "@/pages/SportsMemorials";
+import PetMemorials from "@/pages/PetMemorials";
+import CreatePetMemorial from "@/pages/CreatePetMemorial";
+import PetMemorialView from "@/pages/PetMemorialView";
+import MultiFaithTemplates from "@/pages/MultiFaithTemplates";
+import LivingLegacy from "@/pages/LivingLegacy";
+import FamilyTree from "@/pages/FamilyTree";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -165,6 +171,24 @@ function Router() {
                     <Link href="/sports-memorials">
                       <Trophy className="w-4 h-4 mr-2" />
                       <span>Sports Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-pet-memorials">
+                    <Link href="/pet-memorials">
+                      <PawPrint className="w-4 h-4 mr-2" />
+                      <span>Pet Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-multi-faith">
+                    <Link href="/multi-faith-templates">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      <span>Multi-Faith Templates</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-living-legacy">
+                    <Link href="/living-legacy">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      <span>Living Legacy</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-essential-workers">
@@ -333,6 +357,12 @@ function Router() {
         <Route path="/alumni-memorials/create" component={CreateAlumniMemorial} />
         <Route path="/alumni-memorials/:id" component={AlumniMemorialDetail} />
         <Route path="/sports-memorials" component={SportsMemorials} />
+        <Route path="/pet-memorials" component={PetMemorials} />
+        <Route path="/create-pet-memorial" component={CreatePetMemorial} />
+        <Route path="/pet-memorial/:inviteCode" component={PetMemorialView} />
+        <Route path="/multi-faith-templates" component={MultiFaithTemplates} />
+        <Route path="/living-legacy" component={LivingLegacy} />
+        <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

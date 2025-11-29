@@ -313,6 +313,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/memorials/search", async (req, res) => {
+    try {
+      const query = (req.query.q || req.query.query || "") as string;
+      if (query.length < 2) {
+        return res.json([]);
+      }
+      const memorials = await storage.searchMemorials(query);
+      res.json(memorials);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/memorials/:id", async (req, res) => {
     try {
       const memorial = await storage.getMemorial(req.params.id);
@@ -6925,6 +6938,279 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching essential worker memorials:', error);
       res.status(500).json({ error: 'Failed to fetch essential worker memorials' });
+    }
+  });
+
+  // ============================================
+  // PET MEMORIAL API ROUTES
+  // ============================================
+
+  // Get all public pet memorials
+  app.get("/api/pet-memorials", async (req, res) => {
+    try {
+      const petMemorials = await storage.getPetMemorials();
+      res.json(petMemorials);
+    } catch (error) {
+      console.error('Error fetching pet memorials:', error);
+      res.status(500).json({ error: 'Failed to fetch pet memorials' });
+    }
+  });
+
+  // Get single pet memorial by invite code
+  app.get("/api/pet-memorials/:inviteCode", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const petMemorial = await storage.getPetMemorialByInviteCode(inviteCode);
+      if (!petMemorial) {
+        return res.status(404).json({ error: 'Pet memorial not found' });
+      }
+      // Increment view count
+      await storage.incrementPetMemorialViewCount(petMemorial.id);
+      res.json(petMemorial);
+    } catch (error) {
+      console.error('Error fetching pet memorial:', error);
+      res.status(500).json({ error: 'Failed to fetch pet memorial' });
+    }
+  });
+
+  // Create pet memorial
+  app.post("/api/pet-memorials", async (req, res) => {
+    try {
+      const data = req.body;
+      
+      // Generate invite code
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      // Get creator email from session or use placeholder
+      const creatorEmail = (req as any).user?.email || 'anonymous@opictuary.com';
+      
+      const petMemorial = await storage.createPetMemorial({
+        ...data,
+        creatorEmail,
+        inviteCode,
+      });
+      
+      res.status(201).json(petMemorial);
+    } catch (error) {
+      console.error('Error creating pet memorial:', error);
+      res.status(500).json({ error: 'Failed to create pet memorial' });
+    }
+  });
+
+  // Get pet memorial condolences
+  app.get("/api/pet-memorials/:inviteCode/condolences", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const petMemorial = await storage.getPetMemorialByInviteCode(inviteCode);
+      if (!petMemorial) {
+        return res.status(404).json({ error: 'Pet memorial not found' });
+      }
+      const condolences = await storage.getPetMemorialCondolences(petMemorial.id);
+      res.json(condolences);
+    } catch (error) {
+      console.error('Error fetching pet memorial condolences:', error);
+      res.status(500).json({ error: 'Failed to fetch condolences' });
+    }
+  });
+
+  // Add condolence to pet memorial
+  app.post("/api/pet-memorials/:inviteCode/condolences", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const petMemorial = await storage.getPetMemorialByInviteCode(inviteCode);
+      if (!petMemorial) {
+        return res.status(404).json({ error: 'Pet memorial not found' });
+      }
+      
+      // Apply content moderation
+      const moderatedMessage = moderateContent(req.body.message);
+      
+      const condolence = await storage.createPetMemorialCondolence({
+        petMemorialId: petMemorial.id,
+        authorName: req.body.authorName,
+        authorEmail: req.body.authorEmail,
+        message: moderatedMessage,
+        relationship: req.body.relationship,
+      });
+      
+      res.status(201).json(condolence);
+    } catch (error) {
+      console.error('Error adding pet memorial condolence:', error);
+      res.status(500).json({ error: 'Failed to add condolence' });
+    }
+  });
+
+  // Get pet memorial candles
+  app.get("/api/pet-memorials/:inviteCode/candles", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const petMemorial = await storage.getPetMemorialByInviteCode(inviteCode);
+      if (!petMemorial) {
+        return res.status(404).json({ error: 'Pet memorial not found' });
+      }
+      const candles = await storage.getPetMemorialCandles(petMemorial.id);
+      res.json(candles);
+    } catch (error) {
+      console.error('Error fetching pet memorial candles:', error);
+      res.status(500).json({ error: 'Failed to fetch candles' });
+    }
+  });
+
+  // Light a candle for pet memorial
+  app.post("/api/pet-memorials/:inviteCode/candles", async (req, res) => {
+    try {
+      const { inviteCode } = req.params;
+      const petMemorial = await storage.getPetMemorialByInviteCode(inviteCode);
+      if (!petMemorial) {
+        return res.status(404).json({ error: 'Pet memorial not found' });
+      }
+      
+      const candle = await storage.createPetMemorialCandle({
+        petMemorialId: petMemorial.id,
+        litBy: req.body.litBy,
+        litByEmail: req.body.litByEmail,
+        message: req.body.message ? moderateContent(req.body.message) : undefined,
+        candleType: req.body.candleType || 'standard',
+      });
+      
+      // Increment candle count
+      await storage.incrementPetMemorialCandleCount(petMemorial.id);
+      
+      res.status(201).json(candle);
+    } catch (error) {
+      console.error('Error lighting pet memorial candle:', error);
+      res.status(500).json({ error: 'Failed to light candle' });
+    }
+  });
+
+  // ============================================
+  // FAMILY TREE API ROUTES
+  // ============================================
+
+  // Get family tree connections for a memorial
+  app.get("/api/memorials/:memorialId/family-tree", async (req, res) => {
+    try {
+      const connections = await storage.getFamilyTreeConnections(req.params.memorialId);
+      res.json(connections);
+    } catch (error) {
+      console.error('Error fetching family tree:', error);
+      res.status(500).json({ error: 'Failed to fetch family tree' });
+    }
+  });
+
+  // Add a family tree connection
+  app.post("/api/memorials/:memorialId/family-tree", isAuthenticated, async (req: any, res) => {
+    try {
+      const connection = await storage.createFamilyTreeConnection({
+        ...req.body,
+        primaryMemorialId: req.params.memorialId,
+      });
+      res.status(201).json(connection);
+    } catch (error) {
+      console.error('Error creating family tree connection:', error);
+      res.status(500).json({ error: 'Failed to create family tree connection' });
+    }
+  });
+
+  // ============================================
+  // LIVING LEGACY API ROUTES
+  // ============================================
+
+  // Get user's living legacies
+  app.get("/api/living-legacies/my", isAuthenticated, async (req: any, res) => {
+    try {
+      const legacies = await storage.getLivingLegacies(req.user.id);
+      res.json(legacies);
+    } catch (error) {
+      console.error('Error fetching living legacies:', error);
+      res.status(500).json({ error: 'Failed to fetch living legacies' });
+    }
+  });
+
+  // Get public living legacies
+  app.get("/api/living-legacies", async (req, res) => {
+    try {
+      const legacies = await storage.getLivingLegacies();
+      res.json(legacies);
+    } catch (error) {
+      console.error('Error fetching living legacies:', error);
+      res.status(500).json({ error: 'Failed to fetch living legacies' });
+    }
+  });
+
+  // Get single living legacy
+  app.get("/api/living-legacies/:id", async (req, res) => {
+    try {
+      const legacy = await storage.getLivingLegacy(req.params.id);
+      if (!legacy) {
+        return res.status(404).json({ error: 'Living legacy not found' });
+      }
+      res.json(legacy);
+    } catch (error) {
+      console.error('Error fetching living legacy:', error);
+      res.status(500).json({ error: 'Failed to fetch living legacy' });
+    }
+  });
+
+  // Create living legacy
+  app.post("/api/living-legacies", isAuthenticated, async (req: any, res) => {
+    try {
+      const legacy = await storage.createLivingLegacy({
+        ...req.body,
+        userId: req.user.id,
+      });
+      res.status(201).json(legacy);
+    } catch (error) {
+      console.error('Error creating living legacy:', error);
+      res.status(500).json({ error: 'Failed to create living legacy' });
+    }
+  });
+
+  // Update living legacy
+  app.patch("/api/living-legacies/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const legacy = await storage.getLivingLegacy(req.params.id);
+      if (!legacy) {
+        return res.status(404).json({ error: 'Living legacy not found' });
+      }
+      if (legacy.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      const updated = await storage.updateLivingLegacy(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating living legacy:', error);
+      res.status(500).json({ error: 'Failed to update living legacy' });
+    }
+  });
+
+  // ============================================
+  // MULTI-FAITH TEMPLATES API ROUTES
+  // ============================================
+
+  // Get multi-faith templates with optional filters
+  app.get("/api/multi-faith-templates", async (req, res) => {
+    try {
+      const { faith, category } = req.query;
+      const templates = await storage.getMultiFaithTemplates(
+        faith === 'all' ? undefined : faith as string,
+        category === 'all' ? undefined : category as string
+      );
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching multi-faith templates:', error);
+      res.status(500).json({ error: 'Failed to fetch templates' });
+    }
+  });
+
+  // Create multi-faith template (admin only)
+  app.post("/api/multi-faith-templates", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const template = await storage.createMultiFaithTemplate(req.body);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating multi-faith template:', error);
+      res.status(500).json({ error: 'Failed to create template' });
     }
   });
 

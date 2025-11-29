@@ -233,6 +233,40 @@ import {
   type InsertAthleticLegacyScore,
   type JerseyRetirement,
   type InsertJerseyRetirement,
+  // Pet Memorial tables and types
+  petMemorials,
+  petMemorialPhotos,
+  petMemorialCondolences,
+  petMemorialCandles,
+  type PetMemorial,
+  type InsertPetMemorial,
+  type PetMemorialPhoto,
+  type InsertPetMemorialPhoto,
+  type PetMemorialCondolence,
+  type InsertPetMemorialCondolence,
+  type PetMemorialCandle,
+  type InsertPetMemorialCandle,
+  // Living Legacy tables and types
+  livingLegacies,
+  livingLegacyAchievements,
+  livingLegacyBucketList,
+  livingLegacyMessages,
+  type LivingLegacy,
+  type InsertLivingLegacy,
+  type LivingLegacyAchievement,
+  type InsertLivingLegacyAchievement,
+  type LivingLegacyBucketList,
+  type InsertLivingLegacyBucketList,
+  type LivingLegacyMessage,
+  type InsertLivingLegacyMessage,
+  // Family Tree types
+  familyTreeConnections,
+  type FamilyTreeConnection,
+  type InsertFamilyTreeConnection,
+  // Multi-Faith types
+  multiFaithTemplates,
+  type MultiFaithTemplate,
+  type InsertMultiFaithTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -256,6 +290,7 @@ export interface IStorage {
   updateMemorial(id: string, memorial: Partial<InsertMemorial>): Promise<Memorial | undefined>;
   listMemorials(limit?: number, offset?: number): Promise<Memorial[]>;
   getMemorialsCount(): Promise<number>;
+  searchMemorials(query: string): Promise<Memorial[]>;
 
   // Memorial Admin operations
   getMemorialAdmins(memorialId: string): Promise<MemorialAdmin[]>;
@@ -704,6 +739,43 @@ export interface IStorage {
   addHallOfFameEntry(data: InsertJerseyRetirement): Promise<JerseyRetirement>;
   getHallOfFameEntries(filters?: { athleteId?: string; teamId?: string }): Promise<JerseyRetirement[]>;
   updateHallOfFameEntry(id: string, data: Partial<InsertJerseyRetirement>): Promise<JerseyRetirement | undefined>;
+  
+  // Pet Memorial operations
+  getPetMemorials(): Promise<PetMemorial[]>;
+  getPetMemorial(id: string): Promise<PetMemorial | undefined>;
+  getPetMemorialByInviteCode(inviteCode: string): Promise<PetMemorial | undefined>;
+  createPetMemorial(data: InsertPetMemorial): Promise<PetMemorial>;
+  updatePetMemorial(id: string, data: Partial<InsertPetMemorial>): Promise<PetMemorial | undefined>;
+  deletePetMemorial(id: string): Promise<void>;
+  incrementPetMemorialViewCount(id: string): Promise<void>;
+  incrementPetMemorialCandleCount(id: string): Promise<void>;
+  
+  // Pet Memorial Photos
+  getPetMemorialPhotos(petMemorialId: string): Promise<PetMemorialPhoto[]>;
+  createPetMemorialPhoto(data: InsertPetMemorialPhoto): Promise<PetMemorialPhoto>;
+  deletePetMemorialPhoto(id: string): Promise<void>;
+  
+  // Pet Memorial Condolences
+  getPetMemorialCondolences(petMemorialId: string): Promise<PetMemorialCondolence[]>;
+  createPetMemorialCondolence(data: InsertPetMemorialCondolence): Promise<PetMemorialCondolence>;
+  
+  // Pet Memorial Candles
+  getPetMemorialCandles(petMemorialId: string): Promise<PetMemorialCandle[]>;
+  createPetMemorialCandle(data: InsertPetMemorialCandle): Promise<PetMemorialCandle>;
+  
+  // Living Legacy operations
+  getLivingLegacies(userId?: string): Promise<LivingLegacy[]>;
+  getLivingLegacy(id: string): Promise<LivingLegacy | undefined>;
+  createLivingLegacy(data: InsertLivingLegacy): Promise<LivingLegacy>;
+  updateLivingLegacy(id: string, data: Partial<InsertLivingLegacy>): Promise<LivingLegacy | undefined>;
+  
+  // Multi-Faith Templates
+  getMultiFaithTemplates(faith?: string, category?: string): Promise<MultiFaithTemplate[]>;
+  createMultiFaithTemplate(data: InsertMultiFaithTemplate): Promise<MultiFaithTemplate>;
+  
+  // Family Tree operations
+  getFamilyTreeConnections(memorialId: string): Promise<FamilyTreeConnection[]>;
+  createFamilyTreeConnection(data: InsertFamilyTreeConnection): Promise<FamilyTreeConnection>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -833,6 +905,15 @@ export class DatabaseStorage implements IStorage {
   async getMemorialsCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(memorials);
     return result.count;
+  }
+
+  async searchMemorials(query: string): Promise<Memorial[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    const results = await db.select().from(memorials)
+      .where(sql`LOWER(${memorials.name}) LIKE ${searchPattern}`)
+      .orderBy(desc(memorials.createdAt))
+      .limit(20);
+    return results;
   }
 
   // Memorial Admin operations
@@ -3792,6 +3873,172 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jerseyRetirements.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // ============================================
+  // PET MEMORIAL IMPLEMENTATIONS
+  // ============================================
+
+  async getPetMemorials(): Promise<PetMemorial[]> {
+    return await db.select()
+      .from(petMemorials)
+      .where(eq(petMemorials.isPublic, true))
+      .orderBy(desc(petMemorials.createdAt));
+  }
+
+  async getPetMemorial(id: string): Promise<PetMemorial | undefined> {
+    const [memorial] = await db.select()
+      .from(petMemorials)
+      .where(eq(petMemorials.id, id));
+    return memorial || undefined;
+  }
+
+  async getPetMemorialByInviteCode(inviteCode: string): Promise<PetMemorial | undefined> {
+    const [memorial] = await db.select()
+      .from(petMemorials)
+      .where(eq(petMemorials.inviteCode, inviteCode));
+    return memorial || undefined;
+  }
+
+  async createPetMemorial(data: InsertPetMemorial): Promise<PetMemorial> {
+    const [created] = await db.insert(petMemorials).values(data).returning();
+    return created;
+  }
+
+  async updatePetMemorial(id: string, data: Partial<InsertPetMemorial>): Promise<PetMemorial | undefined> {
+    const [updated] = await db.update(petMemorials)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(petMemorials.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deletePetMemorial(id: string): Promise<void> {
+    await db.delete(petMemorials).where(eq(petMemorials.id, id));
+  }
+
+  async incrementPetMemorialViewCount(id: string): Promise<void> {
+    await db.update(petMemorials)
+      .set({ viewCount: sql`${petMemorials.viewCount} + 1` })
+      .where(eq(petMemorials.id, id));
+  }
+
+  async incrementPetMemorialCandleCount(id: string): Promise<void> {
+    await db.update(petMemorials)
+      .set({ candleLitCount: sql`${petMemorials.candleLitCount} + 1` })
+      .where(eq(petMemorials.id, id));
+  }
+
+  // Pet Memorial Photos
+  async getPetMemorialPhotos(petMemorialId: string): Promise<PetMemorialPhoto[]> {
+    return await db.select()
+      .from(petMemorialPhotos)
+      .where(eq(petMemorialPhotos.petMemorialId, petMemorialId))
+      .orderBy(desc(petMemorialPhotos.createdAt));
+  }
+
+  async createPetMemorialPhoto(data: InsertPetMemorialPhoto): Promise<PetMemorialPhoto> {
+    const [created] = await db.insert(petMemorialPhotos).values(data).returning();
+    return created;
+  }
+
+  async deletePetMemorialPhoto(id: string): Promise<void> {
+    await db.delete(petMemorialPhotos).where(eq(petMemorialPhotos.id, id));
+  }
+
+  // Pet Memorial Condolences
+  async getPetMemorialCondolences(petMemorialId: string): Promise<PetMemorialCondolence[]> {
+    return await db.select()
+      .from(petMemorialCondolences)
+      .where(eq(petMemorialCondolences.petMemorialId, petMemorialId))
+      .orderBy(desc(petMemorialCondolences.createdAt));
+  }
+
+  async createPetMemorialCondolence(data: InsertPetMemorialCondolence): Promise<PetMemorialCondolence> {
+    const [created] = await db.insert(petMemorialCondolences).values(data).returning();
+    return created;
+  }
+
+  // Pet Memorial Candles
+  async getPetMemorialCandles(petMemorialId: string): Promise<PetMemorialCandle[]> {
+    return await db.select()
+      .from(petMemorialCandles)
+      .where(eq(petMemorialCandles.petMemorialId, petMemorialId))
+      .orderBy(desc(petMemorialCandles.createdAt));
+  }
+
+  async createPetMemorialCandle(data: InsertPetMemorialCandle): Promise<PetMemorialCandle> {
+    const [created] = await db.insert(petMemorialCandles).values(data).returning();
+    return created;
+  }
+
+  // Living Legacy Operations
+  async getLivingLegacies(userId?: string): Promise<LivingLegacy[]> {
+    if (userId) {
+      return await db.select()
+        .from(livingLegacies)
+        .where(eq(livingLegacies.userId, userId))
+        .orderBy(desc(livingLegacies.createdAt));
+    }
+    return await db.select()
+      .from(livingLegacies)
+      .where(eq(livingLegacies.isPublic, true))
+      .orderBy(desc(livingLegacies.createdAt));
+  }
+
+  async getLivingLegacy(id: string): Promise<LivingLegacy | undefined> {
+    const [legacy] = await db.select()
+      .from(livingLegacies)
+      .where(eq(livingLegacies.id, id));
+    return legacy || undefined;
+  }
+
+  async createLivingLegacy(data: InsertLivingLegacy): Promise<LivingLegacy> {
+    const [created] = await db.insert(livingLegacies).values(data).returning();
+    return created;
+  }
+
+  async updateLivingLegacy(id: string, data: Partial<InsertLivingLegacy>): Promise<LivingLegacy | undefined> {
+    const [updated] = await db.update(livingLegacies)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(livingLegacies.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Multi-Faith Templates
+  async getMultiFaithTemplates(faith?: string, category?: string): Promise<MultiFaithTemplate[]> {
+    const conditions = [eq(multiFaithTemplates.isPublic, true)];
+    
+    if (faith) {
+      conditions.push(eq(multiFaithTemplates.faith, faith));
+    }
+    if (category) {
+      conditions.push(eq(multiFaithTemplates.category, category));
+    }
+    
+    return await db.select()
+      .from(multiFaithTemplates)
+      .where(and(...conditions))
+      .orderBy(desc(multiFaithTemplates.usageCount));
+  }
+
+  async createMultiFaithTemplate(data: InsertMultiFaithTemplate): Promise<MultiFaithTemplate> {
+    const [created] = await db.insert(multiFaithTemplates).values(data).returning();
+    return created;
+  }
+
+  // Family Tree Operations
+  async getFamilyTreeConnections(memorialId: string): Promise<FamilyTreeConnection[]> {
+    return await db.select()
+      .from(familyTreeConnections)
+      .where(eq(familyTreeConnections.primaryMemorialId, memorialId))
+      .orderBy(desc(familyTreeConnections.createdAt));
+  }
+
+  async createFamilyTreeConnection(data: InsertFamilyTreeConnection): Promise<FamilyTreeConnection> {
+    const [created] = await db.insert(familyTreeConnections).values(data).returning();
+    return created;
   }
 }
 

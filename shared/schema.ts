@@ -2862,6 +2862,325 @@ export const jerseyRetirements = pgTable("jersey_retirements", {
   index("idx_jersey_retirements_organization").on(table.organization),
 ]);
 
+// ============================================
+// PET MEMORIAL SYSTEM
+// ============================================
+
+// Pet Memorials - dedicated tribute pages for beloved pets
+export const petMemorials = pgTable("pet_memorials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorEmail: text("creator_email").notNull(),
+  
+  // Pet basic info
+  name: text("name").notNull(),
+  species: text("species").notNull(), // 'dog', 'cat', 'bird', 'rabbit', 'horse', 'fish', 'reptile', 'other'
+  breed: text("breed"),
+  color: text("color"),
+  birthDate: text("birth_date"),
+  passingDate: text("passing_date").notNull(),
+  age: text("age"), // Human-readable age like "12 years"
+  
+  // Personality and characteristics
+  personality: text("personality").array(), // ['playful', 'loyal', 'cuddly', 'energetic', 'calm']
+  favoriteActivities: text("favorite_activities").array(),
+  favoriteFood: text("favorite_food"),
+  favoriteToy: text("favorite_toy"),
+  specialTraits: text("special_traits"), // What made them unique
+  
+  // Memorial content
+  biography: text("biography"),
+  epitaph: text("epitaph"), // Short tribute message
+  rainbowBridgeMessage: text("rainbow_bridge_message"), // Special tribute
+  
+  // Media
+  profilePhoto: text("profile_photo"),
+  coverPhoto: text("cover_photo"),
+  galleryPhotos: text("gallery_photos").array(),
+  
+  // Theme customization
+  theme: text("theme").default("rainbow_bridge"), // 'rainbow_bridge', 'garden', 'starlight', 'forest', 'ocean'
+  primaryColor: text("primary_color"),
+  
+  // Vet and care info (optional)
+  vetClinic: text("vet_clinic"),
+  microchipId: text("microchip_id"),
+  causeOfPassing: text("cause_of_passing"),
+  
+  // Settings
+  isPublic: boolean("is_public").default(true),
+  allowCondolences: boolean("allow_condolences").default(true),
+  inviteCode: varchar("invite_code", { length: 20 }).notNull().unique(),
+  
+  // Analytics
+  viewCount: integer("view_count").default(0),
+  candleLitCount: integer("candle_lit_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_pet_memorials_creator_email").on(table.creatorEmail),
+  index("idx_pet_memorials_species").on(table.species),
+  index("idx_pet_memorials_is_public").on(table.isPublic),
+]);
+
+// Pet Memorial Photos - gallery images with memories
+export const petMemorialPhotos = pgTable("pet_memorial_photos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petMemorialId: varchar("pet_memorial_id").notNull().references(() => petMemorials.id, { onDelete: "cascade" }),
+  photoUrl: text("photo_url").notNull(),
+  caption: text("caption"),
+  dateTaken: text("date_taken"),
+  location: text("location"),
+  isFavorite: boolean("is_favorite").default(false),
+  uploadedBy: text("uploaded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pet_memorial_photos_pet_memorial_id").on(table.petMemorialId),
+]);
+
+// Pet Memorial Condolences
+export const petMemorialCondolences = pgTable("pet_memorial_condolences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petMemorialId: varchar("pet_memorial_id").notNull().references(() => petMemorials.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  message: text("message").notNull(),
+  relationship: text("relationship"), // 'friend', 'neighbor', 'vet', 'groomer', 'family'
+  isApproved: boolean("is_approved").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pet_memorial_condolences_pet_memorial_id").on(table.petMemorialId),
+]);
+
+// Pet Memorial Candles - virtual candles lit in memory
+export const petMemorialCandles = pgTable("pet_memorial_candles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  petMemorialId: varchar("pet_memorial_id").notNull().references(() => petMemorials.id, { onDelete: "cascade" }),
+  litBy: text("lit_by").notNull(),
+  litByEmail: text("lit_by_email"),
+  message: text("message"),
+  candleType: text("candle_type").default("standard"), // 'standard', 'eternal', 'rainbow'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pet_memorial_candles_pet_memorial_id").on(table.petMemorialId),
+]);
+
+// ============================================
+// LIVING LEGACY ACHIEVEMENT SYSTEM
+// ============================================
+
+// Living Legacy - pre-mortem memorial building for milestone tracking
+export const livingLegacies = pgTable("living_legacies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Person info
+  fullName: text("full_name").notNull(),
+  birthDate: text("birth_date"),
+  currentAge: integer("current_age"),
+  location: text("location"),
+  occupation: text("occupation"),
+  
+  // Life story in progress
+  biography: text("biography"),
+  lifePhilosophy: text("life_philosophy"),
+  favoriteQuote: text("favorite_quote"),
+  
+  // Media
+  profilePhoto: text("profile_photo"),
+  coverPhoto: text("cover_photo"),
+  
+  // Privacy
+  isPublic: boolean("is_public").default(false),
+  publishAfterPassing: boolean("publish_after_passing").default(true),
+  designatedExecutorEmail: text("designated_executor_email"),
+  
+  // Progress tracking
+  completionPercentage: integer("completion_percentage").default(0),
+  lastUpdatedSection: text("last_updated_section"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_living_legacies_user_id").on(table.userId),
+]);
+
+// Living Legacy Achievements - milestones and accomplishments
+export const livingLegacyAchievements = pgTable("living_legacy_achievements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  livingLegacyId: varchar("living_legacy_id").notNull().references(() => livingLegacies.id, { onDelete: "cascade" }),
+  
+  category: text("category").notNull(), // 'education', 'career', 'family', 'travel', 'hobby', 'volunteer', 'award', 'personal'
+  title: text("title").notNull(),
+  description: text("description"),
+  date: text("date"),
+  location: text("location"),
+  photoUrl: text("photo_url"),
+  importance: integer("importance").default(5), // 1-10 scale
+  isHighlight: boolean("is_highlight").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_living_legacy_achievements_living_legacy_id").on(table.livingLegacyId),
+  index("idx_living_legacy_achievements_category").on(table.category),
+]);
+
+// Living Legacy Bucket List - things to accomplish
+export const livingLegacyBucketList = pgTable("living_legacy_bucket_list", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  livingLegacyId: varchar("living_legacy_id").notNull().references(() => livingLegacies.id, { onDelete: "cascade" }),
+  
+  item: text("item").notNull(),
+  category: text("category"), // 'travel', 'experience', 'skill', 'relationship', 'giving'
+  isCompleted: boolean("is_completed").default(false),
+  completedDate: text("completed_date"),
+  completionNotes: text("completion_notes"),
+  photoUrl: text("photo_url"),
+  priority: integer("priority").default(3), // 1-5 scale
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_living_legacy_bucket_list_living_legacy_id").on(table.livingLegacyId),
+]);
+
+// Living Legacy Messages - pre-written messages for loved ones
+export const livingLegacyMessages = pgTable("living_legacy_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  livingLegacyId: varchar("living_legacy_id").notNull().references(() => livingLegacies.id, { onDelete: "cascade" }),
+  
+  recipientName: text("recipient_name").notNull(),
+  recipientEmail: text("recipient_email"),
+  recipientRelationship: text("recipient_relationship"),
+  
+  subject: text("subject"),
+  message: text("message").notNull(),
+  videoUrl: text("video_url"),
+  
+  deliveryTrigger: text("delivery_trigger").default("after_passing"), // 'after_passing', 'specific_date', 'milestone'
+  deliveryDate: text("delivery_date"),
+  deliveryMilestone: text("delivery_milestone"), // 'wedding', 'graduation', 'first_child'
+  
+  isDelivered: boolean("is_delivered").default(false),
+  deliveredAt: timestamp("delivered_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_living_legacy_messages_living_legacy_id").on(table.livingLegacyId),
+]);
+
+// ============================================
+// FAMILY TREE INTEGRATION
+// ============================================
+
+// Family Tree Connections - link memorials to family relationships
+export const familyTreeConnections = pgTable("family_tree_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // The person whose family tree this is
+  primaryMemorialId: varchar("primary_memorial_id").references(() => memorials.id, { onDelete: "cascade" }),
+  primaryLivingLegacyId: varchar("primary_living_legacy_id").references(() => livingLegacies.id, { onDelete: "cascade" }),
+  
+  // The related person
+  relatedMemorialId: varchar("related_memorial_id").references(() => memorials.id, { onDelete: "set null" }),
+  relatedLivingLegacyId: varchar("related_living_legacy_id").references(() => livingLegacies.id, { onDelete: "set null" }),
+  relatedPersonName: text("related_person_name"), // For people without memorials
+  
+  // Relationship details
+  relationship: text("relationship").notNull(), // 'parent', 'child', 'sibling', 'spouse', 'grandparent', 'grandchild', 'aunt_uncle', 'niece_nephew', 'cousin'
+  relationshipDetail: text("relationship_detail"), // 'mother', 'father', 'brother', 'sister', etc.
+  isBloodRelative: boolean("is_blood_relative").default(true),
+  
+  // Marriage details (for spouse relationships)
+  marriageDate: text("marriage_date"),
+  marriageLocation: text("marriage_location"),
+  
+  // Verification
+  isVerified: boolean("is_verified").default(false),
+  verifiedBy: varchar("verified_by").references(() => users.id, { onDelete: "set null" }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_family_tree_primary_memorial").on(table.primaryMemorialId),
+  index("idx_family_tree_primary_living_legacy").on(table.primaryLivingLegacyId),
+  index("idx_family_tree_related_memorial").on(table.relatedMemorialId),
+  index("idx_family_tree_relationship").on(table.relationship),
+]);
+
+// Multi-Faith Templates - prayer and ceremony templates
+export const multiFaithTemplates = pgTable("multi_faith_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  faith: text("faith").notNull(), // 'christian', 'catholic', 'jewish', 'islamic', 'hindu', 'buddhist', 'sikh', 'shinto', 'native_american', 'pagan', 'spiritual', 'secular', 'universal'
+  category: text("category").notNull(), // 'prayer', 'ceremony', 'reading', 'blessing', 'song', 'ritual'
+  
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  source: text("source"), // Scripture reference or origin
+  language: text("language").default("en"),
+  
+  // Usage context
+  suitableFor: text("suitable_for").array(), // ['funeral', 'memorial', 'anniversary', 'birthday']
+  tone: text("tone"), // 'comforting', 'celebratory', 'reflective', 'hopeful'
+  
+  // Customization
+  isCustomizable: boolean("is_customizable").default(true),
+  placeholders: text("placeholders").array(), // ['[NAME]', '[RELATIONSHIP]', '[DATE]']
+  
+  isPublic: boolean("is_public").default(true),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "set null" }),
+  
+  usageCount: integer("usage_count").default(0),
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_multi_faith_templates_faith").on(table.faith),
+  index("idx_multi_faith_templates_category").on(table.category),
+]);
+
+// Export schemas and types for Pet Memorials
+export const insertPetMemorialSchema = createInsertSchema(petMemorials).omit({ id: true, createdAt: true, updatedAt: true, viewCount: true, candleLitCount: true });
+export const insertPetMemorialPhotoSchema = createInsertSchema(petMemorialPhotos).omit({ id: true, createdAt: true });
+export const insertPetMemorialCondolenceSchema = createInsertSchema(petMemorialCondolences).omit({ id: true, createdAt: true });
+export const insertPetMemorialCandleSchema = createInsertSchema(petMemorialCandles).omit({ id: true, createdAt: true });
+
+export type InsertPetMemorial = z.infer<typeof insertPetMemorialSchema>;
+export type PetMemorial = typeof petMemorials.$inferSelect;
+export type InsertPetMemorialPhoto = z.infer<typeof insertPetMemorialPhotoSchema>;
+export type PetMemorialPhoto = typeof petMemorialPhotos.$inferSelect;
+export type InsertPetMemorialCondolence = z.infer<typeof insertPetMemorialCondolenceSchema>;
+export type PetMemorialCondolence = typeof petMemorialCondolences.$inferSelect;
+export type InsertPetMemorialCandle = z.infer<typeof insertPetMemorialCandleSchema>;
+export type PetMemorialCandle = typeof petMemorialCandles.$inferSelect;
+
+// Export schemas and types for Living Legacy
+export const insertLivingLegacySchema = createInsertSchema(livingLegacies).omit({ id: true, createdAt: true, updatedAt: true, completionPercentage: true });
+export const insertLivingLegacyAchievementSchema = createInsertSchema(livingLegacyAchievements).omit({ id: true, createdAt: true });
+export const insertLivingLegacyBucketListSchema = createInsertSchema(livingLegacyBucketList).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertLivingLegacyMessageSchema = createInsertSchema(livingLegacyMessages).omit({ id: true, createdAt: true, updatedAt: true, isDelivered: true, deliveredAt: true });
+
+export type InsertLivingLegacy = z.infer<typeof insertLivingLegacySchema>;
+export type LivingLegacy = typeof livingLegacies.$inferSelect;
+export type InsertLivingLegacyAchievement = z.infer<typeof insertLivingLegacyAchievementSchema>;
+export type LivingLegacyAchievement = typeof livingLegacyAchievements.$inferSelect;
+export type InsertLivingLegacyBucketList = z.infer<typeof insertLivingLegacyBucketListSchema>;
+export type LivingLegacyBucketList = typeof livingLegacyBucketList.$inferSelect;
+export type InsertLivingLegacyMessage = z.infer<typeof insertLivingLegacyMessageSchema>;
+export type LivingLegacyMessage = typeof livingLegacyMessages.$inferSelect;
+
+// Export schemas and types for Family Tree
+export const insertFamilyTreeConnectionSchema = createInsertSchema(familyTreeConnections).omit({ id: true, createdAt: true });
+export type InsertFamilyTreeConnection = z.infer<typeof insertFamilyTreeConnectionSchema>;
+export type FamilyTreeConnection = typeof familyTreeConnections.$inferSelect;
+
+// Export schemas and types for Multi-Faith
+export const insertMultiFaithTemplateSchema = createInsertSchema(multiFaithTemplates).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });
+export type InsertMultiFaithTemplate = z.infer<typeof insertMultiFaithTemplateSchema>;
+export type MultiFaithTemplate = typeof multiFaithTemplates.$inferSelect;
+
 // Export schemas and types for Memorial Event Planner
 export const insertEventTemplateSchema = createInsertSchema(eventTemplates).omit({ id: true, createdAt: true });
 export const insertEventChecklistSchema = createInsertSchema(eventChecklists).omit({ id: true, createdAt: true });
