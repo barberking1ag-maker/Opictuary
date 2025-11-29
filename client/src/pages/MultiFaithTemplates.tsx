@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Search, BookOpen, Heart, Copy, Star, Globe, 
   Church, Moon, Sun, Leaf, Flame, Wind, Mountain,
-  Cross, StarOfDavid
+  Cross
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MultiFaithTemplate } from "@shared/schema";
@@ -22,7 +22,7 @@ const faithOptions = [
   { value: "all", label: "All Faiths", icon: Globe },
   { value: "christian", label: "Christian", icon: Cross },
   { value: "catholic", label: "Catholic", icon: Church },
-  { value: "jewish", label: "Jewish", icon: StarOfDavid },
+  { value: "jewish", label: "Jewish", icon: Star },
   { value: "islamic", label: "Islamic", icon: Moon },
   { value: "hindu", label: "Hindu", icon: Sun },
   { value: "buddhist", label: "Buddhist", icon: Leaf },
