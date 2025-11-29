@@ -267,6 +267,14 @@ import {
   multiFaithTemplates,
   type MultiFaithTemplate,
   type InsertMultiFaithTemplate,
+  // Holiday Events types
+  holidayEvents,
+  type HolidayEvent,
+  type InsertHolidayEvent,
+  // Birthday Wishes types
+  birthdayWishes,
+  type BirthdayWish,
+  type InsertBirthdayWish,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -776,6 +784,18 @@ export interface IStorage {
   // Family Tree operations
   getFamilyTreeConnections(memorialId: string): Promise<FamilyTreeConnection[]>;
   createFamilyTreeConnection(data: InsertFamilyTreeConnection): Promise<FamilyTreeConnection>;
+
+  // Holiday Events operations
+  getHolidayEvents(memorialId: string): Promise<HolidayEvent[]>;
+  createHolidayEvent(data: InsertHolidayEvent): Promise<HolidayEvent>;
+  updateHolidayEvent(id: string, data: Partial<InsertHolidayEvent>): Promise<HolidayEvent | undefined>;
+  deleteHolidayEvent(id: string): Promise<void>;
+
+  // Birthday Wishes operations
+  getBirthdayWishes(memorialId: string): Promise<BirthdayWish[]>;
+  createBirthdayWish(data: InsertBirthdayWish): Promise<BirthdayWish>;
+  updateBirthdayWish(id: string, data: Partial<InsertBirthdayWish>): Promise<BirthdayWish | undefined>;
+  deleteBirthdayWish(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4039,6 +4059,56 @@ export class DatabaseStorage implements IStorage {
   async createFamilyTreeConnection(data: InsertFamilyTreeConnection): Promise<FamilyTreeConnection> {
     const [created] = await db.insert(familyTreeConnections).values(data).returning();
     return created;
+  }
+
+  // Holiday Events Operations
+  async getHolidayEvents(memorialId: string): Promise<HolidayEvent[]> {
+    return await db.select()
+      .from(holidayEvents)
+      .where(eq(holidayEvents.memorialId, memorialId))
+      .orderBy(holidayEvents.date);
+  }
+
+  async createHolidayEvent(data: InsertHolidayEvent): Promise<HolidayEvent> {
+    const [created] = await db.insert(holidayEvents).values(data).returning();
+    return created;
+  }
+
+  async updateHolidayEvent(id: string, data: Partial<InsertHolidayEvent>): Promise<HolidayEvent | undefined> {
+    const [updated] = await db.update(holidayEvents)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(holidayEvents.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteHolidayEvent(id: string): Promise<void> {
+    await db.delete(holidayEvents).where(eq(holidayEvents.id, id));
+  }
+
+  // Birthday Wishes Operations
+  async getBirthdayWishes(memorialId: string): Promise<BirthdayWish[]> {
+    return await db.select()
+      .from(birthdayWishes)
+      .where(eq(birthdayWishes.memorialId, memorialId))
+      .orderBy(desc(birthdayWishes.createdAt));
+  }
+
+  async createBirthdayWish(data: InsertBirthdayWish): Promise<BirthdayWish> {
+    const [created] = await db.insert(birthdayWishes).values(data).returning();
+    return created;
+  }
+
+  async updateBirthdayWish(id: string, data: Partial<InsertBirthdayWish>): Promise<BirthdayWish | undefined> {
+    const [updated] = await db.update(birthdayWishes)
+      .set(data)
+      .where(eq(birthdayWishes.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteBirthdayWish(id: string): Promise<void> {
+    await db.delete(birthdayWishes).where(eq(birthdayWishes.id, id));
   }
 }
 

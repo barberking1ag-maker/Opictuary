@@ -7113,6 +7113,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
+  // HOLIDAY EVENTS API ROUTES
+  // ============================================
+
+  // Get holiday events for a memorial
+  app.get("/api/memorials/:memorialId/holiday-events", async (req, res) => {
+    try {
+      const events = await storage.getHolidayEvents(req.params.memorialId);
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching holiday events:', error);
+      res.status(500).json({ error: 'Failed to fetch holiday events' });
+    }
+  });
+
+  // Create a holiday event
+  app.post("/api/memorials/:memorialId/holiday-events", isAuthenticated, async (req: any, res) => {
+    try {
+      const event = await storage.createHolidayEvent({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      res.status(201).json(event);
+    } catch (error) {
+      console.error('Error creating holiday event:', error);
+      res.status(500).json({ error: 'Failed to create holiday event' });
+    }
+  });
+
+  // Update a holiday event
+  app.patch("/api/memorials/:memorialId/holiday-events/:eventId", isAuthenticated, async (req: any, res) => {
+    try {
+      const event = await storage.updateHolidayEvent(req.params.eventId, req.body);
+      if (!event) {
+        return res.status(404).json({ error: 'Holiday event not found' });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error('Error updating holiday event:', error);
+      res.status(500).json({ error: 'Failed to update holiday event' });
+    }
+  });
+
+  // Delete a holiday event
+  app.delete("/api/memorials/:memorialId/holiday-events/:eventId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteHolidayEvent(req.params.eventId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting holiday event:', error);
+      res.status(500).json({ error: 'Failed to delete holiday event' });
+    }
+  });
+
+  // ============================================
+  // BIRTHDAY CELEBRATION API ROUTES
+  // ============================================
+
+  // Get birthday wishes for a memorial
+  app.get("/api/memorials/:memorialId/birthday-wishes", async (req, res) => {
+    try {
+      const wishes = await storage.getBirthdayWishes(req.params.memorialId);
+      res.json(wishes);
+    } catch (error) {
+      console.error('Error fetching birthday wishes:', error);
+      res.status(500).json({ error: 'Failed to fetch birthday wishes' });
+    }
+  });
+
+  // Create a birthday wish
+  app.post("/api/memorials/:memorialId/birthday-wishes", async (req, res) => {
+    try {
+      const { insertBirthdayWishSchema } = await import("@shared/schema");
+      const validatedData = insertBirthdayWishSchema.parse({
+        ...req.body,
+        memorialId: req.params.memorialId,
+      });
+      const wish = await storage.createBirthdayWish(validatedData);
+      res.status(201).json(wish);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        res.status(400).json({ error: 'Invalid request data', details: error.errors });
+        return;
+      }
+      console.error('Error creating birthday wish:', error);
+      res.status(500).json({ error: 'Failed to create birthday wish' });
+    }
+  });
+
+  // Update a birthday wish
+  app.patch("/api/memorials/:memorialId/birthday-wishes/:wishId", isAuthenticated, async (req: any, res) => {
+    try {
+      const wish = await storage.updateBirthdayWish(req.params.wishId, req.body);
+      if (!wish) {
+        res.status(404).json({ error: 'Birthday wish not found' });
+        return;
+      }
+      res.json(wish);
+    } catch (error) {
+      console.error('Error updating birthday wish:', error);
+      res.status(500).json({ error: 'Failed to update birthday wish' });
+    }
+  });
+
+  // Delete a birthday wish
+  app.delete("/api/memorials/:memorialId/birthday-wishes/:wishId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteBirthdayWish(req.params.wishId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting birthday wish:', error);
+      res.status(500).json({ error: 'Failed to delete birthday wish' });
+    }
+  });
+
+  // ============================================
   // LIVING LEGACY API ROUTES
   // ============================================
 

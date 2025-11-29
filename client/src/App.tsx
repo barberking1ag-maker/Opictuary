@@ -70,6 +70,11 @@ import PetMemorialView from "@/pages/PetMemorialView";
 import MultiFaithTemplates from "@/pages/MultiFaithTemplates";
 import LivingLegacy from "@/pages/LivingLegacy";
 import FamilyTree from "@/pages/FamilyTree";
+import CemeteryNavigator from "@/pages/CemeteryNavigator";
+import CustomQRCodeDesigner from "@/pages/CustomQRCodeDesigner";
+import HolidayTimeline from "@/pages/HolidayTimeline";
+import BirthdayCelebration from "@/pages/BirthdayCelebration";
+import OlympianMemorial from "@/pages/OlympianMemorial";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -363,6 +368,11 @@ function Router() {
         <Route path="/multi-faith-templates" component={MultiFaithTemplates} />
         <Route path="/living-legacy" component={LivingLegacy} />
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
+        <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
+        <Route path="/qr-designer" component={CustomQRCodeDesigner} />
+        <Route path="/holiday-timeline/:memorialId" component={HolidayTimeline} />
+        <Route path="/birthday-celebration/:memorialId" component={BirthdayCelebration} />
+        <Route path="/olympian-memorial/:athleteId" component={OlympianMemorial} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

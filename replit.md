@@ -34,6 +34,8 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **Funeral Program Audio & Bluetooth System:** Integrates audio and Bluetooth connectivity for funeral service programs.
 **Memorial Events System:** Comprehensive event planning with notifications and RSVP tracking.
 **Cemetery Location Mapping:** Stores cemetery coordinates for future map integration.
+**Birthday Celebration Platform:** Annual birthday wish system allowing visitors to submit heartfelt messages on the deceased's birthday, organized by year with relationship tracking.
+**Olympian Memorial System:** Enhanced athletic memorial with detailed Olympic legacy scoring, medal tracking, career statistics, and Olympic Games history timeline.
 **Alumni Memorial System:** Comprehensive system for honoring deceased alumni with university-themed design and creation wizards.
 **AI Chat Assistant:** OpenAI-powered assistant for user support and navigation, accessible via a floating button.
 **QR-Activated Physical Memorial Products System:** Full-stack e-commerce platform for physical memorial products with embedded QR codes, product catalog, customization wizard, order management, admin dashboard, and secure Stripe payment processing.

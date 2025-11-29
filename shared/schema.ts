@@ -3108,6 +3108,67 @@ export const familyTreeConnections = pgTable("family_tree_connections", {
   index("idx_family_tree_relationship").on(table.relationship),
 ]);
 
+// ============================================
+// HOLIDAY MEMORIAL TIMELINE
+// ============================================
+
+// Holiday Events - memorial holiday reminders and celebration planning
+export const holidayEvents = pgTable("holiday_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  
+  name: text("name").notNull(),
+  date: text("date").notNull(), // ISO date format
+  eventType: text("event_type").notNull().default("custom"), // 'birthday', 'anniversary', 'holiday', 'custom'
+  description: text("description"),
+  
+  // Reminder settings
+  reminderEnabled: boolean("reminder_enabled").default(true),
+  reminderDaysBefore: integer("reminder_days_before").default(7),
+  
+  // Celebration planning
+  celebrationPlan: text("celebration_plan"),
+  traditions: text("traditions").array(),
+  
+  isRecurring: boolean("is_recurring").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_holiday_events_memorial_id").on(table.memorialId),
+  index("idx_holiday_events_date").on(table.date),
+  index("idx_holiday_events_type").on(table.eventType),
+]);
+
+export const insertHolidayEventSchema = createInsertSchema(holidayEvents).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertHolidayEvent = z.infer<typeof insertHolidayEventSchema>;
+export type HolidayEvent = typeof holidayEvents.$inferSelect;
+
+// ============================================
+// BIRTHDAY CELEBRATION PLATFORM
+// ============================================
+
+// Birthday Wishes - annual birthday messages for memorials
+export const birthdayWishes = pgTable("birthday_wishes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  
+  authorName: text("author_name").notNull(),
+  authorEmail: text("author_email"),
+  message: text("message").notNull(),
+  relationship: text("relationship"),
+  year: integer("year").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_birthday_wishes_memorial_id").on(table.memorialId),
+  index("idx_birthday_wishes_year").on(table.year),
+]);
+
+export const insertBirthdayWishSchema = createInsertSchema(birthdayWishes).omit({ id: true, createdAt: true });
+export type InsertBirthdayWish = z.infer<typeof insertBirthdayWishSchema>;
+export type BirthdayWish = typeof birthdayWishes.$inferSelect;
+
 // Multi-Faith Templates - prayer and ceremony templates
 export const multiFaithTemplates = pgTable("multi_faith_templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
