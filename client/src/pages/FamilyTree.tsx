@@ -57,13 +57,9 @@ const connectionSchema = z.object({
 
 type ConnectionFormData = z.infer<typeof connectionSchema>;
 
-interface FamilyTreeProps {
-  memorialId?: string;
-}
-
-export default function FamilyTree({ memorialId: propMemorialId }: FamilyTreeProps) {
+export default function FamilyTree() {
   const params = useParams();
-  const memorialId = propMemorialId || params.memorialId;
+  const memorialId = params.memorialId;
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchMemorial, setSearchMemorial] = useState("");
   const { toast } = useToast();

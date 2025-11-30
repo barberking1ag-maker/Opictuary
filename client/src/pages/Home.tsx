@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode, Loader2, RefreshCw, Sparkles, PlayCircle, Video } from "lucide-react";
+import { Heart, Calendar, DollarSign, Music, MessageSquare, Image as ImageIcon, MapPin, Share2, Bookmark, UserPlus, FileText, QrCode, Loader2, RefreshCw, Sparkles, PlayCircle, Video, Cake, CalendarDays, Navigation, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import InviteCodeModal from "@/components/InviteCodeModal";
@@ -1361,6 +1361,106 @@ export default function Home() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Birthday Celebration Feature */}
+            <Card className="hover-elevate" data-testid="card-feature-birthday">
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="mx-auto w-14 h-14 rounded-full bg-pink-500/10 flex items-center justify-center">
+                  <Cake className="w-7 h-7 text-pink-500" aria-hidden="true" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Birthday Celebration</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Leave birthday wishes and celebrate their life on special anniversaries
+                  </p>
+                </div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => window.location.href = `/birthday-celebration/${memorialId}`}
+                  data-testid="button-birthday-celebration"
+                  aria-label="View birthday celebration page"
+                >
+                  <Cake className="w-4 h-4 mr-2" aria-hidden="true" />
+                  View Celebrations
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Holiday Timeline Feature */}
+            <Card className="hover-elevate" data-testid="card-feature-holiday">
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="mx-auto w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CalendarDays className="w-7 h-7 text-green-500" aria-hidden="true" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Holiday Timeline</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track important dates and holidays to remember and celebrate together
+                  </p>
+                </div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => window.location.href = `/holiday-timeline/${memorialId}`}
+                  data-testid="button-holiday-timeline"
+                  aria-label="View holiday timeline"
+                >
+                  <CalendarDays className="w-4 h-4 mr-2" aria-hidden="true" />
+                  View Timeline
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Cemetery Navigator Feature */}
+            <Card className="hover-elevate" data-testid="card-feature-cemetery">
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="mx-auto w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <Navigation className="w-7 h-7 text-blue-500" aria-hidden="true" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Cemetery Navigator</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Find directions to the gravesite and nearby memorial locations
+                  </p>
+                </div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => window.location.href = `/cemetery-navigator/${memorialId}`}
+                  data-testid="button-cemetery-navigator"
+                  aria-label="Navigate to cemetery"
+                >
+                  <Navigation className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Get Directions
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Family Tree Feature */}
+            <Card className="hover-elevate" data-testid="card-feature-family-tree">
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Users className="w-7 h-7 text-amber-500" aria-hidden="true" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Family Tree</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Explore family connections and relationships across generations
+                  </p>
+                </div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => window.location.href = `/family-tree/${memorialId}`}
+                  data-testid="button-family-tree"
+                  aria-label="View family tree"
+                >
+                  <Users className="w-4 h-4 mr-2" aria-hidden="true" />
+                  View Family Tree
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
