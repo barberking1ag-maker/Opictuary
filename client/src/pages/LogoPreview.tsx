@@ -1,33 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import titaniumWorld from "@assets/generated_images/titanium_o_with_world_globe.png";
-import titaniumHalo from "@assets/generated_images/titanium_o_with_halo_orbit.png";
-import titaniumConstellation from "@assets/generated_images/titanium_o_constellation_network.png";
-import titaniumGlobal from "@assets/generated_images/titanium_o_global_network_map.png";
+import originalWithWorld from "@assets/generated_images/original_o_with_world_and_feature_icons.png";
 
 const logos = [
   {
-    id: "world",
-    name: "Titanium O with World Globe",
-    description: "Sleek titanium O with Earth visible behind it, orbital ring with feature icons - messages, birthdays, family trees, QR codes, athletic honors, and memorial flames",
-    image: titaniumWorld,
-  },
-  {
-    id: "halo",
-    name: "Titanium O with Halo Orbit",
-    description: "Polished titanium O with glowing halo orbit, feature symbols floating in the orbital path with cosmic background",
-    image: titaniumHalo,
-  },
-  {
-    id: "constellation",
-    name: "Titanium O Constellation Network",
-    description: "Refined titanium O with constellation-style connected dots radiating outward, each node representing a platform feature",
-    image: titaniumConstellation,
-  },
-  {
-    id: "global",
-    name: "Titanium O Global Network",
-    description: "Majestic titanium O with world map inside, global network lines connecting to feature icons representing worldwide memorial connections",
-    image: titaniumGlobal,
+    id: "original-world",
+    name: "Original O with World & Features",
+    description: "The original Opictuary O with Earth globe inside, surrounded by feature icons: messages, birthdays, family trees, QR codes, athletic honors, and memorial flames - all within the O",
+    image: originalWithWorld,
   },
 ];
 
