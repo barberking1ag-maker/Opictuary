@@ -19,7 +19,7 @@ export default function LogoPreview() {
             Opictuary Continuum Logo Options
           </h1>
           <p className="text-lg text-muted-foreground" data-testid="text-logo-preview-subtitle">
-            New Titanium O designs representing all platform features - choose your favorite
+            Original O with world globe and feature icons inside
           </p>
         </div>
 

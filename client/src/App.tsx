@@ -398,7 +398,7 @@ function Router() {
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
         <Route path="/badge-preview" component={BadgePreview} />
         <Route path="/design-reference" component={DesignReference} />
-        <Route path="/logo-preview" component={LogoPreview} />
+        <Route path="/new-logo" component={LogoPreview} />
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
         <Route path="/memorials/:id/manage" component={ManageMemorial} />
