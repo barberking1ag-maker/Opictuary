@@ -1,140 +1,85 @@
-name: Build Android
+name: Build Android App
+
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
-      
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      
-      - name: Create Android project and setup signing
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Decode Keystore
         env:
-          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS_VAL: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD_VAL: ${{ secrets.KEY_PASSWORD }}
+          ENCODED_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
         run: |
-          mkdir -p android/app/src/main/assets/public
-          mkdir -p android/app/src/main/res/values
-          mkdir -p android/gradle/wrapper
-          mkdir -p android/app/src/main/java/com/opictuary/memorial
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          
-          KEYSTORE=$(find . -name "signing.keystore" -not -path "./android/*" 2>/dev/null | head -1)
-          echo "Found keystore at: $KEYSTORE"
-          cp "$KEYSTORE" android/app/signing.keystore
-          
-          echo "storeFile=signing.keystore" > android/key.properties
-          echo "storePassword=${STORE_PASSWORD}" >> android/key.properties
-          echo "keyAlias=${KEY_ALIAS_VAL}" >> android/key.properties
-          echo "keyPassword=${KEY_PASSWORD_VAL}" >> android/key.properties
-          
-          cat > android/app/src/main/AndroidManifest.xml << 'MANIFEST'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/AppTheme" android:usesCleartextTraffic="true">
-              <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask" android:theme="@style/AppTheme.NoActionBarLaunch">
-                <intent-filter>
-                  <action android:name="android.intent.action.MAIN"/>
-                  <category android:name="android.intent.category.LAUNCHER"/>
-                </intent-filter>
-              </activity>
-            </application>
-            <uses-permission android:name="android.permission.INTERNET"/>
-          </manifest>
-          MANIFEST
-          
-          cat > android/app/src/main/java/com/opictuary/memorial/MainActivity.java << 'JAVA'
-          package com.opictuary.memorial;
-          import android.os.Bundle;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import android.webkit.WebSettings;
-          import androidx.appcompat.app.AppCompatActivity;
-          public class MainActivity extends AppCompatActivity {
-              private WebView webView;
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  webView = new WebView(this);
-                  setContentView(webView);
-                  WebSettings settings = webView.getSettings();
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  webView.setWebViewClient(new WebViewClient());
-                  webView.loadUrl("https://opictuary.replit.app");
-              }
-              @Override
-              public void onBackPressed() {
-                  if (webView.canGoBack()) { webView.goBack(); } else { super.onBackPressed(); }
-              }
-          }
-          JAVA
-          
-          echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Opictuary</string></resources>' > android/app/src/main/res/values/strings.xml
-          
-          cat > android/app/src/main/res/values/styles.xml << 'STYLES'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-            <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar"><item name="colorPrimary">#2C1810</item></style>
-            <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar"><item name="android:background">#2C1810</item></style>
-          </resources>
-          STYLES
-          
-          cat > android/app/build.gradle << 'GRADLE'
-          apply plugin: 'com.android.application'
-          def keystorePropertiesFile = rootProject.file('key.properties')
-          def keystoreProperties = new Properties()
-          if (keystorePropertiesFile.exists()) { keystoreProperties.load(new FileInputStream(keystorePropertiesFile)) }
-          android {
-              namespace "com.opictuary.memorial"
-              compileSdk 34
-              defaultConfig { applicationId "com.opictuary.memorial"; minSdk 22; targetSdk 34; versionCode 2025112700; versionName "2.1.0" }
-              signingConfigs { release { if (keystorePropertiesFile.exists()) { keyAlias keystoreProperties['keyAlias']; keyPassword keystoreProperties['keyPassword']; storeFile file(keystoreProperties['storeFile']); storePassword keystoreProperties['storePassword'] } } }
-              buildTypes { release { signingConfig signingConfigs.release } }
-          }
-          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
-          GRADLE
-          
-          cat > android/build.gradle << 'ROOTGRADLE'
-          buildscript { repositories { google(); mavenCentral() }; dependencies { classpath 'com.android.tools.build:gradle:8.1.0' } }
-          allprojects { repositories { google(); mavenCentral() } }
-          ROOTGRADLE
-          
-          echo "include ':app'" > android/settings.gradle
-          printf 'android.useAndroidX=true\norg.gradle.jvmargs=-Xmx2048m\n' > android/gradle.properties
-          echo 'distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip' > android/gradle/wrapper/gradle-wrapper.properties
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-          
-          curl -sL "https://placehold.co/192x192/2C1810/D4AF37/png?text=O" -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png || touch android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          
-          echo "=== Verifying files ==="
-          ls -la android/app/src/main/
-          cat android/app/src/main/AndroidManifest.xml
-      
-      - name: Build Android Bundle
+          echo $ENCODED_KEYSTORE | base64 -d > android/app/release.jks
+
+      - name: Build Release AAB (for Google Play)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
-          ls -la app/signing.keystore
-          curl -sL https://services.gradle.org/distributions/gradle-8.0-bin.zip -o gradle.zip
-          unzip -q gradle.zip
-          ./gradle-8.0/bin/gradle bundleRelease --no-daemon
-          ls -la app/build/outputs/bundle/release/
-      
-      - name: Upload artifact
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/app/release.jks \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+      - name: Build Release APK (for direct install)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/app/release.jks \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+      - name: Upload AAB (for Google Play)
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-bundle
+          name: opictuary-release.aab
           path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload APK (for direct install)
+        uses: actions/upload-artifact@v4
+        with:
+          name: opictuary-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
