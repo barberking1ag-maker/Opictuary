@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import newLogo from "@assets/generated_images/o_with_halo_globe_and_icons.png";
+import newLogo from "@assets/generated_images/gold_foil_o_with_halo_and_features.png";
 
 export default function BrandLogo2024() {
   return (
@@ -17,7 +17,7 @@ export default function BrandLogo2024() {
         <Card className="overflow-hidden" data-testid="card-new-logo">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl text-center" data-testid="text-logo-title">
-              O with Halo, Globe & Feature Icons
+              Original Gold Foil O with All Features
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
