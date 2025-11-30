@@ -1,7 +1,27 @@
 # Memorial Platform (Opictuary)
 
 ## Overview
-Opictuary is a digital memorial platform designed to preserve memories of deceased loved ones. It offers features such as photo/video sharing, crowdfunding, legacy event planning, grief support, celebrity tributes, and alumni memorials. Key functionalities include Future Messages, enhanced memorial page design, database-backed saved memorials, server-side content moderation, a funeral program creation system, merchandise integration, and a unique prison access system. The platform emphasizes dignified design, multi-faith customization, and privacy. Its business model includes B2B partnerships with funeral homes, flower shops, correctional facilities, and alumni associations, generating revenue through platform fees, advertisements, partnerships, prison access services, and merchandise referrals.
+**Opictuary** is the world's first continuum memorial platform - a comprehensive remembrance operating system that keeps every chapter of a life story connected before, during, and long after memorial services.
+
+**Brand Tagline:** "Honor every life, in every dimension."
+
+**Platform Definition:** A memorial operating system that goes beyond traditional obituaries to capture the full story of every life - every achievement, every connection, every dimension of who someone truly was. Through adaptive, multi-faith storytelling, living legacy achievements, and always-on family collaboration, Opictuary transforms remembrance into an evolving ecosystem that's interactive, inclusive, and revenue-ready for partners.
+
+**Key Capabilities:**
+- Immersive memorial hubs with multimedia galleries
+- AI-guided storytelling and chat assistance
+- Scheduled future messages and time capsules
+- QR-activated physical touchpoints
+- Birthday celebrations and holiday timelines
+- Family tree integration
+- GPS cemetery navigation
+- Olympian/athletic legacy scoring
+- Celebrity and alumni memorial systems
+- Prison access for incarcerated loved ones
+- Live streaming memorial services
+- Crowdfunding and merchandise integration
+
+**Business Model:** B2B partnerships with funeral homes, flower shops, correctional facilities, and alumni associations, generating revenue through platform fees, advertisements, partnerships, prison access services, and merchandise referrals. Protected by 22 provisional patents with $13.2M valuation.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

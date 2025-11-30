@@ -19,14 +19,14 @@ export default function Landing() {
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-foreground tracking-tight" data-testid="text-hero-title">
-              Love doesn't end.
+              Honor every life,
               <br />
-              <span className="text-primary">Neither should remembrance.</span>
+              <span className="text-primary">in every dimension.</span>
             </h1>
             
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed" data-testid="text-hero-description">
-              Create beautiful, lasting memorials for those who shaped your life. 
-              Share their story, preserve their legacy, and find support when you need it most.
+              The world's first continuum memorial platform. Create immersive memorial hubs with living achievements, 
+              AI-guided storytelling, scheduled future messages, and QR-activated touchpoints that honor every chapter of life.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6 w-full max-w-3xl mx-auto">
@@ -79,23 +79,23 @@ export default function Landing() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground" data-testid="text-intro-title">
-            A Space Built on Compassion
+            Beyond Obituaries: A Continuum of Remembrance
           </h2>
           
           <div className="text-base sm:text-lg text-muted-foreground space-y-4 leading-relaxed">
             <p data-testid="text-intro-p1">
-              Losing someone you love changes everything. The grief is real. The memories are precious. 
-              And the need to honor their life in a meaningful way becomes deeply important.
+              Every life is a universe of moments, achievements, connections, and love. 
+              Traditional obituaries capture only a fraction. Opictuary captures the whole story.
             </p>
             
             <p data-testid="text-intro-p2">
-              <strong className="text-foreground">Opictuary was created for this exact moment.</strong>
+              <strong className="text-foreground">A memorial operating system that honors every dimension of life.</strong>
             </p>
             
             <p data-testid="text-intro-p3">
-              We understand that remembering someone isn't just about marking a date or sharing a photo. 
-              It's about preserving the fullness of who they were – their laughter, their wisdom, 
-              the way they made you feel, the mark they left on this world.
+              From birthday celebrations to family trees, from Olympic achievements to community tributes, 
+              from scheduled future messages to GPS cemetery navigation - we've built the tools to preserve 
+              not just who someone was, but the ongoing impact they have on everyone they touched.
             </p>
           </div>
         </div>
@@ -106,10 +106,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground mb-4" data-testid="text-features-title">
-              Three Revolutionary Ways to Honor Life
+              Core Platform Innovations
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-features-description">
-              Patent-protected innovations that change how we remember
+              22 patent-protected innovations powering the continuum memorial experience
             </p>
           </div>
 
@@ -199,10 +199,10 @@ export default function Landing() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground mb-4" data-testid="text-specialized-title">
-            Specialized Memorial Experiences
+            Life Dimensions: Every Story Deserves Its Canvas
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto" data-testid="text-specialized-description">
-            Honor every life with memorial types designed for unique legacies
+            From celebrities to essential workers, athletes to alumni - specialized experiences for every legacy
           </p>
         </div>
 

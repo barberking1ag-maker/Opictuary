@@ -18,7 +18,7 @@ export default function About() {
               About Opictuary
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-about-subtitle">
-              Where memories live on with dignity and grace
+              The world's first continuum memorial platform - honoring every life, in every dimension
             </p>
           </div>
         </div>
@@ -29,23 +29,23 @@ export default function About() {
         {/* Mission Statement */}
         <section className="space-y-6">
           <h2 className="text-3xl font-serif font-semibold text-foreground" data-testid="text-mission-title">
-            A Space Built on Compassion
+            A Memorial Operating System for the Modern Age
           </h2>
           
           <div className="prose prose-lg max-w-none text-muted-foreground space-y-4">
             <p data-testid="text-mission-p1">
-              Losing someone you love changes everything. The grief is real. The memories are precious. 
-              And the need to honor their life in a meaningful way becomes deeply important.
+              Traditional obituaries capture a fraction of a life. Opictuary captures the whole story - 
+              every achievement, every connection, every dimension of who someone truly was.
             </p>
             
             <p data-testid="text-mission-p2">
-              <strong className="text-foreground">Opictuary was created for this exact moment.</strong>
+              <strong className="text-foreground">We built the world's first continuum memorial platform.</strong>
             </p>
             
             <p data-testid="text-mission-p3">
-              We understand that remembering someone isn't just about marking a date or sharing a photo. 
-              It's about preserving the fullness of who they were – their laughter, their wisdom, 
-              the way they made you feel, the mark they left on this world.
+              From immersive photo and video galleries to AI-powered storytelling, from scheduled future messages 
+              that keep your love reaching loved ones to GPS cemetery navigation, from birthday celebrations to 
+              Olympian legacy scores - we've reimagined what it means to honor a life in the digital age.
             </p>
           </div>
         </section>
