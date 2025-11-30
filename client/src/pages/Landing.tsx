@@ -1,7 +1,8 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Smartphone, Calendar, QrCode, Video, Crown, GraduationCap, Shield, Users, MapPin, Lock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Smartphone, Calendar, QrCode, Video, Crown, GraduationCap, Shield, Users, MapPin, Lock, PartyPopper, Cake, Gift, Music, ShoppingBag, Bluetooth } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 
 export default function Landing() {
@@ -71,6 +72,115 @@ export default function Landing() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NEW: Celebrations Section */}
+      <div className="bg-gradient-to-br from-accent/10 via-primary/5 to-background py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4" data-testid="badge-celebrations-new">
+              <PartyPopper className="w-3 h-3 mr-1" />
+              New Feature
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-foreground mb-4" data-testid="text-celebrations-title">
+              Continuum Celebrations
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Beyond memorials - celebrate birthdays, holidays, and life events with friends and family
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Birthday Celebrations */}
+            <Link href="/celebrations?tab=birthdays" className="block" data-testid="link-birthday-celebrations">
+              <Card className="hover-elevate h-full border-2 border-accent/30" data-testid="card-birthday-celebrations">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center mx-auto">
+                    <Cake className="w-7 h-7 text-accent-foreground" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Birthday Celebrations</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Bluetooth playlists, live streaming with friends, and shopping spree from donations
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge variant="outline" className="text-xs">
+                      <Music className="w-3 h-3 mr-1" />
+                      Playlists
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      <Video className="w-3 h-3 mr-1" />
+                      Live
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      <ShoppingBag className="w-3 h-3 mr-1" />
+                      Shopping
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Holiday Celebrations */}
+            <Link href="/celebrations?tab=holidays" className="block" data-testid="link-holiday-celebrations">
+              <Card className="hover-elevate h-full border-2 border-primary/20" data-testid="card-holiday-celebrations">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <Calendar className="w-7 h-7 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">All Holidays</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Multi-faith calendar with 50+ holidays from every tradition and culture
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge variant="outline" className="text-xs">Global</Badge>
+                    <Badge variant="outline" className="text-xs">Multi-Faith</Badge>
+                    <Badge variant="outline" className="text-xs">Custom</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Wedding Gifts */}
+            <Link href="/celebrations?tab=weddings" className="block" data-testid="link-wedding-gifts">
+              <Card className="hover-elevate h-full border-2 border-primary/20" data-testid="card-wedding-gifts">
+                <CardContent className="p-6 space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <Gift className="w-7 h-7 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Wedding Gifts</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Create gift registries, accept cash gifts, and share your special day
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge variant="outline" className="text-xs">
+                      <Gift className="w-3 h-3 mr-1" />
+                      Registry
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      <Heart className="w-3 h-3 mr-1" />
+                      Cash Gifts
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+
+          <div className="text-center mt-10">
+            <Link href="/celebrations">
+              <Button size="lg" data-testid="button-explore-celebrations">
+                <PartyPopper className="w-5 h-5 mr-2" />
+                Explore Celebrations Hub
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

@@ -77,10 +77,11 @@ import CustomQRCodeDesigner from "@/pages/CustomQRCodeDesigner";
 import HolidayTimeline from "@/pages/HolidayTimeline";
 import BirthdayCelebration from "@/pages/BirthdayCelebration";
 import OlympianMemorial from "@/pages/OlympianMemorial";
+import CelebrationsHub from "@/pages/CelebrationsHub";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
-import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -126,6 +127,12 @@ function Router() {
                   Create Memorial
                 </Button>
               </Link>
+              <Link href="/celebrations">
+                <Button variant="ghost" size="sm" data-testid="nav-celebrations" className="text-sm">
+                  <PartyPopper className="w-4 h-4 mr-1.5" />
+                  Celebrations
+                </Button>
+              </Link>
               <Link href="/products">
                 <Button variant="ghost" size="sm" data-testid="nav-products" className="text-sm">
                   <ShoppingBag className="w-4 h-4 mr-1.5" />
@@ -143,6 +150,25 @@ function Router() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-celebrations">
+                    <Link href="/celebrations">
+                      <PartyPopper className="w-4 h-4 mr-2" />
+                      <span>Celebrations Hub</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-birthdays">
+                    <Link href="/celebrations?tab=birthdays">
+                      <Cake className="w-4 h-4 mr-2" />
+                      <span>Birthday Celebrations</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-weddings">
+                    <Link href="/celebrations?tab=weddings">
+                      <Heart className="w-4 h-4 mr-2" />
+                      <span>Wedding Gifts</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-event-planner">
                     <Link href="/event-planner">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -271,6 +297,25 @@ function Router() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-celebrations">
+                      <Link href="/celebrations">
+                        <PartyPopper className="w-4 h-4 mr-2" />
+                        <span>Celebrations Hub</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-birthdays">
+                      <Link href="/celebrations?tab=birthdays">
+                        <Cake className="w-4 h-4 mr-2" />
+                        <span>Birthday Celebrations</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-weddings">
+                      <Link href="/celebrations?tab=weddings">
+                        <Heart className="w-4 h-4 mr-2" />
+                        <span>Wedding Gifts</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-event-planner">
                       <Link href="/event-planner">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -387,6 +432,7 @@ function Router() {
         <Route path="/holiday-timeline/:memorialId" component={HolidayTimeline} />
         <Route path="/birthday-celebration/:memorialId" component={BirthdayCelebration} />
         <Route path="/olympian-memorial/:athleteId" component={OlympianMemorial} />
+        <Route path="/celebrations" component={CelebrationsHub} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />

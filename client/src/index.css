@@ -2,79 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Opictuary Memorial Theme (Rich Backgrounds) */
+/* LIGHT MODE - Opictuary Continuum Celebration Theme (Enhanced Contrast) */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0, .12);
+  --badge-outline: rgba(0,0,0, .08);
 
   /* Automatic computation of border around primary / danger buttons */
-  --opaque-button-border-intensity: -8; /* In terms of percentages */
+  --opaque-button-border-intensity: -10; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0, .04);
+  --elevate-2: rgba(0,0,0, .10);
 
-  --background: 270 35% 96%;
+  /* Deeper, richer backgrounds for better contrast */
+  --background: 270 20% 97%;
 
-  --foreground: 280 40% 12%;
+  /* Darker foreground for better readability */
+  --foreground: 280 45% 8%;
 
-  --border: 270 20% 82%;
+  --border: 270 15% 78%;
 
-  --card: 270 40% 98%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 280 35% 15%;
+  --card-foreground: 280 40% 10%;
 
-  --card-border: 270 20% 88%;
+  --card-border: 270 15% 85%;
 
-  --sidebar: 270 40% 92%;
+  --sidebar: 280 30% 12%;
 
-  --sidebar-foreground: 280 40% 18%;
+  --sidebar-foreground: 45 20% 95%;
 
-  --sidebar-border: 270 20% 82%;
+  --sidebar-border: 280 25% 18%;
 
-  --sidebar-primary: 280 50% 38%;
+  --sidebar-primary: 280 55% 50%;
 
-  --sidebar-primary-foreground: 45 35% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 270 25% 88%;
+  --sidebar-accent: 280 30% 18%;
 
-  --sidebar-accent-foreground: 280 40% 22%;
+  --sidebar-accent-foreground: 45 20% 92%;
 
-  --sidebar-ring: 280 50% 38%;
+  --sidebar-ring: 280 55% 55%;
 
-  --popover: 270 40% 98%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 280 35% 15%;
+  --popover-foreground: 280 40% 10%;
 
-  --popover-border: 270 20% 82%;
+  --popover-border: 270 15% 80%;
 
-  --primary: 280 55% 42%;
+  /* Royal purple primary - richer and more vibrant */
+  --primary: 280 60% 38%;
 
-  --primary-foreground: 45 35% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 45 80% 58%;
+  /* Gold accent - used sparingly for highlights */
+  --secondary: 45 85% 52%;
 
-  --secondary-foreground: 280 40% 12%;
+  --secondary-foreground: 280 50% 8%;
 
-  --muted: 270 25% 90%;
+  /* Better muted colors for hierarchy */
+  --muted: 270 15% 92%;
 
-  --muted-foreground: 280 20% 42%;
+  --muted-foreground: 280 15% 38%;
 
-  --accent: 45 90% 62%;
+  /* Premium gold accent */
+  --accent: 45 90% 50%;
 
-  --accent-foreground: 280 40% 12%;
+  --accent-foreground: 280 50% 8%;
 
-  --destructive: 0 72% 52%;
+  --destructive: 0 72% 50%;
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 280 12% 75%;
-  --ring: 280 40% 40%;
-  --chart-1: 280 45% 55%;
-  --chart-2: 45 70% 58%;
-  --chart-3: 200 50% 50%;
-  --chart-4: 320 40% 50%;
-  --chart-5: 160 45% 48%;
+  --input: 280 10% 70%;
+  --ring: 280 50% 45%;
+  --chart-1: 280 50% 50%;
+  --chart-2: 45 80% 55%;
+  --chart-3: 200 55% 48%;
+  --chart-4: 320 45% 48%;
+  --chart-5: 160 50% 45%;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Crimson Text', Georgia, serif;
@@ -122,77 +128,83 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE - Deep Purple with Gold Accents */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255, .12);
+  --badge-outline: rgba(255,255,255, .08);
 
-  --opaque-button-border-intensity: 9;  /* In terms of percentages */
+  --opaque-button-border-intensity: 12;  /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .05);
+  --elevate-2: rgba(255,255,255, .12);
 
-  --background: 280 35% 12%;
+  /* Deep rich purple background */
+  --background: 280 40% 8%;
 
-  --foreground: 45 30% 94%;
+  /* Warm cream foreground for readability */
+  --foreground: 45 25% 95%;
 
-  --border: 280 25% 22%;
+  --border: 280 30% 18%;
 
-  --card: 280 30% 16%;
+  --card: 280 35% 12%;
 
-  --card-foreground: 45 25% 92%;
+  --card-foreground: 45 20% 94%;
 
-  --card-border: 280 25% 24%;
+  --card-border: 280 25% 20%;
 
-  --sidebar: 280 35% 14%;
+  --sidebar: 280 40% 6%;
 
-  --sidebar-foreground: 45 25% 90%;
+  --sidebar-foreground: 45 20% 92%;
 
-  --sidebar-border: 280 25% 22%;
+  --sidebar-border: 280 30% 15%;
 
-  --sidebar-primary: 280 50% 48%;
+  --sidebar-primary: 280 55% 55%;
 
-  --sidebar-primary-foreground: 45 30% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 280 25% 20%;
+  --sidebar-accent: 280 30% 15%;
 
-  --sidebar-accent-foreground: 45 25% 88%;
+  --sidebar-accent-foreground: 45 20% 90%;
 
-  --sidebar-ring: 280 50% 52%;
+  --sidebar-ring: 280 55% 58%;
 
-  --popover: 280 30% 18%;
+  --popover: 280 35% 14%;
 
-  --popover-foreground: 45 25% 90%;
+  --popover-foreground: 45 20% 92%;
 
-  --popover-border: 280 25% 26%;
+  --popover-border: 280 25% 22%;
 
-  --primary: 280 55% 52%;
+  /* Brighter primary for dark mode visibility */
+  --primary: 280 60% 58%;
 
-  --primary-foreground: 45 30% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 45 75% 58%;
+  /* Gold that pops in dark mode */
+  --secondary: 45 85% 58%;
 
-  --secondary-foreground: 280 35% 10%;
+  --secondary-foreground: 280 50% 8%;
 
-  --muted: 280 20% 24%;
+  --muted: 280 25% 18%;
 
-  --muted-foreground: 280 15% 65%;
+  --muted-foreground: 280 15% 70%;
 
-  --accent: 45 85% 62%;
+  /* Bright gold accent */
+  --accent: 45 90% 55%;
 
-  --accent-foreground: 280 35% 10%;
+  --accent-foreground: 280 50% 8%;
 
-  --destructive: 0 68% 52%;
+  --destructive: 0 70% 55%;
 
-  --destructive-foreground: 0 5% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 280 15% 30%;
-  --ring: 280 45% 50%;
-  --chart-1: 280 40% 65%;
-  --chart-2: 45 75% 65%;
-  --chart-3: 200 45% 60%;
-  --chart-4: 320 35% 62%;
-  --chart-5: 160 40% 58%;
+  --input: 280 20% 25%;
+  --ring: 280 50% 55%;
+  --chart-1: 280 45% 62%;
+  --chart-2: 45 80% 60%;
+  --chart-3: 200 50% 58%;
+  --chart-4: 320 40% 58%;
+  --chart-5: 160 45% 55%;
 
   --shadow-2xs: 0px 1px 2px 0px hsl(220 15% 5% / 0.10);
   --shadow-xs: 0px 1px 3px 0px hsl(220 15% 5% / 0.15);

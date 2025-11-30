@@ -3169,6 +3169,443 @@ export const insertBirthdayWishSchema = createInsertSchema(birthdayWishes).omit(
 export type InsertBirthdayWish = z.infer<typeof insertBirthdayWishSchema>;
 export type BirthdayWish = typeof birthdayWishes.$inferSelect;
 
+// ============================================
+// CONTINUUM CELEBRATIONS SYSTEM
+// ============================================
+
+// Holiday Catalog - comprehensive multi-faith holiday database
+export const holidayCatalog = pgTable("holiday_catalog", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  name: text("name").notNull(),
+  description: text("description"),
+  
+  // Categorization
+  category: text("category").notNull(), // 'religious', 'cultural', 'national', 'international', 'secular'
+  faithTradition: text("faith_tradition"), // 'christian', 'jewish', 'islamic', 'hindu', 'buddhist', 'sikh', 'pagan', 'secular', 'universal'
+  region: text("region"), // 'global', 'north_america', 'europe', 'asia', 'africa', 'middle_east', 'oceania', 'south_america'
+  country: text("country"), // ISO country code for national holidays
+  
+  // Date handling
+  dateType: text("date_type").notNull().default("fixed"), // 'fixed', 'lunar', 'calculated', 'variable'
+  fixedMonth: integer("fixed_month"), // 1-12 for fixed date holidays
+  fixedDay: integer("fixed_day"), // 1-31 for fixed date holidays
+  calculationRule: text("calculation_rule"), // For variable holidays like Easter, Eid, etc.
+  
+  // Styling and assets
+  iconName: text("icon_name"), // Lucide icon name
+  primaryColor: text("primary_color"), // Hex color for theming
+  secondaryColor: text("secondary_color"),
+  bannerImageUrl: text("banner_image_url"),
+  
+  // Content
+  traditions: text("traditions").array(),
+  greetings: text("greetings").array(), // Traditional greetings in multiple languages
+  symbolism: text("symbolism"),
+  
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_holiday_catalog_category").on(table.category),
+  index("idx_holiday_catalog_faith").on(table.faithTradition),
+  index("idx_holiday_catalog_region").on(table.region),
+]);
+
+// Celebration Wallets - hold funds from donations for shopping spree
+export const celebrationWallets = pgTable("celebration_wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Owner reference (can be memorial, living legacy, or user)
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  
+  // Wallet details
+  walletType: text("wallet_type").notNull(), // 'birthday', 'wedding', 'celebration', 'memorial'
+  walletName: text("wallet_name").notNull(),
+  
+  // Balance tracking
+  totalReceived: decimal("total_received", { precision: 10, scale: 2 }).default("0.00"),
+  totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0.00"),
+  currentBalance: decimal("current_balance", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Spending limits
+  spendingLimit: decimal("spending_limit", { precision: 10, scale: 2 }),
+  requiresApproval: boolean("requires_approval").default(false),
+  approverEmail: text("approver_email"),
+  
+  // Status
+  status: text("status").notNull().default("active"), // 'active', 'frozen', 'closed'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_celebration_wallets_memorial").on(table.memorialId),
+  index("idx_celebration_wallets_user").on(table.userId),
+  index("idx_celebration_wallets_type").on(table.walletType),
+]);
+
+// Wallet Transactions - ledger for wallet deposits and spending
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  walletId: varchar("wallet_id").notNull().references(() => celebrationWallets.id, { onDelete: "cascade" }),
+  
+  transactionType: text("transaction_type").notNull(), // 'deposit', 'withdrawal', 'purchase', 'refund'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Source/destination info
+  sourceType: text("source_type"), // 'donation', 'gift', 'transfer', 'refund'
+  sourceId: varchar("source_id"), // Reference to donation ID, order ID, etc.
+  donorName: text("donor_name"),
+  donorEmail: text("donor_email"),
+  
+  // Purchase info (for spending)
+  merchantName: text("merchant_name"),
+  orderReference: text("order_reference"),
+  itemDescription: text("item_description"),
+  
+  // Balance after transaction
+  balanceAfter: decimal("balance_after", { precision: 10, scale: 2 }).notNull(),
+  
+  // Metadata
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_wallet_transactions_wallet").on(table.walletId),
+  index("idx_wallet_transactions_type").on(table.transactionType),
+  index("idx_wallet_transactions_date").on(table.createdAt),
+]);
+
+// Shopping Spree Orders - track purchases from wallet funds
+export const shoppingSpreeOrders = pgTable("shopping_spree_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  walletId: varchar("wallet_id").notNull().references(() => celebrationWallets.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  
+  // Order details
+  orderNumber: text("order_number").notNull(),
+  merchantName: text("merchant_name").notNull(),
+  merchantUrl: text("merchant_url"),
+  
+  // Items
+  items: jsonb("items").notNull().$type<Array<{
+    name: string;
+    description?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    imageUrl?: string;
+  }>>().default([]),
+  
+  // Totals
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Shipping
+  shippingAddress: jsonb("shipping_address").$type<{
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  }>(),
+  
+  // Status tracking
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'
+  trackingNumber: text("tracking_number"),
+  trackingUrl: text("tracking_url"),
+  
+  // Approval workflow
+  approvalStatus: text("approval_status").default("pending"), // 'pending', 'approved', 'rejected'
+  approvedBy: varchar("approved_by").references(() => users.id, { onDelete: "set null" }),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_shopping_spree_orders_wallet").on(table.walletId),
+  index("idx_shopping_spree_orders_user").on(table.userId),
+  index("idx_shopping_spree_orders_status").on(table.status),
+]);
+
+// Wedding Registries - gift registries for weddings and celebrations
+export const weddingRegistries = pgTable("wedding_registries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Owner info
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Event details
+  eventType: text("event_type").notNull().default("wedding"), // 'wedding', 'anniversary', 'baby_shower', 'birthday', 'graduation'
+  eventName: text("event_name").notNull(), // "John & Jane's Wedding"
+  eventDate: text("event_date"),
+  eventLocation: text("event_location"),
+  
+  // Couple/honoree info
+  primaryPersonName: text("primary_person_name").notNull(),
+  secondaryPersonName: text("secondary_person_name"), // For weddings
+  
+  // Styling
+  coverImageUrl: text("cover_image_url"),
+  themeColor: text("theme_color"),
+  message: text("message"), // Welcome message for guests
+  
+  // Sharing
+  shareCode: varchar("share_code", { length: 20 }).notNull().unique(),
+  isPublic: boolean("is_public").default(false),
+  
+  // Wallet link for cash gifts
+  walletId: varchar("wallet_id").references(() => celebrationWallets.id, { onDelete: "set null" }),
+  
+  status: text("status").notNull().default("active"), // 'draft', 'active', 'completed', 'archived'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_wedding_registries_user").on(table.userId),
+  index("idx_wedding_registries_event_type").on(table.eventType),
+  index("idx_wedding_registries_share_code").on(table.shareCode),
+]);
+
+// Registry Items - products in a wedding registry
+export const registryItems = pgTable("registry_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  registryId: varchar("registry_id").notNull().references(() => weddingRegistries.id, { onDelete: "cascade" }),
+  
+  // Product info
+  productName: text("product_name").notNull(),
+  productDescription: text("product_description"),
+  productUrl: text("product_url"),
+  productImageUrl: text("product_image_url"),
+  retailerName: text("retailer_name"),
+  
+  // Pricing
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  
+  // Quantity tracking
+  quantityRequested: integer("quantity_requested").notNull().default(1),
+  quantityPurchased: integer("quantity_purchased").default(0),
+  
+  // Category
+  category: text("category"), // 'kitchen', 'bedroom', 'living', 'outdoor', 'experience', 'cash', 'other'
+  priority: text("priority").default("normal"), // 'must_have', 'high', 'normal', 'nice_to_have'
+  
+  // Notes
+  personalNote: text("personal_note"), // Why this item is special
+  
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_registry_items_registry").on(table.registryId),
+  index("idx_registry_items_category").on(table.category),
+]);
+
+// Registry Gifts - track who purchased what
+export const registryGifts = pgTable("registry_gifts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  registryItemId: varchar("registry_item_id").notNull().references(() => registryItems.id, { onDelete: "cascade" }),
+  registryId: varchar("registry_id").notNull().references(() => weddingRegistries.id, { onDelete: "cascade" }),
+  
+  // Gifter info
+  gifterName: text("gifter_name").notNull(),
+  gifterEmail: text("gifter_email"),
+  gifterUserId: varchar("gifter_user_id").references(() => users.id, { onDelete: "set null" }),
+  
+  // Gift details
+  quantity: integer("quantity").notNull().default(1),
+  amount: decimal("amount", { precision: 10, scale: 2 }), // For partial gifts or cash contributions
+  
+  // Message
+  giftMessage: text("gift_message"),
+  
+  // Status
+  status: text("status").notNull().default("purchased"), // 'reserved', 'purchased', 'shipped', 'delivered'
+  isAnonymous: boolean("is_anonymous").default(false),
+  
+  // Thank you tracking
+  thankYouSent: boolean("thank_you_sent").default(false),
+  thankYouSentAt: timestamp("thank_you_sent_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_registry_gifts_item").on(table.registryItemId),
+  index("idx_registry_gifts_registry").on(table.registryId),
+  index("idx_registry_gifts_gifter").on(table.gifterUserId),
+]);
+
+// Bluetooth Playlist Sessions - for live celebration music sharing
+export const bluetoothPlaylistSessions = pgTable("bluetooth_playlist_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Event reference
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "cascade" }),
+  eventId: varchar("event_id"), // Reference to memorial event
+  
+  // Session host
+  hostUserId: varchar("host_user_id").references(() => users.id, { onDelete: "set null" }),
+  hostDeviceName: text("host_device_name"),
+  
+  // Session details
+  sessionName: text("session_name").notNull(),
+  sessionCode: varchar("session_code", { length: 8 }).notNull().unique(), // Short code to join
+  
+  // Playlist
+  playlistId: varchar("playlist_id").references(() => memorialPlaylists.id, { onDelete: "set null" }),
+  currentTrackIndex: integer("current_track_index").default(0),
+  isPlaying: boolean("is_playing").default(false),
+  
+  // Connected devices
+  connectedDevices: jsonb("connected_devices").$type<Array<{
+    deviceId: string;
+    deviceName: string;
+    deviceType: string;
+    connectedAt: string;
+  }>>().default([]),
+  maxDevices: integer("max_devices").default(20),
+  
+  // Status
+  status: text("status").notNull().default("active"), // 'active', 'paused', 'ended'
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bluetooth_sessions_memorial").on(table.memorialId),
+  index("idx_bluetooth_sessions_host").on(table.hostUserId),
+  index("idx_bluetooth_sessions_code").on(table.sessionCode),
+]);
+
+// Live Celebration Sessions - for streaming celebrations with friends
+export const liveCelebrationSessions = pgTable("live_celebration_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Event type
+  celebrationType: text("celebration_type").notNull(), // 'birthday', 'holiday', 'anniversary', 'graduation', 'wedding', 'memorial'
+  memorialId: varchar("memorial_id").references(() => memorials.id, { onDelete: "cascade" }),
+  
+  // Host info
+  hostUserId: varchar("host_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  hostName: text("host_name").notNull(),
+  
+  // Session details
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  scheduledEnd: timestamp("scheduled_end"),
+  
+  // Joining
+  joinCode: varchar("join_code", { length: 10 }).notNull().unique(),
+  password: text("password"), // Optional password protection
+  maxParticipants: integer("max_participants").default(50),
+  
+  // Stream settings
+  streamUrl: text("stream_url"),
+  streamType: text("stream_type").default("video"), // 'video', 'audio_only', 'photo_slideshow'
+  isRecordingEnabled: boolean("is_recording_enabled").default(false),
+  recordingUrl: text("recording_url"),
+  
+  // Features
+  chatEnabled: boolean("chat_enabled").default(true),
+  reactionsEnabled: boolean("reactions_enabled").default(true),
+  photosEnabled: boolean("photos_enabled").default(true),
+  
+  // Playlist integration
+  playlistSessionId: varchar("playlist_session_id").references(() => bluetoothPlaylistSessions.id, { onDelete: "set null" }),
+  
+  // Status
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'live', 'ended', 'cancelled'
+  actualStartedAt: timestamp("actual_started_at"),
+  actualEndedAt: timestamp("actual_ended_at"),
+  
+  // Stats
+  peakViewers: integer("peak_viewers").default(0),
+  totalViews: integer("total_views").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_live_celebrations_host").on(table.hostUserId),
+  index("idx_live_celebrations_memorial").on(table.memorialId),
+  index("idx_live_celebrations_type").on(table.celebrationType),
+  index("idx_live_celebrations_scheduled").on(table.scheduledStart),
+  index("idx_live_celebrations_code").on(table.joinCode),
+]);
+
+// Live Celebration Participants - track who joined
+export const liveCelebrationParticipants = pgTable("live_celebration_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull().references(() => liveCelebrationSessions.id, { onDelete: "cascade" }),
+  
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  participantName: text("participant_name").notNull(),
+  participantEmail: text("participant_email"),
+  
+  role: text("role").notNull().default("viewer"), // 'host', 'co_host', 'speaker', 'viewer'
+  
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  durationMinutes: integer("duration_minutes"),
+  
+  // Engagement
+  reactionsCount: integer("reactions_count").default(0),
+  messagesCount: integer("messages_count").default(0),
+  photosShared: integer("photos_shared").default(0),
+}, (table) => [
+  index("idx_live_participants_session").on(table.sessionId),
+  index("idx_live_participants_user").on(table.userId),
+]);
+
+// Export schemas and types for new Celebration tables
+export const insertHolidayCatalogSchema = createInsertSchema(holidayCatalog).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertHolidayCatalog = z.infer<typeof insertHolidayCatalogSchema>;
+export type HolidayCatalog = typeof holidayCatalog.$inferSelect;
+
+export const insertCelebrationWalletSchema = createInsertSchema(celebrationWallets).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCelebrationWallet = z.infer<typeof insertCelebrationWalletSchema>;
+export type CelebrationWallet = typeof celebrationWallets.$inferSelect;
+
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({ id: true, createdAt: true });
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+
+export const insertShoppingSpreeOrderSchema = createInsertSchema(shoppingSpreeOrders).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertShoppingSpreeOrder = z.infer<typeof insertShoppingSpreeOrderSchema>;
+export type ShoppingSpreeOrder = typeof shoppingSpreeOrders.$inferSelect;
+
+export const insertWeddingRegistrySchema = createInsertSchema(weddingRegistries).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertWeddingRegistry = z.infer<typeof insertWeddingRegistrySchema>;
+export type WeddingRegistry = typeof weddingRegistries.$inferSelect;
+
+export const insertRegistryItemSchema = createInsertSchema(registryItems).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertRegistryItem = z.infer<typeof insertRegistryItemSchema>;
+export type RegistryItem = typeof registryItems.$inferSelect;
+
+export const insertRegistryGiftSchema = createInsertSchema(registryGifts).omit({ id: true, createdAt: true });
+export type InsertRegistryGift = z.infer<typeof insertRegistryGiftSchema>;
+export type RegistryGift = typeof registryGifts.$inferSelect;
+
+export const insertBluetoothPlaylistSessionSchema = createInsertSchema(bluetoothPlaylistSessions).omit({ id: true, createdAt: true });
+export type InsertBluetoothPlaylistSession = z.infer<typeof insertBluetoothPlaylistSessionSchema>;
+export type BluetoothPlaylistSession = typeof bluetoothPlaylistSessions.$inferSelect;
+
+export const insertLiveCelebrationSessionSchema = createInsertSchema(liveCelebrationSessions).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertLiveCelebrationSession = z.infer<typeof insertLiveCelebrationSessionSchema>;
+export type LiveCelebrationSession = typeof liveCelebrationSessions.$inferSelect;
+
+export const insertLiveCelebrationParticipantSchema = createInsertSchema(liveCelebrationParticipants).omit({ id: true });
+export type InsertLiveCelebrationParticipant = z.infer<typeof insertLiveCelebrationParticipantSchema>;
+export type LiveCelebrationParticipant = typeof liveCelebrationParticipants.$inferSelect;
+
 // Multi-Faith Templates - prayer and ceremony templates
 export const multiFaithTemplates = pgTable("multi_faith_templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
