@@ -1,0 +1,8 @@
+# Example key.properties file for signing Android releases
+# Copy this to key.properties and fill in your values
+# NEVER commit key.properties to git!
+
+storePassword=YOUR_KEYSTORE_PASSWORD_HERE
+keyPassword=YOUR_KEY_PASSWORD_HERE
+keyAlias=opictuary-release
+storeFile=/path/to/your/opictuary-release-key.jks

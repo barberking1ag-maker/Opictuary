@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Export Method Options:
+         "app-store" - For App Store submission
+         "ad-hoc" - For testing on registered devices
+         "enterprise" - For enterprise distribution
+         "development" - For development testing
+    -->
+    <key>method</key>
+    <string>app-store</string>
+    
+    <!-- Team ID - Replace with your Apple Developer Team ID -->
+    <!-- Find it at: https://developer.apple.com/account/#/membership -->
+    <key>teamID</key>
+    <string>CRPD7WHX8V</string>
+    
+    <!-- Bundle ID -->
+    <key>signingCertificate</key>
+    <string>Apple Distribution</string>
+    
+    <!-- Provisioning Profile -->
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.opictuary.memorial</key>
+        <string>Opictuary App Store Profile</string>
+    </dict>
+    
+    <!-- Upload to App Store Connect automatically -->
+    <key>uploadToAppStore</key>
+    <false/>
+    
+    <!-- Bitcode Settings -->
+    <key>uploadBitcode</key>
+    <true/>
+    
+    <!-- Symbols -->
+    <key>uploadSymbols</key>
+    <true/>
+    
+    <!-- Compilation Bitcode -->
+    <key>compileBitcode</key>
+    <true/>
+    
+    <!-- Thinning (reduces app size) -->
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+    
+    <!-- Strip Swift Symbols -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+    
+    <!-- Signing Style -->
+    <key>signingStyle</key>
+    <string>manual</string>
+    
+    <!-- Destination for export -->
+    <key>destination</key>
+    <string>export</string>
+    
+    <!-- Generate App Store Information plist -->
+    <key>generateAppStoreInformation</key>
+    <true/>
+    
+    <!-- Manage App Version and Build Number -->
+    <key>manageAppVersionAndBuildNumber</key>
+    <false/>
+</dict>
+</plist>
