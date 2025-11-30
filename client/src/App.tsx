@@ -65,6 +65,7 @@ import OrderTracking from "@/pages/OrderTracking";
 import EventPlanner from "@/pages/EventPlanner";
 import SportsMemorials from "@/pages/SportsMemorials";
 import PetMemorials from "@/pages/PetMemorials";
+import LogoPreview from "@/pages/LogoPreview";
 import CreatePetMemorial from "@/pages/CreatePetMemorial";
 import PetMemorialView from "@/pages/PetMemorialView";
 import MultiFaithTemplates from "@/pages/MultiFaithTemplates";
@@ -397,6 +398,7 @@ function Router() {
         <Route path="/partner-dashboard/:partnerId" component={PartnerDashboard} />
         <Route path="/badge-preview" component={BadgePreview} />
         <Route path="/design-reference" component={DesignReference} />
+        <Route path="/logo-preview" component={LogoPreview} />
         <Route path="/profile" component={UserProfile} />
         <Route path="/my-memorials" component={MyMemorials} />
         <Route path="/memorials/:id/manage" component={ManageMemorial} />
