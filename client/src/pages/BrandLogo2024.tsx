@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import newLogo from "@assets/generated_images/opictuary_top_curved_text_around_o.png";
+import newLogo from "@assets/generated_images/original_o_with_legacy_celebrations_memorials.png";
 
 export default function BrandLogo2024() {
   return (
