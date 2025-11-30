@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import newLogo from "@assets/generated_images/original_o_with_world_and_feature_icons.png";
+import newLogo from "@assets/generated_images/o_with_halo_globe_and_icons.png";
 
 export default function BrandLogo2024() {
   return (
@@ -10,28 +10,29 @@ export default function BrandLogo2024() {
             New Opictuary Logo Design
           </h1>
           <p className="text-lg text-muted-foreground" data-testid="text-brand-logo-subtitle">
-            Original O with world globe and all feature icons
+            O with halo, world globe, varied feature icons, and Opictuary text below
           </p>
         </div>
 
         <Card className="overflow-hidden" data-testid="card-new-logo">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl text-center" data-testid="text-logo-title">
-              Original O with World & Features
+              O with Halo, Globe & Feature Icons
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-muted/30 rounded-lg p-8 flex items-center justify-center">
               <img
                 src={newLogo}
-                alt="Opictuary Logo - Original O with World Globe and Feature Icons"
+                alt="Opictuary Logo - O with Halo, World Globe and Feature Icons"
                 className="max-w-full max-h-[400px] object-contain rounded-lg"
                 data-testid="img-new-logo"
               />
             </div>
             <p className="text-center text-muted-foreground" data-testid="text-logo-description">
-              The original Opictuary O with Earth globe inside, surrounded by feature icons: 
-              messages, birthdays, family trees, QR codes, athletic honors, and memorial flames
+              Golden halo above the O, Earth globe inside with varied feature icons 
+              (messages, birthdays, family tree, QR codes, Olympic rings, eternal flame, video, heart, star), 
+              and "Opictuary" text at the bottom
             </p>
           </CardContent>
         </Card>
