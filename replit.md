@@ -12,7 +12,10 @@
 - AI-guided storytelling and chat assistance
 - Scheduled future messages and time capsules
 - QR-activated physical touchpoints
-- Birthday celebrations and holiday timelines
+- **Continuum Celebrations Hub** with multi-faith holidays, birthdays, and weddings
+  - 50+ multi-faith holidays (Hindu, Jewish, Islamic, Christian, Buddhist, Sikh, and more)
+  - Birthday celebrations with Bluetooth playlists, live streaming, and shopping spree
+  - Wedding gift registries with cash gift support
 - Family tree integration
 - GPS cemetery navigation
 - Olympian/athletic legacy scoring
