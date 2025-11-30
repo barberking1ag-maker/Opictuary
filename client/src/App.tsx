@@ -75,7 +75,6 @@ import CustomQRCodeDesigner from "@/pages/CustomQRCodeDesigner";
 import HolidayTimeline from "@/pages/HolidayTimeline";
 import BirthdayCelebration from "@/pages/BirthdayCelebration";
 import OlympianMemorial from "@/pages/OlympianMemorial";
-import LogoShowcase from "@/pages/LogoShowcase";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -425,7 +424,6 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/child-safety" component={ChildSafety} />
         <Route path="/support" component={SupportHub} />
-        <Route path="/logo-showcase" component={LogoShowcase} />
         
         <Route component={NotFound} />
         </Switch>
