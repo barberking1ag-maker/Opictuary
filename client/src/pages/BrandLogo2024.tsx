@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import newLogo from "@assets/generated_images/gold_foil_opictuary_halo_varied_icons.png";
+import newLogo from "@assets/generated_images/exact_design_with_opictuary_above_halo.png";
 
 export default function BrandLogo2024() {
   return (
