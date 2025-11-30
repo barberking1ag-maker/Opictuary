@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import newLogo from "@assets/generated_images/exact_design_opictuary_moved_above.png";
+import newLogo from "@assets/generated_images/gold_foil_opictuary_halo_varied_icons.png";
 
 export default function BrandLogo2024() {
   return (
@@ -17,7 +17,7 @@ export default function BrandLogo2024() {
         <Card className="overflow-hidden" data-testid="card-new-logo">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl text-center" data-testid="text-logo-title">
-              Opictuary - Legacy, Celebrations, Memorials
+              Gold Foil Opictuary with Halo & Varied Icons
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
