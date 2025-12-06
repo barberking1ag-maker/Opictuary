@@ -46,7 +46,12 @@ jobs:
         run: npx cap sync ios
 
       - name: Install iOS dependencies
-        working-directory: ios/App
+      - name: Clean iOS folders before sync
+        run: |
+          rm -rf ios/App/App/public
+          rm -rf ios/App/capacitor-cordova-ios-plugins
+          rm -rf ios/App/Pods
+          rm -f ios/App/Podfile.lock        working-directory: ios/App
         run: pod install
 
       - name: Import Code Signing Certificate
