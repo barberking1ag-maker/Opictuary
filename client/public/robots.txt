@@ -1,0 +1,20 @@
+# Opictuary - Digital Memorial Platform
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Allow: /celebrity-memorials
+Allow: /essential-workers
+Allow: /support
+Allow: /about
+Allow: /grief-support
+Allow: /partner-program
+
+# Disallow private memorial management pages
+Disallow: /admin
+Disallow: /memorials/*/manage
+Disallow: /my-memorials
+Disallow: /profile
+
+# Sitemap location
+Sitemap: https://opictuary.replit.app/sitemap.xml

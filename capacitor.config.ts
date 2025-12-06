@@ -7,13 +7,9 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
+    // Remove the URL for production builds - use bundled assets
+    // url: 'https://eternal-tribute-barbering-tag.replit.app',
     cleartext: false
-  },
-  android: {
-    buildOptions: {
-      versionCode: 2025112601,
-      versionName: '2.1.0'
-    }
   },
   ios: {
     contentInset: 'automatic',
