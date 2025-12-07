@@ -26,6 +26,10 @@ jobs:
       - name: Add iOS platform fresh
         run: npx cap add ios
         
+      - name: Update iOS deployment target
+        run: |
+          sed -i '' 's/platform :ios, .*/platform :ios, '\''15.0'\''/' ios/App/Podfile
+          
       - name: Sync iOS
         run: npx cap sync ios
         
