@@ -1,0 +1,40 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build web app
+        run: npm run build
+        
+      - name: Sync iOS
+        run: npx cap sync ios
+        
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install
+          
+      - name: Build iOS
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+          
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: ios/App/build
