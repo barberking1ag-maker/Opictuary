@@ -20,6 +20,12 @@ jobs:
       - name: Build web app
         run: npm run build
         
+      - name: Remove old iOS folder
+        run: rm -rf ios
+        
+      - name: Add iOS platform fresh
+        run: npx cap add ios
+        
       - name: Sync iOS
         run: npx cap sync ios
         
@@ -33,8 +39,11 @@ jobs:
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
           
-      - name: Upload build
+      - name: Package iOS folder
+        run: zip -r ios-project.zip ios/
+          
+      - name: Upload iOS project
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
-          path: ios/App/build
+          name: ios-project
+          path: ios-project.zip
