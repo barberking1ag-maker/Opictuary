@@ -23,12 +23,22 @@ jobs:
       - name: Remove old iOS folder
         run: rm -rf ios
         
-      - name: Add iOS platform (ignore pod errors)
-        run: npx cap add ios || echo "Continuing despite pod error"
-        continue-on-error: true
-          
-      - name: Fix Podfile with post_install hook
+      - name: Hide CocoaPods temporarily
         run: |
+          POD_PATH=$(which pod)
+          sudo mv "$POD_PATH" "${POD_PATH}.bak"
+          
+      - name: Add iOS platform (without pod install)
+        run: npx cap add ios
+          
+      - name: Restore CocoaPods
+        run: |
+          POD_PATH=$(which pod.bak 2>/dev/null || echo "/usr/local/bin/pod.bak")
+          sudo mv "${POD_PATH}" "${POD_PATH%.bak}"
+          
+      - name: Fix Podfile deployment target
+        run: |
+          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" ios/App/Podfile
           cat >> ios/App/Podfile << 'EOF'
           
           post_install do |installer|
@@ -39,7 +49,6 @@ jobs:
             end
           end
           EOF
-          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" ios/App/Podfile
           
       - name: Install CocoaPods
         run: |
