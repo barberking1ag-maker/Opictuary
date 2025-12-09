@@ -24,7 +24,7 @@ jobs:
         run: rm -rf ios
         
       - name: Add iOS platform
-        run: npx cap add ios --skip-sync
+        run: npx cap add ios 
         
       - name: Update iOS deployment target in Podfile
         run: |
