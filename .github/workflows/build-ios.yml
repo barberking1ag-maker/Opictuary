@@ -17,45 +17,53 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Stub QR scanner to remove barcode dependency
+        run: |
+          cat > client/src/hooks/useQRScanner.ts << 'EOF'
+          import { useState } from 'react';
+          import { Capacitor } from '@capacitor/core';
+
+          export function useQRScanner() {
+            const [isScanning, setIsScanning] = useState(false);
+            const [error, setError] = useState<string | null>(null);
+
+            const scanQRCode = async (): Promise<string | null> => {
+              if (!Capacitor.isNativePlatform()) {
+                setError('QR scanning is only available on mobile devices');
+                return null;
+              }
+              setError('QR scanning feature coming soon');
+              return null;
+            };
+
+            const checkPermissions = async () => false;
+            const requestPermissions = async () => false;
+
+            return {
+              scanQRCode,
+              isScanning,
+              error,
+              checkPermissions,
+              requestPermissions,
+              isNative: Capacitor.isNativePlatform()
+            };
+          }
+          EOF
+          
+      - name: Remove barcode scanner package
+        run: npm uninstall @capacitor-mlkit/barcode-scanning
+        
       - name: Build web app
         run: npm run build
         
       - name: Remove old iOS folder
         run: rm -rf ios
         
-      - name: Hide CocoaPods temporarily
-        run: |
-          POD_PATH=$(which pod)
-          sudo mv "$POD_PATH" "${POD_PATH}.bak"
-          
-      - name: Add iOS platform (without pod install)
+      - name: Add iOS platform
         run: npx cap add ios
           
-      - name: Restore CocoaPods
-        run: |
-          POD_PATH=$(which pod.bak 2>/dev/null || echo "/usr/local/bin/pod.bak")
-          sudo mv "${POD_PATH}" "${POD_PATH%.bak}"
-          
-      - name: Show and fix Podfile
-        run: |
-          cd ios/App
-          echo "=== ORIGINAL PODFILE ==="
-          cat Podfile
-          echo ""
-          echo "=== FIXING PODFILE ==="
-          # Replace any iOS version with 15.0
-          sed -i '' 's/platform :ios, .*/platform :ios, '\''15.0'\''/' Podfile
-          sed -i '' "s/deployment_target = '[0-9.]*'/deployment_target = '15.0'/g" Podfile
-          # Add deployment target fix to existing post_install
-          sed -i '' "/config.build_settings\['ENABLE_BITCODE'\]/a\\
-              config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'" Podfile
-          echo "=== FIXED PODFILE ==="
-          cat Podfile
-          
-      - name: Install CocoaPods
-        run: |
-          cd ios/App
-          pod install --repo-update
+      - name: Sync iOS
+        run: npx cap sync ios
           
       - name: Build iOS
         run: |
