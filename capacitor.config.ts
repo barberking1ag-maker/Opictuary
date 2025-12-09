@@ -14,7 +14,9 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     limitsNavigationsToAppBoundDomains: true
-  },
+  true,
+    miniVersion:'15.0'
+  }.
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
