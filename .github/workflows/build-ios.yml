@@ -38,17 +38,11 @@ jobs:
           
       - name: Fix Podfile deployment target
         run: |
-          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" ios/App/Podfile
-          cat >> ios/App/Podfile << 'EOF'
-          
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
-              end
-            end
-          end
-          EOF
+          cd ios/App
+          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" Podfile
+          sed -i '' "s/deployment_target = '13.0'/deployment_target = '15.0'/g" Podfile
+          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET', '13.0'/IPHONEOS_DEPLOYMENT_TARGET', '15.0'/g" Podfile
+          cat Podfile
           
       - name: Install CocoaPods
         run: |
@@ -68,4 +62,3 @@ jobs:
         with:
           name: ios-project
           path: ios-project.zip
-          
