@@ -7,16 +7,12 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
-    // Remove the URL for production builds - use bundled assets
-    // url: 'https://eternal-tribute-barbering-tag.replit.app',
     cleartext: false
   },
   ios: {
     contentInset: 'automatic',
     limitsNavigationsToAppBoundDomains: true
-  true,
-    miniVersion:'15.0'
-  }.
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
