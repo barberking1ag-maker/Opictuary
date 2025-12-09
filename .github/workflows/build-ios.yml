@@ -17,24 +17,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Remove barcode scanner temporarily
-        run: npm uninstall @capacitor-mlkit/barcode-scanning
-        
       - name: Build web app
         run: npm run build
         
       - name: Remove old iOS folder
         run: rm -rf ios
         
-      - name: Add iOS platform
-        run: npx cap add ios
+      - name: Add iOS platform (ignore pod errors)
+        run: npx cap add ios || echo "Continuing despite pod error"
+        continue-on-error: true
           
-      - name: Update Podfile deployment target
+      - name: Fix Podfile with post_install hook
         run: |
-          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" ios/App/Podfile
+          cat >> ios/App/Podfile << 'EOF'
           
-      - name: Sync iOS
-        run: npx cap sync ios
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+              end
+            end
+          end
+          EOF
+          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" ios/App/Podfile
           
       - name: Install CocoaPods
         run: |
@@ -54,4 +59,4 @@ jobs:
         with:
           name: ios-project
           path: ios-project.zip
-       
+          
