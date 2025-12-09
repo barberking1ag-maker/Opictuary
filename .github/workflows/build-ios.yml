@@ -36,12 +36,20 @@ jobs:
           POD_PATH=$(which pod.bak 2>/dev/null || echo "/usr/local/bin/pod.bak")
           sudo mv "${POD_PATH}" "${POD_PATH%.bak}"
           
-      - name: Fix Podfile deployment target
+      - name: Show and fix Podfile
         run: |
           cd ios/App
-          sed -i '' "s/platform :ios, '13.0'/platform :ios, '15.0'/" Podfile
-          sed -i '' "s/deployment_target = '13.0'/deployment_target = '15.0'/g" Podfile
-          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET', '13.0'/IPHONEOS_DEPLOYMENT_TARGET', '15.0'/g" Podfile
+          echo "=== ORIGINAL PODFILE ==="
+          cat Podfile
+          echo ""
+          echo "=== FIXING PODFILE ==="
+          # Replace any iOS version with 15.0
+          sed -i '' 's/platform :ios, .*/platform :ios, '\''15.0'\''/' Podfile
+          sed -i '' "s/deployment_target = '[0-9.]*'/deployment_target = '15.0'/g" Podfile
+          # Add deployment target fix to existing post_install
+          sed -i '' "/config.build_settings\['ENABLE_BITCODE'\]/a\\
+              config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'" Podfile
+          echo "=== FIXED PODFILE ==="
           cat Podfile
           
       - name: Install CocoaPods
