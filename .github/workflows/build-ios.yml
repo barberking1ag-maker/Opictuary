@@ -47,55 +47,25 @@ jobs:
           npx cap add ios
           npx cap sync ios
           
-      - name: Setup keychain
-        env:
-          CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-        run: |
-          CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD="actions"
+      - name: Import Code Signing Certificates
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           
-          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-          
-      - name: Install provisioning profile
+      - name: Install Provisioning Profile
         env:
           PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
         run: |
-          PROVISION_PATH=$RUNNER_TEMP/profile.mobileprovision
-          PLIST_PATH=$RUNNER_TEMP/profile.plist
+          PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+          echo -n "$PROVISION_PROFILE_BASE64" | base64 --decode > $PP_PATH
           
-          echo -n "$PROVISION_PROFILE_BASE64" | base64 --decode -o $PROVISION_PATH
-          
-          security cms -D -i $PROVISION_PATH -o $PLIST_PATH
-          
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" $PLIST_PATH)
-          echo "Profile UUID: $PROFILE_UUID"
-          
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          cp $PROVISION_PATH "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
-          
-          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
-          
-      - name: Configure Xcode signing
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          cd ios/App/App.xcodeproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "'"$TEAM_ID"'";/g' project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "Opictuary App Store";/g' project.pbxproj
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          UUID=$(grep -a -A1 UUID $PP_PATH | grep -o '[-A-Z0-9]\{36\}')
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          echo "Installed profile: $UUID"
           
       - name: Build iOS Archive
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
@@ -103,34 +73,25 @@ jobs:
             -sdk iphoneos \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="Opictuary App Store" \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             archive
             
       - name: Export IPA
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          cat > $RUNNER_TEMP/ExportOptions.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
             <string>app-store-connect</string>
-            <key>teamID</key>
-            <string>$TEAM_ID</string>
+            <key>destination</key>
+            <string>upload</string>
             <key>signingStyle</key>
-            <string>manual</string>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.opictuary.memorial</key>
-              <string>Opictuary App Store</string>
-            </dict>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
           </dict>
           </plist>
           EOF
@@ -138,7 +99,8 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -exportPath $RUNNER_TEMP/export
+            -exportPath $RUNNER_TEMP/export \
+            -allowProvisioningUpdates
             
       - name: Upload IPA
         uses: actions/upload-artifact@v4
