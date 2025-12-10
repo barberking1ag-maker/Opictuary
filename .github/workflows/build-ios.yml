@@ -47,7 +47,7 @@ jobs:
           npx cap add ios
           npx cap sync ios
           
-      - name: Import certificate
+      - name: Import certificate and profile
         env:
           CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -57,20 +57,38 @@ jobs:
           PROVISION_PATH=$RUNNER_TEMP/profile.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           
+          # Decode files
           echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$PROVISION_PROFILE_BASE64" | base64 --decode -o $PROVISION_PATH
           
-          security create-keychain -p "" $KEYCHAIN_PATH
+          # Create and configure keychain
+          security create-keychain -p "temp123" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "" $KEYCHAIN_PATH
+          security unlock-keychain -p "temp123" $KEYCHAIN_PATH
           security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "" $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "temp123" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
           
+          # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PROVISION_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PROVISION_PATH))
+          cp $PROVISION_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+          echo "Installed profile with UUID: $PROFILE_UUID"
+          
+      - name: Update Xcode project signing
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios/App
+          # Update project.pbxproj for manual signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = "'$TEAM_ID'"/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ""/PROVISIONING_PROFILE_SPECIFIER = "Opictuary App Store"/g' App.xcodeproj/project.pbxproj
           
       - name: Build iOS Archive
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
@@ -78,11 +96,15 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
             CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="Opictuary App Store" \
             archive
             
       - name: Export IPA
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -92,7 +114,16 @@ jobs:
             <key>method</key>
             <string>app-store-connect</string>
             <key>teamID</key>
-            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <string>$TEAM_ID</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.opictuary.memorial</key>
+              <string>Opictuary App Store</string>
+            </dict>
           </dict>
           </plist>
           EOF
