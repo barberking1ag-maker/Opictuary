@@ -47,39 +47,51 @@ jobs:
           npx cap add ios
           npx cap sync ios
           
-      - name: Import certificate and profile
+      - name: Setup keychain
         env:
           CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
         run: |
           CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
-          PROVISION_PATH=$RUNNER_TEMP/profile.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD="actions"
           
           echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$PROVISION_PROFILE_BASE64" | base64 --decode -o $PROVISION_PATH
           
-          security create-keychain -p "temp123" $KEYCHAIN_PATH
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "temp123" $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "temp123" $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
           
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          security cms -D -i $PROVISION_PATH > $RUNNER_TEMP/profile.plist
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" $RUNNER_TEMP/profile.plist)
-          cp $PROVISION_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
-          echo "Installed profile: $PROFILE_UUID"
+      - name: Install provisioning profile
+        env:
+          PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+        run: |
+          PROVISION_PATH=$RUNNER_TEMP/profile.mobileprovision
+          PLIST_PATH=$RUNNER_TEMP/profile.plist
           
-      - name: Update Xcode project signing
+          echo -n "$PROVISION_PROFILE_BASE64" | base64 --decode -o $PROVISION_PATH
+          
+          security cms -D -i $PROVISION_PATH -o $PLIST_PATH
+          
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" $PLIST_PATH)
+          echo "Profile UUID: $PROFILE_UUID"
+          
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp $PROVISION_PATH "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+          
+      - name: Configure Xcode signing
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          cd ios/App
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = "'$TEAM_ID'"/g' App.xcodeproj/project.pbxproj
+          cd ios/App/App.xcodeproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "'"$TEAM_ID"'";/g' project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "Opictuary App Store";/g' project.pbxproj
           
       - name: Build iOS Archive
         env:
@@ -88,9 +100,9 @@ jobs:
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
+            -sdk iphoneos \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
-            -destination 'generic/platform=iOS' \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
@@ -133,3 +145,4 @@ jobs:
         with:
           name: opictuary-ios
           path: ${{ runner.temp }}/export/*.ipa
+          
