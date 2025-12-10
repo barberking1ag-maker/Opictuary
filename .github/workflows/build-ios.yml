@@ -70,7 +70,7 @@ jobs:
       - name: Download Provisioning Profiles
         uses: apple-actions/download-provisioning-profiles@v3
         with:
-          bundle-id: 'com.opictuary.memorial'
+          bundle-id: 'com.opictuary.memoriol'
           profile-type: 'IOS_APP_STORE'
           issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
