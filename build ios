@@ -1,0 +1,145 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Fix Bundle ID
+        run: |
+          sed -i '' "s/com.opictuary.memorial/com.opictuary.memoriol/g" capacitor.config.ts
+      
+      - name: Stub QR scanner
+        run: |
+          cat > client/src/hooks/useQRScanner.ts << 'EOF'
+          import { useState } from 'react';
+          import { Capacitor } from '@capacitor/core';
+          export function useQRScanner() {
+            const [isScanning, setIsScanning] = useState(false);
+            const [error, setError] = useState<string | null>(null);
+            const scanQRCode = async (): Promise<string | null> => { setError('QR coming soon'); return null; };
+            const checkPermissions = async () => false;
+            const requestPermissions = async () => false;
+            return { scanQRCode, isScanning, error, checkPermissions, requestPermissions, isNative: Capacitor.isNativePlatform() };
+          }
+          EOF
+      
+      - name: Remove barcode scanner
+        run: npm uninstall @capacitor-mlkit/barcode-scanning || true
+      
+      - name: Build web app
+        run: npm run build
+      
+      - name: Add iOS platform
+        run: |
+          rm -rf ios
+          npx cap add ios
+          npx cap sync ios
+      
+      - name: Import Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      
+      - name: Download Provisioning Profile
+        uses: apple-actions/download-provisioning-profiles@v3
+        with:
+          bundle-id: 'com.opictuary.memoriol'
+          profile-type: 'IOS_APP_STORE'
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      
+      - name: Get Profile Name
+        id: profile
+        run: |
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
+          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -extract Name raw -)
+          echo "name=$PROFILE_NAME" >> $GITHUB_OUTPUT
+          echo "Profile: $PROFILE_NAME"
+      
+      - name: Disable Code Signing for Pods
+        run: |
+          cd ios/App
+          cat >> Podfile << 'EOF'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+    end
+  end
+end
+EOF
+          pod install
+      
+      - name: Build iOS Archive
+        env:
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            archive
+      
+      - name: Export IPA
+        env:
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.opictuary.memoriol</key>
+              <string>$PROFILE_NAME</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
+      
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Opictuary-iOS-IPA
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
