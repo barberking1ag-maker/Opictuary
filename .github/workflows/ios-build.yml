@@ -21,8 +21,7 @@ jobs:
         run: npm ci
       
       - name: Fix Bundle ID
-        run: |
-          sed -i '' "s/com.opictuary.memorial/com.opictuary.memoriol/g" capacitor.config.ts
+        run: sed -i '' "s/com.opictuary.memorial/com.opictuary.memoriol/g" capacitor.config.ts
       
       - name: Stub QR scanner
         run: |
@@ -66,7 +65,7 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       
-      - name: Get Profile Name
+      - name: Get Profile Info
         id: profile
         run: |
           PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
@@ -74,16 +73,19 @@ jobs:
           echo "name=$PROFILE_NAME" >> $GITHUB_OUTPUT
           echo "Profile: $PROFILE_NAME"
       
-      - name: Disable Code Signing for Pods
+      - name: Configure App for Manual Signing
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
-          cd ios/App/Pods/Pods.xcodeproj
-          sed -i '' 's/CODE_SIGNING_ALLOWED = YES;/CODE_SIGNING_ALLOWED = NO;/g' project.pbxproj
-          sed -i '' 's/CODE_SIGNING_REQUIRED = YES;/CODE_SIGNING_REQUIRED = NO;/g' project.pbxproj
-          echo "Disabled code signing for Pods"
+          cd ios/App/App.xcodeproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' project.pbxproj
+          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' project.pbxproj
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = \"com.opictuary.memoriol\";/PRODUCT_BUNDLE_IDENTIFIER = \"com.opictuary.memoriol\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" project.pbxproj
+          echo "Configured App for manual signing with profile: $PROFILE_NAME"
       
       - name: Build iOS Archive
-        env:
-          PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
@@ -94,7 +96,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
       
       - name: Export IPA
