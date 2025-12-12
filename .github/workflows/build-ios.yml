@@ -20,10 +20,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Fix Bundle ID in Capacitor Config
+      - name: Fix Bundle ID
         run: |
           sed -i '' "s/com.opictuary.memorial/com.opictuary.memoriol/g" capacitor.config.ts
-          cat capacitor.config.ts
       
       - name: Stub QR scanner
         run: |
@@ -33,10 +32,7 @@ jobs:
           export function useQRScanner() {
             const [isScanning, setIsScanning] = useState(false);
             const [error, setError] = useState<string | null>(null);
-            const scanQRCode = async (): Promise<string | null> => {
-              setError('QR scanning feature coming soon');
-              return null;
-            };
+            const scanQRCode = async (): Promise<string | null> => { setError('QR coming soon'); return null; };
             const checkPermissions = async () => false;
             const requestPermissions = async () => false;
             return { scanQRCode, isScanning, error, checkPermissions, requestPermissions, isNative: Capacitor.isNativePlatform() };
@@ -70,17 +66,33 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       
-      - name: Get Profile UUID
+      - name: Get Profile Name
         id: profile
         run: |
           PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
-          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-          echo "uuid=$PROFILE_UUID" >> $GITHUB_OUTPUT
-          echo "Profile UUID: $PROFILE_UUID"
+          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -extract Name raw -)
+          echo "name=$PROFILE_NAME" >> $GITHUB_OUTPUT
+          echo "Profile: $PROFILE_NAME"
+      
+      - name: Disable Code Signing for Pods
+        run: |
+          cd ios/App
+          cat >> Podfile << 'EOF'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+    end
+  end
+end
+EOF
+          pod install
       
       - name: Build iOS Archive
         env:
-          PROFILE_UUID: ${{ steps.profile.outputs.uuid }}
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
@@ -89,15 +101,14 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="$PROFILE_UUID" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
       
       - name: Export IPA
         env:
-          PROFILE_UUID: ${{ steps.profile.outputs.uuid }}
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -115,7 +126,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.opictuary.memoriol</key>
-              <string>$PROFILE_UUID</string>
+              <string>$PROFILE_NAME</string>
             </dict>
           </dict>
           </plist>
@@ -125,8 +136,6 @@ jobs:
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportPath $RUNNER_TEMP/export \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
-          
-          ls -la $RUNNER_TEMP/export/
       
       - name: Upload IPA
         uses: actions/upload-artifact@v4
