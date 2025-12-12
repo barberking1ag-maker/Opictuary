@@ -76,9 +76,17 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       
+      - name: List Provisioning Profiles
+        run: |
+          echo "Installed provisioning profiles:"
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+      
       - name: Build iOS Archive
         run: |
           cd ios/App
+          
+          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1 | xargs -I {} security cms -D -i {} 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          echo "Using profile UUID: $PROFILE_UUID"
           
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
@@ -86,15 +94,16 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
+            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_STYLE="Automatic" \
-            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE="$PROFILE_UUID" \
             archive
-          
-          echo "✅ Archive created successfully"
       
       - name: Export IPA
         run: |
+          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1 | xargs -I {} security cms -D -i {} 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -105,9 +114,14 @@ jobs:
             <key>teamID</key>
             <string>${{ secrets.APPLE_TEAM_ID }}</string>
             <key>signingStyle</key>
-            <string>automatic</string>
-            <key>uploadSymbols</key>
-            <true/>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.opictuary.memoriol</key>
+              <string>$PROFILE_UUID</string>
+            </dict>
           </dict>
           </plist>
           EOF
@@ -115,10 +129,8 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportPath $RUNNER_TEMP/export \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -allowProvisioningUpdates
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
           
-          echo "✅ IPA exported successfully"
           ls -la $RUNNER_TEMP/export/
       
       - name: Upload IPA Artifact
