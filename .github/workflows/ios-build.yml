@@ -50,6 +50,21 @@ jobs:
           npx cap add ios
           npx cap sync ios
       
+      - name: Add Privacy Descriptions to Info.plist
+        run: |
+          PLIST_PATH="ios/App/App/Info.plist"
+          
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Opictuary needs access to your photo library to upload photos to memorials and share memories of your loved ones.'" "$PLIST_PATH" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'Opictuary needs access to your photo library to upload photos to memorials and share memories of your loved ones.'" "$PLIST_PATH"
+          
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'Opictuary needs permission to save memorial photos to your photo library.'" "$PLIST_PATH" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'Opictuary needs permission to save memorial photos to your photo library.'" "$PLIST_PATH"
+          
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Opictuary needs access to your camera to take photos for memorials.'" "$PLIST_PATH" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'Opictuary needs access to your camera to take photos for memorials.'" "$PLIST_PATH"
+          
+          echo "Added privacy descriptions to Info.plist"
+      
       - name: Import Certificate
         uses: apple-actions/import-codesign-certs@v3
         with:
