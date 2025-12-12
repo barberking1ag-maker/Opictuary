@@ -73,17 +73,31 @@ jobs:
           echo "name=$PROFILE_NAME" >> $GITHUB_OUTPUT
           echo "Profile: $PROFILE_NAME"
       
-      - name: Configure App for Manual Signing
+      - name: Install xcodeproj gem
+        run: gem install xcodeproj
+      
+      - name: Configure App Target for Manual Signing
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROFILE_NAME: ${{ steps.profile.outputs.name }}
         run: |
-          cd ios/App/App.xcodeproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' project.pbxproj
-          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' project.pbxproj
-          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = \"com.opictuary.memoriol\";/PRODUCT_BUNDLE_IDENTIFIER = \"com.opictuary.memoriol\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" project.pbxproj
-          echo "Configured App for manual signing with profile: $PROFILE_NAME"
+          cd ios/App
+          ruby << 'RUBY'
+          require 'xcodeproj'
+          
+          project = Xcodeproj::Project.open('App.xcodeproj')
+          app_target = project.targets.find { |t| t.name == 'App' }
+          
+          app_target.build_configurations.each do |config|
+            config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
+            config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+            config.build_settings['DEVELOPMENT_TEAM'] = ENV['TEAM_ID']
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ENV['PROFILE_NAME']
+          end
+          
+          project.save
+          puts "Configured App target for manual signing"
+          RUBY
       
       - name: Build iOS Archive
         run: |
@@ -94,8 +108,6 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             archive
       
       - name: Export IPA
