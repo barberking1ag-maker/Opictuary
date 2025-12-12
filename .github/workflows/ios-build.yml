@@ -76,19 +76,10 @@ jobs:
       
       - name: Disable Code Signing for Pods
         run: |
-          cd ios/App
-          cat >> Podfile << 'EOF'
-
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-              end
-            end
-          end
-          EOF
-          pod install
+          cd ios/App/Pods/Pods.xcodeproj
+          sed -i '' 's/CODE_SIGNING_ALLOWED = YES;/CODE_SIGNING_ALLOWED = NO;/g' project.pbxproj
+          sed -i '' 's/CODE_SIGNING_REQUIRED = YES;/CODE_SIGNING_REQUIRED = NO;/g' project.pbxproj
+          echo "Disabled code signing for Pods"
       
       - name: Build iOS Archive
         env:
