@@ -20,54 +20,48 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Stub QR scanner for iOS compatibility
+      - name: Fix Bundle ID in Capacitor Config
+        run: |
+          sed -i '' "s/com.opictuary.memorial/com.opictuary.memoriol/g" capacitor.config.ts
+          cat capacitor.config.ts
+      
+      - name: Stub QR scanner
         run: |
           cat > client/src/hooks/useQRScanner.ts << 'EOF'
           import { useState } from 'react';
           import { Capacitor } from '@capacitor/core';
-
           export function useQRScanner() {
             const [isScanning, setIsScanning] = useState(false);
             const [error, setError] = useState<string | null>(null);
-
             const scanQRCode = async (): Promise<string | null> => {
               setError('QR scanning feature coming soon');
               return null;
             };
-
             const checkPermissions = async () => false;
             const requestPermissions = async () => false;
-
-            return {
-              scanQRCode,
-              isScanning,
-              error,
-              checkPermissions,
-              requestPermissions,
-              isNative: Capacitor.isNativePlatform()
-            };
+            return { scanQRCode, isScanning, error, checkPermissions, requestPermissions, isNative: Capacitor.isNativePlatform() };
           }
           EOF
       
-      - name: Remove barcode scanner dependency
+      - name: Remove barcode scanner
         run: npm uninstall @capacitor-mlkit/barcode-scanning || true
       
       - name: Build web app
         run: npm run build
       
-      - name: Add iOS platform fresh
+      - name: Add iOS platform
         run: |
           rm -rf ios
           npx cap add ios
           npx cap sync ios
       
-      - name: Import Code Signing Certificate
+      - name: Import Certificate
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
       
-      - name: Download Provisioning Profiles
+      - name: Download Provisioning Profile
         uses: apple-actions/download-provisioning-profiles@v3
         with:
           bundle-id: 'com.opictuary.memoriol'
@@ -76,18 +70,19 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       
-      - name: List Provisioning Profiles
+      - name: Get Profile UUID
+        id: profile
         run: |
-          echo "Installed provisioning profiles:"
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          echo "uuid=$PROFILE_UUID" >> $GITHUB_OUTPUT
+          echo "Profile UUID: $PROFILE_UUID"
       
       - name: Build iOS Archive
+        env:
+          PROFILE_UUID: ${{ steps.profile.outputs.uuid }}
         run: |
           cd ios/App
-          
-          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1 | xargs -I {} security cms -D -i {} 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-          echo "Using profile UUID: $PROFILE_UUID"
-          
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -sdk iphoneos \
@@ -101,9 +96,9 @@ jobs:
             archive
       
       - name: Export IPA
+        env:
+          PROFILE_UUID: ${{ steps.profile.outputs.uuid }}
         run: |
-          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1 | xargs -I {} security cms -D -i {} 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-          
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -133,7 +128,7 @@ jobs:
           
           ls -la $RUNNER_TEMP/export/
       
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Opictuary-iOS-IPA
