@@ -22,7 +22,8 @@ jobs:
     - run: npx cap sync android
     
     - name: Decode Keystore
-      run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
       
     - name: Build and Sign AAB
       run: |
