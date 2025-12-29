@@ -23,14 +23,14 @@ jobs:
     
     - name: Decode Keystore
       run: |
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/release.jks
       
     - name: Build and Sign AAB
       run: |
         cd android
         chmod +x gradlew
         ./gradlew bundleRelease \
-          -Pandroid.injected.signing.store.file=release.jks \
+          -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.jks \
           -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
           -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
           -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -39,3 +39,4 @@ jobs:
       with:
         name: app-release-signed-aab
         path: android/app/build/outputs/bundle/release/app-release.aab
+        
