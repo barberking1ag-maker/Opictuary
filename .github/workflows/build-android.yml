@@ -20,9 +20,21 @@ jobs:
     - run: npm ci
     - run: npm run build
     - run: npx cap sync android
-    - name: Build AAB
-      run: cd android && chmod +x gradlew && ./gradlew bundleRelease
+    
+    - name: Decode Keystore
+      run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+      
+    - name: Build and Sign AAB
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew bundleRelease \
+          -Pandroid.injected.signing.store.file=release.jks \
+          -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+          -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
+          -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+          
     - uses: actions/upload-artifact@v4
       with:
-        name: app-release-aab
+        name: app-release-signed-aab
         path: android/app/build/outputs/bundle/release/app-release.aab
