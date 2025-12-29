@@ -1,137 +1,34 @@
-name: Build iOS
-
+name: Build iOS App
 on:
+  push:
+    branches: [ main, opic1 ]
   workflow_dispatch:
-    inputs:
-      build_number:
-        description: 'Build number (optional, auto-increments if empty)'
-        required: false
-        default: ''
-
 jobs:
   build:
     runs-on: macos-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Build web app
-        run: npm run build:client
-      
-      - name: Sync Capacitor iOS
-        run: npx cap sync ios
-      
-      - name: Install CocoaPods dependencies
-        run: |
-          cd ios/App
-          pod install --repo-update
-      
-      - name: Setup Keychain
-        env:
-          CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
-        run: |
-          # Create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
-          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          
-          # Decode certificate and provisioning profile
-          echo "$CERTIFICATE_BASE64" | base64 --decode > $CERTIFICATE_PATH
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > $PROFILE_PATH
-          
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          
-          # Import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          
-          # Add temporary keychain to search list while preserving existing keychains
-          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychain -d user | tr -d '"')
-          security default-keychain -s $KEYCHAIN_PATH
-          
-          # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-          
-          echo "✅ Keychain and provisioning profile configured"
-      
-      - name: Update Build Number
-        run: |
-          cd ios/App
-          BUILD_NUM="${{ github.event.inputs.build_number }}"
-          if [ -z "$BUILD_NUM" ]; then
-            BUILD_NUM=${{ github.run_number }}
-          fi
-          # Update build number in project
-          agvtool new-version -all $BUILD_NUM
-          echo "📱 Build number set to: $BUILD_NUM"
-      
-      - name: Build and Archive
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          cd ios/App
-          
-          # Build archive
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath $RUNNER_TEMP/App.xcarchive \
-            -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates \
-            DEVELOPMENT_TEAM="${TEAM_ID:-CRPD7WHX8V}" \
-            archive
-          
-          echo "✅ Archive created successfully"
-      
-      - name: Export IPA
-        run: |
-          cd ios/App
-          
-          # Export IPA for App Store
-          xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/App.xcarchive \
-            -exportPath $RUNNER_TEMP/export \
-            -exportOptionsPlist ExportOptions.plist
-          
-          echo "✅ IPA exported successfully"
-          ls -la $RUNNER_TEMP/export/
-      
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Opictuary-iOS
-          path: |
-            ${{ runner.temp }}/export/*.ipa
-            ${{ runner.temp }}/export/ExportOptions.plist
-          retention-days: 30
-      
-      - name: Upload Archive (for debugging)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Opictuary-Archive
-          path: ${{ runner.temp }}/App.xcarchive
-          retention-days: 7
-      
-      - name: Cleanup Keychain
-        if: always()
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
-          rm -f $RUNNER_TEMP/certificate.p12 || true
-          rm -f $RUNNER_TEMP/profile.mobileprovision || true
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run build
+    - run: npx cap sync ios
+    - name: Install CocoaPods
+      run: cd ios/App && pod install
+    - name: Build iOS Archive
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace \
+          -scheme App \
+          -configuration Release \
+          -archivePath $RUNNER_TEMP/App.xcarchive \
+          archive \
+          CODE_SIGN_IDENTITY="-" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ios-archive
+        path: ${{ runner.temp }}/App.xcarchive
