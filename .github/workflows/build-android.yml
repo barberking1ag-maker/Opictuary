@@ -1,85 +1,28 @@
 name: Build Android App
-
 on:
   push:
-    branches:
-      - main
+    branches: [ main, opic1 ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web app
-        run: npm run build
-
-      - name: Capacitor sync
-        run: npx cap sync android
-
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: Decode Keystore
-        env:
-          ENCODED_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
-        run: |
-          echo $ENCODED_KEYSTORE | base64 -d > android/app/release.jks
-
-      - name: Build Release AAB (for Google Play)
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          cd android
-          ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=$PWD/app/release.jks \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-
-      - name: Build Release APK (for direct install)
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          cd android
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$PWD/app/release.jks \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-
-      - name: Upload AAB (for Google Play)
-        uses: actions/upload-artifact@v4
-        with:
-          name: opictuary-release.aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
-          retention-days: 30
-
-      - name: Upload APK (for direct install)
-        uses: actions/upload-artifact@v4
-        with:
-          name: opictuary-release.apk
-          path: android/app/build/outputs/apk/release/app-release.apk
-          retention-days: 30
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+    - uses: android-actions/setup-android@v3
+    - run: npm ci
+    - run: npm run build
+    - run: npx cap sync android
+    - name: Build AAB
+      run: cd android && chmod +x gradlew && ./gradlew bundleRelease
+    - uses: actions/upload-artifact@v4
+      with:
+        name: app-release-aab
+        path: android/app/build/outputs/bundle/release/app-release.aab
