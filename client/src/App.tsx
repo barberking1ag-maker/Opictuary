@@ -86,13 +86,17 @@ import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
 import { Badge } from "@/components/ui/badge";
+import { MobileTabBar } from "@/components/MobileTabBar";
+import { MobileHeader } from "@/components/MobileHeader";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
+import { usePlatform } from "./hooks/usePlatform";
 
 function Router() {
   // From blueprint: javascript_google_analytics - Track page views when routes change
   useAnalytics();
+  const { isMobile, isNative } = usePlatform();
   
   return (
     <div className="min-h-screen bg-background">
@@ -105,7 +109,11 @@ function Router() {
         Skip to main content
       </a>
       
-      <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
+      {/* Mobile Header - shown only on mobile */}
+      {isMobile && <MobileHeader />}
+      
+      {/* Desktop Navigation - hidden on mobile */}
+      <nav className="hidden lg:block border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/">
@@ -479,7 +487,14 @@ function Router() {
         </Switch>
       </main>
 
-      <Footer badgeVariant="classic" />
+      {/* Desktop Footer - hidden on mobile */}
+      {!isMobile && <Footer badgeVariant="classic" />}
+      
+      {/* Mobile Tab Bar - only on mobile */}
+      {isMobile && <MobileTabBar />}
+      
+      {/* Bottom padding for mobile tab bar */}
+      {isMobile && <div className="h-24" />}
     </div>
   );
 }
