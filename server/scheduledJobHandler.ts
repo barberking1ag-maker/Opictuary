@@ -448,14 +448,16 @@ let jobInterval: NodeJS.Timeout | null = null;
 export function startScheduledMessageJob() {
   console.log('[SCHEDULED JOB] Starting scheduled jobs (runs every minute)');
   
-  // Run immediately on startup
-  processScheduledMessages();
-  checkAndReleaseVideoTimeCapsules();
+  // Defer first run by 5 seconds to allow server to fully start (non-blocking)
+  setTimeout(() => {
+    processScheduledMessages().catch(err => console.error('[SCHEDULED JOB] Initial message processing failed:', err));
+    checkAndReleaseVideoTimeCapsules().catch(err => console.error('[SCHEDULED JOB] Initial capsule check failed:', err));
+  }, 5000);
   
   // Then run every minute
   jobInterval = setInterval(() => {
-    processScheduledMessages();
-    checkAndReleaseVideoTimeCapsules();
+    processScheduledMessages().catch(err => console.error('[SCHEDULED JOB] Message processing failed:', err));
+    checkAndReleaseVideoTimeCapsules().catch(err => console.error('[SCHEDULED JOB] Capsule check failed:', err));
   }, 60000); // 60 seconds
 }
 

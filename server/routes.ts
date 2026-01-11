@@ -143,8 +143,27 @@ function getStripe(): Stripe {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
-  await setupAuth(app);
+  // Health check endpoint - responds immediately for deployment health checks
+  app.get('/healthz', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+  
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Setup Replit Auth with timeout to prevent deployment hangs
+  console.log('[SERVER] Setting up authentication...');
+  try {
+    const authTimeout = new Promise<void>((_, reject) => 
+      setTimeout(() => reject(new Error('Auth setup timeout')), 15000)
+    );
+    await Promise.race([setupAuth(app), authTimeout]);
+    console.log('[SERVER] Authentication setup complete');
+  } catch (error) {
+    console.error('[SERVER] Auth setup failed or timed out:', error);
+    console.log('[SERVER] Continuing without auth - some features may be unavailable');
+  }
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
