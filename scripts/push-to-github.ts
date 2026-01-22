@@ -269,13 +269,14 @@ async function main() {
       repo: REPO_NAME,
       ref: 'heads/main',
       sha: commit.sha,
+      force: true,
     });
   } catch (err) {
     // Create the ref if it doesn't exist
     await octokit.git.createRef({
       owner: user.login,
       repo: REPO_NAME,
-      ref: 'refs/heads/main',
+      ref: 'refs/heads/opic1',
       sha: commit.sha,
     });
   }
