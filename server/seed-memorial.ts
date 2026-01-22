@@ -60,6 +60,7 @@ async function seedMemorial() {
   await db.insert(legacyEvents).values({
     memorialId: memorial.id,
     title: "Annual Memorial Picnic",
+    eventType: "celebration_of_life",
     eventDate: "June 15, 2025",
     eventTime: "12:00 PM",
     location: "Riverside Park, Pavilion 3",

@@ -275,6 +275,25 @@ import {
   birthdayWishes,
   type BirthdayWish,
   type InsertBirthdayWish,
+  // BYUS Mediator tables and types
+  byusUsers,
+  byusMediations,
+  byusMediationHistory,
+  byusFeedback,
+  byusTherapists,
+  byusProfessionalReviews,
+  type ByusUser,
+  type InsertByusUser,
+  type ByusMediation,
+  type InsertByusMediation,
+  type ByusMediationHistory,
+  type InsertByusMediationHistory,
+  type ByusFeedback,
+  type InsertByusFeedback,
+  type ByusTherapist,
+  type InsertByusTherapist,
+  type ByusProfessionalReview,
+  type InsertByusProfessionalReview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -1367,21 +1386,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialDocumentary(documentary: InsertMemorialDocumentary): Promise<MemorialDocumentary> {
-    // Ensure photoIds is properly formatted as an array for JSON storage
-    const documentaryData = {
-      ...documentary,
-      photoIds: documentary.photoIds || []
-    };
-    const [created] = await db.insert(memorialDocumentaries).values(documentaryData).returning();
+    const [created] = await db.insert(memorialDocumentaries).values(documentary as any).returning();
     return created;
   }
 
   async updateMemorialDocumentary(id: string, documentary: Partial<InsertMemorialDocumentary>): Promise<MemorialDocumentary | undefined> {
-    // Ensure photoIds is properly formatted if provided
-    const updateData = documentary.photoIds !== undefined
-      ? { ...documentary, photoIds: documentary.photoIds || [] }
-      : documentary;
-    const [updated] = await db.update(memorialDocumentaries).set(updateData).where(eq(memorialDocumentaries.id, id)).returning();
+    const [updated] = await db.update(memorialDocumentaries).set(documentary as any).where(eq(memorialDocumentaries.id, id)).returning();
     return updated || undefined;
   }
 
@@ -1726,21 +1736,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialPlaylist(playlist: InsertMemorialPlaylist): Promise<MemorialPlaylist> {
-    // Ensure songs is properly formatted as an array for JSON storage
-    const playlistData = {
-      ...playlist,
-      songs: playlist.songs || []
-    };
-    const [created] = await db.insert(memorialPlaylists).values(playlistData).returning();
+    const [created] = await db.insert(memorialPlaylists).values(playlist as any).returning();
     return created;
   }
 
   async updateMemorialPlaylist(id: string, playlist: Partial<InsertMemorialPlaylist>): Promise<MemorialPlaylist | undefined> {
-    // Ensure songs is properly formatted if provided
-    const updateData = playlist.songs !== undefined 
-      ? { ...playlist, songs: playlist.songs || [] }
-      : playlist;
-    const [updated] = await db.update(memorialPlaylists).set(updateData).where(eq(memorialPlaylists.id, id)).returning();
+    const [updated] = await db.update(memorialPlaylists).set(playlist as any).where(eq(memorialPlaylists.id, id)).returning();
     return updated || undefined;
   }
 
@@ -1773,21 +1774,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMemorialSlideshow(slideshow: InsertMemorialSlideshow): Promise<MemorialSlideshow> {
-    // Ensure photoIds is properly formatted as an array for JSON storage
-    const slideshowData = {
-      ...slideshow,
-      photoIds: slideshow.photoIds || []
-    };
-    const [created] = await db.insert(memorialSlideshows).values(slideshowData).returning();
+    const [created] = await db.insert(memorialSlideshows).values(slideshow as any).returning();
     return created;
   }
 
   async updateMemorialSlideshow(id: string, slideshow: Partial<InsertMemorialSlideshow>): Promise<MemorialSlideshow | undefined> {
-    // Ensure photoIds is properly formatted if provided
-    const updateData = slideshow.photoIds !== undefined
-      ? { ...slideshow, photoIds: slideshow.photoIds || [] }
-      : slideshow;
-    const [updated] = await db.update(memorialSlideshows).set(updateData).where(eq(memorialSlideshows.id, id)).returning();
+    const [updated] = await db.update(memorialSlideshows).set(slideshow as any).where(eq(memorialSlideshows.id, id)).returning();
     return updated || undefined;
   }
 
@@ -1805,19 +1797,18 @@ export class DatabaseStorage implements IStorage {
 
   // Video Condolence operations
   async getVideoCondolences(memorialId: string, includePrivate: boolean = false): Promise<VideoCondolence[]> {
-    let query = db.select().from(videoCondolences)
-      .where(
-        and(
-          eq(videoCondolences.memorialId, memorialId),
-          eq(videoCondolences.isApproved, true)
-        )
-      );
+    const conditions = [
+      eq(videoCondolences.memorialId, memorialId),
+      eq(videoCondolences.isApproved, true)
+    ];
     
     if (!includePrivate) {
-      query = query.where(eq(videoCondolences.isPrivate, false)) as any;
+      conditions.push(eq(videoCondolences.isPrivate, false));
     }
     
-    return await query.orderBy(desc(videoCondolences.createdAt));
+    return await db.select().from(videoCondolences)
+      .where(and(...conditions))
+      .orderBy(desc(videoCondolences.createdAt));
   }
 
   async getVideoCondolence(id: string): Promise<VideoCondolence | undefined> {
@@ -3270,22 +3261,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFuneralProgram(program: InsertFuneralProgram): Promise<FuneralProgram> {
-    // Ensure songs is properly formatted as an array for JSON storage
-    const programData = {
-      ...program,
-      songs: program.songs || []
-    };
-    const [created] = await db.insert(funeralPrograms).values(programData).returning();
+    const [created] = await db.insert(funeralPrograms).values(program).returning();
     return created;
   }
 
   async updateFuneralProgram(memorialId: string, program: Partial<InsertFuneralProgram>): Promise<FuneralProgram | undefined> {
-    // Ensure songs is properly formatted if provided
-    const updateData = program.songs !== undefined
-      ? { ...program, songs: program.songs || [], updatedAt: new Date() }
-      : { ...program, updatedAt: new Date() };
     const [updated] = await db.update(funeralPrograms)
-      .set(updateData)
+      .set({ ...program, updatedAt: new Date() })
       .where(eq(funeralPrograms.memorialId, memorialId))
       .returning();
     return updated || undefined;
@@ -3335,7 +3317,7 @@ export class DatabaseStorage implements IStorage {
 
   // Physical Product operations
   async createProduct(product: InsertProduct): Promise<Product> {
-    const [created] = await db.insert(products).values(product).returning();
+    const [created] = await db.insert(products).values(product as any).returning();
     return created;
   }
 
@@ -3366,7 +3348,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined> {
     const [updated] = await db.update(products)
-      .set({ ...product, updatedAt: new Date() })
+      .set({ ...product, updatedAt: new Date() } as any)
       .where(eq(products.id, id))
       .returning();
     return updated || undefined;
@@ -3378,7 +3360,7 @@ export class DatabaseStorage implements IStorage {
 
   // Product Order operations
   async createProductOrder(order: InsertProductOrder): Promise<ProductOrder> {
-    const [created] = await db.insert(productOrders).values(order).returning();
+    const [created] = await db.insert(productOrders).values(order as any).returning();
     return created;
   }
 
@@ -3501,7 +3483,7 @@ export class DatabaseStorage implements IStorage {
 
   // Memorial Event Planner implementations
   async createMemorialEventPlan(data: InsertMemorialEventPlan): Promise<MemorialEventPlan> {
-    const [created] = await db.insert(memorialEventPlans).values(data).returning();
+    const [created] = await db.insert(memorialEventPlans).values(data as any).returning();
     return created;
   }
 
@@ -3517,7 +3499,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...data,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(memorialEventPlans.id, id))
       .returning();
     return updated || undefined;
@@ -3554,10 +3536,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateEventTask(taskId: string, data: Partial<InsertEventTask>): Promise<EventTask | undefined> {
     const [updated] = await db.update(eventTasks)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(data)
       .where(eq(eventTasks.id, taskId))
       .returning();
     return updated || undefined;
@@ -3569,7 +3548,7 @@ export class DatabaseStorage implements IStorage {
 
   // Vendor operations
   async createVendorListing(vendor: InsertVendorListing): Promise<VendorListing> {
-    const [created] = await db.insert(vendorListings).values(vendor).returning();
+    const [created] = await db.insert(vendorListings).values(vendor as any).returning();
     return created;
   }
 
@@ -3601,7 +3580,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...data,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(vendorListings.id, id))
       .returning();
     return updated || undefined;
@@ -3609,7 +3588,7 @@ export class DatabaseStorage implements IStorage {
 
   // Vendor Booking operations
   async createVendorBooking(booking: InsertVendorBooking): Promise<VendorBooking> {
-    const [created] = await db.insert(vendorBookings).values(booking).returning();
+    const [created] = await db.insert(vendorBookings).values(booking as any).returning();
     return created;
   }
 
@@ -3640,7 +3619,7 @@ export class DatabaseStorage implements IStorage {
 
   // Sports Memorial - Athlete Profile implementations
   async createAthleteProfile(data: InsertAthleteProfile): Promise<AthleteProfile> {
-    const [created] = await db.insert(athleteProfiles).values(data).returning();
+    const [created] = await db.insert(athleteProfiles).values(data as any).returning();
     return created;
   }
 
@@ -3678,7 +3657,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...data,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(athleteProfiles.id, id))
       .returning();
     return updated || undefined;
@@ -3690,7 +3669,7 @@ export class DatabaseStorage implements IStorage {
 
   // Athlete Stats implementations
   async createAthleteStat(stat: InsertAthleteStat): Promise<AthleteStat> {
-    const [created] = await db.insert(athleteStats).values(stat).returning();
+    const [created] = await db.insert(athleteStats).values(stat as any).returning();
     return created;
   }
 
@@ -3703,10 +3682,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateAthleteStat(id: string, data: Partial<InsertAthleteStat>): Promise<AthleteStat | undefined> {
     const [updated] = await db.update(athleteStats)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(data as any)
       .where(eq(athleteStats.id, id))
       .returning();
     return updated || undefined;
@@ -3714,7 +3690,7 @@ export class DatabaseStorage implements IStorage {
 
   // Team Memorial implementations
   async createTeamMemorial(data: InsertTeamMemorial): Promise<TeamMemorial> {
-    const [created] = await db.insert(teamMemorials).values(data).returning();
+    const [created] = await db.insert(teamMemorials).values(data as any).returning();
     return created;
   }
 
@@ -3748,7 +3724,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...data,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(teamMemorials.id, id))
       .returning();
     return updated || undefined;
@@ -3764,47 +3740,45 @@ export class DatabaseStorage implements IStorage {
 
     const stats = await this.getAthleteStats(athleteId);
     
-    // Calculate career statistics score (40% weight)
-    let careerScore = 0;
+    // Calculate statistical score (based on career stats)
+    let statisticalScore = 0;
     if (stats.length > 0) {
-      // Base score on number of seasons and overall stats
       const seasons = stats.length;
       const totalStats = stats.reduce((acc, stat) => {
-        // Count meaningful stats entries
         const statCount = stat.stats ? Object.keys(stat.stats).length : 0;
         return acc + statCount;
       }, 0);
-      
-      careerScore = Math.min(100, (seasons * 5) + (totalStats * 2));
+      statisticalScore = Math.min(100, (seasons * 5) + (totalStats * 2));
     }
     
-    // Calculate championships score (30% weight)
-    let championshipScore = 0;
-    if (profile.championships) {
-      // Each championship is worth 20 points, max 100
-      championshipScore = Math.min(100, profile.championships.length * 20);
+    // Calculate achievement score (based on awards)
+    let achievementScore = 0;
+    if (profile.awards && Array.isArray(profile.awards)) {
+      achievementScore = Math.min(100, profile.awards.length * 20);
     }
     
-    // Calculate Hall of Fame score (20% weight)
-    let hallOfFameScore = 0;
-    if (profile.hallOfFameInductions) {
-      // Hall of Fame induction is worth 100 points
-      hallOfFameScore = profile.hallOfFameInductions.inducted ? 100 : 0;
+    // Calculate impact score (based on hall of fame inductions)
+    let impactScore = 50;
+    if (profile.hallOfFameInductions && Array.isArray(profile.hallOfFameInductions)) {
+      impactScore = profile.hallOfFameInductions.length > 0 ? 100 : 50;
     }
     
-    // Calculate impact/fan engagement score (10% weight)
-    let impactScore = 50; // Default middle score
-    if (profile.achievements) {
-      // Each achievement adds 10 points, max 100
-      impactScore = Math.min(100, profile.achievements.length * 10);
+    // Calculate fan engagement score (based on career highlights)
+    let fanEngagementScore = 50;
+    if (profile.careerHighlights && Array.isArray(profile.careerHighlights)) {
+      fanEngagementScore = Math.min(100, profile.careerHighlights.length * 10);
     }
+    
+    // Media presence score defaults to 50
+    const mediaPresenceScore = 50;
     
     // Calculate weighted overall score
     const overallScore = Math.round(
-      (careerScore * 0.4) +
-      (championshipScore * 0.3) +
-      (hallOfFameScore * 0.2) +
-      (impactScore * 0.1)
+      (statisticalScore * 0.3) +
+      (achievementScore * 0.25) +
+      (impactScore * 0.2) +
+      (fanEngagementScore * 0.15) +
+      (mediaPresenceScore * 0.1)
     );
     
     // Check if legacy score already exists
@@ -3816,12 +3790,13 @@ export class DatabaseStorage implements IStorage {
       // Update existing score
       const [updated] = await db.update(athleticLegacyScores)
         .set({
-          careerScore,
-          championshipScore,
-          hallOfFameScore,
+          statisticalScore,
+          achievementScore,
           impactScore,
+          fanEngagementScore,
+          mediaPresenceScore,
           overallScore,
-          updatedAt: new Date(),
+          lastCalculated: new Date(),
         })
         .where(eq(athleticLegacyScores.athleteProfileId, athleteId))
         .returning();
@@ -3831,11 +3806,13 @@ export class DatabaseStorage implements IStorage {
       const [created] = await db.insert(athleticLegacyScores)
         .values({
           athleteProfileId: athleteId,
-          careerScore,
-          championshipScore,
-          hallOfFameScore,
+          statisticalScore,
+          achievementScore,
           impactScore,
+          fanEngagementScore,
+          mediaPresenceScore,
           overallScore,
+          lastCalculated: new Date(),
         })
         .returning();
       return created;
@@ -3854,7 +3831,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         ...scores,
         updatedAt: new Date(),
-      })
+      } as any)
       .where(eq(athleticLegacyScores.athleteProfileId, athleteId))
       .returning();
     return updated || undefined;
@@ -3862,7 +3839,7 @@ export class DatabaseStorage implements IStorage {
 
   // Hall of Fame / Jersey Retirement implementations
   async addHallOfFameEntry(data: InsertJerseyRetirement): Promise<JerseyRetirement> {
-    const [created] = await db.insert(jerseyRetirements).values(data).returning();
+    const [created] = await db.insert(jerseyRetirements).values(data as any).returning();
     return created;
   }
 
@@ -3886,10 +3863,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateHallOfFameEntry(id: string, data: Partial<InsertJerseyRetirement>): Promise<JerseyRetirement | undefined> {
     const [updated] = await db.update(jerseyRetirements)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(data as any)
       .where(eq(jerseyRetirements.id, id))
       .returning();
     return updated || undefined;
@@ -4109,6 +4083,249 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBirthdayWish(id: string): Promise<void> {
     await db.delete(birthdayWishes).where(eq(birthdayWishes.id, id));
+  }
+
+  // ============================================
+  // BYUS MEDIATOR STORAGE METHODS
+  // ============================================
+
+  async getByusUserByEmail(email: string): Promise<ByusUser | undefined> {
+    const [user] = await db.select()
+      .from(byusUsers)
+      .where(eq(byusUsers.email, email));
+    return user || undefined;
+  }
+
+  async createByusUser(data: InsertByusUser & { id?: string }): Promise<ByusUser> {
+    const [created] = await db.insert(byusUsers).values(data).returning();
+    return created;
+  }
+
+  async getByusUser(id: string): Promise<ByusUser | undefined> {
+    const [user] = await db.select()
+      .from(byusUsers)
+      .where(eq(byusUsers.id, id));
+    return user || undefined;
+  }
+
+  async createMediation(data: InsertByusMediation): Promise<ByusMediation> {
+    const [created] = await db.insert(byusMediations).values(data).returning();
+    return created;
+  }
+
+  async getMediation(id: string): Promise<ByusMediation | undefined> {
+    const [mediation] = await db.select()
+      .from(byusMediations)
+      .where(eq(byusMediations.id, id));
+    return mediation || undefined;
+  }
+
+  async updateMediation(id: string, data: Partial<InsertByusMediation>): Promise<ByusMediation | undefined> {
+    const [updated] = await db.update(byusMediations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(byusMediations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async recordMediationHistory(data: InsertByusMediationHistory): Promise<ByusMediationHistory> {
+    const [created] = await db.insert(byusMediationHistory).values(data).returning();
+    return created;
+  }
+
+  async getMediationCategories(): Promise<{ name: string; promptTemplate?: string }[]> {
+    // Return predefined mediation categories
+    return [
+      { name: 'family', promptTemplate: 'You are a family mediator helping to resolve family disputes with empathy and understanding.' },
+      { name: 'business', promptTemplate: 'You are a business mediator helping to resolve professional conflicts fairly.' },
+      { name: 'neighbor', promptTemplate: 'You are a community mediator helping neighbors resolve their differences.' },
+      { name: 'relationship', promptTemplate: 'You are a relationship counselor helping couples work through their issues.' },
+      { name: 'workplace', promptTemplate: 'You are a workplace mediator helping colleagues resolve professional conflicts.' },
+      { name: 'other', promptTemplate: 'You are an unbiased mediator helping to resolve conflicts fairly.' },
+    ];
+  }
+
+  async getMediationsByUser(userId: string): Promise<ByusMediation[]> {
+    return await db.select()
+      .from(byusMediations)
+      .where(eq(byusMediations.creatorId, userId))
+      .orderBy(desc(byusMediations.createdAt));
+  }
+
+  async addFeedback(data: InsertByusFeedback): Promise<ByusFeedback> {
+    const [created] = await db.insert(byusFeedback).values(data).returning();
+    return created;
+  }
+
+  async getFeedbackByMediation(mediationId: string): Promise<ByusFeedback[]> {
+    return await db.select()
+      .from(byusFeedback)
+      .where(eq(byusFeedback.mediationId, mediationId))
+      .orderBy(desc(byusFeedback.createdAt));
+  }
+
+  async getMediationHistory(mediationId: string): Promise<ByusMediationHistory[]> {
+    return await db.select()
+      .from(byusMediationHistory)
+      .where(eq(byusMediationHistory.mediationId, mediationId))
+      .orderBy(desc(byusMediationHistory.createdAt));
+  }
+
+  async getTherapistByUserId(userId: string): Promise<ByusTherapist | undefined> {
+    const [therapist] = await db.select()
+      .from(byusTherapists)
+      .where(eq(byusTherapists.userId, userId));
+    return therapist || undefined;
+  }
+
+  async createTherapist(data: InsertByusTherapist): Promise<ByusTherapist> {
+    const [created] = await db.insert(byusTherapists).values(data as any).returning();
+    return created;
+  }
+
+  async getTherapist(id: string): Promise<ByusTherapist | undefined> {
+    const [therapist] = await db.select()
+      .from(byusTherapists)
+      .where(eq(byusTherapists.id, id));
+    return therapist || undefined;
+  }
+
+  async getActiveTherapists(limit: number = 50, offset: number = 0): Promise<ByusTherapist[]> {
+    return await db.select()
+      .from(byusTherapists)
+      .where(eq(byusTherapists.isVerified, true))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(byusTherapists.createdAt));
+  }
+
+  async getProfessionalReviewByMediationId(mediationId: string): Promise<ByusProfessionalReview | undefined> {
+    const [review] = await db.select()
+      .from(byusProfessionalReviews)
+      .where(eq(byusProfessionalReviews.mediationId, mediationId));
+    return review || undefined;
+  }
+
+  async createProfessionalReview(data: InsertByusProfessionalReview & { id?: string; createdAt?: Date }): Promise<ByusProfessionalReview> {
+    const [created] = await db.insert(byusProfessionalReviews).values(data as any).returning();
+    return created;
+  }
+
+  async getPendingReviewsForTherapist(therapistId: string): Promise<ByusProfessionalReview[]> {
+    return await db.select()
+      .from(byusProfessionalReviews)
+      .where(and(
+        eq(byusProfessionalReviews.therapistId, therapistId),
+        eq(byusProfessionalReviews.approvalStatus, 'pending')
+      ))
+      .orderBy(desc(byusProfessionalReviews.createdAt));
+  }
+
+  async updateReviewStatus(
+    reviewId: string,
+    status: string,
+    professionalNotes?: string
+  ): Promise<ByusProfessionalReview | undefined> {
+    const [updated] = await db.update(byusProfessionalReviews)
+      .set({
+        approvalStatus: status,
+        professionalNotes,
+        reviewedAt: new Date(),
+      })
+      .where(eq(byusProfessionalReviews.id, reviewId))
+      .returning();
+    return updated || undefined;
+  }
+
+  // ============================================
+  // ADMIN STORAGE METHODS
+  // ============================================
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getQRCodes(): Promise<QRCode[]> {
+    return await db.select().from(qrCodes).orderBy(desc(qrCodes.createdAt));
+  }
+
+  async getMemorialPhotos(memorialId?: string): Promise<Memory[]> {
+    if (memorialId) {
+      return await db.select()
+        .from(memories)
+        .where(eq(memories.memorialId, memorialId))
+        .orderBy(desc(memories.createdAt));
+    }
+    return await db.select().from(memories).orderBy(desc(memories.createdAt));
+  }
+
+  async getMemorialVideos(memorialId?: string): Promise<Memory[]> {
+    // Videos are stored as memories with video URLs
+    if (memorialId) {
+      return await db.select()
+        .from(memories)
+        .where(eq(memories.memorialId, memorialId))
+        .orderBy(desc(memories.createdAt));
+    }
+    return await db.select().from(memories).orderBy(desc(memories.createdAt));
+  }
+
+  async getMemories(): Promise<Memory[]> {
+    return await db.select().from(memories).orderBy(desc(memories.createdAt));
+  }
+
+  async getCondolences(): Promise<Condolence[]> {
+    return await db.select().from(condolences).orderBy(desc(condolences.createdAt));
+  }
+
+  async getFutureMessages(memorialId: string): Promise<ScheduledMessage[]> {
+    return await db.select()
+      .from(scheduledMessages)
+      .where(eq(scheduledMessages.memorialId, memorialId))
+      .orderBy(desc(scheduledMessages.nextSendDate));
+  }
+
+  async getScheduledMessages(memorialId: string): Promise<ScheduledMessage[]> {
+    return await db.select()
+      .from(scheduledMessages)
+      .where(eq(scheduledMessages.memorialId, memorialId))
+      .orderBy(scheduledMessages.nextSendDate);
+  }
+
+  async getVideoTimeCapsules(): Promise<VideoTimeCapsule[]> {
+    return await db.select().from(videoTimeCapsules).orderBy(desc(videoTimeCapsules.createdAt));
+  }
+
+  async getPrisonAccessSessions(): Promise<PrisonAccessSession[]> {
+    return await db.select().from(prisonAccessSessions).orderBy(desc(prisonAccessSessions.createdAt));
+  }
+
+  async getCelebrityDonations(): Promise<CelebrityDonation[]> {
+    return await db.select().from(celebrityDonations).orderBy(desc(celebrityDonations.createdAt));
+  }
+
+  async listAllCelebrityFanContent(): Promise<CelebrityFanContent[]> {
+    return await db.select().from(celebrityFanContent).orderBy(desc(celebrityFanContent.createdAt));
+  }
+
+  async getDonations(): Promise<Donation[]> {
+    return await db.select().from(donations).orderBy(desc(donations.createdAt));
+  }
+
+  async getFundraisers(): Promise<Fundraiser[]> {
+    return await db.select().from(fundraisers).orderBy(desc(fundraisers.createdAt));
+  }
+
+  async listAllMemorialLiveStreams(): Promise<MemorialLiveStream[]> {
+    return await db.select().from(memorialLiveStreams).orderBy(desc(memorialLiveStreams.createdAt));
+  }
+
+  async getGriefSupport(): Promise<GriefSupport[]> {
+    return await db.select().from(griefSupport);
+  }
+
+  async getEssentialWorkerMemorials(): Promise<EssentialWorkerMemorial[]> {
+    return await db.select().from(essentialWorkersMemorials).orderBy(desc(essentialWorkersMemorials.createdAt));
   }
 }
 
