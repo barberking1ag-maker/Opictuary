@@ -60,10 +60,7 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
   // Add symbol to memorial
   const addSymbolMutation = useMutation({
     mutationFn: async (symbolId: string) => {
-      return apiRequest(`/api/memorials/${memorialId}/symbols`, {
-        method: "POST",
-        body: JSON.stringify({ symbolId, displayOrder: selectedSymbols.length }),
-      });
+      return apiRequest("POST", `/api/memorials/${memorialId}/symbols`, { symbolId, position: selectedSymbols.length });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/symbols`] });
@@ -84,9 +81,7 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
   // Remove symbol from memorial
   const removeSymbolMutation = useMutation({
     mutationFn: async (memorialSymbolId: string) => {
-      return apiRequest(`/api/memorial-symbols/${memorialSymbolId}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/memorial-symbols/${memorialSymbolId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/symbols`] });
@@ -109,14 +104,11 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
     mutationFn: async (data: {
       name: string;
       category: string;
-      imageUrl?: string;
-      unicodeSymbol?: string;
+      symbolUrl?: string;
+      symbolUnicode?: string;
       description?: string;
     }) => {
-      return apiRequest("/api/religious-symbols", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/religious-symbols", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/religious-symbols"] });
@@ -208,13 +200,13 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
                 )}
                 
                 {/* Display symbol */}
-                {symbol.unicodeSymbol ? (
+                {symbol.symbolUnicode ? (
                   <div className="text-3xl mb-2" data-testid={`text-symbol-${symbol.id}`}>
-                    {symbol.unicodeSymbol}
+                    {symbol.symbolUnicode}
                   </div>
-                ) : symbol.imageUrl ? (
+                ) : symbol.symbolUrl ? (
                   <img
-                    src={symbol.imageUrl}
+                    src={symbol.symbolUrl}
                     alt={symbol.name}
                     className="w-12 h-12 mx-auto mb-2 object-contain"
                     data-testid={`img-symbol-${symbol.id}`}
@@ -236,7 +228,7 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
           <h4 className="text-sm font-medium mb-3">Selected Symbols</h4>
           <div className="flex flex-wrap gap-3">
             {memorialSymbols
-              .sort((a, b) => a.displayOrder - b.displayOrder)
+              .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
               .map((ms) => {
                 const symbol = availableSymbols.find(s => s.id === ms.symbolId);
                 if (!symbol) return null;
@@ -247,11 +239,11 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
                     className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full"
                     data-testid={`selected-symbol-${ms.id}`}
                   >
-                    {symbol.unicodeSymbol ? (
-                      <span className="text-lg">{symbol.unicodeSymbol}</span>
-                    ) : symbol.imageUrl ? (
+                    {symbol.symbolUnicode ? (
+                      <span className="text-lg">{symbol.symbolUnicode}</span>
+                    ) : symbol.symbolUrl ? (
                       <img
-                        src={symbol.imageUrl}
+                        src={symbol.symbolUrl}
                         alt={symbol.name}
                         className="w-5 h-5 object-contain"
                       />
@@ -281,8 +273,8 @@ export function ReligiousSymbolGallery({ memorialId, canEdit = false }: Religiou
               uploadSymbolMutation.mutate({
                 name: formData.get("name") as string,
                 category: formData.get("category") as string,
-                unicodeSymbol: formData.get("unicodeSymbol") as string || undefined,
-                imageUrl: formData.get("imageUrl") as string || undefined,
+                symbolUnicode: formData.get("unicodeSymbol") as string || undefined,
+                symbolUrl: formData.get("imageUrl") as string || undefined,
                 description: formData.get("description") as string || undefined,
               });
             }}

@@ -43,12 +43,11 @@ export function SlideshowCreator({
   );
   const [title, setTitle] = useState(editingSlideshow?.title || "");
   const [description, setDescription] = useState(editingSlideshow?.description || "");
-  const [transition, setTransition] = useState(editingSlideshow?.transitionType || "fade");
-  const [duration, setDuration] = useState(editingSlideshow?.photoDuration || 5);
-  const [syncToMusic, setSyncToMusic] = useState(editingSlideshow?.syncToMusic || false);
+  const [transition, setTransition] = useState(editingSlideshow?.transitionEffect || "fade");
+  const [duration, setDuration] = useState(editingSlideshow?.photoDuration ?? 5000);
+  const [syncToBeats, setSyncToBeats] = useState(editingSlideshow?.syncToBeats || false);
   const [autoplay, setAutoplay] = useState(editingSlideshow?.autoplay || false);
-  const [showCaptions, setShowCaptions] = useState(editingSlideshow?.showCaptions || true);
-  const [isPublic, setIsPublic] = useState(editingSlideshow?.isPublic ?? true);
+  const [loop, setLoop] = useState(editingSlideshow?.loop ?? true);
 
   // Fetch memorial photos
   const { data: memories = [] } = useQuery<Memory[]>({
@@ -56,8 +55,8 @@ export function SlideshowCreator({
     enabled: isOpen,
   });
 
-  // Filter to get only photos
-  const photos = memories.filter(m => m.type === 'photo');
+  // Filter to get only photos (photos have mediaUrl set)
+  const photos = memories.filter(m => m.mediaUrl);
 
   // Fetch playlists
   const { data: playlists = [] } = useQuery<MemorialPlaylist[]>({
@@ -73,10 +72,7 @@ export function SlideshowCreator({
         : `/api/memorials/${memorialId}/slideshows`;
       const method = editingSlideshow ? "PUT" : "POST";
       
-      return apiRequest(url, {
-        method,
-        body: JSON.stringify(data),
-      });
+      return apiRequest(method, url, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/slideshows`] });
@@ -143,12 +139,11 @@ export function SlideshowCreator({
       description: description || undefined,
       photoIds: selectedPhotos,
       playlistId: selectedPlaylistId || undefined,
-      transitionType: transition,
+      transitionEffect: transition,
       photoDuration: duration,
-      syncToMusic,
+      syncToBeats,
       autoplay,
-      showCaptions,
-      isPublic,
+      loop,
     });
   };
 
@@ -183,7 +178,7 @@ export function SlideshowCreator({
                         data-testid={`photo-select-${photo.id}`}
                       >
                         <img
-                          src={photo.mediaUrl}
+                          src={photo.mediaUrl ?? undefined}
                           alt={photo.caption || "Memorial photo"}
                           className="w-full h-20 object-cover"
                         />
@@ -219,7 +214,7 @@ export function SlideshowCreator({
                         <GripVertical className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{index + 1}.</span>
                         <img
-                          src={photo.mediaUrl}
+                          src={photo.mediaUrl ?? undefined}
                           alt=""
                           className="w-10 h-10 object-cover rounded"
                         />
@@ -338,8 +333,8 @@ export function SlideshowCreator({
                 </Label>
                 <Switch
                   id="sync-music"
-                  checked={syncToMusic}
-                  onCheckedChange={setSyncToMusic}
+                  checked={syncToBeats}
+                  onCheckedChange={setSyncToBeats}
                   disabled={!selectedPlaylistId || selectedPlaylistId === 'none'}
                   data-testid="switch-sync-music"
                 />
@@ -361,32 +356,17 @@ export function SlideshowCreator({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-captions" className="flex-1">
-                  Show Captions
+                <Label htmlFor="loop" className="flex-1">
+                  Loop Slideshow
                   <p className="text-xs text-muted-foreground">
-                    Display photo captions during slideshow
+                    Automatically restart after completing
                   </p>
                 </Label>
                 <Switch
-                  id="show-captions"
-                  checked={showCaptions}
-                  onCheckedChange={setShowCaptions}
-                  data-testid="switch-captions"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="is-public" className="flex-1">
-                  Public Slideshow
-                  <p className="text-xs text-muted-foreground">
-                    Allow anyone to view this slideshow
-                  </p>
-                </Label>
-                <Switch
-                  id="is-public"
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                  data-testid="switch-public"
+                  id="loop"
+                  checked={loop}
+                  onCheckedChange={setLoop}
+                  data-testid="switch-loop"
                 />
               </div>
             </div>

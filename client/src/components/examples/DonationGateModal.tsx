@@ -18,7 +18,6 @@ export default function DonationGateModalExample() {
         donationAmount={10}
         platformPercentage={5}
         onSubmit={(amount, email) => {
-          console.log('Donation submitted:', { amount, email });
           setOpen(false);
         }}
       />

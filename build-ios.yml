@@ -1,0 +1,50 @@
+name: Build iOS App
+on:
+  push:
+    branches: [main, opic1]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm uninstall @capacitor-mlkit/barcode-scanning || true
+      - run: npm run build
+      - run: rm -rf ios && npx cap add ios && npx cap sync ios
+      - name: Sign and Build
+        env:
+          CERT: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          CERT_PASS: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo -n "$CERT" | base64 --decode -o cert.p12
+          echo -n "$PROFILE" | base64 --decode -o pp.mobileprovision
+          security create-keychain -p pw $RUNNER_TEMP/k.keychain
+          security default-keychain -s $RUNNER_TEMP/k.keychain
+          security unlock-keychain -p pw $RUNNER_TEMP/k.keychain
+          security import cert.p12 -k $RUNNER_TEMP/k.keychain -P "$CERT_PASS" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k pw $RUNNER_TEMP/k.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          security cms -D -i pp.mobileprovision > pp.plist
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" pp.plist)
+          cp pp.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          cd ios/App
+          xcodebuild archive -workspace App.xcworkspace -scheme App -configuration Release -archivePath $RUNNER_TEMP/App.xcarchive -sdk iphoneos DEVELOPMENT_TEAM=$TEAM CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=$UUID CODE_SIGN_IDENTITY="Apple Distribution"
+      - name: Export
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          security cms -D -i pp.mobileprovision > pp.plist
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" pp.plist)
+          echo "<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>method</key><string>app-store</string><key>teamID</key><string>$TEAM</string><key>signingStyle</key><string>manual</string><key>provisioningProfiles</key><dict><key>com.opictuary.memorial</key><string>$UUID</string></dict></dict></plist>" > export.plist
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/App.xcarchive -exportOptionsPlist export.plist -exportPath $RUNNER_TEMP/out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: ${{ runner.temp }}/out/*.ipa

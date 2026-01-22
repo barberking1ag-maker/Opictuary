@@ -97,16 +97,16 @@ export function LiveStreamViewer({
     };
   }, [viewerSessionId]);
 
-  const activeStreams = streams.filter((s) => s.isActive);
+  const activeStreams = streams.filter((s) => s.isLive);
   const upcomingStreams = streams.filter(
-    (s) => !s.isActive && isFuture(new Date(s.scheduledStartTime))
+    (s) => !s.isLive && isFuture(new Date(s.scheduledStartTime))
   );
   const pastStreams = streams.filter(
-    (s) => !s.isActive && isPast(new Date(s.scheduledStartTime))
+    (s) => !s.isLive && isPast(new Date(s.scheduledStartTime))
   );
 
   const getStreamStatus = (stream: MemorialLiveStream) => {
-    if (stream.isActive) {
+    if (stream.isLive) {
       return { label: "Live Now", variant: "destructive" as const };
     }
     if (isFuture(new Date(stream.scheduledStartTime))) {
@@ -117,7 +117,7 @@ export function LiveStreamViewer({
 
   const handleJoinStream = (stream: MemorialLiveStream) => {
     setSelectedStream(stream);
-    if (stream.isActive) {
+    if (stream.isLive) {
       joinStreamMutation.mutate(stream.id);
     }
   };
@@ -176,9 +176,9 @@ export function LiveStreamViewer({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="aspect-video bg-background/50 rounded-md flex items-center justify-center relative overflow-hidden border border-white/10">
-              {selectedStream.isActive ? (
+              {selectedStream.isLive ? (
                 <div className="w-full h-full">
-                  {selectedStream.platform === "youtube" && selectedStream.streamUrl.includes("youtube.com") ? (
+                  {selectedStream.streamType === "youtube" && selectedStream.streamUrl.includes("youtube.com") ? (
                     <iframe
                       className="w-full h-full"
                       src={selectedStream.streamUrl.replace("watch?v=", "embed/")}
@@ -192,7 +192,7 @@ export function LiveStreamViewer({
                       <div className="text-center space-y-2">
                         <p className="text-lg font-medium">External Stream</p>
                         <p className="text-sm text-muted-foreground">
-                          This stream is hosted on {selectedStream.platform || "an external platform"}
+                          This stream is hosted on {selectedStream.streamType || "an external platform"}
                         </p>
                         <Button
                           asChild
@@ -263,10 +263,10 @@ export function LiveStreamViewer({
                       >
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="bg-primary/20 text-xs">
-                            {getInitials(viewer.userName || "A")}
+                            {getInitials(viewer.viewerName || "A")}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">{viewer.userName || "Anonymous"}</span>
+                        <span className="text-sm">{viewer.viewerName || "Anonymous"}</span>
                       </div>
                     ))}
                   {viewers.filter((v) => !v.leftAt).length > 10 && (
@@ -317,8 +317,8 @@ export function LiveStreamViewer({
                             <Clock className="h-3 w-3" />
                             {format(new Date(stream.scheduledStartTime), "p")}
                           </span>
-                          {stream.platform && (
-                            <span className="capitalize">{stream.platform}</span>
+                          {stream.streamType && (
+                            <span className="capitalize">{stream.streamType}</span>
                           )}
                         </div>
                       </div>
@@ -364,8 +364,8 @@ export function LiveStreamViewer({
                             <Clock className="h-3 w-3" />
                             {format(new Date(stream.scheduledStartTime), "PPp")}
                           </span>
-                          {stream.platform && (
-                            <span className="capitalize">{stream.platform}</span>
+                          {stream.streamType && (
+                            <span className="capitalize">{stream.streamType}</span>
                           )}
                         </div>
                       </div>

@@ -207,7 +207,7 @@ export default function EventPlanner() {
   });
 
   // Fetch vendors data
-  const { data: vendorData = [], isLoading: vendorsLoading } = useQuery({
+  const { data: vendorData = [], isLoading: vendorsLoading } = useQuery<VendorListing[]>({
     queryKey: ['/api/vendor-listings'],
     enabled: activeTab === "vendors",
   });

@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
-import { Capacitor } from '@capacitor/core';
+
+// Safe check for native platform without importing Capacitor at module load
+const isNativePlatform = (): boolean => {
+  try {
+    return typeof window !== 'undefined' && 
+           !!(window as any).Capacitor && 
+           typeof (window as any).Capacitor.isNativePlatform === 'function' &&
+           (window as any).Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
 
 export function useQRScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const scanQRCode = async (): Promise<string | null> => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNativePlatform()) {
       setError('QR scanning is only available on mobile devices');
       return null;
     }
@@ -15,6 +25,9 @@ export function useQRScanner() {
     try {
       setIsScanning(true);
       setError(null);
+
+      // Dynamic import to avoid loading Capacitor modules at startup
+      const { BarcodeScanner, BarcodeFormat } = await import('@capacitor-mlkit/barcode-scanning');
 
       const granted = await checkPermissions();
       if (!granted) {
@@ -45,6 +58,7 @@ export function useQRScanner() {
 
   const checkPermissions = async () => {
     try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       const { camera } = await BarcodeScanner.checkPermissions();
       return camera === 'granted';
     } catch (err) {
@@ -55,6 +69,7 @@ export function useQRScanner() {
 
   const requestPermissions = async () => {
     try {
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       const { camera } = await BarcodeScanner.requestPermissions();
       return camera === 'granted';
     } catch (err) {
@@ -69,6 +84,6 @@ export function useQRScanner() {
     error,
     checkPermissions,
     requestPermissions,
-    isNative: Capacitor.isNativePlatform()
+    isNative: isNativePlatform()
   };
 }

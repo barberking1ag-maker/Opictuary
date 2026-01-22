@@ -71,18 +71,15 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
       // For now, we'll use a placeholder URL
       const videoUrl = "https://example.com/video.mp4"; // This would be actual upload logic
       
-      return apiRequest(`/api/memorials/${memorialId}/video-condolences`, {
-        method: "POST",
-        body: JSON.stringify({
-          videoUrl,
-          thumbnailUrl: videoUrl + ".thumbnail.jpg",
-          name,
-          email,
-          relationship,
-          transcription: message,
-          duration: 60, // Placeholder duration
-          isPrivate,
-        }),
+      return apiRequest("POST", `/api/memorials/${memorialId}/video-condolences`, {
+        videoUrl,
+        thumbnailUrl: videoUrl + ".thumbnail.jpg",
+        authorName: name,
+        authorEmail: email,
+        relationship,
+        transcription: message,
+        duration: 60, // Placeholder duration
+        isPrivate,
       });
     },
     onSuccess: () => {
@@ -106,9 +103,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
   // Approve video
   const approveCondolenceMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/video-condolences/${id}/approve`, {
-        method: "POST",
-      });
+      return apiRequest("POST", `/api/video-condolences/${id}/approve`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/video-condolences`] });
@@ -122,9 +117,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
   // Reject/Delete video
   const rejectCondolenceMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/video-condolences/${id}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/video-condolences/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/video-condolences`] });
@@ -138,9 +131,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
   // Track video view
   const trackViewMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/video-condolences/${id}/view`, {
-        method: "POST",
-      });
+      return apiRequest("POST", `/api/video-condolences/${id}/view`);
     },
   });
 
@@ -279,7 +270,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
                   <div className="flex items-center gap-3">
                     <div className="relative w-20 h-12 bg-black rounded overflow-hidden">
                       <img
-                        src={condolence.thumbnailUrl}
+                        src={condolence.thumbnailUrl ?? undefined}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -294,7 +285,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
                       </Button>
                     </div>
                     <div>
-                      <p className="font-medium">{condolence.name}</p>
+                      <p className="font-medium">{condolence.authorName}</p>
                       <p className="text-sm text-muted-foreground">
                         {condolence.relationship}
                       </p>
@@ -337,7 +328,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
             >
               <div className="relative aspect-video bg-black">
                 <img
-                  src={condolence.thumbnailUrl}
+                  src={condolence.thumbnailUrl ?? undefined}
                   alt=""
                   className="w-full h-full object-cover"
                 />
@@ -347,11 +338,11 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
                   </div>
                 </div>
                 <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
-                  {Math.floor(condolence.duration / 60)}:{String(condolence.duration % 60).padStart(2, '0')}
+                  {Math.floor((condolence.duration ?? 0) / 60)}:{String((condolence.duration ?? 0) % 60).padStart(2, '0')}
                 </div>
               </div>
               <div className="p-4">
-                <p className="font-medium">{condolence.name}</p>
+                <p className="font-medium">{condolence.authorName}</p>
                 <p className="text-sm text-muted-foreground">{condolence.relationship}</p>
                 {condolence.isPrivate && (
                   <Badge variant="secondary" className="mt-2">
@@ -361,7 +352,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
                 )}
                 <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                   <Eye className="w-3 h-3" />
-                  {condolence.viewCount || 0} views
+                  {condolence.views || 0} views
                 </div>
               </div>
             </Card>
@@ -555,7 +546,7 @@ export function VideoCondolence({ memorialId, canApprove = false }: VideoCondole
         <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
           <DialogContent className="max-w-3xl" data-testid="dialog-video-player">
             <DialogHeader>
-              <DialogTitle>{selectedVideo.name}'s Message</DialogTitle>
+              <DialogTitle>{selectedVideo.authorName}'s Message</DialogTitle>
               <DialogDescription>
                 {selectedVideo.relationship}
               </DialogDescription>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { User, Settings, Heart, LogOut, LogIn, UserPlus, BarChart3, Calendar, Image, ShoppingBag } from "lucide-react";
+import { handleMobileLogin, handleMobileLogout } from "@/lib/mobileUtils";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -27,7 +28,7 @@ export function UserMenu() {
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={() => window.location.href = '/api/login'}
+          onClick={handleMobileLogin}
           data-testid="button-login"
           className="hidden sm:flex"
         >
@@ -36,7 +37,7 @@ export function UserMenu() {
         </Button>
         <Button 
           size="sm" 
-          onClick={() => window.location.href = '/api/login'}
+          onClick={handleMobileLogin}
           data-testid="button-signup"
         >
           <UserPlus className="w-4 h-4 sm:mr-2" />
@@ -128,7 +129,7 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="cursor-pointer text-destructive focus:text-destructive" 
-          onClick={() => window.location.href = '/api/logout'}
+          onClick={handleMobileLogout}
           data-testid="menu-item-logout"
         >
           <LogOut className="mr-2 h-4 w-4" />

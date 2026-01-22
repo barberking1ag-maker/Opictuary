@@ -1,6 +1,29 @@
 import { useEffect, useState } from 'react';
-import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+
+// Safe check for native platform without importing Capacitor at module load
+const isNativePlatform = (): boolean => {
+  try {
+    return typeof window !== 'undefined' && 
+           !!(window as any).Capacitor && 
+           typeof (window as any).Capacitor.isNativePlatform === 'function' &&
+           (window as any).Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
+const getPlatform = (): string => {
+  try {
+    if (typeof window !== 'undefined' && 
+        (window as any).Capacitor && 
+        typeof (window as any).Capacitor.getPlatform === 'function') {
+      return (window as any).Capacitor.getPlatform();
+    }
+  } catch {
+    // Ignore
+  }
+  return 'web';
+};
 
 export function usePushNotifications() {
   const [token, setToken] = useState<string | null>(null);
@@ -8,12 +31,15 @@ export function usePushNotifications() {
   const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!isNativePlatform()) {
       return;
     }
 
     const initializePushNotifications = async () => {
       try {
+        // Dynamic import to avoid loading Capacitor modules at startup
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        
         let permStatus = await PushNotifications.checkPermissions();
 
         if (permStatus.receive === 'prompt') {
@@ -28,19 +54,19 @@ export function usePushNotifications() {
         await PushNotifications.register();
         setIsRegistered(true);
 
-        PushNotifications.addListener('registration', (token: Token) => {
-          setToken(token.value);
+        PushNotifications.addListener('registration', (tokenData) => {
+          setToken(tokenData.value);
         });
 
         PushNotifications.addListener('registrationError', (err: any) => {
           setError(err.error || 'Failed to register for push notifications');
         });
 
-        PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
           console.log('Push notification received:', notification);
         });
 
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
+        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
           console.log('Push notification action performed:', notification);
         });
       } catch (err) {
@@ -52,8 +78,10 @@ export function usePushNotifications() {
     initializePushNotifications();
 
     return () => {
-      if (Capacitor.isNativePlatform()) {
-        PushNotifications.removeAllListeners();
+      if (isNativePlatform()) {
+        import('@capacitor/push-notifications').then(({ PushNotifications }) => {
+          PushNotifications.removeAllListeners();
+        }).catch(() => {});
       }
     };
   }, []);
@@ -72,7 +100,7 @@ export function usePushNotifications() {
         body: JSON.stringify({
           token,
           memorialId,
-          platform: Capacitor.getPlatform()
+          platform: getPlatform()
         }),
       });
 
@@ -89,6 +117,6 @@ export function usePushNotifications() {
     error,
     isRegistered,
     registerToken,
-    isNative: Capacitor.isNativePlatform()
+    isNative: isNativePlatform()
   };
 }

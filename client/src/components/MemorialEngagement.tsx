@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
 import type { MemorialLike, MemorialComment, Condolence } from "@shared/schema";
+import { hapticNotification, hapticImpact } from "@/lib/mobileUtils";
 
 interface MemorialEngagementProps {
   memorialId: string;
@@ -214,7 +215,8 @@ export function MemorialEngagement({
     },
   });
 
-  const handleLikeToggle = () => {
+  const handleLikeToggle = async () => {
+    await hapticImpact('medium');
     if (userHasLiked) {
       unlikeMutation.mutate();
     } else {
@@ -222,13 +224,15 @@ export function MemorialEngagement({
     }
   };
 
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     if (!commentText.trim()) return;
+    await hapticImpact('light');
     commentMutation.mutate(commentText);
   };
 
-  const handleCondolenceSubmit = () => {
+  const handleCondolenceSubmit = async () => {
     if (!condolenceText.trim() || !condolenceName.trim()) {
+      await hapticNotification('warning');
       toast({
         title: "Missing information",
         description: "Please provide your name and message.",
@@ -237,6 +241,7 @@ export function MemorialEngagement({
       return;
     }
 
+    await hapticImpact('light');
     condolenceMutation.mutate({
       authorName: condolenceName,
       authorEmail: condolenceEmail || undefined,
@@ -334,7 +339,7 @@ export function MemorialEngagement({
                           {comment.authorName || "Anonymous"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(comment.createdAt), {
+                          {comment.createdAt && formatDistanceToNow(new Date(comment.createdAt), {
                             addSuffix: true,
                           })}
                         </p>
@@ -433,7 +438,7 @@ export function MemorialEngagement({
                           {condolence.authorName}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(condolence.createdAt), {
+                          {condolence.createdAt && formatDistanceToNow(new Date(condolence.createdAt), {
                             addSuffix: true,
                           })}
                         </p>

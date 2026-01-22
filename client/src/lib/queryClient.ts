@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/config/api";
+import { getApiBaseUrl, isNativeApp } from "@/config/api";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -8,16 +8,44 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Get fetch options based on platform
+// Native apps need different CORS handling than web
+function getFetchOptions(additionalHeaders?: Record<string, string>): RequestInit {
+  const baseOptions: RequestInit = {
+    headers: {
+      ...additionalHeaders,
+    },
+  };
+  
+  // For native apps, we don't use credentials: "include" as CORS works differently
+  // Native apps bypass CORS restrictions but still need proper headers
+  if (isNativeApp()) {
+    return {
+      ...baseOptions,
+      mode: 'cors',
+    };
+  }
+  
+  // For web, include credentials for session cookies
+  return {
+    ...baseOptions,
+    credentials: "include",
+  };
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(`${API_BASE_URL}${url}`, {
+  const fetchOptions = getFetchOptions(
+    data ? { "Content-Type": "application/json" } : undefined
+  );
+  
+  const res = await fetch(`${getApiBaseUrl()}${url}`, {
+    ...fetchOptions,
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -30,9 +58,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(`${API_BASE_URL}${queryKey.join("/")}`, {
-      credentials: "include",
-    });
+    const fetchOptions = getFetchOptions();
+    
+    const res = await fetch(`${getApiBaseUrl()}${queryKey.join("/")}`, fetchOptions);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

@@ -27,6 +27,7 @@ import { SlideshowPlayer } from "@/components/SlideshowPlayer";
 import { VideoCondolence } from "@/components/VideoCondolence";
 import VideoTimeCapsuleViewer from "@/components/VideoTimeCapsuleViewer";
 import { trackPageView, trackEvent } from "@/lib/analytics";
+import { handleMobileLogin } from "@/lib/mobileUtils";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -242,7 +243,7 @@ export default function Home() {
       description: "Please log in to interact with this memorial.",
       variant: "default",
     });
-    window.location.href = "/api/login";
+    handleMobileLogin();
   };
 
   const unsaveMutation = useMutation({
@@ -272,7 +273,7 @@ export default function Home() {
         description: "Please log in to save memorials.",
         variant: "default",
       });
-      window.location.href = "/api/login";
+      handleMobileLogin();
       return;
     }
 
@@ -581,7 +582,7 @@ export default function Home() {
                 <div className="flex flex-wrap justify-center gap-4 pt-4">
                   <Button 
                     size="lg" 
-                    onClick={() => window.location.href = '/api/login'}
+                    onClick={() => handleMobileLogin()}
                     data-testid="button-cta-signup"
                     className="bg-primary hover:bg-primary/90"
                   >

@@ -42,9 +42,7 @@ export function SlideshowPlayer({ slideshow, memorialId, onClose }: SlideshowPla
   // Track view
   const trackViewMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/slideshows/${slideshow.id}/view`, {
-        method: "POST",
-      });
+      return apiRequest("POST", `/api/slideshows/${slideshow.id}/view`);
     },
   });
 
@@ -56,7 +54,7 @@ export function SlideshowPlayer({ slideshow, memorialId, onClose }: SlideshowPla
   // Handle slideshow timing
   useEffect(() => {
     if (isPlaying && photos.length > 0) {
-      const duration = slideshow.photoDuration * 1000;
+      const duration = (slideshow.photoDuration ?? 5000);
       const progressInterval = 100; // Update progress every 100ms
 
       // Update progress
@@ -132,10 +130,10 @@ export function SlideshowPlayer({ slideshow, memorialId, onClose }: SlideshowPla
 
   const currentPhoto = photos[currentIndex];
   const transitionClass = 
-    slideshow.transitionType === 'fade' ? 'animate-fade-in' :
-    slideshow.transitionType === 'slide' ? 'animate-slide-in' :
-    slideshow.transitionType === 'zoom' ? 'animate-zoom-in' :
-    slideshow.transitionType === 'ken-burns' ? 'animate-ken-burns' : '';
+    slideshow.transitionEffect === 'fade' ? 'animate-fade-in' :
+    slideshow.transitionEffect === 'slide' ? 'animate-slide-in' :
+    slideshow.transitionEffect === 'zoom' ? 'animate-zoom-in' :
+    slideshow.transitionEffect === 'ken-burns' ? 'animate-ken-burns' : '';
 
   return (
     <div 
@@ -148,9 +146,9 @@ export function SlideshowPlayer({ slideshow, memorialId, onClose }: SlideshowPla
         <audio
           ref={audioRef}
           src={playlist.songs[0].url}
-          loop={playlist.isLooped}
+          loop={slideshow.loop ?? false}
           muted={isMuted}
-          autoPlay={slideshow.autoplay}
+          autoPlay={slideshow.autoplay ?? false}
         />
       )}
 
@@ -171,14 +169,14 @@ export function SlideshowPlayer({ slideshow, memorialId, onClose }: SlideshowPla
       <div className="relative aspect-video bg-black flex items-center justify-center">
         <img
           key={currentIndex}
-          src={currentPhoto.mediaUrl}
+          src={currentPhoto.mediaUrl ?? undefined}
           alt={currentPhoto.caption || "Memorial photo"}
           className={`max-w-full max-h-full object-contain ${transitionClass}`}
           data-testid={`slideshow-photo-${currentIndex}`}
         />
         
         {/* Caption Overlay */}
-        {slideshow.showCaptions && currentPhoto.caption && (
+        {currentPhoto.caption && (
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
             <p className="text-white text-lg" data-testid="photo-caption">
               {currentPhoto.caption}

@@ -81,22 +81,41 @@ import CelebrationsHub from "@/pages/CelebrationsHub";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
+import { AppTour } from "@/components/AppTour";
 import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
 import { Badge } from "@/components/ui/badge";
-import { MobileTabBar } from "@/components/MobileTabBar";
-import { MobileHeader } from "@/components/MobileHeader";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
-import { usePlatform } from "./hooks/usePlatform";
+
+// CRITICAL: Hide splash screen IMMEDIATELY on native platforms
+// Without this, the splash screen stays forever causing white/grey screen!
+const hideSplashScreen = async () => {
+  try {
+    // Check if running on native platform
+    if (typeof window !== 'undefined' && 
+        (window as any).Capacitor && 
+        (window as any).Capacitor.isNativePlatform &&
+        (window as any).Capacitor.isNativePlatform()) {
+      // Dynamic import to avoid loading Capacitor on web
+      const { SplashScreen } = await import('@capacitor/splash-screen');
+      await SplashScreen.hide({ fadeOutDuration: 0 });
+      console.log('[Opictuary] Splash screen hidden successfully');
+    }
+  } catch (error) {
+    console.warn('[Opictuary] Could not hide splash screen:', error);
+  }
+};
+
+// Hide splash screen immediately when this module loads (before React mounts)
+hideSplashScreen();
 
 function Router() {
   // From blueprint: javascript_google_analytics - Track page views when routes change
   useAnalytics();
-  const { isMobile, isNative } = usePlatform();
   
   return (
     <div className="min-h-screen bg-background">
@@ -109,11 +128,7 @@ function Router() {
         Skip to main content
       </a>
       
-      {/* Mobile Header - shown only on mobile */}
-      {isMobile && <MobileHeader />}
-      
-      {/* Desktop Navigation - hidden on mobile */}
-      <nav className="hidden lg:block border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
+      <nav className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <Link href="/">
@@ -487,19 +502,17 @@ function Router() {
         </Switch>
       </main>
 
-      {/* Desktop Footer - hidden on mobile */}
-      {!isMobile && <Footer badgeVariant="classic" />}
-      
-      {/* Mobile Tab Bar - only on mobile */}
-      {isMobile && <MobileTabBar />}
-      
-      {/* Bottom padding for mobile tab bar */}
-      {isMobile && <div className="h-24" />}
+      <Footer badgeVariant="classic" />
     </div>
   );
 }
 
 function App() {
+  // CRITICAL: Hide splash screen immediately after React mounts on native platforms
+  useEffect(() => {
+    hideSplashScreen();
+  }, []);
+  
   // From blueprint: javascript_google_analytics - Initialize Google Analytics when app loads
   useEffect(() => {
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
@@ -515,6 +528,7 @@ function App() {
         <Router />
         <InstallPrompt />
         <AIChat />
+        <AppTour />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

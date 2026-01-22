@@ -35,7 +35,7 @@ export function MusicPlaylistManager({
   const [editingPlaylist, setEditingPlaylist] = useState<MemorialPlaylist | null>(null);
   const [playlistName, setPlaylistName] = useState("");
   const [playlistDescription, setPlaylistDescription] = useState("");
-  const [isLooped, setIsLooped] = useState(false);
+  const [isDefaultPlaylist, setIsDefaultPlaylist] = useState(false);
   const [songs, setSongs] = useState<PlaylistSong[]>([]);
 
   // Fetch playlists
@@ -46,10 +46,7 @@ export function MusicPlaylistManager({
   // Create playlist
   const createPlaylistMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/memorials/${memorialId}/playlists`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/memorials/${memorialId}/playlists`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/playlists`] });
@@ -72,10 +69,7 @@ export function MusicPlaylistManager({
   // Update playlist
   const updatePlaylistMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string, data: any }) => {
-      return apiRequest(`/api/playlists/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PUT", `/api/playlists/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/playlists`] });
@@ -98,9 +92,7 @@ export function MusicPlaylistManager({
   // Delete playlist
   const deletePlaylistMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/playlists/${id}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/playlists/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/playlists`] });
@@ -121,9 +113,7 @@ export function MusicPlaylistManager({
   // Set default playlist
   const setDefaultPlaylistMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/playlists/${id}/set-default`, {
-        method: "POST",
-      });
+      return apiRequest("POST", `/api/playlists/${id}/set-default`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/memorials/${memorialId}/playlists`] });
@@ -144,7 +134,7 @@ export function MusicPlaylistManager({
   const resetForm = () => {
     setPlaylistName("");
     setPlaylistDescription("");
-    setIsLooped(false);
+    setIsDefaultPlaylist(false);
     setSongs([]);
   };
 
@@ -152,7 +142,7 @@ export function MusicPlaylistManager({
     setEditingPlaylist(playlist);
     setPlaylistName(playlist.name);
     setPlaylistDescription(playlist.description || "");
-    setIsLooped(playlist.isLooped);
+    setIsDefaultPlaylist(playlist.isDefault ?? false);
     setSongs(playlist.songs as PlaylistSong[]);
     setIsCreateOpen(true);
   };
@@ -195,7 +185,7 @@ export function MusicPlaylistManager({
       name: playlistName,
       description: playlistDescription || undefined,
       songs: validSongs,
-      isLooped,
+      isDefault: isDefaultPlaylist,
     };
 
     if (editingPlaylist) {
@@ -259,7 +249,7 @@ export function MusicPlaylistManager({
                   )}
                   <div className="mt-2 text-sm text-muted-foreground">
                     {playlist.songs.length} song{playlist.songs.length !== 1 ? 's' : ''}
-                    {playlist.isLooped && " • Looped"}
+                    {playlist.isDefault && " • Default"}
                   </div>
                 </div>
                 
@@ -371,17 +361,17 @@ export function MusicPlaylistManager({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="is-looped" className="flex-1">
-                Loop Playlist
+              <Label htmlFor="is-default" className="flex-1">
+                Set as Default
                 <p className="text-xs text-muted-foreground">
-                  Automatically restart when it ends
+                  Use as the default playlist for slideshows
                 </p>
               </Label>
               <Switch
-                id="is-looped"
-                checked={isLooped}
-                onCheckedChange={setIsLooped}
-                data-testid="switch-loop"
+                id="is-default"
+                checked={isDefaultPlaylist}
+                onCheckedChange={setIsDefaultPlaylist}
+                data-testid="switch-default"
               />
             </div>
 

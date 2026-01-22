@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     
     <!-- Primary Meta Tags -->
-    <title>Opictuary - Digital Memorial Platform | Honor & Remember Loved Ones</title>
-    <meta name="title" content="Opictuary - Digital Memorial Platform | Honor & Remember Loved Ones" />
+    <title>Opictuary - The Ultimate Celebration · Memorial · Legacy · Platform</title>
+    <meta name="title" content="Opictuary - The Ultimate Celebration · Memorial · Legacy · Platform" />
     <meta name="description" content="Create beautiful, dignified digital memorials for loved ones. Share memories, photos, condolences, and preserve legacies forever. QR codes for gravesites, fundraising, grief support, and scheduled messages to family." />
     <meta name="keywords" content="digital memorial, online obituary, memorial website, honor loved ones, grief support, funeral fundraising, QR code memorial, cemetery QR codes, legacy planning, condolences, remembrance, tribute page, memorial fundraiser, flower delivery, prison memorial access, celebrity memorials, essential workers tribute" />
     <meta name="author" content="Opictuary" />
@@ -17,7 +17,7 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://opictuary.replit.app/" />
-    <meta property="og:title" content="Opictuary - Digital Memorial Platform | Honor & Remember Loved Ones" />
+    <meta property="og:title" content="Opictuary - The Ultimate Celebration · Memorial · Legacy · Platform" />
     <meta property="og:description" content="Create beautiful, dignified digital memorials for loved ones. Share memories, photos, condolences, and preserve legacies forever." />
     <meta property="og:image" content="https://opictuary.replit.app/icon-512.png" />
     <meta property="og:image:width" content="512" />
@@ -28,7 +28,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://opictuary.replit.app/" />
-    <meta name="twitter:title" content="Opictuary - Digital Memorial Platform" />
+    <meta name="twitter:title" content="Opictuary - The Ultimate Celebration · Memorial · Legacy · Platform" />
     <meta name="twitter:description" content="Create beautiful, dignified digital memorials for loved ones. Share memories, preserve legacies forever." />
     <meta name="twitter:image" content="https://opictuary.replit.app/icon-512.png" />
     
@@ -49,20 +49,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Analytics -->
+    <!-- Analytics - deferred to not block initial render -->
     <script>
-      // Dynamically load Plausible Analytics with the correct domain
-      (function() {
-        var domain = window.location.hostname;
-        // Skip analytics on localhost
-        if (domain !== 'localhost' && domain !== '127.0.0.1') {
-          var script = document.createElement('script');
-          script.defer = true;
-          script.setAttribute('data-domain', domain);
-          script.src = 'https://plausible.io/js/script.js';
-          document.head.appendChild(script);
+      // Dynamically load Plausible Analytics after app loads
+      // Skip on native Capacitor apps to prevent blocking
+      window.addEventListener('load', function() {
+        try {
+          // Skip if Capacitor native app
+          if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+            return;
+          }
+          var domain = window.location.hostname;
+          // Skip analytics on localhost
+          if (domain && domain !== 'localhost' && domain !== '127.0.0.1') {
+            var script = document.createElement('script');
+            script.defer = true;
+            script.setAttribute('data-domain', domain);
+            script.src = 'https://plausible.io/js/script.js';
+            document.head.appendChild(script);
+          }
+        } catch(e) {
+          console.warn('Analytics init skipped:', e);
         }
-      })();
+      });
     </script>
     
     <!-- Structured Data for SEO -->
@@ -87,8 +96,23 @@
     }
     </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color: #4A1D6A; margin: 0; padding: 0;">
+    <div id="root">
+      <!-- Loading indicator visible until React renders -->
+      <div id="app-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a0f29; color: white; font-family: sans-serif;">
+        <div style="font-size: 48px; margin-bottom: 20px;">O</div>
+        <div>Loading Opictuary...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // If app doesn't load within 10 seconds, show error
+      setTimeout(function() {
+        var loading = document.getElementById('app-loading');
+        if (loading && loading.parentNode) {
+          loading.innerHTML = '<div style="padding:20px;color:#ff6b6b;">App failed to start. Check console for errors.</div>';
+        }
+      }, 10000);
+    </script>
   </body>
 </html>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { nativeShare, hapticImpact, isNativePlatform } from "@/lib/mobileUtils";
 
 interface ShareObituaryButtonProps {
   memorialId: string;
@@ -46,23 +47,14 @@ export function ShareObituaryButton({
   };
 
   const shareViaWebShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Obituary: ${deceasedName}`,
-          text: `View the obituary for ${deceasedName}`,
-          url: shareableUrl,
-        });
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          toast({
-            title: "Error",
-            description: "Failed to share obituary link.",
-            variant: "destructive",
-          });
-        }
-      }
-    } else {
+    const shared = await nativeShare({
+      title: `Obituary: ${deceasedName}`,
+      text: `View the obituary for ${deceasedName}`,
+      url: shareableUrl,
+      dialogTitle: 'Share Memorial',
+    });
+    
+    if (!shared) {
       copyToClipboard();
     }
   };
@@ -126,7 +118,7 @@ export function ShareObituaryButton({
             </Button>
           </div>
 
-          {navigator.share && (
+          {(typeof navigator.share === 'function' || isNativePlatform()) && (
             <>
               <Button
                 onClick={shareViaWebShare}

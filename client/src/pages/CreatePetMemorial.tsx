@@ -91,10 +91,7 @@ export default function CreatePetMemorial() {
 
   const createMutation = useMutation({
     mutationFn: async (data: PetMemorialFormData) => {
-      return apiRequest("/api/pet-memorials", {
-        method: "POST",
-        body: JSON.stringify({ ...data, personality: selectedPersonality }),
-      });
+      return apiRequest("POST", "/api/pet-memorials", { ...data, personality: selectedPersonality });
     },
     onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/pet-memorials"] });

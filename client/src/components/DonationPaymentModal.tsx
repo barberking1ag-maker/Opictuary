@@ -10,10 +10,18 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { DollarSign, Loader2 } from "lucide-react";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// LAZY STRIPE LOADING: Avoid module-level throws that crash the app on startup
+// Stripe is loaded only when needed, preventing white screen issues on mobile
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+const getStripePromise = () => {
+  if (!stripePromise) {
+    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (key) {
+      stripePromise = loadStripe(key);
+    }
+  }
+  return stripePromise;
+};
 
 interface DonationPaymentFormProps {
   fundraiserId: string;
@@ -288,7 +296,7 @@ export default function DonationPaymentModal({
 
         {step === 'payment' && clientSecret && (
           <div className="py-4">
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <Elements stripe={getStripePromise()} options={{ clientSecret }}>
               <DonationPaymentForm
                 fundraiserId={fundraiserId}
                 fundraiserTitle={fundraiserTitle}

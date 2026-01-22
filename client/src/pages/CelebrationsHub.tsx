@@ -110,7 +110,7 @@ export default function CelebrationsHub() {
   };
   
   // Get unique traditions for filtering
-  const traditions = [...new Set(allHolidays.map(h => h.tradition))].sort();
+  const traditions = Array.from(new Set(allHolidays.map(h => h.tradition))).sort();
   
   // Filter holidays
   const filteredHolidays = allHolidays.filter(holiday => {

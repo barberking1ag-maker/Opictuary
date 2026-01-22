@@ -199,7 +199,11 @@ async function main() {
   const treeItems: any[] = [];
   let uploadedCount = 0;
   
-  for (const file of files) {
+  const BATCH_SIZE = 30;
+  const BATCH_DELAY_MS = 2000;
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     try {
       const content = fs.readFileSync(file);
       const isBinary = isBinaryFile(file);
@@ -222,7 +226,17 @@ async function main() {
       if (uploadedCount % 50 === 0) {
         console.log(`  Uploaded ${uploadedCount}/${files.length} files...`);
       }
+      
+      if ((i + 1) % BATCH_SIZE === 0 && i < files.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+      }
     } catch (err: any) {
+      if (err.message?.includes('rate limit')) {
+        console.log('  ⏳ Rate limited, waiting 10 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        i--;
+        continue;
+      }
       console.error(`  ⚠️ Failed to upload ${file}: ${err.message}`);
     }
   }
