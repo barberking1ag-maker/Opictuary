@@ -127,7 +127,7 @@ function getAllFiles(dir: string, baseDir: string = dir): string[] {
 }
 
 function isBinaryFile(filePath: string): boolean {
-  const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.svg', '.woff', '.woff2', '.ttf', '.eot', '.mp3', '.mp4', '.wav', '.pdf', '.zip', '.gz', '.tar'];
+  const binaryExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.svg', '.woff', '.woff2', '.ttf', '.eot', '.mp3', '.mp4', '.wav', '.pdf', '.zip', '.gz', '.tar', '.jar', '.class', '.so', '.dylib', '.a'];
   const ext = path.extname(filePath).toLowerCase();
   return binaryExtensions.includes(ext);
 }
