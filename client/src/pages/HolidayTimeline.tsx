@@ -276,11 +276,27 @@ export default function HolidayTimeline() {
 
   if (!memorialId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="p-8 text-center max-w-md">
           <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold mb-2">No Memorial Selected</h2>
-          <p className="text-muted-foreground">Please select a memorial to view the holiday timeline.</p>
+          <p className="text-muted-foreground mb-6">
+            To view the holiday timeline, please first select or create a memorial.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link href="/">
+              <Button className="w-full" data-testid="button-browse-memorials">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Browse Memorials
+              </Button>
+            </Link>
+            <Link href="/create-memorial">
+              <Button variant="outline" className="w-full" data-testid="button-create-memorial">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Memorial
+              </Button>
+            </Link>
+          </div>
         </Card>
       </div>
     );
