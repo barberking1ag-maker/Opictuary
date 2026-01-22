@@ -88,9 +88,9 @@ import {
   type QRCode,
   insertByusUserSchema,
   insertByusMediationSchema,
-  insertByusMediationCategorySchema,
   insertByusMediationHistorySchema,
   insertByusFeedbackSchema,
+  insertByusTherapistSchema,
   insertProductSchema,
   insertProductOrderSchema,
   // Event Planner schemas
@@ -143,27 +143,8 @@ function getStripe(): Stripe {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint - responds immediately for deployment health checks
-  app.get('/healthz', (_req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-  
-  app.get('/api/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  // Setup Replit Auth with timeout to prevent deployment hangs
-  console.log('[SERVER] Setting up authentication...');
-  try {
-    const authTimeout = new Promise<void>((_, reject) => 
-      setTimeout(() => reject(new Error('Auth setup timeout')), 15000)
-    );
-    await Promise.race([setupAuth(app), authTimeout]);
-    console.log('[SERVER] Authentication setup complete');
-  } catch (error) {
-    console.error('[SERVER] Auth setup failed or timed out:', error);
-    console.log('[SERVER] Continuing without auth - some features may be unavailable');
-  }
+  // Setup Replit Auth
+  await setupAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -834,9 +815,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         qrCode,
         memorial: {
           id: memorial.id,
-          firstName: memorial.firstName,
-          lastName: memorial.lastName,
-          imageUrl: memorial.imageUrl,
+          name: memorial.name,
+          backgroundImage: memorial.backgroundImage,
         },
         scannerType,
         availableActions: actions,
@@ -1959,18 +1939,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/memorials/:memorialId/scheduled-messages", isAuthenticated, async (req: any, res) => {
-    console.log('[CREATE SCHEDULED MESSAGE] Route hit:', req.params.memorialId);
-    console.log('[CREATE SCHEDULED MESSAGE] Request body:', JSON.stringify(req.body, null, 2));
-    
     try {
       const userEmail = req.user.claims.email;
-      console.log('[CREATE SCHEDULED MESSAGE] User email:', userEmail);
       
       const memorial = await storage.getMemorial(req.params.memorialId);
-      console.log('[CREATE SCHEDULED MESSAGE] Memorial found:', memorial ? 'yes' : 'no');
       
       if (!memorial) {
-        console.log('[CREATE SCHEDULED MESSAGE] Memorial not found');
         return res.status(404).json({ error: "Memorial not found" });
       }
 
@@ -1978,10 +1952,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const admins = await storage.getMemorialAdmins(req.params.memorialId);
       const isCreator = memorial.creatorEmail === userEmail;
       const isAdmin = admins.some(admin => admin.email === userEmail);
-      console.log('[CREATE SCHEDULED MESSAGE] Authorization check - isCreator:', isCreator, 'isAdmin:', isAdmin);
 
       if (!isCreator && !isAdmin) {
-        console.log('[CREATE SCHEDULED MESSAGE] Authorization failed');
         return res.status(403).json({ error: "Forbidden: You do not have permission to create scheduled messages for this memorial" });
       }
 
@@ -1996,7 +1968,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recurrenceCount: req.body.recurrenceCount || undefined,
         recurrenceEndDate: req.body.recurrenceEndDate || undefined,
       };
-      console.log('[CREATE SCHEDULED MESSAGE] Cleaned body:', JSON.stringify(cleanedBody, null, 2));
 
       // Calculate nextSendDate if this is a recurring message
       let nextSendDate = undefined;
@@ -2010,22 +1981,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         memorialId: req.params.memorialId,
         nextSendDate: nextSendDate,
       };
-      console.log('[CREATE SCHEDULED MESSAGE] Data to validate:', JSON.stringify(dataToValidate, null, 2));
 
       const data = insertScheduledMessageSchema.parse(dataToValidate);
-      console.log('[CREATE SCHEDULED MESSAGE] Validation passed');
       
       const message = await storage.createScheduledMessage(data);
-      console.log('[CREATE SCHEDULED MESSAGE] Message created:', message.id);
       
       res.status(201).json(message);
     } catch (error: any) {
       if (error instanceof ZodError) {
-        console.error('[CREATE SCHEDULED MESSAGE] Validation error:', JSON.stringify(error.errors, null, 2));
-        console.error('[CREATE SCHEDULED MESSAGE] Received body:', JSON.stringify(req.body, null, 2));
+        console.error('[SCHEDULED MESSAGE] Validation error');
         return res.status(400).json({ error: error.errors });
       }
-      console.error('[CREATE SCHEDULED MESSAGE] Server error:', error.message);
+      console.error('[SCHEDULED MESSAGE] Server error');
       res.status(500).json({ error: error.message });
     }
   });
@@ -2220,11 +2187,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         memorial.timezone || 'America/New_York' // Use memorial's timezone for accurate scheduling
       );
       
-      // Create the capsule with computed nextReleaseDate (convert Date to ISO string for Zod)
+      // Create the capsule with computed nextReleaseDate
       const capsule = await storage.createVideoTimeCapsule({
         ...validatedData,
         memorialId: req.params.memorialId,
-        nextReleaseDate: nextReleaseDateObj.toISOString(), // Convert Date to ISO string for Zod validation
+        nextReleaseDate: nextReleaseDateObj, // Pass Date object directly
       });
       
       res.status(201).json(capsule);
@@ -2274,7 +2241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           releaseTime,
           memorial.timezone || 'America/New_York' // Use memorial's timezone for accurate scheduling
         );
-        updateData.nextReleaseDate = nextReleaseDateObj.toISOString(); // Convert Date to ISO string for Zod validation
+        updateData.nextReleaseDate = nextReleaseDateObj; // Pass Date object directly
       }
       
       // Update the capsule
@@ -5294,9 +5261,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           user = await storage.createByusUser({
             id: "test-user-123",
             email: "test@byus.com",
-            name: "Test User",
-            subscriptionTier: "free",
-            subscriptionStatus: "active",
+            passwordHash: "test-hash",
+            firstName: "Test",
+            lastName: "User",
             role: "user"
           });
         } catch (userError) {
@@ -5312,7 +5279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediationId: mediation.id,
         userId: data.creatorId, // Use creatorId instead of userId
         action: "created",
-        details: "Mediation case created",
+        description: "Mediation case created",
       });
       
       res.status(201).json(mediation);
@@ -5361,7 +5328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mediationId: req.params.id,
           userId: data.creatorId, // Use creatorId for history tracking
           action: "updated_perspective",
-          details: JSON.stringify({ 
+          description: JSON.stringify({ 
             partyA: !!data.party1Perspective,
             partyB: !!data.party2Perspective 
           }),
@@ -5387,7 +5354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if both perspectives are provided
-      if (!mediation.partyAPerspective || !mediation.partyBPerspective) {
+      if (!mediation.party1Perspective || !mediation.party2Perspective) {
         return res.status(400).json({ 
           error: "Both party perspectives must be provided before analysis" 
         });
@@ -5398,21 +5365,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get category for prompt template if applicable
       const categories = await storage.getMediationCategories();
-      const category = categories.find(c => c.name === mediation.type);
+      const category = categories.find((c: { name: string; promptTemplate?: string }) => c.name === mediation.category);
       
       // Create AI prompt
       const systemPrompt = category?.promptTemplate || 
         "You are an unbiased mediator helping to resolve conflicts. Analyze both perspectives fairly and provide constructive solutions.";
       
       const userPrompt = `
-        Mediation Type: ${mediation.type}
+        Mediation Type: ${mediation.category}
         Title: ${mediation.title}
         
-        Party A (${mediation.partyAName})'s Perspective:
-        ${mediation.partyAPerspective}
+        Party 1 (${mediation.party1Name})'s Perspective:
+        ${mediation.party1Perspective}
         
-        Party B (${mediation.partyBName})'s Perspective:
-        ${mediation.partyBPerspective}
+        Party 2 (${mediation.party2Name})'s Perspective:
+        ${mediation.party2Perspective}
         
         Please provide:
         1. An unbiased analysis of the situation
@@ -5437,18 +5404,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update mediation with AI analysis
       const updated = await storage.updateMediation(req.params.id, {
-        aiAnalysis: aiResponse.analysis,
-        aiSolution: aiResponse.solution,
-        fairnessScore: aiResponse.fairnessScore,
-        status: "complete",
+        aiAnalysisCompleted: true,
+        status: "resolved",
       });
       
       // Record history
       await storage.recordMediationHistory({
         mediationId: req.params.id,
-        userId: mediation.userId,
+        userId: mediation.creatorId,
         action: "analyzed",
-        details: "AI analysis completed",
+        description: "AI analysis completed",
       });
       
       res.json(updated);
@@ -5506,48 +5471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const categories = await storage.getMediationCategories();
       
-      // If no categories exist, create default ones
-      if (categories.length === 0) {
-        const defaultCategories = [
-          {
-            name: "relationship",
-            description: "Romantic and interpersonal relationship conflicts",
-            icon: "heart",
-            promptTemplate: "You are a relationship counselor helping couples and individuals resolve conflicts with empathy and understanding.",
-          },
-          {
-            name: "business",
-            description: "Business and professional disagreements",
-            icon: "briefcase",
-            promptTemplate: "You are a business mediator helping resolve professional conflicts with focus on mutual benefit and sustainable solutions.",
-          },
-          {
-            name: "family",
-            description: "Family disputes and disagreements",
-            icon: "users",
-            promptTemplate: "You are a family mediator helping resolve conflicts with sensitivity to family dynamics and long-term relationships.",
-          },
-          {
-            name: "legal",
-            description: "Legal and contractual disputes",
-            icon: "scale",
-            promptTemplate: "You are a legal mediator helping resolve disputes with focus on fairness, legal principles, and mutual agreement.",
-          },
-          {
-            name: "other",
-            description: "Other types of conflicts",
-            icon: "help-circle",
-            promptTemplate: "You are an unbiased mediator helping to resolve conflicts fairly and constructively.",
-          },
-        ];
-        
-        for (const cat of defaultCategories) {
-          await storage.createMediationCategory(cat);
-        }
-        
-        const newCategories = await storage.getMediationCategories();
-        return res.json(newCategories);
-      }
+      // Categories are predefined in storage, just return them
       
       res.json(categories);
     } catch (error: any) {
@@ -5575,9 +5499,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertByusTherapistSchema.parse(req.body);
       
       // Check if therapist already exists
-      const existingTherapist = await storage.getTherapistByEmail(data.email);
+      const existingTherapist = await storage.getTherapistByUserId(data.userId);
       if (existingTherapist) {
-        return res.status(400).json({ error: "Therapist with this email already exists" });
+        return res.status(400).json({ error: "Therapist with this user ID already exists" });
       }
       
       const therapist = await storage.createTherapist(data);
@@ -5649,11 +5573,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create review request
       const review = await storage.createProfessionalReview({
-        id: crypto.randomUUID(),
         mediationId,
         therapistId,
-        reviewStatus: 'pending',
-        createdAt: new Date(),
+        reviewType: 'mediation',
+        originalContent: JSON.stringify({ mediationId }),
+        professionalNotes: '',
+        approvalStatus: 'pending',
       });
       
       res.status(201).json(review);
@@ -5677,7 +5602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get mediation details for each review
       const reviewsWithMediations = await Promise.all(
         pendingReviews.map(async (review) => {
-          const mediation = await storage.getMediation(review.mediationId);
+          const mediation = review.mediationId ? await storage.getMediation(review.mediationId) : null;
           return {
             ...review,
             mediation,
@@ -5717,9 +5642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedReview = await storage.updateReviewStatus(
         reviewId,
         status,
-        therapistNotes,
-        professionalRecommendations,
-        validationScore
+        therapistNotes
       );
       
       if (!updatedReview) {
@@ -5820,6 +5743,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Forbidden: You don't have permission to modify this order" });
       }
 
+      // PREVENT ABUSE: Only allow 1 AI generation per unpaid order
+      // Users must pay before generating additional designs
+      if (order.aiDesignImageUrl && order.paymentStatus !== 'paid') {
+        return res.status(403).json({ 
+          error: "AI design already generated for this order. Please complete payment to generate additional designs.",
+          requiresPayment: true
+        });
+      }
+
       // CRITICAL SECURITY: Content moderation check BEFORE calling OpenAI
       // MUST await this async call - moderation won't run otherwise!
       const moderationResult = await moderateContent(prompt);
@@ -5882,7 +5814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Normalize response - ALWAYS return {imageUrl: string}
-      const imageUrl = response.data[0]?.url;
+      const imageUrl = response.data?.[0]?.url;
       
       if (!imageUrl) {
         console.error("[AI Design] No image URL in OpenAI response:", response);
@@ -6897,7 +6829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all celebrity fan content
   app.get("/api/celebrity-fan-content", async (req, res) => {
     try {
-      const content = await storage.getCelebrityFanContent();
+      const content = await storage.listAllCelebrityFanContent();
       res.json(content);
     } catch (error) {
       console.error('Error fetching fan content:', error);
@@ -6930,7 +6862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all live streams
   app.get("/api/memorial-live-streams", async (req, res) => {
     try {
-      const streams = await storage.getMemorialLiveStreams();
+      const streams = await storage.listAllMemorialLiveStreams();
       res.json(streams);
     } catch (error) {
       console.error('Error fetching live streams:', error);
@@ -7042,13 +6974,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Apply content moderation
-      const moderatedMessage = moderateContent(req.body.message);
+      const moderationResult = await moderateContent(req.body.message);
       
       const condolence = await storage.createPetMemorialCondolence({
         petMemorialId: petMemorial.id,
         authorName: req.body.authorName,
         authorEmail: req.body.authorEmail,
-        message: moderatedMessage,
+        message: moderationResult.filteredText,
         relationship: req.body.relationship,
       });
       
@@ -7084,11 +7016,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Pet memorial not found' });
       }
       
+      // Apply content moderation if message provided
+      let moderatedMessage: string | undefined;
+      if (req.body.message) {
+        const moderationResult = await moderateContent(req.body.message);
+        moderatedMessage = moderationResult.filteredText;
+      }
+      
       const candle = await storage.createPetMemorialCandle({
         petMemorialId: petMemorial.id,
         litBy: req.body.litBy,
         litByEmail: req.body.litByEmail,
-        message: req.body.message ? moderateContent(req.body.message) : undefined,
+        message: moderatedMessage,
         candleType: req.body.candleType || 'standard',
       });
       

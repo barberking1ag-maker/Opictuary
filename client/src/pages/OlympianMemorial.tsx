@@ -9,6 +9,18 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { AthleteProfile } from "@shared/schema";
+
+// Extended type for Olympic athletes with computed/display fields
+interface OlympicAthlete extends AthleteProfile {
+  name?: string;
+  profileImage?: string | null;
+  careerStats?: Record<string, string>;
+  legacyScore?: number;
+  nationality?: string;
+  careerSpan?: string;
+  biography?: string;
+  achievements?: string[];
+}
 import { 
   Trophy, 
   Medal, 
@@ -74,7 +86,7 @@ export default function OlympianMemorial() {
   const athleteId = params.athleteId as string;
   const [selectedOlympics, setSelectedOlympics] = useState<string | null>(null);
 
-  const { data: athlete, isLoading } = useQuery<AthleteProfile>({
+  const { data: athlete, isLoading } = useQuery<OlympicAthlete>({
     queryKey: [`/api/athlete-profiles/${athleteId}`],
     enabled: !!athleteId,
   });
@@ -219,7 +231,7 @@ export default function OlympianMemorial() {
                       <AvatarImage src={athlete.profileImage} alt={athlete.name} />
                     ) : null}
                     <AvatarFallback className="bg-white/20 text-white text-3xl">
-                      {athlete.name.split(" ").map(n => n[0]).join("")}
+                      {(athlete.name ?? "A").split(" ").map((n: string) => n[0]).join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div>

@@ -105,7 +105,7 @@ export function registerExtendedRoutes(app: Express) {
     try {
       const { paymentIntentId } = req.params;
       const status = await paymentProcessor.verifyPaymentStatus(paymentIntentId);
-      res.json({ status: status.status, amount: status.amount });
+      res.json({ status: status?.status ?? 'unknown', amount: status?.amount ?? 0 });
     } catch (error) {
       res.status(500).json({ error: 'Failed to verify payment status' });
     }
@@ -456,7 +456,7 @@ export function registerExtendedRoutes(app: Express) {
   // Get all product orders
   app.get("/api/product-orders", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const orders = await storage.getProductOrders();
+      const orders = await storage.getAllProductOrders();
       res.json(orders);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get orders' });

@@ -264,13 +264,13 @@ export default function SportsMemorials() {
   const { toast } = useToast();
 
   // Fetch athletes from API
-  const { data: athletes = [], isLoading: athletesLoading } = useQuery({
+  const { data: athletes = [], isLoading: athletesLoading } = useQuery<any[]>({
     queryKey: ['/api/athlete-profiles'],
     enabled: activeTab === "athletes",
   });
 
   // Fetch teams from API
-  const { data: teams = [], isLoading: teamsLoading } = useQuery({
+  const { data: teams = [], isLoading: teamsLoading } = useQuery<any[]>({
     queryKey: ['/api/team-memorials'],
     enabled: activeTab === "teams",
   });
@@ -605,7 +605,7 @@ export default function SportsMemorials() {
 
             {/* Team Memorial Cards */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sampleTeams.map((team) => (
+              {sampleTeamsStructure.map((team: any) => (
                 <Card key={team.id} className="hover-elevate" data-testid={`card-team-${team.id}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -625,7 +625,7 @@ export default function SportsMemorials() {
                     <div>
                       <p className="text-sm font-medium mb-2">Achievements</p>
                       <ul className="space-y-1">
-                        {team.achievements.map((achievement, idx) => (
+                        {team.achievements.map((achievement: string, idx: number) => (
                           <li key={idx} className="text-sm text-muted-foreground flex items-start gap-1">
                             <Star className="w-3 h-3 mt-0.5 flex-shrink-0" />
                             {achievement}
@@ -636,7 +636,7 @@ export default function SportsMemorials() {
                     <div>
                       <p className="text-sm font-medium mb-2">Notable Members</p>
                       <div className="flex flex-wrap gap-1">
-                        {team.notableMembers.map((member, idx) => (
+                        {team.notableMembers.map((member: string, idx: number) => (
                           <Badge key={idx} variant="outline" className="text-xs">
                             {member}
                           </Badge>
@@ -916,7 +916,7 @@ export default function SportsMemorials() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedAthlete.photo} alt={selectedAthlete.name} />
-                  <AvatarFallback>{selectedAthlete.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback>{selectedAthlete.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
                   <DialogTitle className="text-2xl">{selectedAthlete.name}</DialogTitle>
@@ -952,10 +952,10 @@ export default function SportsMemorials() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(selectedAthlete.stats).map(([key, value]) => (
+                      {Object.entries(selectedAthlete.stats).map(([key, value]: [string, unknown]) => (
                         <div key={key} className="flex justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded">
                           <span className="text-sm text-muted-foreground">{key}</span>
-                          <span className="font-semibold">{value}</span>
+                          <span className="font-semibold">{String(value)}</span>
                         </div>
                       ))}
                     </div>
@@ -972,7 +972,7 @@ export default function SportsMemorials() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {selectedAthlete.achievements.map((achievement, idx) => (
+                      {selectedAthlete.achievements.map((achievement: string, idx: number) => (
                         <div key={idx} className="flex items-center gap-2">
                           <Star className="w-4 h-4 text-yellow-600" />
                           <span className="text-sm">{achievement}</span>

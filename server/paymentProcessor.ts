@@ -19,7 +19,7 @@ let stripe: Stripe | null = null;
 if (process.env.STRIPE_SECRET_KEY) {
   try {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16'  // Use valid Stripe API version
+      apiVersion: '2025-09-30.clover'
     });
     console.log('[PAYMENT PROCESSOR] Stripe initialized successfully');
   } catch (error) {
@@ -406,12 +406,12 @@ class PaymentProcessor {
         total: amount.toString(),
         shippingAddress: {
           fullName: session.customer_details?.name || '',
-          addressLine1: session.shipping_details?.address?.line1 || '',
-          addressLine2: session.shipping_details?.address?.line2,
-          city: session.shipping_details?.address?.city || '',
-          state: session.shipping_details?.address?.state || '',
-          zipCode: session.shipping_details?.address?.postal_code || '',
-          country: session.shipping_details?.address?.country || 'US',
+          addressLine1: (session as any).shipping_details?.address?.line1 || '',
+          addressLine2: (session as any).shipping_details?.address?.line2,
+          city: (session as any).shipping_details?.address?.city || '',
+          state: (session as any).shipping_details?.address?.state || '',
+          zipCode: (session as any).shipping_details?.address?.postal_code || '',
+          country: (session as any).shipping_details?.address?.country || 'US',
           phone: session.customer_details?.phone || '',
         },
         status: 'processing',

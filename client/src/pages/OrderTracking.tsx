@@ -85,7 +85,7 @@ export default function OrderTracking() {
     );
   }
 
-  const statusInfo = statusConfig[order.status] || statusConfig.pending;
+  const statusInfo = statusConfig[order.status ?? "pending"] || statusConfig.pending;
   const currentStatusIndex = orderTimeline.findIndex((s) => s.key === order.status);
 
   return (
@@ -103,7 +103,7 @@ export default function OrderTracking() {
             <div>
               <h1 className="text-3xl font-serif font-bold mb-2">Order Details</h1>
               <p className="text-muted-foreground">
-                Order placed on {format(new Date(order.createdAt), "MMMM d, yyyy 'at' h:mm a")}
+                Order placed on {order.createdAt && format(new Date(order.createdAt), "MMMM d, yyyy 'at' h:mm a")}
               </p>
             </div>
             <Badge variant={statusInfo.variant} className="text-base px-4 py-2" data-testid="order-status">
@@ -278,11 +278,11 @@ export default function OrderTracking() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-medium">${parseFloat(order.shipping).toFixed(2)}</span>
+                  <span className="font-medium">${parseFloat(order.shipping ?? "0").toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">${parseFloat(order.tax).toFixed(2)}</span>
+                  <span className="font-medium">${parseFloat(order.tax ?? "0").toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg">

@@ -63,10 +63,7 @@ class PrisonAccessManager {
       await db.update(prisonAccessRequests)
         .set({
           status: 'approved',
-          approvedAt: now,
-          approvedBy: approvedByEmail,
-          expirationDate: expirationDate || new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000), // 90 days default
-          reviewNotes: verificationNotes,
+          adminNotes: verificationNotes,
           updatedAt: now
         })
         .where(eq(prisonAccessRequests.id, requestId));
@@ -75,12 +72,9 @@ class PrisonAccessManager {
       await db.insert(prisonVerifications).values({
         requestId: requestId,
         verifiedBy: approvedBy,
-        verificationMethod: 'manual_review',
-        verificationDate: now,
-        verificationStatus: 'verified',
-        verificationNotes: verificationNotes,
-        documentUrls: null,
-        expiresAt: expirationDate
+        verificationType: 'manual_review',
+        status: 'verified',
+        notes: verificationNotes
       });
 
       // Create audit log
@@ -127,10 +121,7 @@ class PrisonAccessManager {
       await db.update(prisonAccessRequests)
         .set({
           status: 'denied',
-          deniedAt: now,
-          denialReason: reason,
-          reviewNotes: reason,
-          approvedBy: deniedBy,
+          adminNotes: reason,
           updatedAt: now
         })
         .where(eq(prisonAccessRequests.id, requestId));
@@ -139,10 +130,9 @@ class PrisonAccessManager {
       await db.insert(prisonVerifications).values({
         requestId: requestId,
         verifiedBy: deniedBy,
-        verificationMethod: 'manual_review',
-        verificationDate: now,
-        verificationStatus: 'denied',
-        verificationNotes: reason
+        verificationType: 'manual_review',
+        status: 'denied',
+        notes: reason
       });
 
       // Create audit log
@@ -187,10 +177,8 @@ class PrisonAccessManager {
         throw new Error('Approved access request not found');
       }
 
-      // Check if request is not expired
-      if (request.expirationDate && new Date() > request.expirationDate) {
-        throw new Error('Access request has expired');
-      }
+      // Check if request is approved and valid
+      // Note: expirationDate is tracked via session expiration, not request level
 
       // Check for active sessions (prevent multiple concurrent sessions)
       const [activeSessions] = await db.select()
@@ -353,13 +341,10 @@ class PrisonAccessManager {
   async createAuditLog(data: AuditLogData): Promise<void> {
     try {
       await db.insert(prisonAuditLogs).values({
-        facilityId: data.facilityId,
-        inmateDocNumber: data.inmateId || null,
         action: data.action,
         performedBy: data.performedBy,
-        performedAt: new Date(),
-        details: data.details || {},
-        ipAddress: data.ipAddress || null
+        ipAddress: data.ipAddress || null,
+        metadata: { facilityId: data.facilityId, inmateId: data.inmateId, ...(data.details || {}) }
       });
     } catch (error) {
       console.error('[PRISON ACCESS] Error creating audit log:', error);

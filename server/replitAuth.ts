@@ -8,9 +8,8 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Check for REPLIT_DOMAINS but don't crash - allow graceful degradation
 if (!process.env.REPLIT_DOMAINS) {
-  console.warn("[AUTH] REPLIT_DOMAINS not set - authentication will be disabled");
+  throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
 const getOidcConfig = memoize(
@@ -74,23 +73,6 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Skip full auth setup if REPLIT_DOMAINS is not configured
-  if (!process.env.REPLIT_DOMAINS) {
-    console.warn("[AUTH] Skipping OIDC setup - REPLIT_DOMAINS not configured");
-    
-    // Add stub routes that return appropriate errors
-    app.get("/api/login", (_req, res) => {
-      res.status(503).json({ message: "Authentication not configured" });
-    });
-    app.get("/api/callback", (_req, res) => {
-      res.status(503).json({ message: "Authentication not configured" });
-    });
-    app.get("/api/logout", (_req, res) => {
-      res.redirect("/");
-    });
-    return;
-  }
-
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -103,7 +85,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env.REPLIT_DOMAINS.split(",")) {
+  for (const domain of process.env
+    .REPLIT_DOMAINS!.split(",")) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,

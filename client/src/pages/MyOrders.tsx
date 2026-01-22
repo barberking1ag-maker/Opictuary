@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Package, Eye, ShoppingBag } from "lucide-react";
 import { format } from "date-fns";
 import type { ProductOrder } from "@shared/schema";
+import { handleMobileLogin } from "@/lib/mobileUtils";
 
 const statusFilters = [
   { value: "all", label: "All Orders" },
@@ -42,7 +43,7 @@ export default function MyOrders() {
     : orders.filter((order) => order.status === statusFilter);
 
   const sortedOrders = [...filteredOrders].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
   );
 
   if (!isAuthenticated) {
@@ -54,7 +55,7 @@ export default function MyOrders() {
             <CardDescription>Please login to view your orders.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/api/login'} className="w-full">
+            <Button onClick={() => handleMobileLogin()} className="w-full">
               Login to Continue
             </Button>
           </CardContent>
@@ -158,7 +159,7 @@ export default function MyOrders() {
         {!isLoading && !error && sortedOrders.length > 0 && (
           <div className="space-y-4">
             {sortedOrders.map((order) => {
-              const statusInfo = statusConfig[order.status] || statusConfig.pending;
+              const statusInfo = statusConfig[order.status ?? "pending"] || statusConfig.pending;
               
               return (
                 <Card 
@@ -179,7 +180,7 @@ export default function MyOrders() {
                           <div>
                             <h3 className="font-semibold text-lg">Order #{order.orderNumber}</h3>
                             <p className="text-sm text-muted-foreground">
-                              Placed on {format(new Date(order.createdAt), "MMM d, yyyy")}
+                              Placed on {order.createdAt && format(new Date(order.createdAt), "MMM d, yyyy")}
                             </p>
                           </div>
                           <Badge variant={statusInfo.variant}>

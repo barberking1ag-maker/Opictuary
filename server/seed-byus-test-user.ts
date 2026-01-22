@@ -20,9 +20,9 @@ async function seedTestByusUser() {
     await db.insert(byusUsers).values({
       id: "test-user-123",
       email: "test@byus.com",
-      name: "Test User",
-      subscriptionTier: "free",
-      subscriptionStatus: "active",
+      firstName: "Test",
+      lastName: "User",
+      passwordHash: "test-hash-placeholder",
       role: "user"
     });
     

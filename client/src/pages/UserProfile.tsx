@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { handleMobileLogin } from "@/lib/mobileUtils";
 
 export default function UserProfile() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -211,7 +212,7 @@ export default function UserProfile() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/api/login'} className="w-full">
+            <Button onClick={() => handleMobileLogin()} className="w-full">
               Login to Continue
             </Button>
           </CardContent>

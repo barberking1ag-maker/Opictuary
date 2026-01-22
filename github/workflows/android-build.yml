@@ -1,0 +1,212 @@
+name: Build Android AAB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Install NDK r28
+      run: |
+        sdkmanager --install "ndk;28.0.12433566"
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.0.12433566" >> $GITHUB_ENV
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Build web app
+      run: npm run build
+      
+    - name: Verify web build
+      run: |
+        echo "=== Checking dist/public ==="
+        ls -la dist/public/
+        echo "=== Checking index.html ==="
+        cat dist/public/index.html
+        echo "=== Checking for built JS assets ==="
+        ls -la dist/public/assets/ || echo "No assets folder"
+      
+    - name: Sync Capacitor
+      run: npx cap sync android
+      
+    - name: Copy assets explicitly
+      run: npx cap copy android
+      
+    - name: Verify Android assets
+      run: |
+        echo "=== Checking Android assets ==="
+        ls -la android/app/src/main/assets/public/
+        echo "=== Android index.html ==="
+        cat android/app/src/main/assets/public/index.html
+      
+    - name: Fix SDK version
+      run: |
+        cat > android/variables.gradle << 'EOF'
+        ext {
+            minSdkVersion = 22
+            compileSdkVersion = 35
+            targetSdkVersion = 35
+            androidxActivityVersion = '1.9.2'
+            androidxAppCompatVersion = '1.7.0'
+            androidxCoordinatorLayoutVersion = '1.2.0'
+            androidxCoreVersion = '1.15.0'
+            androidxFragmentVersion = '1.8.4'
+            coreSplashScreenVersion = '1.0.1'
+            androidxWebkitVersion = '1.12.1'
+            junitVersion = '4.13.2'
+            androidxJunitVersion = '1.2.1'
+            androidxEspressoCoreVersion = '3.6.1'
+            cordovaAndroidVersion = '10.1.1'
+        }
+        EOF
+      
+    - name: Fix build.gradle
+      run: |
+        cat > android/app/build.gradle << 'EOF'
+        apply plugin: 'com.android.application'
+        
+        android {
+            namespace "com.opictuary.app"
+            compileSdk rootProject.ext.compileSdkVersion
+            ndkVersion '28.0.12433566'
+            
+            defaultConfig {
+                applicationId "com.opictuary.app"
+                minSdkVersion rootProject.ext.minSdkVersion
+                targetSdkVersion rootProject.ext.targetSdkVersion
+                versionCode 2026011912
+                versionName "2.4.9"
+                testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+            }
+            
+            packaging {
+                jniLibs {
+                    useLegacyPackaging = false
+                }
+            }
+            
+            buildTypes {
+                release {
+                    minifyEnabled false
+                    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                }
+            }
+            
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_21
+                targetCompatibility JavaVersion.VERSION_21
+            }
+        }
+        
+        configurations.all {
+            resolutionStrategy {
+                force 'androidx.camera:camera-core:1.4.0'
+                force 'androidx.camera:camera-camera2:1.4.0'
+                force 'androidx.camera:camera-lifecycle:1.4.0'
+                force 'androidx.camera:camera-view:1.4.0'
+                force 'androidx.camera:camera-video:1.4.0'
+            }
+        }
+        
+        repositories {
+            flatDir{
+                dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+            }
+        }
+        
+        dependencies {
+            implementation fileTree(include: ['*.jar'], dir: 'libs')
+            implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+            implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+            implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+            implementation project(':capacitor-android')
+            testImplementation "junit:junit:$junitVersion"
+            androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+            androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+            implementation project(':capacitor-cordova-android-plugins')
+        }
+        
+        apply from: 'capacitor.build.gradle'
+        
+        try {
+            def servicesJSON = file('google-services.json')
+            if (servicesJSON.text) {
+                apply plugin: 'com.google.gms.google-services'
+            }
+        } catch(Exception e) {
+            logger.info("google-services.json not found")
+        }
+        EOF
+      
+    - name: Fix app icons completely
+      run: |
+        sudo apt-get update && sudo apt-get install -y imagemagick
+        
+        # Download icon
+        curl -L "https://eternal-tribute-barberking1ag.replit.app/icon-192.png" -o /tmp/icon.png
+        
+        # Create all icon sizes for ic_launcher, ic_launcher_round, AND ic_launcher_foreground
+        for density in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+          folder=$(echo $density | cut -d: -f1)
+          size=$(echo $density | cut -d: -f2)
+          
+          convert /tmp/icon.png -resize ${size}x${size} android/app/src/main/res/mipmap-${folder}/ic_launcher.png
+          convert /tmp/icon.png -resize ${size}x${size} android/app/src/main/res/mipmap-${folder}/ic_launcher_round.png
+          convert /tmp/icon.png -resize ${size}x${size} android/app/src/main/res/mipmap-${folder}/ic_launcher_foreground.png
+          
+          # Create solid background
+          convert -size ${size}x${size} xc:'#6B4EAE' android/app/src/main/res/mipmap-${folder}/ic_launcher_background.png
+        done
+        
+        # Remove adaptive icon XML to force use of PNG icons
+        rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+        rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+        
+        echo "Icons updated!"
+        ls -la android/app/src/main/res/mipmap-hdpi/
+      
+    - name: Decode keystore
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+      
+    - name: Build and sign Release AAB
+      working-directory: android
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        chmod +x gradlew
+        ./gradlew bundleRelease \
+          -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
+          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+      
+    - name: Upload AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-aab
+        path: android/app/build/outputs/bundle/release/*.aab
+        if-no-files-found: warn
+        retention-days: 30

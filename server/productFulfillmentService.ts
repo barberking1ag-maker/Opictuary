@@ -58,9 +58,7 @@ class ProductFulfillmentService {
       // Update order status to processing
       await db.update(productOrders)
         .set({
-          status: 'processing',
-          processingStartedAt: new Date(),
-          updatedAt: new Date()
+          status: 'processing'
         })
         .where(eq(productOrders.id, orderId));
 
@@ -69,22 +67,10 @@ class ProductFulfillmentService {
         where: eq(products.id, order.productId)
       });
 
-      if (product && product.stockQuantity !== null) {
-        const newStock = product.stockQuantity - order.quantity;
-        
-        if (newStock < 0) {
-          // Insufficient stock
-          await this.handleInsufficientStock(order);
-          return false;
-        }
-
-        // Update product stock
-        await db.update(products)
-          .set({
-            stockQuantity: newStock,
-            updatedAt: new Date()
-          })
-          .where(eq(products.id, product.id));
+      if (product && product.stockStatus === 'out_of_stock') {
+        // Insufficient stock
+        await this.handleInsufficientStock(order);
+        return false;
       }
 
       // Send order to fulfillment center (in production, this would integrate with 3PL API)
@@ -182,11 +168,9 @@ class ProductFulfillmentService {
       await db.update(productOrders)
         .set({
           status: 'shipped',
-          shippedAt: new Date(),
           trackingNumber: trackingNumber,
-          shippingCarrier: shippingCarrier,
-          estimatedDeliveryDate: estimatedDeliveryDate,
-          updatedAt: new Date()
+          carrier: shippingCarrier,
+          estimatedDelivery: estimatedDeliveryDate
         })
         .where(eq(productOrders.id, orderId));
 
@@ -216,18 +200,17 @@ class ProductFulfillmentService {
         throw new Error('Product not found');
       }
 
-      let newStock: number;
-      const currentStock = product.stockQuantity || 0;
+      let newStockStatus: string;
 
       switch (operation) {
         case 'add':
-          newStock = currentStock + quantity;
+          newStockStatus = quantity > 10 ? 'in_stock' : (quantity > 0 ? 'low_stock' : 'out_of_stock');
           break;
         case 'subtract':
-          newStock = Math.max(0, currentStock - quantity);
+          newStockStatus = 'low_stock';
           break;
         case 'set':
-          newStock = quantity;
+          newStockStatus = quantity > 10 ? 'in_stock' : (quantity > 0 ? 'low_stock' : 'out_of_stock');
           break;
         default:
           throw new Error('Invalid operation');
@@ -235,17 +218,17 @@ class ProductFulfillmentService {
 
       await db.update(products)
         .set({
-          stockQuantity: newStock,
+          stockStatus: newStockStatus,
           updatedAt: new Date()
         })
         .where(eq(products.id, productId));
 
       // Check if low stock alert needed
-      if (newStock <= 10) {
-        await this.sendLowStockAlert(product, newStock);
+      if (newStockStatus === 'low_stock' || newStockStatus === 'out_of_stock') {
+        await this.sendLowStockAlert(product, quantity);
       }
 
-      console.log(`[FULFILLMENT] Updated inventory for product ${productId}: ${newStock}`);
+      console.log(`[FULFILLMENT] Updated inventory for product ${productId}: ${newStockStatus}`);
       return true;
     } catch (error) {
       console.error('[FULFILLMENT] Error updating inventory:', error);
@@ -274,17 +257,13 @@ class ProductFulfillmentService {
         status: order.status,
         paymentStatus: order.paymentStatus,
         trackingNumber: order.trackingNumber,
-        shippingCarrier: order.shippingCarrier,
-        shippedAt: order.shippedAt,
+        carrier: order.carrier,
         deliveredAt: order.deliveredAt,
-        estimatedDeliveryDate: order.estimatedDeliveryDate,
+        estimatedDelivery: order.estimatedDelivery,
         product: {
-          name: order.product.name,
-          sku: order.product.sku
+          name: (order.product as any)?.name
         },
         quantity: order.quantity,
-        customerName: order.customerName,
-        customerEmail: order.customerEmail,
         shippingAddress: order.shippingAddress
       };
     } catch (error) {
@@ -317,25 +296,20 @@ class ProductFulfillmentService {
       // Update order with partner assignment
       await db.update(flowerOrders)
         .set({
-          partnerId: partnerId,
-          status: 'assigned',
-          assignedAt: new Date(),
-          updatedAt: new Date()
+          status: 'assigned'
         })
         .where(eq(flowerOrders.id, orderId));
 
       // Calculate and create commission record
-      const orderAmount = parseFloat(order.totalAmount);
-      const commissionAmount = orderAmount * (partner.commissionRate / 100);
+      const orderAmountValue = parseFloat(order.orderAmount);
+      const commissionAmount = orderAmountValue * (parseFloat(partner.commissionRate) / 100);
 
       await db.insert(flowerCommissions).values({
-        partnerId: partnerId,
+        shopId: partnerId,
         orderId: orderId,
-        orderAmount: orderAmount.toString(),
-        commissionRate: partner.commissionRate.toString(),
+        orderAmount: order.orderAmount,
         commissionAmount: commissionAmount.toString(),
-        status: 'pending',
-        calculatedAt: new Date()
+        commissionRate: partner.commissionRate
       });
 
       // Send order to partner (in production, this would use partner's API)
@@ -356,8 +330,7 @@ class ProductFulfillmentService {
     await db.update(productOrders)
       .set({
         status: 'pending',
-        fulfillmentNotes: 'Insufficient stock - awaiting restock',
-        updatedAt: new Date()
+        internalNotes: 'Insufficient stock - awaiting restock'
       })
       .where(eq(productOrders.id, order.id));
 
@@ -373,15 +346,15 @@ class ProductFulfillmentService {
       where: eq(products.id, order.productId)
     });
 
-    if (product && product.stockQuantity !== null) {
+    if (product) {
       await db.update(products)
         .set({
-          stockQuantity: product.stockQuantity + order.quantity,
+          stockStatus: 'in_stock',
           updatedAt: new Date()
         })
         .where(eq(products.id, product.id));
 
-      console.log(`[FULFILLMENT] Restored ${order.quantity} units to product ${product.id}`);
+      console.log(`[FULFILLMENT] Restored stock for product ${product.id}`);
     }
   }
 
@@ -524,12 +497,13 @@ class ProductFulfillmentService {
       const deliveredOrders = orders.filter(o => o.status === 'delivered').length;
       const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
       
-      const averageFulfillmentTime = orders
-        .filter(o => o.shippedAt && o.createdAt)
-        .reduce((sum, o) => {
-          const time = o.shippedAt!.getTime() - o.createdAt.getTime();
-          return sum + time;
-        }, 0) / shippedOrders || 0;
+      const ordersWithDates = orders.filter(o => o.deliveredAt && o.createdAt);
+      const averageFulfillmentTime = ordersWithDates.length > 0 
+        ? ordersWithDates.reduce((sum, o) => {
+            const time = o.deliveredAt!.getTime() - o.createdAt!.getTime();
+            return sum + time;
+          }, 0) / ordersWithDates.length 
+        : 0;
 
       return {
         totalOrders,

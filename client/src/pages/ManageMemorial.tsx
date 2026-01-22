@@ -811,7 +811,7 @@ function SlideshowSection({ memorialId }: { memorialId: string }) {
   const { toast } = useToast();
 
   // Fetch slideshows
-  const { data: slideshows = [] } = useQuery({
+  const { data: slideshows = [] } = useQuery<any[]>({
     queryKey: [`/api/memorials/${memorialId}/slideshows`],
   });
 

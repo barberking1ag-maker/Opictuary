@@ -22,11 +22,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { Package, ArrowLeft, ArrowRight, Check, Loader2, CreditCard, MapPin, Sparkles, Image as ImageIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Product, Memorial } from "@shared/schema";
+import { handleMobileLogin } from "@/lib/mobileUtils";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// LAZY STRIPE LOADING: Avoid module-level throws that crash the app on startup
+// Stripe is loaded only when needed, preventing white screen issues on mobile
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+const getStripePromise = () => {
+  if (!stripePromise) {
+    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (key) {
+      stripePromise = loadStripe(key);
+    }
+  }
+  return stripePromise;
+};
 
 const shippingSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -279,7 +288,7 @@ export default function ProductCustomize() {
             <CardDescription>Please login to customize and order products.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/api/login'} className="w-full">
+            <Button onClick={() => handleMobileLogin()} className="w-full">
               Login to Continue
             </Button>
           </CardContent>
@@ -1060,7 +1069,7 @@ export default function ProductCustomize() {
                 )}
 
                 {clientSecret && (
-                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <Elements stripe={getStripePromise()} options={{ clientSecret }}>
                     <PaymentForm
                       orderId={pendingOrderId!}
                       clientSecret={clientSecret}
