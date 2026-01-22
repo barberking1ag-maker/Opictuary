@@ -452,7 +452,9 @@ function Router() {
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
         <Route path="/qr-designer" component={CustomQRCodeDesigner} />
+        <Route path="/holiday-timeline" component={HolidayTimeline} />
         <Route path="/holiday-timeline/:memorialId" component={HolidayTimeline} />
+        <Route path="/birthday-celebration" component={BirthdayCelebration} />
         <Route path="/birthday-celebration/:memorialId" component={BirthdayCelebration} />
         <Route path="/olympian-memorial/:athleteId" component={OlympianMemorial} />
         <Route path="/celebrations" component={CelebrationsHub} />
