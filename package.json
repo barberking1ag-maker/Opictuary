@@ -15,7 +15,7 @@
     "@capacitor/android": "^7.4.3",
     "@capacitor/browser": "^7.0.3",
     "@capacitor/camera": "^7.0.2",
-    "@capacitor/cli": "^8.0.1",
+    "@capacitor/cli": "^7.4.5",
     "@capacitor/core": "^7.4.3",
     "@capacitor/haptics": "^7.0.3",
     "@capacitor/ios": "^7.4.3",
