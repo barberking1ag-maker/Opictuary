@@ -91,28 +91,6 @@ import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
 
-// CRITICAL: Hide splash screen IMMEDIATELY on native platforms
-// Without this, the splash screen stays forever causing white/grey screen!
-const hideSplashScreen = async () => {
-  try {
-    // Check if running on native platform
-    if (typeof window !== 'undefined' && 
-        (window as any).Capacitor && 
-        (window as any).Capacitor.isNativePlatform &&
-        (window as any).Capacitor.isNativePlatform()) {
-      // Dynamic import to avoid loading Capacitor on web
-      const { SplashScreen } = await import('@capacitor/splash-screen');
-      await SplashScreen.hide({ fadeOutDuration: 0 });
-      console.log('[Opictuary] Splash screen hidden successfully');
-    }
-  } catch (error) {
-    console.warn('[Opictuary] Could not hide splash screen:', error);
-  }
-};
-
-// Hide splash screen immediately when this module loads (before React mounts)
-hideSplashScreen();
-
 function Router() {
   // From blueprint: javascript_google_analytics - Track page views when routes change
   useAnalytics();
@@ -510,11 +488,6 @@ function Router() {
 }
 
 function App() {
-  // CRITICAL: Hide splash screen immediately after React mounts on native platforms
-  useEffect(() => {
-    hideSplashScreen();
-  }, []);
-  
   // From blueprint: javascript_google_analytics - Initialize Google Analytics when app loads
   useEffect(() => {
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
