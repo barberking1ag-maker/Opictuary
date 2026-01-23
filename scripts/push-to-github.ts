@@ -105,7 +105,8 @@ function getAllFiles(dir: string, baseDir: string = dir): string[] {
       const fullPath = path.join(dir, entry.name);
       const relativePath = path.relative(baseDir, fullPath);
       
-      if (shouldExclude(relativePath) || entry.name.startsWith('.')) {
+      // Allow .github directory but exclude other dot files/folders
+      if (shouldExclude(relativePath) || (entry.name.startsWith('.') && entry.name !== '.github')) {
         continue;
       }
       
