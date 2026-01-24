@@ -11,10 +11,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 17
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
     
     - name: Set up Android SDK
@@ -99,12 +99,10 @@ jobs:
         echo "=== gradle.properties after cleanup ==="
         cat android/gradle.properties
         
-    - name: Fix Java version in all Capacitor modules
+    - name: Verify Java version setup
       run: |
-        # Fix capacitor-android build.gradle
-        find android -name "build.gradle" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} \;
-        find android -name "build.gradle" -exec sed -i 's/VERSION_21/VERSION_17/g' {} \;
-        echo "Fixed Java versions in all build.gradle files"
+        java -version
+        echo "Java 21 is required for Capacitor 6+"
         
     - name: Configure build.gradle with 16KB support
       run: |
@@ -120,8 +118,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012408
-                versionName "2.6.22"
+                versionCode 2026012410
+                versionName "2.6.24"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
@@ -155,8 +153,8 @@ jobs:
             }
             
             compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
+                sourceCompatibility JavaVersion.VERSION_21
+                targetCompatibility JavaVersion.VERSION_21
             }
         }
         
