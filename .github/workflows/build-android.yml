@@ -113,8 +113,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012404
-                versionName "2.6.18"
+                versionCode 2026012405
+                versionName "2.6.19"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
