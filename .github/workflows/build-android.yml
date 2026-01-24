@@ -61,6 +61,11 @@ jobs:
         echo "=== Android index.html ==="
         cat android/app/src/main/assets/public/index.html
       
+    - name: Remove duplicate splash resources
+      run: |
+        find android/app/src/main/res -name "splash.png" -type f -delete
+        echo "Removed duplicate splash.png files"
+      
     - name: Fix SDK version
       run: |
         cat > android/variables.gradle << 'EOF'
