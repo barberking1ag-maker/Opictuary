@@ -55,11 +55,10 @@ jobs:
         run: npm ci --legacy-peer-deps
       
       - name: Build production frontend with all features
-        run: npm run build:client
+        run: npm run build
         env:
           NODE_ENV: production
-          VITE_API_URL: ''
-          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY || 'pk_test_51234567890abcdefghijklmnopqrstuvwxyz' }}
+          VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
       
       - name: Sync Capacitor with Android
         run: npx cap sync android
