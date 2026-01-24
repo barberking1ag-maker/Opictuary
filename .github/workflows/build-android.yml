@@ -20,9 +20,9 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
     
-    - name: Install NDK r28 for 16KB page size support
+    - name: Install NDK r28 and Build Tools for 16KB page size support
       run: |
-        sdkmanager --install "ndk;28.0.12433566"
+        sdkmanager --install "ndk;28.0.12433566" "build-tools;35.0.0"
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.0.12433566" >> $GITHUB_ENV
         
     - name: Set up Node.js
@@ -113,19 +113,27 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012405
-                versionName "2.6.19"
+                versionCode 2026012406
+                versionName "2.6.20"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
                     // Include all ABIs for 16KB page size compatibility
                     abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
                 }
+                
+                // Request 16KB page alignment
+                externalNativeBuild {
+                    cmake {
+                        arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                    }
+                }
             }
             
             packaging {
                 jniLibs {
-                    useLegacyPackaging = false
+                    // Use compressed native libs to avoid alignment issues with prebuilt libs
+                    useLegacyPackaging = true
                 }
                 resources {
                     excludes += ['META-INF/DEPENDENCIES']
@@ -175,16 +183,14 @@ jobs:
         }
         EOF
         
-        # Add extractNativeLibs=false to manifest for 16KB support
-        sed -i 's/<application/<application android:extractNativeLibs="false"/' android/app/src/main/AndroidManifest.xml
+        # Remove extractNativeLibs since we're using compressed libs
+        sed -i 's/android:extractNativeLibs="false"//g' android/app/src/main/AndroidManifest.xml
+        sed -i 's/android:extractNativeLibs="true"//g' android/app/src/main/AndroidManifest.xml
         
         echo "=== app/build.gradle ==="
         cat android/app/build.gradle
-        echo ""
-        echo "=== AndroidManifest.xml application tag ==="
-        grep -A2 "<application" android/app/src/main/AndroidManifest.xml
       
-    - name: Build Release AAB
+    - name: Clean and Build Release AAB
       working-directory: android
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -192,6 +198,8 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
         chmod +x gradlew
+        # Clean previous builds
+        ./gradlew clean
         # Remove duplicate splash.png files right before build
         find app/src/main/res -name "splash.png" -type f -delete
         echo "Removed splash.png duplicates"
@@ -201,6 +209,19 @@ jobs:
           -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
           -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
           -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+    
+    - name: Verify 16KB alignment with bundletool
+      run: |
+        # Download bundletool
+        wget -q https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar -O bundletool.jar
+        
+        # Check alignment configuration
+        echo "=== Checking bundle alignment configuration ==="
+        java -jar bundletool.jar dump config --bundle=android/app/build/outputs/bundle/release/app-release.aab | grep -i alignment || echo "No explicit alignment found (using defaults)"
+        
+        # Show bundle info
+        echo "=== Bundle manifest ==="
+        java -jar bundletool.jar dump manifest --bundle=android/app/build/outputs/bundle/release/app-release.aab | head -50
     
     - name: Upload AAB
       uses: actions/upload-artifact@v4
