@@ -92,14 +92,6 @@ jobs:
         }
         EOF
       
-    - name: Configure gradle.properties for 16KB support
-      run: |
-        cat >> android/gradle.properties << 'EOF'
-        
-        # 16KB page size support
-        android.bundle.enableUncompressedNativeLibs=false
-        EOF
-        
     - name: Configure build.gradle with 16KB support
       run: |
         cat > android/app/build.gradle << 'EOF'
@@ -114,8 +106,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012401
-                versionName "2.6.15"
+                versionCode 2026012402
+                versionName "2.6.16"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
