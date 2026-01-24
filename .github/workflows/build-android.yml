@@ -99,6 +99,13 @@ jobs:
         echo "=== gradle.properties after cleanup ==="
         cat android/gradle.properties
         
+    - name: Fix Java version in all Capacitor modules
+      run: |
+        # Fix capacitor-android build.gradle
+        find android -name "build.gradle" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} \;
+        find android -name "build.gradle" -exec sed -i 's/VERSION_21/VERSION_17/g' {} \;
+        echo "Fixed Java versions in all build.gradle files"
+        
     - name: Configure build.gradle with 16KB support
       run: |
         cat > android/app/build.gradle << 'EOF'
@@ -113,8 +120,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012407
-                versionName "2.6.21"
+                versionCode 2026012408
+                versionName "2.6.22"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
