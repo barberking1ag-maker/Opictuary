@@ -11,10 +11,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 21
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: '17'
         distribution: 'temurin'
     
     - name: Set up Android SDK
@@ -113,8 +113,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012406
-                versionName "2.6.20"
+                versionCode 2026012407
+                versionName "2.6.21"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
@@ -148,8 +148,8 @@ jobs:
             }
             
             compileOptions {
-                sourceCompatibility JavaVersion.VERSION_21
-                targetCompatibility JavaVersion.VERSION_21
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
             }
         }
         
