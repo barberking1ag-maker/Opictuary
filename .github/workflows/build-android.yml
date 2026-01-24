@@ -172,6 +172,9 @@ jobs:
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
         chmod +x gradlew
+        # Remove duplicate splash.png files right before build
+        find app/src/main/res -name "splash.png" -type f -delete
+        echo "Removed splash.png duplicates"
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
         ./gradlew bundleRelease \
           -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
