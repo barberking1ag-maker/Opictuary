@@ -48,11 +48,21 @@ jobs:
         echo "=== Checking for built JS assets ==="
         ls -la dist/public/assets/ || echo "No assets folder"
       
+    - name: Remove splash.png before sync
+      run: |
+        find android/app/src/main/res -name "splash.png" -type f -delete 2>/dev/null || true
+        echo "Pre-sync cleanup done"
+    
     - name: Sync Capacitor
       run: npx cap sync android
       
     - name: Copy assets explicitly
       run: npx cap copy android
+    
+    - name: Remove splash.png after sync
+      run: |
+        find android/app/src/main/res -name "splash.png" -type f -delete 2>/dev/null || true
+        echo "Post-sync cleanup done"
       
     - name: Verify Android assets
       run: |
@@ -60,11 +70,6 @@ jobs:
         ls -la android/app/src/main/assets/public/
         echo "=== Android index.html ==="
         cat android/app/src/main/assets/public/index.html
-      
-    - name: Remove duplicate splash resources
-      run: |
-        find android/app/src/main/res -name "splash.png" -type f -delete
-        echo "Removed duplicate splash.png files"
       
     - name: Fix SDK version
       run: |
