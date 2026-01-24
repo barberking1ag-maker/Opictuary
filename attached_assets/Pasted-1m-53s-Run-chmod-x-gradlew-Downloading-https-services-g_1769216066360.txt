@@ -1,0 +1,311 @@
+1m 53s
+Run chmod +x ./gradlew
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-all.zip
+.....................10%......................20%......................30%......................40%......................50%......................60%......................70%......................80%......................90%......................100%
+Welcome to Gradle 8.11.1!
+Here are the highlights of this release:
+ - Parallel load and store for Configuration Cache
+ - Java compilation errors at the end of the build output
+ - Consolidated report for warnings and deprecations
+For more details see https://docs.gradle.org/8.11.1/release-notes.html
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+> Task :clean UP-TO-DATE
+> Task :app:clean UP-TO-DATE
+> Task :capacitor-android:clean UP-TO-DATE
+> Task :capacitor-browser:clean UP-TO-DATE
+> Task :capacitor-camera:clean UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:clean UP-TO-DATE
+> Task :capacitor-haptics:clean UP-TO-DATE
+> Task :capacitor-mlkit-barcode-scanning:clean UP-TO-DATE
+> Task :capacitor-preferences:clean UP-TO-DATE
+> Task :capacitor-push-notifications:clean UP-TO-DATE
+> Task :capacitor-share:clean UP-TO-DATE
+> Task :capacitor-status-bar:clean UP-TO-DATE
+BUILD SUCCESSFUL in 53s
+12 actionable tasks: 12 up-to-date
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseResValues
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preReleaseBuild UP-TO-DATE
+> Task :capacitor-android:generateReleaseResValues
+> Task :capacitor-android:generateReleaseResources
+> Task :capacitor-android:packageReleaseResources
+> Task :capacitor-browser:preBuild UP-TO-DATE
+> Task :capacitor-browser:preReleaseBuild UP-TO-DATE
+> Task :capacitor-browser:generateReleaseResValues
+> Task :capacitor-browser:generateReleaseResources
+> Task :capacitor-browser:packageReleaseResources
+> Task :capacitor-camera:preBuild UP-TO-DATE
+> Task :capacitor-camera:preReleaseBuild UP-TO-DATE
+> Task :capacitor-camera:generateReleaseResValues
+> Task :capacitor-camera:generateReleaseResources
+> Task :capacitor-camera:packageReleaseResources
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preReleaseBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:generateReleaseResValues
+> Task :capacitor-cordova-android-plugins:generateReleaseResources
+> Task :capacitor-cordova-android-plugins:packageReleaseResources
+> Task :capacitor-haptics:preBuild UP-TO-DATE
+> Task :capacitor-haptics:preReleaseBuild UP-TO-DATE
+> Task :capacitor-haptics:generateReleaseResValues
+> Task :capacitor-haptics:generateReleaseResources
+> Task :capacitor-haptics:packageReleaseResources
+> Task :capacitor-mlkit-barcode-scanning:preBuild UP-TO-DATE
+> Task :capacitor-mlkit-barcode-scanning:preReleaseBuild UP-TO-DATE
+> Task :capacitor-mlkit-barcode-scanning:generateReleaseResValues
+> Task :capacitor-mlkit-barcode-scanning:generateReleaseResources
+> Task :capacitor-mlkit-barcode-scanning:packageReleaseResources
+> Task :capacitor-preferences:preBuild UP-TO-DATE
+> Task :capacitor-preferences:preReleaseBuild UP-TO-DATE
+> Task :capacitor-preferences:generateReleaseResValues
+> Task :capacitor-preferences:generateReleaseResources
+> Task :capacitor-preferences:packageReleaseResources
+> Task :capacitor-push-notifications:preBuild UP-TO-DATE
+> Task :capacitor-push-notifications:preReleaseBuild UP-TO-DATE
+> Task :capacitor-push-notifications:generateReleaseResValues
+> Task :capacitor-push-notifications:generateReleaseResources
+> Task :capacitor-push-notifications:packageReleaseResources
+> Task :capacitor-share:preBuild UP-TO-DATE
+> Task :capacitor-share:preReleaseBuild UP-TO-DATE
+> Task :capacitor-share:generateReleaseResValues
+> Task :capacitor-share:generateReleaseResources
+> Task :capacitor-share:packageReleaseResources
+> Task :capacitor-status-bar:preBuild UP-TO-DATE
+> Task :capacitor-status-bar:preReleaseBuild UP-TO-DATE
+> Task :capacitor-status-bar:generateReleaseResValues
+> Task :capacitor-status-bar:generateReleaseResources
+> Task :capacitor-status-bar:packageReleaseResources
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+ERROR: [drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.png [drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.xml: Resource and asset merger: Duplicate resources
+> Task :app:mergeReleaseResources FAILED
+ERROR: [drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.png [drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.png [drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.png [drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.png [drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.png [drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.png [drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.png [drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.png [drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.png [drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.xml: Resource and asset merger: Duplicate resources
+ERROR: [drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.png [drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.xml: Resource and asset merger: Duplicate resources
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:mergeReleaseResources'.
+> [drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.png	[drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.xml: Error: Duplicate resources
+  [drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.png	[drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.xml: Error: Duplicate resources
+  [drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.png	[drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.xml: Error: Duplicate resources
+  [drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.png	[drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.xml: Error: Duplicate resources
+  [drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.png	[drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.xml: Error: Duplicate resources
+  [drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.png	[drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.xml: Error: Duplicate resources
+  [drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.png	[drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.xml: Error: Duplicate resources
+  [drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.png	[drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.xml: Error: Duplicate resources
+  [drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.png	[drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.xml: Error: Duplicate resources
+  [drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.png	[drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.xml: Error: Duplicate resources
+  [drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.png	[drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.xml: Error: Duplicate resources
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:mergeReleaseResources'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: com.android.build.gradle.tasks.ResourceException: [drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.png	[drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.png	[drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.png	[drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.xml: Error: Duplicate resources
+[drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.png	[drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.png	[drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.png	[drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.png	[drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.png	[drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.png	[drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.xml: Error: Duplicate resources
+[drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.png	[drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.xml: Error: Duplicate resources
+[drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.png	[drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.xml: Error: Duplicate resources
+	at com.android.build.gradle.tasks.MergeResources.doFullTaskAction(MergeResources.kt:328)
+	at com.android.build.gradle.tasks.MergeResources.doTaskAction(MergeResources.kt:357)
+	at com.android.build.gradle.internal.tasks.NewIncrementalTask$taskAction$$inlined$recordTaskAction$1.invoke(BaseTask.kt:82)
+	at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
+	at com.android.build.gradle.internal.tasks.NewIncrementalTask.taskAction(NewIncrementalTask.kt:46)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
+	at org.gradle.internal.Either$Right.fold(Either.java:175)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: [drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.png	[drawable-land-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.png	[drawable-land-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xxxhdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.png	[drawable-port-xxxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxxhdpi/splash.xml: Error: Duplicate resources
+[drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.png	[drawable-port-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-mdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.png	[drawable-port-xxhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xxhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.png	[drawable-land-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-xhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.png	[drawable-land-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-hdpi/splash.xml: Error: Duplicate resources
+[drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.png	[drawable-port-xhdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-xhdpi/splash.xml: Error: Duplicate resources
+[drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.png	[drawable-land-mdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-land-mdpi/splash.xml: Error: Duplicate resources
+[drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.png	[drawable-port-hdpi-v4/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable-port-hdpi/splash.xml: Error: Duplicate resources
+[drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.png	[drawable/splash] /home/runner/work/Opictuary/Opictuary/android/app/src/main/res/drawable/splash.xml: Error: Duplicate resources
+	at com.android.ide.common.resources.DataSet.checkItems(DataSet.java:512)
+	at com.android.ide.common.resources.DataSet.loadFromFiles(DataSet.java:273)
+	at com.android.ide.common.resources.DataSet.loadFromFiles(DataSet.java:243)
+	at com.android.build.gradle.tasks.MergeResources$doFullTaskAction$1$1$1.invoke(MergeResources.kt:278)
+	at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
+	at com.android.build.gradle.tasks.MergeResources.doFullTaskAction(MergeResources.kt:272)
+	... 125 more
+BUILD FAILED in 58s
+34 actionable tasks: 34 executed
+Error: Pr
