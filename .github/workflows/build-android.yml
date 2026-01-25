@@ -118,8 +118,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012413
-                versionName "2.6.27"
+                versionCode 2026012414
+                versionName "2.6.28"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
@@ -137,10 +137,8 @@ jobs:
             
             packaging {
                 jniLibs {
-                    // Use uncompressed native libs with 16KB alignment (AGP 8.5.1+)
+                    // AGP 8.5.1+ handles 16KB alignment automatically for uncompressed libs
                     useLegacyPackaging = false
-                    // Request 16KB page alignment
-                    pageAlignment = 16384
                 }
                 resources {
                     excludes += ['META-INF/DEPENDENCIES']
