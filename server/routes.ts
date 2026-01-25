@@ -104,7 +104,13 @@ import {
   insertTeamMemorialSchema,
   insertAthleticLegacyScoreSchema,
   insertJerseyRetirementSchema,
+  // Family Tree schemas
+  familyTrees,
+  familyTreeLeaves,
+  familyTreeSubscriptions,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 const inviteCodeSchema = z.object({
   inviteCode: z.string().min(1, "Invite code is required"),
@@ -7067,6 +7073,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating family tree connection:', error);
       res.status(500).json({ error: 'Failed to create family tree connection' });
+    }
+  });
+
+  // ============================================
+  // STANDALONE FAMILY TREE API ROUTES
+  // ============================================
+
+  // Get user's family trees
+  app.get("/api/family-trees/my-trees", isAuthenticated, async (req: any, res) => {
+    try {
+      const trees = await db.select().from(familyTrees).where(eq(familyTrees.ownerId, req.user.claims.sub));
+      res.json(trees);
+    } catch (error) {
+      console.error('Error fetching family trees:', error);
+      res.status(500).json({ error: 'Failed to fetch family trees' });
+    }
+  });
+
+  // Get user's family tree subscription
+  app.get("/api/family-trees/subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const subscription = await db.select().from(familyTreeSubscriptions)
+        .where(eq(familyTreeSubscriptions.userId, req.user.claims.sub))
+        .limit(1);
+      res.json(subscription[0] || null);
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      res.status(500).json({ error: 'Failed to fetch subscription' });
+    }
+  });
+
+  // Create a new family tree
+  app.post("/api/family-trees", isAuthenticated, async (req: any, res) => {
+    try {
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const [tree] = await db.insert(familyTrees).values({
+        ...req.body,
+        ownerId: req.user.claims.sub,
+        inviteCode,
+      }).returning();
+      res.status(201).json(tree);
+    } catch (error) {
+      console.error('Error creating family tree:', error);
+      res.status(500).json({ error: 'Failed to create family tree' });
+    }
+  });
+
+  // Get leaves for a family tree
+  app.get("/api/family-trees/:treeId/leaves", isAuthenticated, async (req: any, res) => {
+    try {
+      const leaves = await db.select().from(familyTreeLeaves)
+        .where(eq(familyTreeLeaves.treeId, req.params.treeId));
+      res.json(leaves);
+    } catch (error) {
+      console.error('Error fetching leaves:', error);
+      res.status(500).json({ error: 'Failed to fetch leaves' });
+    }
+  });
+
+  // Add a leaf to a family tree
+  app.post("/api/family-trees/:treeId/leaves", isAuthenticated, async (req: any, res) => {
+    try {
+      const generation = req.body.relationship === 'self' ? 0 :
+        ['parent', 'grandparent'].includes(req.body.relationship) ? -1 :
+        ['child', 'grandchild'].includes(req.body.relationship) ? 1 : 0;
+      
+      const [leaf] = await db.insert(familyTreeLeaves).values({
+        ...req.body,
+        treeId: req.params.treeId,
+        generation,
+        userId: req.body.relationship === 'self' ? req.user.claims.sub : null,
+      }).returning();
+      res.status(201).json(leaf);
+    } catch (error) {
+      console.error('Error adding leaf:', error);
+      res.status(500).json({ error: 'Failed to add leaf' });
     }
   });
 

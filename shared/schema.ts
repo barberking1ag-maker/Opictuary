@@ -3109,6 +3109,132 @@ export const familyTreeConnections = pgTable("family_tree_connections", {
 ]);
 
 // ============================================
+// STANDALONE FAMILY TREE WITH SUBSCRIPTIONS
+// ============================================
+
+// Family Trees - standalone feature with subscription
+export const familyTrees = pgTable("family_trees", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  name: text("name").notNull(), // e.g., "The Johnson Family Tree"
+  description: text("description"),
+  
+  // Tree styling
+  backgroundImage: text("background_image"),
+  treeStyle: text("tree_style").default("classic"), // 'classic', 'modern', 'vintage', 'nature'
+  
+  // Privacy
+  isPublic: boolean("is_public").default(false),
+  inviteCode: varchar("invite_code", { length: 20 }).notNull().unique(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_family_trees_owner").on(table.ownerId),
+  index("idx_family_trees_invite_code").on(table.inviteCode),
+]);
+
+// Family Tree Subscriptions - $9.99/month primary, $5/month family member
+export const familyTreeSubscriptions = pgTable("family_tree_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  treeId: varchar("tree_id").notNull().references(() => familyTrees.id, { onDelete: "cascade" }),
+  
+  // Subscription type
+  subscriptionType: text("subscription_type").notNull().default("primary"), // 'primary' ($9.99/mo) or 'family_member' ($5/mo)
+  
+  // Stripe subscription details
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripePriceId: varchar("stripe_price_id"),
+  
+  // Status
+  status: text("status").notNull().default("inactive"), // 'active', 'inactive', 'cancelled', 'past_due'
+  
+  // Billing
+  billingCycle: text("billing_cycle").default("monthly"), // 'monthly', 'annual' (20% discount)
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  
+  // Access tracking - even after cancellation, content persists but view is gated
+  hasActiveAccess: boolean("has_active_access").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_family_tree_subs_user").on(table.userId),
+  index("idx_family_tree_subs_tree").on(table.treeId),
+  index("idx_family_tree_subs_status").on(table.status),
+]);
+
+// Family Tree Leaves - each person's leaf on the tree
+export const familyTreeLeaves = pgTable("family_tree_leaves", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  treeId: varchar("tree_id").notNull().references(() => familyTrees.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }), // Owner of this leaf
+  
+  // Person info
+  personName: text("person_name").notNull(),
+  profilePhoto: text("profile_photo"),
+  birthDate: text("birth_date"),
+  deathDate: text("death_date"), // null = living person
+  
+  // Position on tree (for visualization)
+  generation: integer("generation").default(0), // 0 = self, -1 = parents, -2 = grandparents, 1 = children
+  positionX: integer("position_x").default(0),
+  positionY: integer("position_y").default(0),
+  
+  // Relationship to tree owner
+  relationship: text("relationship"), // 'self', 'parent', 'child', 'sibling', 'spouse', 'grandparent', etc.
+  
+  // Invitation status for living family members
+  invitedEmail: text("invited_email"),
+  invitationStatus: text("invitation_status").default("pending"), // 'pending', 'accepted', 'declined'
+  invitedAt: timestamp("invited_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_family_tree_leaves_tree").on(table.treeId),
+  index("idx_family_tree_leaves_user").on(table.userId),
+  index("idx_family_tree_leaves_generation").on(table.generation),
+]);
+
+// Family Tree Leaf Content - stories, photos, messages added to each leaf over time
+export const familyTreeLeafContent = pgTable("family_tree_leaf_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leafId: varchar("leaf_id").notNull().references(() => familyTreeLeaves.id, { onDelete: "cascade" }),
+  addedByUserId: varchar("added_by_user_id").references(() => users.id, { onDelete: "set null" }),
+  
+  // Content type
+  contentType: text("content_type").notNull(), // 'story', 'photo', 'video', 'audio', 'future_message', 'document'
+  
+  // Content data
+  title: text("title"),
+  content: text("content"), // Text content for stories
+  mediaUrl: text("media_url"), // URL for photos/videos/audio
+  
+  // Future message scheduling
+  scheduledDeliveryDate: timestamp("scheduled_delivery_date"), // For future messages
+  isDelivered: boolean("is_delivered").default(false),
+  
+  // Order for display
+  displayOrder: integer("display_order").default(0),
+  
+  // Privacy within family
+  visibleToAll: boolean("visible_to_all").default(true), // If false, only visible to specific leaves
+  visibleToLeafIds: text("visible_to_leaf_ids").array(), // Specific leaves that can see this content
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_family_tree_leaf_content_leaf").on(table.leafId),
+  index("idx_family_tree_leaf_content_type").on(table.contentType),
+  index("idx_family_tree_leaf_content_scheduled").on(table.scheduledDeliveryDate),
+]);
+
+// ============================================
 // HOLIDAY MEMORIAL TIMELINE
 // ============================================
 
@@ -3669,10 +3795,27 @@ export type LivingLegacyBucketList = typeof livingLegacyBucketList.$inferSelect;
 export type InsertLivingLegacyMessage = z.infer<typeof insertLivingLegacyMessageSchema>;
 export type LivingLegacyMessage = typeof livingLegacyMessages.$inferSelect;
 
-// Export schemas and types for Family Tree
+// Export schemas and types for Family Tree Connections
 export const insertFamilyTreeConnectionSchema = createInsertSchema(familyTreeConnections).omit({ id: true, createdAt: true });
 export type InsertFamilyTreeConnection = z.infer<typeof insertFamilyTreeConnectionSchema>;
 export type FamilyTreeConnection = typeof familyTreeConnections.$inferSelect;
+
+// Export schemas and types for Standalone Family Trees
+export const insertFamilyTreeSchema = createInsertSchema(familyTrees).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFamilyTree = z.infer<typeof insertFamilyTreeSchema>;
+export type FamilyTree = typeof familyTrees.$inferSelect;
+
+export const insertFamilyTreeSubscriptionSchema = createInsertSchema(familyTreeSubscriptions).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFamilyTreeSubscription = z.infer<typeof insertFamilyTreeSubscriptionSchema>;
+export type FamilyTreeSubscription = typeof familyTreeSubscriptions.$inferSelect;
+
+export const insertFamilyTreeLeafSchema = createInsertSchema(familyTreeLeaves).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFamilyTreeLeaf = z.infer<typeof insertFamilyTreeLeafSchema>;
+export type FamilyTreeLeaf = typeof familyTreeLeaves.$inferSelect;
+
+export const insertFamilyTreeLeafContentSchema = createInsertSchema(familyTreeLeafContent).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFamilyTreeLeafContent = z.infer<typeof insertFamilyTreeLeafContentSchema>;
+export type FamilyTreeLeafContent = typeof familyTreeLeafContent.$inferSelect;
 
 // Export schemas and types for Multi-Faith
 export const insertMultiFaithTemplateSchema = createInsertSchema(multiFaithTemplates).omit({ id: true, createdAt: true, updatedAt: true, usageCount: true });

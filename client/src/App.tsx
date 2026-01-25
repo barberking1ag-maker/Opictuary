@@ -236,6 +236,12 @@ function Router() {
                       <span>Living Legacy</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-family-tree">
+                    <Link href="/family-tree">
+                      <TreeDeciduous className="w-4 h-4 mr-2" />
+                      <span>Family Tree</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-qr-designer">
                     <Link href="/qr-designer">
                       <QrCode className="w-4 h-4 mr-2" />
