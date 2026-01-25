@@ -7,8 +7,8 @@ import { verificationService } from "./verificationService";
 import { storage } from "./storage";
 import { isAuthenticated, isAdmin } from "./replitAuth";
 import { db } from "./db";
-import { familyTrees } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { familyTrees, familyTreeLeaves } from "@shared/schema";
+import { eq, and, isNotNull } from "drizzle-orm";
 
 // Payment schemas
 const createCheckoutSessionSchema = z.object({
@@ -99,6 +99,20 @@ export function registerExtendedRoutes(app: Express) {
         // For primary subscription, user must be tree owner
         if (data.subscriptionTier === 'primary' && tree[0].ownerId !== authenticatedUserId) {
           return res.status(403).json({ error: 'Only tree owner can subscribe as primary' });
+        }
+        
+        // For family subscription, user must have a leaf on this tree (joined via invite code)
+        if (data.subscriptionTier === 'family') {
+          const userLeaf = await db.select().from(familyTreeLeaves)
+            .where(and(
+              eq(familyTreeLeaves.treeId, data.treeId),
+              eq(familyTreeLeaves.userId, authenticatedUserId)
+            ))
+            .limit(1);
+          
+          if (userLeaf.length === 0) {
+            return res.status(403).json({ error: 'You must join this tree first using an invite code before subscribing' });
+          }
         }
         
         // Override userId with authenticated user's ID (don't trust client-provided userId)
