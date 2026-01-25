@@ -89,6 +89,11 @@ jobs:
             androidxJunitVersion = '1.2.1'
             androidxEspressoCoreVersion = '3.6.1'
             cordovaAndroidVersion = '10.1.1'
+            // Fix 16KB page size for ML Kit barcode scanning
+            androidxCameraCamera2Version = '1.5.2'
+            androidxCameraCoreVersion = '1.5.2'
+            androidxCameraLifecycleVersion = '1.5.2'
+            androidxCameraViewVersion = '1.5.2'
         }
         EOF
       
@@ -118,8 +123,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012414
-                versionName "2.6.28"
+                versionCode 2026012415
+                versionName "2.6.29"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
