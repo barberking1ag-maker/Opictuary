@@ -397,6 +397,8 @@ export default function FamilyTree() {
     },
   });
 
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+
   const handleSubscribe = async (type: string, cycle: string) => {
     if (!user) {
       toast({
@@ -405,10 +407,53 @@ export default function FamilyTree() {
       });
       return;
     }
-    toast({
-      title: "Coming Soon",
-      description: "Subscription payments will be available soon!",
-    });
+
+    // Need a tree first - create one if none exists
+    let treeId = activeTree?.id;
+    
+    if (!treeId) {
+      // Will need to create tree first via the dialog
+      toast({
+        title: "Create Your Tree First",
+        description: "Use the 'Create Your Tree' form above to start, then subscribe.",
+      });
+      return;
+    }
+
+    setSubscribeLoading(true);
+    
+    try {
+      const response = await apiRequest("/api/stripe/create-checkout-session", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "family_tree_subscription",
+          treeId,
+          subscriptionTier: type === "primary" ? "primary" : "family",
+          billingPeriod: cycle === "annual" ? "yearly" : "monthly",
+          userId: user.id,
+          successUrl: `${window.location.origin}/family-tree?success=true`,
+          cancelUrl: `${window.location.origin}/family-tree?canceled=true`,
+          customerEmail: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast({
+        title: "Subscription Error",
+        description: "Unable to start subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubscribeLoading(false);
+    }
   };
 
   if (!user) {
@@ -434,7 +479,7 @@ export default function FamilyTree() {
             </Link>
           </div>
         </div>
-        <PricingSection onSubscribe={handleSubscribe} isLoading={false} />
+        <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
       </div>
     );
   }
@@ -508,7 +553,7 @@ export default function FamilyTree() {
             </Dialog>
           </div>
         </div>
-        <PricingSection onSubscribe={handleSubscribe} isLoading={false} />
+        <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
       </div>
     );
   }
@@ -691,7 +736,7 @@ export default function FamilyTree() {
           </TabsContent>
 
           <TabsContent value="settings">
-            <PricingSection onSubscribe={handleSubscribe} isLoading={false} />
+            <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
           </TabsContent>
         </Tabs>
       </div>

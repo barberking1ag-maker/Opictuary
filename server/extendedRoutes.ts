@@ -6,10 +6,13 @@ import { productFulfillmentService } from "./productFulfillmentService";
 import { verificationService } from "./verificationService";
 import { storage } from "./storage";
 import { isAuthenticated, isAdmin } from "./replitAuth";
+import { db } from "./db";
+import { familyTrees } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Payment schemas
 const createCheckoutSessionSchema = z.object({
-  type: z.enum(['donation', 'product', 'flower', 'prison_access', 'celebrity_donation', 'subscription']),
+  type: z.enum(['donation', 'product', 'flower', 'prison_access', 'celebrity_donation', 'subscription', 'family_tree_subscription']),
   memorialId: z.string().optional(),
   fundraiserId: z.string().optional(),
   productId: z.string().optional(),
@@ -21,6 +24,11 @@ const createCheckoutSessionSchema = z.object({
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
   customerEmail: z.string().email().optional(),
+  // Family Tree subscription fields
+  treeId: z.string().optional(),
+  subscriptionTier: z.enum(['primary', 'family']).optional(),
+  billingPeriod: z.enum(['monthly', 'yearly']).optional(),
+  userId: z.string().optional(),
 });
 
 const updateOrderStatusSchema = z.object({
@@ -63,10 +71,40 @@ const verifyHoodMemorialSchema = z.object({
 export function registerExtendedRoutes(app: Express) {
   // ===== PAYMENT ENDPOINTS =====
   
-  // Create Stripe checkout session
-  app.post("/api/stripe/create-checkout-session", async (req, res) => {
+  // Create Stripe checkout session (family tree subscriptions require auth)
+  app.post("/api/stripe/create-checkout-session", async (req: any, res) => {
     try {
       const data = createCheckoutSessionSchema.parse(req.body);
+      
+      // Family tree subscriptions require authentication and authorization
+      if (data.type === 'family_tree_subscription') {
+        // Check if user is authenticated
+        if (!req.user?.claims?.sub) {
+          return res.status(401).json({ error: 'Authentication required for family tree subscription' });
+        }
+        
+        const authenticatedUserId = req.user.claims.sub;
+        
+        // Validate treeId exists and user has access
+        if (!data.treeId) {
+          return res.status(400).json({ error: 'Tree ID is required for family tree subscription' });
+        }
+        
+        const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, data.treeId)).limit(1);
+        
+        if (tree.length === 0) {
+          return res.status(404).json({ error: 'Family tree not found' });
+        }
+        
+        // For primary subscription, user must be tree owner
+        if (data.subscriptionTier === 'primary' && tree[0].ownerId !== authenticatedUserId) {
+          return res.status(403).json({ error: 'Only tree owner can subscribe as primary' });
+        }
+        
+        // Override userId with authenticated user's ID (don't trust client-provided userId)
+        data.userId = authenticatedUserId;
+      }
+      
       const session = await paymentProcessor.createCheckoutSession(data);
       
       res.json({ 

@@ -9,7 +9,9 @@ import {
   flowerOrders,
   prisonPayments,
   celebrityDonations,
-  partnerCommissions
+  partnerCommissions,
+  familyTreeSubscriptions,
+  familyTrees
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -35,7 +37,7 @@ const PLATFORM_FEE_PERCENTAGE = 0.10;
 const PRISON_ACCESS_FEE = 50.00; // $50 for prison access
 
 export interface CreateCheckoutSessionData {
-  type: 'donation' | 'product' | 'flower' | 'prison_access' | 'celebrity_donation' | 'subscription';
+  type: 'donation' | 'product' | 'flower' | 'prison_access' | 'celebrity_donation' | 'subscription' | 'family_tree_subscription';
   memorialId?: string;
   fundraiserId?: string;
   productId?: string;
@@ -48,7 +50,24 @@ export interface CreateCheckoutSessionData {
   cancelUrl: string;
   customerEmail?: string;
   metadata?: Record<string, string>;
+  // Family Tree specific
+  treeId?: string;
+  subscriptionTier?: 'primary' | 'family';
+  billingPeriod?: 'monthly' | 'yearly';
+  userId?: string;
 }
+
+// Family Tree subscription pricing
+const FAMILY_TREE_PRICING = {
+  primary: {
+    monthly: 999, // $9.99 in cents
+    yearly: 9590, // $95.90 in cents (20% discount from $119.88)
+  },
+  family: {
+    monthly: 500, // $5.00 in cents
+    yearly: 4800, // $48.00 in cents (20% discount from $60.00)
+  },
+};
 
 export interface ProcessWebhookData {
   signature: string;
@@ -220,20 +239,66 @@ class PaymentProcessor {
           };
           break;
 
+        case 'family_tree_subscription':
+          if (!data.treeId || !data.subscriptionTier || !data.billingPeriod || !data.userId) {
+            throw new Error('Tree ID, tier, billing period, and user ID required for family tree subscription');
+          }
+
+          const tierPricing = FAMILY_TREE_PRICING[data.subscriptionTier];
+          const priceAmount = tierPricing[data.billingPeriod];
+          const tierLabel = data.subscriptionTier === 'primary' ? 'Primary Creator' : 'Family Member';
+          const periodLabel = data.billingPeriod === 'yearly' ? 'Annual' : 'Monthly';
+
+          lineItems = [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Family Tree ${tierLabel} Subscription`,
+                description: `${periodLabel} access to your family tree legacy platform`,
+              },
+              unit_amount: priceAmount,
+              recurring: {
+                interval: data.billingPeriod === 'yearly' ? 'year' : 'month',
+              },
+            },
+            quantity: 1,
+          }];
+          break;
+
         default:
           throw new Error(`Invalid payment type: ${type}`);
       }
 
       // Create the checkout session
-      const session = await stripe.checkout.sessions.create({
+      const isSubscription = type === 'subscription' || type === 'family_tree_subscription';
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
         payment_method_types: ['card'],
         line_items: lineItems,
-        mode: type === 'subscription' ? 'subscription' : 'payment',
+        mode: isSubscription ? 'subscription' : 'payment',
         success_url: successUrl,
         cancel_url: cancelUrl,
         customer_email: customerEmail,
-        payment_intent_data: type !== 'subscription' ? paymentIntentData : undefined,
-      });
+      };
+
+      // Add payment intent data for non-subscription payments
+      if (!isSubscription && paymentIntentData) {
+        sessionParams.payment_intent_data = paymentIntentData;
+      }
+
+      // Add subscription metadata for family tree subscriptions
+      if (type === 'family_tree_subscription') {
+        sessionParams.subscription_data = {
+          metadata: {
+            type: 'family_tree_subscription',
+            treeId: data.treeId || '',
+            userId: data.userId || '',
+            tier: data.subscriptionTier || '',
+            billingPeriod: data.billingPeriod || '',
+          },
+        };
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
       return session;
     } catch (error) {
@@ -486,7 +551,59 @@ class PaymentProcessor {
    */
   private async handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     console.log(`[PAYMENT PROCESSOR] Subscription updated: ${subscription.id}`);
-    // Update subscription status in database
+    
+    const metadata = subscription.metadata;
+    
+    // Handle Family Tree subscriptions
+    if (metadata.type === 'family_tree_subscription') {
+      const { treeId, userId, tier, billingPeriod } = metadata;
+      
+      if (!treeId || !userId) {
+        console.warn('[PAYMENT PROCESSOR] Missing treeId or userId in subscription metadata');
+        return;
+      }
+
+      // Check if subscription record exists
+      const existing = await db.select().from(familyTreeSubscriptions)
+        .where(and(
+          eq(familyTreeSubscriptions.userId, userId),
+          eq(familyTreeSubscriptions.treeId, treeId)
+        ))
+        .limit(1);
+
+      // Get current period end from subscription items
+      const subAny = subscription as any;
+      const currentPeriodEnd = subAny.current_period_end 
+        ? new Date(subAny.current_period_end * 1000) 
+        : new Date();
+        
+      const subscriptionData = {
+        userId,
+        treeId,
+        subscriptionType: tier === 'family' ? 'family_member' : 'primary',
+        status: subscription.status === 'active' ? 'active' : 'inactive',
+        billingCycle: billingPeriod === 'yearly' ? 'annual' : 'monthly',
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id,
+        currentPeriodEnd,
+        hasActiveAccess: subscription.status === 'active',
+      };
+
+      if (existing.length > 0) {
+        // Update existing subscription
+        await db.update(familyTreeSubscriptions)
+          .set({
+            ...subscriptionData,
+            updatedAt: new Date(),
+          })
+          .where(eq(familyTreeSubscriptions.id, existing[0].id));
+        console.log(`[PAYMENT PROCESSOR] Updated family tree subscription for user ${userId}`);
+      } else {
+        // Create new subscription record
+        await db.insert(familyTreeSubscriptions).values(subscriptionData);
+        console.log(`[PAYMENT PROCESSOR] Created family tree subscription for user ${userId}`);
+      }
+    }
   }
 
   /**
@@ -494,7 +611,27 @@ class PaymentProcessor {
    */
   private async handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     console.log(`[PAYMENT PROCESSOR] Subscription canceled: ${subscription.id}`);
-    // Update subscription status to canceled
+    
+    const metadata = subscription.metadata;
+    
+    // Handle Family Tree subscriptions
+    if (metadata.type === 'family_tree_subscription') {
+      const { userId, treeId } = metadata;
+      
+      if (userId && treeId) {
+        await db.update(familyTreeSubscriptions)
+          .set({
+            status: 'cancelled',
+            hasActiveAccess: false,
+            updatedAt: new Date(),
+          })
+          .where(and(
+            eq(familyTreeSubscriptions.userId, userId),
+            eq(familyTreeSubscriptions.treeId, treeId)
+          ));
+        console.log(`[PAYMENT PROCESSOR] Canceled family tree subscription for user ${userId}`);
+      }
+    }
   }
 
   /**
