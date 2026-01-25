@@ -77,7 +77,7 @@ jobs:
         ext {
             minSdkVersion = 22
             compileSdkVersion = 35
-            targetSdkVersion = 34
+            targetSdkVersion = 35
             androidxActivityVersion = '1.9.2'
             androidxAppCompatVersion = '1.7.0'
             androidxCoordinatorLayoutVersion = '1.2.0'
@@ -118,8 +118,8 @@ jobs:
                 applicationId "com.opictuary.app"
                 minSdkVersion rootProject.ext.minSdkVersion
                 targetSdkVersion rootProject.ext.targetSdkVersion
-                versionCode 2026012412
-                versionName "2.6.26"
+                versionCode 2026012413
+                versionName "2.6.27"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
                 
                 ndk {
@@ -137,8 +137,10 @@ jobs:
             
             packaging {
                 jniLibs {
-                    // Use compressed native libs to avoid alignment issues with prebuilt libs
-                    useLegacyPackaging = true
+                    // Use uncompressed native libs with 16KB alignment (AGP 8.5.1+)
+                    useLegacyPackaging = false
+                    // Request 16KB page alignment
+                    pageAlignment = 16384
                 }
                 resources {
                     excludes += ['META-INF/DEPENDENCIES']
