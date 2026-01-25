@@ -65,7 +65,19 @@ const leafFormSchema = z.object({
 type TreeFormData = z.infer<typeof treeFormSchema>;
 type LeafFormData = z.infer<typeof leafFormSchema>;
 
-function TreeVisualization({ leaves, hasAccess }: { leaves: FamilyTreeLeaf[]; hasAccess: boolean }) {
+interface LeafContent {
+  id: string;
+  leafId: string;
+  contentType: string;
+  title?: string;
+  content?: string;
+  mediaUrl?: string;
+  scheduledDeliveryDate?: string;
+  isDelivered?: boolean;
+  createdAt?: string;
+}
+
+function TreeVisualization({ leaves, hasAccess, onLeafClick }: { leaves: FamilyTreeLeaf[]; hasAccess: boolean; onLeafClick?: (leaf: FamilyTreeLeaf) => void }) {
   const groupedByGeneration = leaves.reduce((acc, leaf) => {
     const gen = leaf.generation || 0;
     if (!acc[gen]) acc[gen] = [];
@@ -105,7 +117,9 @@ function TreeVisualization({ leaves, hasAccess }: { leaves: FamilyTreeLeaf[]; ha
             {groupedByGeneration[generation].map((leaf) => (
               <div 
                 key={leaf.id} 
-                className="relative group"
+                className="relative group cursor-pointer"
+                onClick={() => hasAccess && onLeafClick?.(leaf)}
+                data-testid={`leaf-card-${leaf.id}`}
               >
                 <div className={`
                   flex flex-col items-center p-4 rounded-2xl transition-all
@@ -136,6 +150,10 @@ function TreeVisualization({ leaves, hasAccess }: { leaves: FamilyTreeLeaf[]; ha
                       Invited
                     </Badge>
                   )}
+                  
+                  {hasAccess && (
+                    <p className="text-xs text-muted-foreground mt-2">Click to view</p>
+                  )}
                 </div>
                 
                 {!hasAccess && (
@@ -152,7 +170,319 @@ function TreeVisualization({ leaves, hasAccess }: { leaves: FamilyTreeLeaf[]; ha
   );
 }
 
-function PricingSection({ onSubscribe, isLoading }: { onSubscribe: (type: string, cycle: string) => void; isLoading: boolean }) {
+const contentFormSchema = z.object({
+  contentType: z.enum(['story', 'photo', 'video', 'future_message']),
+  title: z.string().min(1, "Title is required"),
+  content: z.string().optional(),
+  mediaUrl: z.string().optional(),
+  scheduledDeliveryDate: z.string().optional(),
+});
+
+type ContentFormData = z.infer<typeof contentFormSchema>;
+
+function LeafContentDialog({ 
+  leaf, 
+  open, 
+  onOpenChange 
+}: { 
+  leaf: FamilyTreeLeaf | null; 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  
+  const form = useForm<ContentFormData>({
+    resolver: zodResolver(contentFormSchema),
+    defaultValues: {
+      contentType: 'story',
+      title: '',
+      content: '',
+      mediaUrl: '',
+    },
+  });
+
+  const { data: contents = [], isLoading } = useQuery<LeafContent[]>({
+    queryKey: ['/api/family-trees/leaves', leaf?.id, 'content'],
+    enabled: !!leaf?.id && open,
+  });
+
+  const addContentMutation = useMutation({
+    mutationFn: async (data: ContentFormData) => {
+      const res = await apiRequest(`/api/family-trees/leaves/${leaf?.id}/content`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/family-trees/leaves', leaf?.id, 'content'] });
+      toast({ title: "Content Added", description: "Your content has been saved to this leaf." });
+      setShowAddForm(false);
+      form.reset();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add content.", variant: "destructive" });
+    },
+  });
+
+  const deleteContentMutation = useMutation({
+    mutationFn: async (contentId: string) => {
+      await apiRequest(`/api/family-trees/leaves/${leaf?.id}/content/${contentId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/family-trees/leaves', leaf?.id, 'content'] });
+      toast({ title: "Deleted", description: "Content has been removed." });
+    },
+  });
+
+  if (!leaf) return null;
+
+  const onSubmit = (data: ContentFormData) => {
+    addContentMutation.mutate(data);
+  };
+
+  const contentTypeIcons: Record<string, any> = {
+    story: MessageSquare,
+    photo: Image,
+    video: Image,
+    future_message: Calendar,
+    document: MessageSquare,
+    audio: MessageSquare,
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={leaf.profilePhoto || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {leaf.personName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <span>{leaf.personName}</span>
+              <p className="text-sm font-normal text-muted-foreground">
+                {relationshipTypes.find(r => r.value === leaf.relationship)?.label}
+                {leaf.birthDate && ` • Born ${leaf.birthDate}`}
+              </p>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Stories & Memories</h3>
+            <Button 
+              size="sm" 
+              onClick={() => setShowAddForm(!showAddForm)}
+              data-testid="button-add-content"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Content
+            </Button>
+          </div>
+
+          {showAddForm && (
+            <Card className="p-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="contentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Content Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-content-type">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="story">Story / Memory</SelectItem>
+                            <SelectItem value="photo">Photo</SelectItem>
+                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="future_message">Future Message</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Give this memory a title" data-testid="input-content-title" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('contentType') === 'story' && (
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Story</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              placeholder="Share a story or memory..." 
+                              className="min-h-[120px]"
+                              data-testid="textarea-content"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {(form.watch('contentType') === 'photo' || form.watch('contentType') === 'video') && (
+                    <FormField
+                      control={form.control}
+                      name="mediaUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Media URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://..." data-testid="input-media-url" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {form.watch('contentType') === 'future_message' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Message</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                {...field} 
+                                placeholder="Write a message to be delivered in the future..." 
+                                className="min-h-[100px]"
+                                data-testid="textarea-future-message"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="scheduledDeliveryDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Delivery Date</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="date" data-testid="input-delivery-date" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={addContentMutation.isPending} data-testid="button-save-content">
+                      {addContentMutation.isPending ? "Saving..." : "Save Content"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </Card>
+          )}
+
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading content...</div>
+          ) : contents.length === 0 ? (
+            <Card className="p-8 text-center">
+              <Sparkles className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h4 className="font-medium mb-2">No content yet</h4>
+              <p className="text-sm text-muted-foreground">
+                Add stories, photos, and memories to preserve this person's legacy.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {contents.map((item) => {
+                const IconComponent = contentTypeIcons[item.contentType] || MessageSquare;
+                return (
+                  <Card key={item.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="font-medium">{item.title}</h4>
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {item.contentType.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        {item.content && (
+                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
+                            {item.content}
+                          </p>
+                        )}
+                        {item.mediaUrl && (
+                          <img 
+                            src={item.mediaUrl} 
+                            alt={item.title} 
+                            className="mt-2 rounded-lg max-h-48 object-cover"
+                          />
+                        )}
+                        {item.scheduledDeliveryDate && (
+                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Scheduled for {new Date(item.scheduledDeliveryDate).toLocaleDateString()}
+                            {item.isDelivered && <Badge variant="secondary" className="ml-2">Delivered</Badge>}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteContentMutation.mutate(item.id)}
+                        data-testid={`button-delete-content-${item.id}`}
+                      >
+                        <span className="text-destructive">×</span>
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PricingSection({ onSubscribe, onJoinTree, isLoading }: { onSubscribe: (type: string, cycle: string) => void; onJoinTree: () => void; isLoading: boolean }) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   return (
@@ -289,6 +619,7 @@ function PricingSection({ onSubscribe, isLoading }: { onSubscribe: (type: string
               variant="outline" 
               className="w-full"
               disabled={isLoading}
+              onClick={onJoinTree}
               data-testid="button-subscribe-family"
             >
               Join with Invite Code
@@ -305,9 +636,168 @@ function PricingSection({ onSubscribe, isLoading }: { onSubscribe: (type: string
   );
 }
 
+function JoinTreeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { toast } = useToast();
+  const [inviteCode, setInviteCode] = useState("");
+  const [foundTree, setFoundTree] = useState<FamilyTreeType | null>(null);
+  const [joinForm, setJoinForm] = useState({ personName: "", relationship: "sibling", birthDate: "" });
+
+  const lookupMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const res = await apiRequest("/api/family-trees/join", {
+        method: "POST",
+        body: JSON.stringify({ inviteCode: code }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to find tree");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setFoundTree(data.tree);
+      toast({ title: "Tree Found!", description: `You can now join "${data.tree.name}"` });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const joinMutation = useMutation({
+    mutationFn: async () => {
+      if (!foundTree) throw new Error("No tree selected");
+      const res = await apiRequest(`/api/family-trees/${foundTree.id}/join-as-leaf`, {
+        method: "POST",
+        body: JSON.stringify(joinForm),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to join");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/family-trees/my-trees"] });
+      toast({ title: "Welcome!", description: "You've joined the family tree!" });
+      onOpenChange(false);
+      setFoundTree(null);
+      setInviteCode("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Join a Family Tree</DialogTitle>
+          <DialogDescription>
+            Enter the invite code shared by a family member to join their tree.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {!foundTree ? (
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="invite-code">Invite Code</Label>
+              <Input
+                id="invite-code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="Enter 8-character code"
+                className="font-mono text-lg tracking-widest"
+                maxLength={8}
+                data-testid="input-invite-code"
+              />
+            </div>
+            <Button 
+              onClick={() => lookupMutation.mutate(inviteCode)}
+              disabled={inviteCode.length < 4 || lookupMutation.isPending}
+              className="w-full"
+              data-testid="button-lookup-tree"
+            >
+              {lookupMutation.isPending ? "Looking up..." : "Find Tree"}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4 py-4">
+            <Card className="p-4 bg-green-500/10 border-green-500/30">
+              <div className="flex items-center gap-3">
+                <TreeDeciduous className="w-8 h-8 text-green-600" />
+                <div>
+                  <h3 className="font-semibold">{foundTree.name}</h3>
+                  <p className="text-sm text-muted-foreground">{foundTree.description || "A family legacy"}</p>
+                </div>
+              </div>
+            </Card>
+            
+            <div>
+              <Label htmlFor="join-name">Your Name</Label>
+              <Input
+                id="join-name"
+                value={joinForm.personName}
+                onChange={(e) => setJoinForm(f => ({ ...f, personName: e.target.value }))}
+                placeholder="Your full name"
+                data-testid="input-join-name"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="join-relationship">Your Relationship to Tree Creator</Label>
+              <Select 
+                value={joinForm.relationship} 
+                onValueChange={(v) => setJoinForm(f => ({ ...f, relationship: v }))}
+              >
+                <SelectTrigger data-testid="select-join-relationship">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {relationshipTypes.filter(r => r.value !== 'self').map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="join-birthdate">Birth Date (optional)</Label>
+              <Input
+                id="join-birthdate"
+                type="date"
+                value={joinForm.birthDate}
+                onChange={(e) => setJoinForm(f => ({ ...f, birthDate: e.target.value }))}
+                data-testid="input-join-birthdate"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => joinMutation.mutate()}
+                disabled={!joinForm.personName || joinMutation.isPending}
+                className="flex-1"
+                data-testid="button-join-tree"
+              >
+                {joinMutation.isPending ? "Joining..." : "Join Tree"}
+              </Button>
+              <Button variant="outline" onClick={() => setFoundTree(null)}>
+                Back
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function FamilyTree() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showAddLeafDialog, setShowAddLeafDialog] = useState(false);
+  const [selectedLeaf, setSelectedLeaf] = useState<FamilyTreeLeaf | null>(null);
+  const [showLeafDialog, setShowLeafDialog] = useState(false);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
   const { toast } = useToast();
 
   const { data: user } = useQuery<User>({
@@ -479,7 +969,7 @@ export default function FamilyTree() {
             </Link>
           </div>
         </div>
-        <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
+        <PricingSection onSubscribe={handleSubscribe} onJoinTree={() => setShowJoinDialog(true)} isLoading={subscribeLoading} />
       </div>
     );
   }
@@ -553,7 +1043,7 @@ export default function FamilyTree() {
             </Dialog>
           </div>
         </div>
-        <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
+        <PricingSection onSubscribe={handleSubscribe} onJoinTree={() => setShowJoinDialog(true)} isLoading={subscribeLoading} />
       </div>
     );
   }
@@ -694,7 +1184,14 @@ export default function FamilyTree() {
           <TabsContent value="tree">
             <Card>
               <CardContent className="pt-6">
-                <TreeVisualization leaves={leaves} hasAccess={hasActiveSubscription || leaves.length <= 3} />
+                <TreeVisualization 
+                  leaves={leaves} 
+                  hasAccess={hasActiveSubscription || leaves.length <= 3}
+                  onLeafClick={(leaf) => {
+                    setSelectedLeaf(leaf);
+                    setShowLeafDialog(true);
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -736,10 +1233,21 @@ export default function FamilyTree() {
           </TabsContent>
 
           <TabsContent value="settings">
-            <PricingSection onSubscribe={handleSubscribe} isLoading={subscribeLoading} />
+            <PricingSection onSubscribe={handleSubscribe} onJoinTree={() => setShowJoinDialog(true)} isLoading={subscribeLoading} />
           </TabsContent>
         </Tabs>
       </div>
+
+      <LeafContentDialog 
+        leaf={selectedLeaf}
+        open={showLeafDialog}
+        onOpenChange={setShowLeafDialog}
+      />
+
+      <JoinTreeDialog
+        open={showJoinDialog}
+        onOpenChange={setShowJoinDialog}
+      />
     </div>
   );
 }

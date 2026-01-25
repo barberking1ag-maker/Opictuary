@@ -108,6 +108,7 @@ import {
   familyTrees,
   familyTreeLeaves,
   familyTreeSubscriptions,
+  familyTreeLeafContent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -7187,6 +7188,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('Error adding leaf:', error);
       res.status(500).json({ error: 'Failed to add leaf' });
+    }
+  });
+
+  // Join a family tree using invite code
+  app.post("/api/family-trees/join", isAuthenticated, async (req: any, res) => {
+    try {
+      const { inviteCode } = req.body;
+      
+      if (!inviteCode) {
+        return res.status(400).json({ error: 'Invite code is required' });
+      }
+
+      // Find tree by invite code
+      const tree = await db.select().from(familyTrees).where(eq(familyTrees.inviteCode, inviteCode.toUpperCase())).limit(1);
+      
+      if (tree.length === 0) {
+        return res.status(404).json({ error: 'Invalid invite code' });
+      }
+
+      // Check if user already has a leaf on this tree
+      const existingLeaf = await db.select().from(familyTreeLeaves)
+        .where(eq(familyTreeLeaves.treeId, tree[0].id))
+        .limit(1);
+      
+      const userLeaf = existingLeaf.find(l => l.userId === req.user.claims.sub);
+      if (userLeaf) {
+        return res.status(400).json({ error: 'You are already part of this family tree' });
+      }
+
+      res.json({ tree: tree[0], message: 'Tree found! You can now add yourself as a leaf.' });
+    } catch (error) {
+      console.error('Error joining family tree:', error);
+      res.status(500).json({ error: 'Failed to join family tree' });
+    }
+  });
+
+  // Add self as a leaf to a family tree (for invited members)
+  app.post("/api/family-trees/:treeId/join-as-leaf", isAuthenticated, async (req: any, res) => {
+    try {
+      const treeId = req.params.treeId;
+      const { personName, relationship, birthDate } = req.body;
+      
+      if (!personName || !relationship) {
+        return res.status(400).json({ error: 'Name and relationship are required' });
+      }
+
+      // Verify tree exists
+      const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, treeId)).limit(1);
+      if (tree.length === 0) {
+        return res.status(404).json({ error: 'Family tree not found' });
+      }
+
+      // Check if user already has a leaf on this tree
+      const existingLeaves = await db.select().from(familyTreeLeaves)
+        .where(eq(familyTreeLeaves.treeId, treeId));
+      
+      const userLeaf = existingLeaves.find(l => l.userId === req.user.claims.sub);
+      if (userLeaf) {
+        return res.status(400).json({ error: 'You already have a leaf on this tree' });
+      }
+
+      const generation = relationship === 'self' ? 0 :
+        ['parent', 'grandparent'].includes(relationship) ? -1 :
+        ['child', 'grandchild'].includes(relationship) ? 1 : 0;
+
+      const [leaf] = await db.insert(familyTreeLeaves).values({
+        treeId,
+        userId: req.user.claims.sub,
+        personName,
+        relationship,
+        birthDate,
+        generation,
+        invitationStatus: 'accepted',
+      }).returning();
+
+      res.status(201).json(leaf);
+    } catch (error) {
+      console.error('Error joining as leaf:', error);
+      res.status(500).json({ error: 'Failed to join as leaf' });
+    }
+  });
+
+  // Get tree invite code (owner only)
+  app.get("/api/family-trees/:treeId/invite-code", isAuthenticated, async (req: any, res) => {
+    try {
+      const isOwner = await verifyTreeOwnership(req.params.treeId, req.user.claims.sub);
+      if (!isOwner) {
+        return res.status(403).json({ error: 'Only tree owner can view invite code' });
+      }
+      
+      const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, req.params.treeId)).limit(1);
+      if (tree.length === 0) {
+        return res.status(404).json({ error: 'Tree not found' });
+      }
+      
+      res.json({ inviteCode: tree[0].inviteCode });
+    } catch (error) {
+      console.error('Error fetching invite code:', error);
+      res.status(500).json({ error: 'Failed to fetch invite code' });
+    }
+  });
+
+  // ============================================
+  // FAMILY TREE LEAF CONTENT API ROUTES
+  // ============================================
+
+  const createLeafContentSchema = z.object({
+    contentType: z.enum(['story', 'photo', 'video', 'audio', 'future_message', 'document']),
+    title: z.string().optional(),
+    content: z.string().optional(),
+    mediaUrl: z.string().optional(),
+    scheduledDeliveryDate: z.string().optional(),
+    visibleToAll: z.boolean().optional().default(true),
+  });
+
+  // Helper to verify leaf access (user owns the leaf or is tree owner)
+  async function verifyLeafAccess(leafId: string, userId: string): Promise<boolean> {
+    const leaf = await db.select().from(familyTreeLeaves).where(eq(familyTreeLeaves.id, leafId)).limit(1);
+    if (leaf.length === 0) return false;
+    
+    // Check if user owns the leaf
+    if (leaf[0].userId === userId) return true;
+    
+    // Check if user owns the tree
+    const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, leaf[0].treeId)).limit(1);
+    return tree.length > 0 && tree[0].ownerId === userId;
+  }
+
+  // Get content for a leaf
+  app.get("/api/family-trees/leaves/:leafId/content", isAuthenticated, async (req: any, res) => {
+    try {
+      const hasAccess = await verifyLeafAccess(req.params.leafId, req.user.claims.sub);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied to this leaf' });
+      }
+      
+      const content = await db.select().from(familyTreeLeafContent)
+        .where(eq(familyTreeLeafContent.leafId, req.params.leafId));
+      res.json(content);
+    } catch (error) {
+      console.error('Error fetching leaf content:', error);
+      res.status(500).json({ error: 'Failed to fetch leaf content' });
+    }
+  });
+
+  // Add content to a leaf
+  app.post("/api/family-trees/leaves/:leafId/content", isAuthenticated, async (req: any, res) => {
+    try {
+      const hasAccess = await verifyLeafAccess(req.params.leafId, req.user.claims.sub);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied to this leaf' });
+      }
+      
+      const validatedData = createLeafContentSchema.parse(req.body);
+      
+      const [contentItem] = await db.insert(familyTreeLeafContent).values({
+        leafId: req.params.leafId,
+        addedByUserId: req.user.claims.sub,
+        contentType: validatedData.contentType,
+        title: validatedData.title,
+        content: validatedData.content,
+        mediaUrl: validatedData.mediaUrl,
+        scheduledDeliveryDate: validatedData.scheduledDeliveryDate ? new Date(validatedData.scheduledDeliveryDate) : null,
+        visibleToAll: validatedData.visibleToAll,
+      }).returning();
+      
+      res.status(201).json(contentItem);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      console.error('Error adding leaf content:', error);
+      res.status(500).json({ error: 'Failed to add leaf content' });
+    }
+  });
+
+  // Delete leaf content
+  app.delete("/api/family-trees/leaves/:leafId/content/:contentId", isAuthenticated, async (req: any, res) => {
+    try {
+      const hasAccess = await verifyLeafAccess(req.params.leafId, req.user.claims.sub);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied to this leaf' });
+      }
+      
+      await db.delete(familyTreeLeafContent)
+        .where(eq(familyTreeLeafContent.id, req.params.contentId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting leaf content:', error);
+      res.status(500).json({ error: 'Failed to delete leaf content' });
     }
   });
 
