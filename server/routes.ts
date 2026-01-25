@@ -7080,6 +7080,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // STANDALONE FAMILY TREE API ROUTES
   // ============================================
 
+  // Validation schemas for family trees
+  const createFamilyTreeSchema = z.object({
+    name: z.string().min(1, "Family name is required"),
+    description: z.string().optional(),
+  });
+
+  const createFamilyTreeLeafSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    relationship: z.string().min(1, "Relationship is required"),
+    birthDate: z.string().optional(),
+    deathDate: z.string().optional(),
+    photoUrl: z.string().optional(),
+    bio: z.string().optional(),
+  });
+
+  // Helper to verify tree ownership
+  async function verifyTreeOwnership(treeId: string, userId: string): Promise<boolean> {
+    const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, parseInt(treeId))).limit(1);
+    return tree.length > 0 && tree[0].ownerId === userId;
+  }
+
   // Get user's family trees
   app.get("/api/family-trees/my-trees", isAuthenticated, async (req: any, res) => {
     try {
@@ -7107,24 +7128,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new family tree
   app.post("/api/family-trees", isAuthenticated, async (req: any, res) => {
     try {
+      const validatedData = createFamilyTreeSchema.parse(req.body);
       const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
       const [tree] = await db.insert(familyTrees).values({
-        ...req.body,
+        ...validatedData,
         ownerId: req.user.claims.sub,
         inviteCode,
       }).returning();
       res.status(201).json(tree);
     } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
       console.error('Error creating family tree:', error);
       res.status(500).json({ error: 'Failed to create family tree' });
     }
   });
 
-  // Get leaves for a family tree
+  // Get leaves for a family tree (owner only)
   app.get("/api/family-trees/:treeId/leaves", isAuthenticated, async (req: any, res) => {
     try {
+      const isOwner = await verifyTreeOwnership(req.params.treeId, req.user.claims.sub);
+      if (!isOwner) {
+        return res.status(403).json({ error: 'Access denied to this family tree' });
+      }
       const leaves = await db.select().from(familyTreeLeaves)
-        .where(eq(familyTreeLeaves.treeId, req.params.treeId));
+        .where(eq(familyTreeLeaves.treeId, parseInt(req.params.treeId)));
       res.json(leaves);
     } catch (error) {
       console.error('Error fetching leaves:', error);
@@ -7132,21 +7161,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a leaf to a family tree
+  // Add a leaf to a family tree (owner only)
   app.post("/api/family-trees/:treeId/leaves", isAuthenticated, async (req: any, res) => {
     try {
-      const generation = req.body.relationship === 'self' ? 0 :
-        ['parent', 'grandparent'].includes(req.body.relationship) ? -1 :
-        ['child', 'grandchild'].includes(req.body.relationship) ? 1 : 0;
+      const isOwner = await verifyTreeOwnership(req.params.treeId, req.user.claims.sub);
+      if (!isOwner) {
+        return res.status(403).json({ error: 'Access denied to this family tree' });
+      }
+      
+      const validatedData = createFamilyTreeLeafSchema.parse(req.body);
+      const generation = validatedData.relationship === 'self' ? 0 :
+        ['parent', 'grandparent'].includes(validatedData.relationship) ? -1 :
+        ['child', 'grandchild'].includes(validatedData.relationship) ? 1 : 0;
       
       const [leaf] = await db.insert(familyTreeLeaves).values({
-        ...req.body,
-        treeId: req.params.treeId,
+        ...validatedData,
+        treeId: parseInt(req.params.treeId),
         generation,
-        userId: req.body.relationship === 'self' ? req.user.claims.sub : null,
+        userId: validatedData.relationship === 'self' ? req.user.claims.sub : null,
       }).returning();
       res.status(201).json(leaf);
     } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
       console.error('Error adding leaf:', error);
       res.status(500).json({ error: 'Failed to add leaf' });
     }
