@@ -120,11 +120,11 @@ export default function SupportHub() {
               <Phone className="w-8 h-8 text-[#d4af37]" />
               <h3 className="font-semibold text-purple-100">Phone Support</h3>
               <a 
-                href="tel:+18005551234" 
+                href="tel:+18723496798" 
                 className="text-[#d4af37] hover:underline"
                 data-testid="link-phone-support"
               >
-                1-800-555-1234
+                872-349-6798
               </a>
               <p className="text-sm text-purple-300">Mon-Fri: 9AM - 5PM EST</p>
             </div>
