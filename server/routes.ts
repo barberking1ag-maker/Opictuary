@@ -160,16 +160,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // In production, serve from dist/public/support
     // In development, serve from static-support/support
     const isProd = process.env.NODE_ENV === 'production';
-    const supportPath = isProd 
-      ? path.resolve(import.meta.dirname, 'public', 'support', 'index.html')
-      : path.resolve(process.cwd(), 'static-support', 'support', 'index.html');
     
-    if (fs.existsSync(supportPath)) {
-      res.sendFile(supportPath);
-    } else {
-      // Fallback to the SPA (let the client-side router handle it)
-      res.redirect('/');
+    // Try multiple paths to find the support page
+    const pathsToTry = isProd 
+      ? [
+          path.resolve(process.cwd(), 'dist', 'public', 'support', 'index.html'),
+          path.resolve(import.meta.dirname, 'public', 'support', 'index.html'),
+          path.resolve(import.meta.dirname, '..', 'public', 'support', 'index.html'),
+        ]
+      : [
+          path.resolve(process.cwd(), 'static-support', 'support', 'index.html'),
+        ];
+    
+    for (const supportPath of pathsToTry) {
+      if (fs.existsSync(supportPath)) {
+        console.log(`[Support] Serving from: ${supportPath}`);
+        return res.sendFile(supportPath);
+      }
     }
+    
+    // Log error for debugging
+    console.error('[Support] Could not find support page. Tried paths:', pathsToTry);
+    
+    // Fallback: serve inline support page
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - Opictuary</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    .container { max-width: 600px; width: 100%; }
+    h1 { color: #9b59b6; font-size: 2rem; margin-bottom: 20px; text-align: center; }
+    .card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    h2 { font-size: 1.25rem; margin-bottom: 12px; }
+    p { color: #a0a0a0; line-height: 1.6; margin-bottom: 12px; }
+    a { color: #9b59b6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .contact-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #2a2a4a; }
+    .contact-item:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Opictuary Support</h1>
+    <div class="card">
+      <h2>Contact Us</h2>
+      <div class="contact-item">
+        <span>Email:</span>
+        <a href="mailto:support@opictuary.com">support@opictuary.com</a>
+      </div>
+      <div class="contact-item">
+        <span>Phone:</span>
+        <a href="tel:+18723496798">872-349-6798</a>
+      </div>
+      <div class="contact-item">
+        <span>Hours:</span>
+        <span>Monday - Friday, 9 AM - 6 PM CST</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>About Opictuary</h2>
+      <p>Opictuary is the world's first continuum memorial platform. We help families honor every life, in every dimension, through immersive digital memorials.</p>
+      <p>Developer: Aaron Givens</p>
+      <p>Website: <a href="https://opictuary.com">opictuary.com</a></p>
+    </div>
+    <div class="card">
+      <h2>App Support</h2>
+      <p>For app-related issues, feature requests, or feedback, please email us at <a href="mailto:support@opictuary.com">support@opictuary.com</a> or use the in-app feedback option.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `);
   });
 
   // Auth routes
