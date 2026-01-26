@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   Calendar, Cake, Heart, Gift, PartyPopper, Music, Video, 
   ShoppingBag, Users, Bluetooth, Globe, Sparkles, Star,
-  TreeDeciduous, Sun, Moon, Flame, Clock, Play, Search
+  TreeDeciduous, Sun, Moon, Flame, Clock, Play, Search, Radio
 } from "lucide-react";
 
 const allHolidays = [
@@ -234,6 +234,14 @@ export default function CelebrationsHub() {
                         </div>
                         <p className="text-sm text-muted-foreground">{holiday.date}</p>
                         <p className="text-xs text-muted-foreground mt-1">{holiday.tradition}</p>
+                        <div className="mt-3 flex gap-2">
+                          <Link href={`/holiday-celebration/${holiday.id}?name=${encodeURIComponent(holiday.name)}&tradition=${encodeURIComponent(holiday.tradition)}`}>
+                            <Button size="sm" className="gap-1" data-testid={`button-celebrate-${holiday.id}`}>
+                              <Radio className="w-3 h-3" />
+                              Go Live
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

@@ -78,6 +78,7 @@ import HolidayTimeline from "@/pages/HolidayTimeline";
 import BirthdayCelebration from "@/pages/BirthdayCelebration";
 import OlympianMemorial from "@/pages/OlympianMemorial";
 import CelebrationsHub from "@/pages/CelebrationsHub";
+import HolidayCelebration from "@/pages/HolidayCelebration";
 import QRScannerDemo from "@/pages/QRScannerDemo";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -455,6 +456,7 @@ function Router() {
         <Route path="/birthday-celebration/:memorialId" component={BirthdayCelebration} />
         <Route path="/olympian-memorial/:athleteId" component={OlympianMemorial} />
         <Route path="/celebrations" component={CelebrationsHub} />
+        <Route path="/holiday-celebration/:id" component={HolidayCelebration} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
