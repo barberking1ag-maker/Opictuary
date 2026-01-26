@@ -17,6 +17,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Health check endpoint for Cloud Run deployments
+// Must respond quickly with 200 status code
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
