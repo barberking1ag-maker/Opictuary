@@ -8,6 +8,8 @@ import { moderateContent } from "./contentModeration";
 import { fromZonedTime, toZonedTime, format } from "date-fns-tz";
 import { openai } from "./openai";
 import { registerExtendedRoutes } from "./extendedRoutes";
+import path from "path";
+import fs from "fs";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -152,6 +154,23 @@ function getStripe(): Stripe {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
+
+  // Static support page route - serves static HTML for App Store compliance
+  app.get('/support', (req, res) => {
+    // In production, serve from dist/public/support
+    // In development, serve from static-support/support
+    const isProd = process.env.NODE_ENV === 'production';
+    const supportPath = isProd 
+      ? path.resolve(import.meta.dirname, 'public', 'support', 'index.html')
+      : path.resolve(process.cwd(), 'static-support', 'support', 'index.html');
+    
+    if (fs.existsSync(supportPath)) {
+      res.sendFile(supportPath);
+    } else {
+      // Fallback to the SPA (let the client-side router handle it)
+      res.redirect('/');
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
