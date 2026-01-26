@@ -7,10 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Image as ImageIcon, Video, Heart, Loader2, Camera } from "lucide-react";
+import { Upload, Image as ImageIcon, Video, Heart, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
-import { hapticImpact, hapticNotification, isNativePlatform } from "@/lib/mobileUtils";
 
 interface Memorial {
   id: string;
@@ -271,107 +270,21 @@ export default function MemorialUpload() {
                 />
               </div>
 
-              {/* Camera Capture (Native) */}
-              <div className="space-y-2">
-                <Label className="text-purple-100">
-                  Take or Choose Photo
-                </Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 bg-purple-950/50 border-purple-700/50 text-purple-100"
-                    onClick={async () => {
-                      await hapticImpact('medium');
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.capture = 'environment';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setMediaUrl(reader.result as string);
-                            hapticNotification('success');
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      };
-                      input.click();
-                    }}
-                    data-testid="button-camera-capture"
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Take Photo
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 bg-purple-950/50 border-purple-700/50 text-purple-100"
-                    onClick={async () => {
-                      await hapticImpact('light');
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*,video/*';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setMediaUrl(reader.result as string);
-                            hapticNotification('success');
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      };
-                      input.click();
-                    }}
-                    data-testid="button-gallery-select"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Gallery
-                  </Button>
-                </div>
-                {mediaUrl && mediaUrl.startsWith('data:') && (
-                  <div className="mt-2 relative">
-                    <img 
-                      src={mediaUrl} 
-                      alt="Preview" 
-                      className="w-full h-32 object-cover rounded-lg border border-purple-700/50"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-1 right-1 h-6 w-6 p-0 bg-red-500/80 hover:bg-red-500 text-white rounded-full"
-                      onClick={() => setMediaUrl('')}
-                      data-testid="button-remove-photo"
-                    >
-                      ×
-                    </Button>
-                  </div>
-                )}
-                <p className="text-xs text-purple-400">
-                  Use your device camera or select from gallery
-                </p>
-              </div>
-
-              {/* Media URL (Alternative) */}
+              {/* Media URL */}
               <div className="space-y-2">
                 <Label htmlFor="mediaUrl" className="text-purple-100">
-                  Or Paste Photo URL
+                  Photo or Video URL (Optional)
                 </Label>
                 <Input
                   id="mediaUrl"
                   data-testid="input-media-url"
                   placeholder="https://example.com/photo.jpg"
-                  value={mediaUrl.startsWith('data:') ? '' : mediaUrl}
+                  value={mediaUrl}
                   onChange={(e) => setMediaUrl(e.target.value)}
                   className="bg-purple-950/50 border-purple-700/50 text-purple-100 placeholder:text-purple-400"
                 />
                 <p className="text-xs text-purple-400">
-                  Or paste a link to your photo (hosted on Imgur, Google Photos, etc.)
+                  Paste a link to your photo or video (hosted on Imgur, Google Photos, etc.)
                 </p>
               </div>
 

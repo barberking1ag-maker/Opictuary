@@ -157,63 +157,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Static support page route - serves static HTML for App Store compliance
   app.get('/support', (req, res) => {
-    // Try multiple paths to ensure support page is always served
-    const possiblePaths = [
-      path.resolve(import.meta.dirname, 'public', 'support', 'index.html'),
-      path.resolve(process.cwd(), 'dist', 'public', 'support', 'index.html'),
-      path.resolve(process.cwd(), 'static-support', 'support', 'index.html'),
-    ];
+    // In production, serve from dist/public/support
+    // In development, serve from static-support/support
+    const isProd = process.env.NODE_ENV === 'production';
+    const supportPath = isProd 
+      ? path.resolve(import.meta.dirname, 'public', 'support', 'index.html')
+      : path.resolve(process.cwd(), 'static-support', 'support', 'index.html');
     
-    for (const supportPath of possiblePaths) {
-      if (fs.existsSync(supportPath)) {
-        res.sendFile(supportPath);
-        return;
-      }
+    if (fs.existsSync(supportPath)) {
+      res.sendFile(supportPath);
+    } else {
+      // Fallback to the SPA (let the client-side router handle it)
+      res.redirect('/');
     }
-    
-    // Ultimate fallback: serve inline HTML support page
-    res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support - Opictuary</title>
-  <style>
-    body { font-family: -apple-system, system-ui, sans-serif; background: #1a1a2e; color: #fff; padding: 40px 20px; }
-    .container { max-width: 600px; margin: 0 auto; text-align: center; }
-    h1 { color: #9b59b6; margin-bottom: 30px; }
-    .contact { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 12px; margin: 20px 0; }
-    a { color: #9b59b6; text-decoration: none; }
-    .method { margin: 20px 0; }
-    .label { font-size: 14px; color: #888; }
-    .value { font-size: 18px; margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Opictuary Support</h1>
-    <p>We're here to help you honor and remember your loved ones.</p>
-    <div class="contact">
-      <div class="method">
-        <div class="label">Email</div>
-        <div class="value"><a href="mailto:support@opictuary.com">support@opictuary.com</a></div>
-      </div>
-      <div class="method">
-        <div class="label">Phone</div>
-        <div class="value"><a href="tel:+18723496798">872-349-6798</a></div>
-      </div>
-      <div class="method">
-        <div class="label">Hours</div>
-        <div class="value">Monday - Friday, 9AM - 6PM CST</div>
-      </div>
-    </div>
-    <p style="margin-top: 40px; font-size: 14px; color: #666;">
-      Opictuary - The world's first continuum memorial platform.<br>
-      Honor every life, in every dimension.
-    </p>
-  </div>
-</body>
-</html>`);
   });
 
   // Auth routes

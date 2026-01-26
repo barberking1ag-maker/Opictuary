@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Heart, Shield, Users, Smartphone, Calendar, DollarSign, MessageSquare, Music, Star, UserCheck, Vibrate, Share2, Bell, Camera } from "lucide-react";
+import { Heart, Shield, Users, Smartphone, Calendar, DollarSign, MessageSquare, Music, Star, UserCheck } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 
 export default function About() {
@@ -199,66 +199,6 @@ export default function About() {
                 <p className="text-sm text-muted-foreground">Recognize frontline heroes who gave their lives</p>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Native App Features */}
-        <section className="space-y-8">
-          <h2 className="text-3xl font-serif font-semibold text-foreground" data-testid="text-native-features-title">
-            Native App Experience
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Opictuary is built as a native iOS application with device-specific features that provide a premium experience beyond a simple website.
-          </p>
-          
-          <div className="grid sm:grid-cols-2 gap-6">
-            <Card data-testid="native-feature-haptics">
-              <CardContent className="p-6">
-                <div className="flex gap-3">
-                  <Vibrate className="w-6 h-6 text-primary flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Haptic Feedback</h4>
-                    <p className="text-sm text-muted-foreground">Feel subtle vibrations when interacting with buttons, tabs, and important actions - providing tactile confirmation that makes the app feel responsive.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card data-testid="native-feature-share">
-              <CardContent className="p-6">
-                <div className="flex gap-3">
-                  <Share2 className="w-6 h-6 text-primary flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Native Share Sheet</h4>
-                    <p className="text-sm text-muted-foreground">Share memorials directly through iOS's native share interface to Messages, Mail, AirDrop, or any other app on your device.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card data-testid="native-feature-notifications">
-              <CardContent className="p-6">
-                <div className="flex gap-3">
-                  <Bell className="w-6 h-6 text-primary flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Push Notifications</h4>
-                    <p className="text-sm text-muted-foreground">Receive instant notifications for new condolences, scheduled message deliveries, and memorial updates even when the app is closed.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card data-testid="native-feature-camera">
-              <CardContent className="p-6">
-                <div className="flex gap-3">
-                  <Camera className="w-6 h-6 text-primary flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Camera Integration</h4>
-                    <p className="text-sm text-muted-foreground">Capture and upload photos directly from your device's camera to add memories, or scan QR codes on physical memorial products.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </section>
 
