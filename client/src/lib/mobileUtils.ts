@@ -25,10 +25,13 @@ export async function handleMobileLogin(): Promise<void> {
       browserListenerRegistered = true;
     }
     
+    // Use fullscreen presentation for iOS Safari View Controller (in-app browser)
+    // This keeps the user within the app per Apple guidelines
     await Browser.open({
       url: loginUrl,
-      presentationStyle: 'popover',
+      presentationStyle: 'fullscreen',
       toolbarColor: '#4A1D6A',
+      windowName: '_self',
     });
   } else {
     window.location.href = '/api/login';
@@ -50,10 +53,12 @@ export async function handleMobileLogout(): Promise<void> {
       browserListenerRegistered = true;
     }
     
+    // Use fullscreen presentation for iOS Safari View Controller (in-app browser)
     await Browser.open({
       url: logoutUrl,
-      presentationStyle: 'popover',
+      presentationStyle: 'fullscreen',
       toolbarColor: '#4A1D6A',
+      windowName: '_self',
     });
   } else {
     window.location.href = '/api/logout';

@@ -1,0 +1,113 @@
+
+
+
+Review Environment
+
+Submission ID: bba4f65f-21df-445b-a7c6-183904f4a4f8
+Review date: January 22, 2026
+Review Device: iPhone 17 Pro Max and iPad Pro 11-inch (M4)
+Version reviewed: 1.0
+
+
+Guideline 1.5 - Safety
+Issue Description
+
+The Support URL provided in App Store Connect, https://opictuary.replit.app/support, is currently not functional and/or displays an error. 
+
+Next Steps
+
+Update the specified Support URL to direct users to a functional webpage with support information.
+
+Resources
+
+Learn about Support URLs and other platform version information on App Store Connect Help.
+
+
+Guideline 2.3.3 - Performance - Accurate Metadata
+Issue Description
+
+The 13-inch iPad screenshots show an iPhone device frame. Screenshots should highlight the app's core concept to help users understand the app’s functionality and value. 
+
+Next Steps
+
+Upload new screenshots that resolve the issues identified above and accurately reflect the app in use on each of the supported devices.
+
+Note some screenshots may only be viewed and updated by selecting "View All Sizes in Media Manager" in the Previews and Screenshots section of App Store Connect.
+
+Resources
+
+Follow these general requirements when adding or updating screenshots:
+
+- Marketing or promotional materials that do not reflect the UI of the app are not appropriate for screenshots.
+- The majority of the screenshots should highlight the app's main features and functionality. Note that splash and login screens are generally not considered to show your app in use.
+- Confirm that the screenshots appear identical to the app in all languages and on all supported devices. For example, screenshots can include the controls, interface or menus present in the app. 
+- Make sure that the screenshots show the app in use on the correct device. For example, iPhone screenshots should show the app as it appears on iPhone, not on iPad. Screenshots of the app on multiple Apple platforms can be included to demonstrate compatibility. 
+
+Learn more about creating great screenshots for your product page on the App Store or how to upload screenshots in App Store Connect.
+
+
+Guideline 4.2 - Design - Minimum Functionality
+
+Your app provides a limited user experience as it is not sufficiently different from a web browsing experience. As such, the experience it provides is similar to the general experience of using a web browser. Including features such as push notifications, Core Location, or sharing do not provide a robust enough experience to be appropriate for the App Store.
+
+Next Steps
+
+To resolve this issue, please revise your app to provide a more robust user experience by including additional native functionality.
+
+
+Guideline 4.1 - Design - Copycats
+
+The app or its metadata appears to contain potentially misleading content. Specifically, the app includes content that resembles Opictuary without the necessary authorization.
+
+Next Steps
+
+Please demonstrate your relationship with any third-party brand owners represented in the app.
+
+
+Guideline 4.0 - Design
+
+We noticed that the user is taken to the default web browser to sign in or register for an account, which provides a poor user experience.
+
+Next Steps
+
+To resolve this issue, please revise your app to enable users to sign in or register for an account in the app.
+
+You may also choose to implement the Safari View Controller API to display web content within your app. The Safari View Controller allows the display of a URL and inspection of the certificate from an embedded browser in an app so that customers can verify the webpage URL and SSL certificate to confirm they are entering their sign in credentials into a legitimate page.
+
+Resources
+
+- For additional information on the Safari View Controller API, please review the What's New in Safari webpage.
+- Note that apps that support account creation must also offer account deletion, per App Review Guideline 5.1.1(v). Learn more about offering account deletion in your app.
+
+
+Guideline 2.1 - Performance - App Completeness
+Issue Description
+
+The app exhibited one or more bugs that would negatively impact users.
+
+Bug description: Specifically, an error message is displayed when login to the app.
+
+Review device details:
+
+- Device type: iPhone 17 Pro Max and iPad Pro 11-inch (M4) 
+- OS version: iOS 26.2 and iPadOS 26.2
+
+Next Steps
+
+Test the app on supported devices to identify and resolve bugs and stability issues before submitting for review.
+
+If the bug cannot be reproduced, try the following:
+
+- For new apps, uninstall all previous versions of the app from a device, then install and follow the steps to reproduce.
+- For app updates, install the new version as an update to the previous version, then follow the steps to reproduce.
+
+Resources
+
+- For information about testing apps and preparing them for review, see Testing a Release Build.
+- To learn about troubleshooting networking issues, see Networking Overview.
+
+
+Support
+- Reply to this message in your preferred language if you need assistance. If you need additional support, use the Contact Us module.
+- Consult with fellow developers and Apple engineers on the Apple Developer Forums.
+- Provide feedback on this message and your review experience by completing a short survey.
