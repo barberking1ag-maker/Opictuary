@@ -7,9 +7,10 @@ channel = "stable-24_05"
 packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip"]
 
 [deployment]
-deploymentTarget = "vm"
+deploymentTarget = "static"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
+publicDir = "static-support"
 
 [[ports]]
 localPort = 5000
