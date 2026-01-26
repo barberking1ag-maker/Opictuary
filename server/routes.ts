@@ -7098,7 +7098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper to verify tree ownership
   async function verifyTreeOwnership(treeId: string, userId: string): Promise<boolean> {
-    const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, parseInt(treeId))).limit(1);
+    const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, treeId)).limit(1);
     return tree.length > 0 && tree[0].ownerId === userId;
   }
 
@@ -7154,7 +7154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'Access denied to this family tree' });
       }
       const leaves = await db.select().from(familyTreeLeaves)
-        .where(eq(familyTreeLeaves.treeId, parseInt(req.params.treeId)));
+        .where(eq(familyTreeLeaves.treeId, req.params.treeId));
       res.json(leaves);
     } catch (error) {
       console.error('Error fetching leaves:', error);
@@ -7176,8 +7176,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ['child', 'grandchild'].includes(validatedData.relationship) ? 1 : 0;
       
       const [leaf] = await db.insert(familyTreeLeaves).values({
-        ...validatedData,
-        treeId: parseInt(req.params.treeId),
+        personName: validatedData.name,
+        relationship: validatedData.relationship,
+        birthDate: validatedData.birthDate,
+        profilePhoto: validatedData.photoUrl,
+        treeId: req.params.treeId,
         generation,
         userId: validatedData.relationship === 'self' ? req.user.claims.sub : null,
       }).returning();

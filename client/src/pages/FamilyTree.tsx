@@ -209,10 +209,7 @@ function LeafContentDialog({
 
   const addContentMutation = useMutation({
     mutationFn: async (data: ContentFormData) => {
-      const res = await apiRequest(`/api/family-trees/leaves/${leaf?.id}/content`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest('POST', `/api/family-trees/leaves/${leaf?.id}/content`, data);
       return res.json();
     },
     onSuccess: () => {
@@ -228,9 +225,7 @@ function LeafContentDialog({
 
   const deleteContentMutation = useMutation({
     mutationFn: async (contentId: string) => {
-      await apiRequest(`/api/family-trees/leaves/${leaf?.id}/content/${contentId}`, {
-        method: 'DELETE',
-      });
+      await apiRequest('DELETE', `/api/family-trees/leaves/${leaf?.id}/content/${contentId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/family-trees/leaves', leaf?.id, 'content'] });
@@ -644,10 +639,7 @@ function JoinTreeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
   const lookupMutation = useMutation({
     mutationFn: async (code: string) => {
-      const res = await apiRequest("/api/family-trees/join", {
-        method: "POST",
-        body: JSON.stringify({ inviteCode: code }),
-      });
+      const res = await apiRequest("POST", "/api/family-trees/join", { inviteCode: code });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to find tree");
@@ -666,10 +658,7 @@ function JoinTreeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
   const joinMutation = useMutation({
     mutationFn: async () => {
       if (!foundTree) throw new Error("No tree selected");
-      const res = await apiRequest(`/api/family-trees/${foundTree.id}/join-as-leaf`, {
-        method: "POST",
-        body: JSON.stringify({ ...joinForm, inviteCode }),
-      });
+      const res = await apiRequest("POST", `/api/family-trees/${foundTree.id}/join-as-leaf`, { ...joinForm, inviteCode });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to join");
@@ -913,18 +902,15 @@ export default function FamilyTree() {
     setSubscribeLoading(true);
     
     try {
-      const response = await apiRequest("/api/stripe/create-checkout-session", {
-        method: "POST",
-        body: JSON.stringify({
-          type: "family_tree_subscription",
-          treeId,
-          subscriptionTier: type === "primary" ? "primary" : "family",
-          billingPeriod: cycle === "annual" ? "yearly" : "monthly",
-          userId: user.id,
-          successUrl: `${window.location.origin}/family-tree?success=true`,
-          cancelUrl: `${window.location.origin}/family-tree?canceled=true`,
-          customerEmail: user.email,
-        }),
+      const response = await apiRequest("POST", "/api/stripe/create-checkout-session", {
+        type: "family_tree_subscription",
+        treeId,
+        subscriptionTier: type === "primary" ? "primary" : "family",
+        billingPeriod: cycle === "annual" ? "yearly" : "monthly",
+        userId: user.id,
+        successUrl: `${window.location.origin}/family-tree?success=true`,
+        cancelUrl: `${window.location.origin}/family-tree?canceled=true`,
+        customerEmail: user.email,
       });
 
       const data = await response.json();
