@@ -668,7 +668,7 @@ function JoinTreeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
       if (!foundTree) throw new Error("No tree selected");
       const res = await apiRequest(`/api/family-trees/${foundTree.id}/join-as-leaf`, {
         method: "POST",
-        body: JSON.stringify(joinForm),
+        body: JSON.stringify({ ...joinForm, inviteCode }),
       });
       if (!res.ok) {
         const err = await res.json();

@@ -7228,7 +7228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/family-trees/:treeId/join-as-leaf", isAuthenticated, async (req: any, res) => {
     try {
       const treeId = req.params.treeId;
-      const { personName, relationship, birthDate } = req.body;
+      const userId = req.user.claims.sub;
+      const { personName, relationship, birthDate, inviteCode } = req.body;
       
       if (!personName || !relationship) {
         return res.status(400).json({ error: 'Name and relationship are required' });
@@ -7238,6 +7239,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tree = await db.select().from(familyTrees).where(eq(familyTrees.id, treeId)).limit(1);
       if (tree.length === 0) {
         return res.status(404).json({ error: 'Family tree not found' });
+      }
+
+      // Security: Only tree owner can join without invite code, others must provide valid invite code
+      const isOwner = tree[0].ownerId === userId;
+      if (!isOwner) {
+        if (!inviteCode) {
+          return res.status(403).json({ error: 'Invite code is required to join this tree' });
+        }
+        if (tree[0].inviteCode !== inviteCode.toUpperCase()) {
+          return res.status(403).json({ error: 'Invalid invite code for this tree' });
+        }
       }
 
       // Check if user already has a leaf on this tree
