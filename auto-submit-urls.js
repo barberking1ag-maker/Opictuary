@@ -62,7 +62,6 @@ async function submitToIndexNow() {
   console.log('\n📋 IndexNow Submission:');
   console.log(`   Note: To complete IndexNow setup, create file at:`);
   console.log(`   ${SITE_URL}/${apiKey}.txt`);
-  console.log(`   With contents: ${apiKey}`);
   
   // For now, just inform the user
   console.log('   (Skipping IndexNow - requires API key file setup)');
