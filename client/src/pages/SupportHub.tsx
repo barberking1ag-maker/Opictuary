@@ -102,6 +102,41 @@ export default function SupportHub() {
           </p>
         </div>
 
+        <Card className="p-6 mb-8 bg-purple-900/30 border-purple-700/30">
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Mail className="w-8 h-8 text-[#d4af37]" />
+              <h3 className="font-semibold text-purple-100">Email Support</h3>
+              <a 
+                href="mailto:support@opictuary.com" 
+                className="text-[#d4af37] hover:underline"
+                data-testid="link-email-support"
+              >
+                support@opictuary.com
+              </a>
+              <p className="text-sm text-purple-300">Response within 24-48 hours</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Phone className="w-8 h-8 text-[#d4af37]" />
+              <h3 className="font-semibold text-purple-100">Phone Support</h3>
+              <a 
+                href="tel:+18005551234" 
+                className="text-[#d4af37] hover:underline"
+                data-testid="link-phone-support"
+              >
+                1-800-555-1234
+              </a>
+              <p className="text-sm text-purple-300">Mon-Fri: 9AM - 5PM EST</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <MessageSquare className="w-8 h-8 text-[#d4af37]" />
+              <h3 className="font-semibold text-purple-100">Live Chat</h3>
+              <p className="text-purple-200">Available in-app</p>
+              <p className="text-sm text-purple-300">Instant responses during business hours</p>
+            </div>
+          </div>
+        </Card>
+
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 bg-purple-900/30" data-testid="tabs-support-sections">
             <TabsTrigger value="help-center" className="gap-2" data-testid="tab-help-center">
