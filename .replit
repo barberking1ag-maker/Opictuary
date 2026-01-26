@@ -7,9 +7,9 @@ channel = "stable-24_05"
 packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip"]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 build = ["npm", "run", "build"]
-run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
+run = ["node", "dist/index.js"]
 publicDir = "dist/public"
 
 [[ports]]
