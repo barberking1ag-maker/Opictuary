@@ -7,7 +7,7 @@ channel = "stable-24_05"
 packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip"]
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 publicDir = "dist/public"
