@@ -78,6 +78,7 @@ import HolidayTimeline from "@/pages/HolidayTimeline";
 import BirthdayCelebration from "@/pages/BirthdayCelebration";
 import OlympianMemorial from "@/pages/OlympianMemorial";
 import CelebrationsHub from "@/pages/CelebrationsHub";
+import QRScannerDemo from "@/pages/QRScannerDemo";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -447,6 +448,7 @@ function Router() {
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
         <Route path="/qr-designer" component={CustomQRCodeDesigner} />
+        <Route path="/qr-scanner-demo" component={QRScannerDemo} />
         <Route path="/holiday-timeline" component={HolidayTimeline} />
         <Route path="/holiday-timeline/:memorialId" component={HolidayTimeline} />
         <Route path="/birthday-celebration" component={BirthdayCelebration} />
