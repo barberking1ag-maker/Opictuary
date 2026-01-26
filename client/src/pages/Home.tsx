@@ -28,6 +28,7 @@ import { VideoCondolence } from "@/components/VideoCondolence";
 import VideoTimeCapsuleViewer from "@/components/VideoTimeCapsuleViewer";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 import { handleMobileLogin } from "@/lib/mobileUtils";
+import { NativeMemorialActions } from "@/components/NativeMemorialActions";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -561,6 +562,24 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Native Mobile Actions - Quick access for mobile users */}
+      <div className="max-w-md mx-auto px-4 -mt-6 mb-6 relative z-10">
+        <NativeMemorialActions
+          memorialId={memorialId!}
+          memorialName={memorial.name}
+          onAddMemory={() => {
+            const memoriesSection = document.getElementById('memories-section');
+            memoriesSection?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onAddCondolence={() => {
+            const condolenceBar = document.querySelector('[data-testid="input-condolence"]');
+            if (condolenceBar) {
+              (condolenceBar as HTMLInputElement).focus();
+            }
+          }}
+        />
+      </div>
 
       {/* Engagement Call-to-Action Card */}
       {!isAuthenticated && (
