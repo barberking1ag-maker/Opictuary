@@ -18,9 +18,36 @@ import {
   Trophy, Users, Medal, Award, Calendar, MapPin, Play, 
   Star, TrendingUp, Shield, Target, Timer, Hash, 
   UserPlus, Filter, Search, ChevronRight, ExternalLink,
-  BarChart3, Clock, Zap, Heart, Crown
+  BarChart3, Clock, Zap, Heart, Crown, Circle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Sport icon component - using Lucide Circle with sport-specific colors
+function SportIcon({ sport }: { sport: string }) {
+  const getColor = () => {
+    switch (sport) {
+      case "Basketball": return "text-orange-500";
+      case "Football": return "text-amber-700";
+      case "Tennis": return "text-yellow-400";
+      default: return "text-primary";
+    }
+  };
+  
+  const getLabel = () => {
+    switch (sport) {
+      case "Basketball": return "🏀";
+      case "Football": return "🏈";
+      case "Tennis": return "🎾";
+      default: return "🏆";
+    }
+  };
+  
+  return (
+    <div className={`w-full h-full flex items-center justify-center text-2xl ${getColor()}`}>
+      {getLabel()}
+    </div>
+  );
+}
 
 // Sample athlete data
 const sampleAthletes = [
@@ -30,7 +57,6 @@ const sampleAthletes = [
     sport: "Basketball",
     position: "Shooting Guard",
     jerseyNumber: "23",
-    photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=MJ23",
     birthDate: "Feb 17, 1963",
     retiredDate: "2003",
     legacyScore: 98,
@@ -70,7 +96,6 @@ const sampleAthletes = [
     sport: "Football",
     position: "Quarterback",
     jerseyNumber: "12",
-    photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=TB12",
     birthDate: "Aug 3, 1977",
     retiredDate: "2023",
     legacyScore: 97,
@@ -110,7 +135,6 @@ const sampleAthletes = [
     sport: "Tennis",
     position: "Singles/Doubles",
     jerseyNumber: "N/A",
-    photo: "https://api.dicebear.com/7.x/avataaars/svg?seed=SerenaW",
     birthDate: "Sep 26, 1981",
     retiredDate: "2022",
     legacyScore: 96,
@@ -458,10 +482,9 @@ export default function SportsMemorials() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={athlete.photo} alt={athlete.name} />
-                          <AvatarFallback>{athlete.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center p-2">
+                          <SportIcon sport={athlete.sport} />
+                        </div>
                         <div>
                           <CardTitle className="text-lg">{athlete.name}</CardTitle>
                           <CardDescription>{athlete.sport} • #{athlete.jerseyNumber}</CardDescription>
@@ -670,10 +693,9 @@ export default function SportsMemorials() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {sampleAthletes.filter(a => a.hallOfFame.inducted).map((athlete) => (
                     <div key={athlete.id} className="flex items-start gap-4 p-4 border rounded-lg hover-elevate" data-testid={`hof-athlete-${athlete.id}`}>
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={athlete.photo} alt={athlete.name} />
-                        <AvatarFallback>{athlete.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
+                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center p-3">
+                        <SportIcon sport={athlete.sport} />
+                      </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">{athlete.name}</h3>
                         <p className="text-sm text-muted-foreground">{athlete.sport} • {athlete.position}</p>
