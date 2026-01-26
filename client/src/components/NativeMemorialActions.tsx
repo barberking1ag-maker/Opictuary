@@ -1,20 +1,10 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/hooks/usePlatform";
-import { nativeShare, hapticNotification } from "@/lib/mobileUtils";
-import { 
-  Flame, 
-  Share2, 
-  Camera, 
-  Heart, 
-  Bell,
-  Sparkles,
-  Music,
-  MessageCircle
-} from "lucide-react";
+import { nativeShare } from "@/lib/mobileUtils";
+import { Flame, Share2, Camera, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NativeMemorialActionsProps {
@@ -65,11 +55,19 @@ export function NativeMemorialActions({
     if (shared) {
       notification('success');
     } else {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link Copied",
-        description: "Memorial link copied to clipboard",
-      });
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link Copied",
+          description: "Memorial link copied to clipboard",
+        });
+      } catch (err) {
+        toast({
+          title: "Share Failed",
+          description: "Unable to copy link. Please copy the URL manually.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

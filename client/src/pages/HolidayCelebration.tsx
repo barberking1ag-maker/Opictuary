@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -18,10 +17,17 @@ export default function HolidayCelebration() {
   const holidayId = params.id;
   const { toast } = useToast();
   
-  const urlParams = new URLSearchParams(window.location.search);
-  const [holidayName, setHolidayName] = useState(urlParams.get('name') || 'Holiday');
-  const [tradition, setTradition] = useState(urlParams.get('tradition') || 'Global');
+  const [holidayName, setHolidayName] = useState('Holiday');
+  const [tradition, setTradition] = useState('Global');
   const [isLive, setIsLive] = useState(false);
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const name = urlParams.get('name');
+    const trad = urlParams.get('tradition');
+    if (name) setHolidayName(name);
+    if (trad) setTradition(trad);
+  }, []);
   const [viewerCount, setViewerCount] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
