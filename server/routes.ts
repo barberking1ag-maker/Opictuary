@@ -7783,6 +7783,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // WEDDING REGISTRY API ROUTES
+  // ============================================
+
+  // Get user's wedding registries
+  app.get("/api/wedding-registries/my", isAuthenticated, async (req: any, res) => {
+    try {
+      const registries = await storage.getWeddingRegistries(req.user.id);
+      res.json(registries);
+    } catch (error) {
+      console.error('Error fetching wedding registries:', error);
+      res.status(500).json({ error: 'Failed to fetch registries' });
+    }
+  });
+
+  // Get registry by share code (public)
+  app.get("/api/wedding-registries/share/:shareCode", async (req, res) => {
+    try {
+      const registry = await storage.getWeddingRegistryByShareCode(req.params.shareCode);
+      if (!registry) {
+        return res.status(404).json({ error: 'Registry not found' });
+      }
+      if (!registry.isPublic) {
+        return res.status(403).json({ error: 'Registry is private' });
+      }
+      res.json(registry);
+    } catch (error) {
+      console.error('Error fetching registry:', error);
+      res.status(500).json({ error: 'Failed to fetch registry' });
+    }
+  });
+
+  // Get single registry
+  app.get("/api/wedding-registries/:id", async (req, res) => {
+    try {
+      const registry = await storage.getWeddingRegistry(req.params.id);
+      if (!registry) {
+        return res.status(404).json({ error: 'Registry not found' });
+      }
+      res.json(registry);
+    } catch (error) {
+      console.error('Error fetching registry:', error);
+      res.status(500).json({ error: 'Failed to fetch registry' });
+    }
+  });
+
+  // Create registry
+  app.post("/api/wedding-registries", isAuthenticated, async (req: any, res) => {
+    try {
+      const shareCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const registry = await storage.createWeddingRegistry({
+        ...req.body,
+        userId: req.user.id,
+        shareCode,
+      });
+      res.status(201).json(registry);
+    } catch (error) {
+      console.error('Error creating registry:', error);
+      res.status(500).json({ error: 'Failed to create registry' });
+    }
+  });
+
+  // Update registry
+  app.patch("/api/wedding-registries/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const registry = await storage.getWeddingRegistry(req.params.id);
+      if (!registry) {
+        return res.status(404).json({ error: 'Registry not found' });
+      }
+      if (registry.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      const updated = await storage.updateWeddingRegistry(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating registry:', error);
+      res.status(500).json({ error: 'Failed to update registry' });
+    }
+  });
+
+  // Delete registry
+  app.delete("/api/wedding-registries/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const registry = await storage.getWeddingRegistry(req.params.id);
+      if (!registry) {
+        return res.status(404).json({ error: 'Registry not found' });
+      }
+      if (registry.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      await storage.deleteWeddingRegistry(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting registry:', error);
+      res.status(500).json({ error: 'Failed to delete registry' });
+    }
+  });
+
+  // ============================================
+  // REGISTRY ITEMS API ROUTES
+  // ============================================
+
+  // Get items for a registry
+  app.get("/api/wedding-registries/:registryId/items", async (req, res) => {
+    try {
+      const items = await storage.getRegistryItems(req.params.registryId);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching registry items:', error);
+      res.status(500).json({ error: 'Failed to fetch items' });
+    }
+  });
+
+  // Create registry item
+  app.post("/api/wedding-registries/:registryId/items", isAuthenticated, async (req: any, res) => {
+    try {
+      const registry = await storage.getWeddingRegistry(req.params.registryId);
+      if (!registry || registry.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      const item = await storage.createRegistryItem({
+        ...req.body,
+        registryId: req.params.registryId,
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      console.error('Error creating registry item:', error);
+      res.status(500).json({ error: 'Failed to create item' });
+    }
+  });
+
+  // Update registry item
+  app.patch("/api/registry-items/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const item = await storage.getRegistryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ error: 'Item not found' });
+      }
+      const registry = await storage.getWeddingRegistry(item.registryId);
+      if (!registry || registry.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      const updated = await storage.updateRegistryItem(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating item:', error);
+      res.status(500).json({ error: 'Failed to update item' });
+    }
+  });
+
+  // Delete registry item
+  app.delete("/api/registry-items/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const item = await storage.getRegistryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ error: 'Item not found' });
+      }
+      const registry = await storage.getWeddingRegistry(item.registryId);
+      if (!registry || registry.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      await storage.deleteRegistryItem(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      res.status(500).json({ error: 'Failed to delete item' });
+    }
+  });
+
+  // ============================================
+  // REGISTRY GIFTS API ROUTES
+  // ============================================
+
+  // Get gifts for a registry
+  app.get("/api/wedding-registries/:registryId/gifts", async (req, res) => {
+    try {
+      const gifts = await storage.getRegistryGifts(req.params.registryId);
+      res.json(gifts);
+    } catch (error) {
+      console.error('Error fetching gifts:', error);
+      res.status(500).json({ error: 'Failed to fetch gifts' });
+    }
+  });
+
+  // Record a gift purchase (for guests)
+  app.post("/api/wedding-registries/:registryId/gifts", async (req, res) => {
+    try {
+      const { registryItemId, gifterName, gifterEmail, message, quantity, amountPaid, paymentMethod, stripePaymentId } = req.body;
+      
+      const gift = await storage.createRegistryGift({
+        registryItemId,
+        registryId: req.params.registryId,
+        gifterName,
+        gifterEmail,
+        message,
+        quantity: quantity || 1,
+        amountPaid: amountPaid || "0",
+        paymentMethod: paymentMethod || "external",
+        stripePaymentId,
+        isPurchased: true,
+      });
+
+      // Update item purchased quantity
+      if (registryItemId) {
+        const item = await storage.getRegistryItem(registryItemId);
+        if (item) {
+          const newPurchased = (item.quantityPurchased || 0) + (quantity || 1);
+          await storage.updateRegistryItem(registryItemId, {
+            quantityPurchased: newPurchased,
+          });
+        }
+      }
+
+      res.status(201).json(gift);
+    } catch (error) {
+      console.error('Error recording gift:', error);
+      res.status(500).json({ error: 'Failed to record gift' });
+    }
+  });
+
+  // Mark gift as thanked
+  app.patch("/api/registry-gifts/:id/thank", isAuthenticated, async (req: any, res) => {
+    try {
+      const updated = await storage.updateRegistryGift(req.params.id, {
+        isThankYouSent: true,
+        thankYouSentAt: new Date(),
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating gift:', error);
+      res.status(500).json({ error: 'Failed to update gift' });
+    }
+  });
+
   // Register extended routes for payment processing, verification, and fulfillment
   registerExtendedRoutes(app);
 

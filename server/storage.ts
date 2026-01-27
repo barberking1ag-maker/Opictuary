@@ -303,6 +303,16 @@ import {
   type InsertByusTherapist,
   type ByusProfessionalReview,
   type InsertByusProfessionalReview,
+  // Wedding Registry tables and types
+  weddingRegistries,
+  registryItems,
+  registryGifts,
+  type WeddingRegistry,
+  type InsertWeddingRegistry,
+  type RegistryItem,
+  type InsertRegistryItem,
+  type RegistryGift,
+  type InsertRegistryGift,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
@@ -831,6 +841,26 @@ export interface IStorage {
   getFamilyGroupMessages(groupId: string): Promise<FamilyGroupMessage[]>;
   createFamilyGroupMessage(data: InsertFamilyGroupMessage): Promise<FamilyGroupMessage>;
   getFamilyGroupMembers(groupId: string): Promise<FamilyGroupMember[]>;
+
+  // Wedding Registry operations
+  getWeddingRegistries(userId: string): Promise<WeddingRegistry[]>;
+  getWeddingRegistry(id: string): Promise<WeddingRegistry | undefined>;
+  getWeddingRegistryByShareCode(shareCode: string): Promise<WeddingRegistry | undefined>;
+  createWeddingRegistry(data: InsertWeddingRegistry): Promise<WeddingRegistry>;
+  updateWeddingRegistry(id: string, data: Partial<InsertWeddingRegistry>): Promise<WeddingRegistry | undefined>;
+  deleteWeddingRegistry(id: string): Promise<void>;
+
+  // Registry Items operations
+  getRegistryItems(registryId: string): Promise<RegistryItem[]>;
+  getRegistryItem(id: string): Promise<RegistryItem | undefined>;
+  createRegistryItem(data: InsertRegistryItem): Promise<RegistryItem>;
+  updateRegistryItem(id: string, data: Partial<InsertRegistryItem>): Promise<RegistryItem | undefined>;
+  deleteRegistryItem(id: string): Promise<void>;
+
+  // Registry Gifts operations
+  getRegistryGifts(registryId: string): Promise<RegistryGift[]>;
+  createRegistryGift(data: InsertRegistryGift): Promise<RegistryGift>;
+  updateRegistryGift(id: string, data: Partial<InsertRegistryGift>): Promise<RegistryGift | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4365,6 +4395,74 @@ export class DatabaseStorage implements IStorage {
 
   async getFamilyGroupMembers(groupId: string): Promise<FamilyGroupMember[]> {
     return await db.select().from(familyGroupMembers).where(eq(familyGroupMembers.groupId, groupId));
+  }
+
+  // Wedding Registry operations
+  async getWeddingRegistries(userId: string): Promise<WeddingRegistry[]> {
+    return await db.select().from(weddingRegistries).where(eq(weddingRegistries.userId, userId)).orderBy(desc(weddingRegistries.createdAt));
+  }
+
+  async getWeddingRegistry(id: string): Promise<WeddingRegistry | undefined> {
+    const [registry] = await db.select().from(weddingRegistries).where(eq(weddingRegistries.id, id));
+    return registry;
+  }
+
+  async getWeddingRegistryByShareCode(shareCode: string): Promise<WeddingRegistry | undefined> {
+    const [registry] = await db.select().from(weddingRegistries).where(eq(weddingRegistries.shareCode, shareCode));
+    return registry;
+  }
+
+  async createWeddingRegistry(data: InsertWeddingRegistry): Promise<WeddingRegistry> {
+    const [registry] = await db.insert(weddingRegistries).values(data).returning();
+    return registry;
+  }
+
+  async updateWeddingRegistry(id: string, data: Partial<InsertWeddingRegistry>): Promise<WeddingRegistry | undefined> {
+    const [registry] = await db.update(weddingRegistries).set({ ...data, updatedAt: new Date() }).where(eq(weddingRegistries.id, id)).returning();
+    return registry;
+  }
+
+  async deleteWeddingRegistry(id: string): Promise<void> {
+    await db.delete(weddingRegistries).where(eq(weddingRegistries.id, id));
+  }
+
+  // Registry Items operations
+  async getRegistryItems(registryId: string): Promise<RegistryItem[]> {
+    return await db.select().from(registryItems).where(eq(registryItems.registryId, registryId)).orderBy(desc(registryItems.createdAt));
+  }
+
+  async getRegistryItem(id: string): Promise<RegistryItem | undefined> {
+    const [item] = await db.select().from(registryItems).where(eq(registryItems.id, id));
+    return item;
+  }
+
+  async createRegistryItem(data: InsertRegistryItem): Promise<RegistryItem> {
+    const [item] = await db.insert(registryItems).values(data).returning();
+    return item;
+  }
+
+  async updateRegistryItem(id: string, data: Partial<InsertRegistryItem>): Promise<RegistryItem | undefined> {
+    const [item] = await db.update(registryItems).set({ ...data, updatedAt: new Date() }).where(eq(registryItems.id, id)).returning();
+    return item;
+  }
+
+  async deleteRegistryItem(id: string): Promise<void> {
+    await db.delete(registryItems).where(eq(registryItems.id, id));
+  }
+
+  // Registry Gifts operations
+  async getRegistryGifts(registryId: string): Promise<RegistryGift[]> {
+    return await db.select().from(registryGifts).where(eq(registryGifts.registryId, registryId)).orderBy(desc(registryGifts.createdAt));
+  }
+
+  async createRegistryGift(data: InsertRegistryGift): Promise<RegistryGift> {
+    const [gift] = await db.insert(registryGifts).values(data).returning();
+    return gift;
+  }
+
+  async updateRegistryGift(id: string, data: Partial<InsertRegistryGift>): Promise<RegistryGift | undefined> {
+    const [gift] = await db.update(registryGifts).set(data).where(eq(registryGifts.id, id)).returning();
+    return gift;
   }
 }
 
