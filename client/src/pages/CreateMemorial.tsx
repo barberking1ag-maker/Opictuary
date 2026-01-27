@@ -33,6 +33,7 @@ const createMemorialSchema = z.object({
   fontFamily: z.string().optional(),
   symbol: z.string().optional(),
   isPublic: z.boolean().default(false),
+  isTraditional: z.boolean().default(false),
 }).refine((data) => new Date(data.deathDate) >= new Date(data.birthDate), {
   message: "Death date cannot be before birth date",
   path: ["deathDate"],
@@ -62,11 +63,14 @@ export default function CreateMemorial() {
       cemeteryName: "",
       cemeteryLocation: "",
       timezone: browserTimezone,
-      fontFamily: "crimson",
-      symbol: "cross",
-      isPublic: false,
-    },
-  });
+    fontFamily: "crimson",
+    symbol: "cross",
+    isPublic: false,
+    isTraditional: false,
+  },
+});
+
+const watchIsTraditional = form.watch("isTraditional");
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateMemorialForm) => {
@@ -236,6 +240,38 @@ export default function CreateMemorial() {
                             Add a photo URL of your loved one to display as the memorial background
                           </FormDescription>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="isTraditional"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border border-primary/20 p-4 bg-primary/5">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-primary" />
+                              Traditional Obituary Style
+                            </FormLabel>
+                            <FormDescription>
+                              Format this memorial as a traditional obituary with a live QR connection ($9.99/mo)
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Select 
+                              onValueChange={(val) => field.onChange(val === "true")} 
+                              defaultValue={field.value ? "true" : "false"}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select style" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="false">Digital Hub (Default)</SelectItem>
+                                <SelectItem value="true">Traditional Obituary</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
                         </FormItem>
                       )}
                     />

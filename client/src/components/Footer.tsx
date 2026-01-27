@@ -40,7 +40,7 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
               <li>
                 <Link href="/qr-code">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-qr-memorials">
-                    QR Memorials
+                    QR Memorials ($9.99/mo Live URL)
                   </span>
                 </Link>
               </li>

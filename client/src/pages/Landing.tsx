@@ -185,6 +185,31 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* Traditional Obituary & QR Live Section */}
+      <div className="bg-primary/5 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <Badge variant="outline" className="border-primary/50 text-primary">Traditional Legacy</Badge>
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-foreground">
+              Traditional Obituaries with Live QR Connections
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Create a traditional-style obituary that connects to the digital dimension. 
+              Our Live URL option for QR codes ensures your loved one's data is kept live and 
+              accessible forever at the gravesite or any memorialized location for just 
+              <span className="font-bold text-foreground"> $9.99/month</span>.
+            </p>
+            <div className="pt-4">
+              <Link href="/create-memorial">
+                <Button size="lg" className="shadow-lg">
+                  Start Traditional Obituary
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Introduction Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-6">
