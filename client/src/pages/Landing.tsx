@@ -264,8 +264,7 @@ export default function Landing() {
                     <h3 className="text-2xl font-semibold text-foreground">QR Memorial System</h3>
                   </div>
                   <p className="text-muted-foreground text-center leading-relaxed">
-                    Place QR codes on tombstones, memorial cards, or funeral programs. Anyone can scan to view the memorial, 
-                    upload photos from the gravesite, or share memories – bridging physical and digital remembrance.
+                    Place QR codes on tombstones, memorial cards, or traditional obituaries. Just $9.99/mo to keep your memorial data live and connected forever at the gravesite or any memorialized location.
                   </p>
                   <div className="pt-4 text-center">
                     <Button variant="outline" size="sm">

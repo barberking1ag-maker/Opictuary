@@ -147,7 +147,7 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
               <div className="space-y-4">
                 <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-xs text-amber-200">
-                    <strong>Live Data Connection:</strong> $4.99/month per QR code to keep your data live and connected forever.
+                    <strong>Live Data Connection:</strong> $9.99/month per QR code to keep your data live and connected forever. Perfect for traditional obituaries and gravesite memorials.
                   </p>
                 </div>
                 <div className="space-y-2">

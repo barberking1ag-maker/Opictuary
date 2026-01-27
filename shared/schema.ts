@@ -69,6 +69,9 @@ export const memorials = pgTable("memorials", {
   isPublic: boolean("is_public").default(false),
   creatorEmail: text("creator_email"),
   ownershipType: text("ownership_type").default("family_created"),
+  isTraditional: boolean("is_traditional").default(false).notNull(),
+  qrLiveStatus: boolean("qr_live_status").default(false).notNull(),
+  qrLivePrice: decimal("qr_live_price", { precision: 10, scale: 2 }).default("9.99").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_memorials_creator_email").on(table.creatorEmail),
