@@ -481,11 +481,19 @@ export default function CelebrationsHub() {
               </CardContent>
             </Card>
 
-            <div className="text-center pt-4">
-              <Button size="lg" data-testid="button-create-registry">
-                <Gift className="w-5 h-5 mr-2" />
-                Create Gift Registry
-              </Button>
+            <div className="text-center pt-4 flex flex-wrap justify-center gap-4">
+              <Link href="/wedding-registry">
+                <Button size="lg" data-testid="button-create-registry">
+                  <Gift className="w-5 h-5 mr-2" />
+                  Wedding Registry
+                </Button>
+              </Link>
+              <Link href="/baby-shower">
+                <Button size="lg" variant="outline" data-testid="button-baby-shower">
+                  <Cake className="w-5 h-5 mr-2" />
+                  Baby Shower Registry
+                </Button>
+              </Link>
             </div>
           </TabsContent>
         </Tabs>
@@ -504,33 +512,39 @@ export default function CelebrationsHub() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <Card className="text-center hover-elevate">
-              <CardContent className="p-6 space-y-4">
-                <Video className="w-10 h-10 text-primary mx-auto" />
-                <h3 className="font-semibold">Live Video</h3>
-                <p className="text-sm text-muted-foreground">
-                  HD video streaming with chat and reactions
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover-elevate">
-              <CardContent className="p-6 space-y-4">
-                <Music className="w-10 h-10 text-primary mx-auto" />
-                <h3 className="font-semibold">Shared Music</h3>
-                <p className="text-sm text-muted-foreground">
-                  Everyone listens to the same playlist together
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover-elevate">
-              <CardContent className="p-6 space-y-4">
-                <PartyPopper className="w-10 h-10 text-primary mx-auto" />
-                <h3 className="font-semibold">Virtual Reactions</h3>
-                <p className="text-sm text-muted-foreground">
-                  Send reactions, photos, and messages in real-time
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/live-celebration">
+              <Card className="text-center hover-elevate cursor-pointer" data-testid="card-live-video">
+                <CardContent className="p-6 space-y-4">
+                  <Video className="w-10 h-10 text-primary mx-auto" />
+                  <h3 className="font-semibold">Live Video</h3>
+                  <p className="text-sm text-muted-foreground">
+                    HD video streaming with chat and reactions
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/shared-music">
+              <Card className="text-center hover-elevate cursor-pointer" data-testid="card-shared-music">
+                <CardContent className="p-6 space-y-4">
+                  <Music className="w-10 h-10 text-primary mx-auto" />
+                  <h3 className="font-semibold">Shared Music</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Everyone listens to the same playlist together
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/virtual-reactions">
+              <Card className="text-center hover-elevate cursor-pointer" data-testid="card-virtual-reactions">
+                <CardContent className="p-6 space-y-4">
+                  <PartyPopper className="w-10 h-10 text-primary mx-auto" />
+                  <h3 className="font-semibold">Virtual Reactions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Send reactions, photos, and messages in real-time
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
