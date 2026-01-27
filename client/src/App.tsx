@@ -81,6 +81,7 @@ import OlympianMemorial from "@/pages/OlympianMemorial";
 import CelebrationsHub from "@/pages/CelebrationsHub";
 import WeddingRegistry from "@/pages/WeddingRegistry";
 import RegistryPublicView from "@/pages/RegistryPublicView";
+import BabyShower from "@/pages/BabyShower";
 import HolidayCelebration from "@/pages/HolidayCelebration";
 import QRScannerDemo from "@/pages/QRScannerDemo";
 import NotFound from "@/pages/not-found";
@@ -463,6 +464,7 @@ function Router() {
         <Route path="/celebrations" component={CelebrationsHub} />
         <Route path="/wedding-registry" component={WeddingRegistry} />
         <Route path="/registry/:shareCode" component={RegistryPublicView} />
+        <Route path="/baby-shower" component={BabyShower} />
         <Route path="/holiday-celebration/:id" component={HolidayCelebration} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
