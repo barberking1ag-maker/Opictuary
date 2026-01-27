@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, MapPin, Heart } from "lucide-react";
 import { format } from "date-fns";
 import { ShareObituaryButton } from "@/components/ShareObituaryButton";
 import { MemorialCondolenceBar } from "@/components/MemorialCondolenceBar";
+import { MemorialStats } from "@/components/MemorialStats";
 
 interface Memorial {
   id: string;
@@ -186,6 +187,10 @@ export default function ObituaryPage() {
               <h3 className="text-xl font-serif font-semibold text-center">Express Your Condolences</h3>
               <MemorialCondolenceBar memorialId={memorial.id} />
             </div>
+
+            <Separator className="bg-white/10" />
+
+            <MemorialStats memorialId={memorial.id} />
 
             <Separator className="bg-white/10" />
 

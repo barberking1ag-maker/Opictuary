@@ -6,6 +6,8 @@ import { usePlatform } from "@/hooks/usePlatform";
 import { nativeShare } from "@/lib/mobileUtils";
 import { Flame, Share2, Camera, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface NativeMemorialActionsProps {
   memorialId: string;
@@ -23,14 +25,29 @@ export function NativeMemorialActions({
   const { isNative, isMobile } = usePlatform();
   const { impact, notification } = useHaptics();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [candleLit, setCandleLit] = useState(false);
   const [candleAnimation, setCandleAnimation] = useState(false);
 
+  const candleMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/memorials/${memorialId}/reactions`, {
+        reactionType: "candle"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/memorials", memorialId, "reactions"] });
+    }
+  });
+
   const handleLightCandle = async () => {
+    if (candleLit) return;
+    
     impact('heavy');
     setCandleAnimation(true);
     
-    setTimeout(() => {
+    try {
+      await candleMutation.mutateAsync();
       setCandleLit(true);
       setCandleAnimation(false);
       notification('success');
@@ -38,7 +55,15 @@ export function NativeMemorialActions({
         title: "Candle Lit",
         description: `A candle has been lit in memory of ${memorialName}`,
       });
-    }, 600);
+    } catch (error) {
+      setCandleAnimation(false);
+      notification('error');
+      toast({
+        title: "Unable to Light Candle",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = async () => {

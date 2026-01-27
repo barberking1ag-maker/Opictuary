@@ -266,6 +266,15 @@ import {
   // Multi-Faith types
   multiFaithTemplates,
   type MultiFaithTemplate,
+  familyGroups,
+  familyGroupMembers,
+  familyGroupMessages,
+  type FamilyGroup,
+  type InsertFamilyGroup,
+  type FamilyGroupMember,
+  type InsertFamilyGroupMember,
+  type FamilyGroupMessage,
+  type InsertFamilyGroupMessage,
   type InsertMultiFaithTemplate,
   // Holiday Events types
   holidayEvents,
@@ -815,6 +824,13 @@ export interface IStorage {
   createBirthdayWish(data: InsertBirthdayWish): Promise<BirthdayWish>;
   updateBirthdayWish(id: string, data: Partial<InsertBirthdayWish>): Promise<BirthdayWish | undefined>;
   deleteBirthdayWish(id: string): Promise<void>;
+  
+  // Family Groups operations
+  getFamilyGroups(memorialId: string): Promise<FamilyGroup[]>;
+  createFamilyGroup(data: InsertFamilyGroup): Promise<FamilyGroup>;
+  getFamilyGroupMessages(groupId: string): Promise<FamilyGroupMessage[]>;
+  createFamilyGroupMessage(data: InsertFamilyGroupMessage): Promise<FamilyGroupMessage>;
+  getFamilyGroupMembers(groupId: string): Promise<FamilyGroupMember[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4326,6 +4342,29 @@ export class DatabaseStorage implements IStorage {
 
   async getEssentialWorkerMemorials(): Promise<EssentialWorkerMemorial[]> {
     return await db.select().from(essentialWorkersMemorials).orderBy(desc(essentialWorkersMemorials.createdAt));
+  }
+
+  // Family Groups operations
+  async getFamilyGroups(memorialId: string): Promise<FamilyGroup[]> {
+    return await db.select().from(familyGroups).where(eq(familyGroups.memorialId, memorialId)).orderBy(desc(familyGroups.createdAt));
+  }
+
+  async createFamilyGroup(data: InsertFamilyGroup): Promise<FamilyGroup> {
+    const [group] = await db.insert(familyGroups).values(data).returning();
+    return group;
+  }
+
+  async getFamilyGroupMessages(groupId: string): Promise<FamilyGroupMessage[]> {
+    return await db.select().from(familyGroupMessages).where(eq(familyGroupMessages.groupId, groupId)).orderBy(desc(familyGroupMessages.createdAt));
+  }
+
+  async createFamilyGroupMessage(data: InsertFamilyGroupMessage): Promise<FamilyGroupMessage> {
+    const [message] = await db.insert(familyGroupMessages).values(data).returning();
+    return message;
+  }
+
+  async getFamilyGroupMembers(groupId: string): Promise<FamilyGroupMember[]> {
+    return await db.select().from(familyGroupMembers).where(eq(familyGroupMembers.groupId, groupId));
   }
 }
 

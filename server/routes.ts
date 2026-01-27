@@ -7699,6 +7699,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // PRIVATE FAMILY GROUPS API ROUTES
+  // ============================================
+
+  // Get family groups for a memorial
+  app.get("/api/memorials/:memorialId/family-groups", async (req, res) => {
+    try {
+      const { memorialId } = req.params;
+      const groups = await storage.getFamilyGroups(memorialId);
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching family groups:', error);
+      res.status(500).json({ error: 'Failed to fetch family groups' });
+    }
+  });
+
+  // Create a family group
+  app.post("/api/memorials/:memorialId/family-groups", isAuthenticated, async (req: any, res) => {
+    try {
+      const { memorialId } = req.params;
+      const { name, description } = req.body;
+      
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      const group = await storage.createFamilyGroup({
+        memorialId,
+        name,
+        description,
+        inviteCode,
+        createdBy: req.user?.id,
+        isActive: true,
+      });
+      res.status(201).json(group);
+    } catch (error) {
+      console.error('Error creating family group:', error);
+      res.status(500).json({ error: 'Failed to create family group' });
+    }
+  });
+
+  // Get messages for a family group
+  app.get("/api/family-groups/:groupId/messages", async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const messages = await storage.getFamilyGroupMessages(groupId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching group messages:', error);
+      res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  });
+
+  // Post a message to a family group
+  app.post("/api/family-groups/:groupId/messages", async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { content, authorName, mediaUrl, mediaType } = req.body;
+      
+      const message = await storage.createFamilyGroupMessage({
+        groupId,
+        content,
+        authorName: authorName || 'Family Member',
+        mediaUrl,
+        mediaType,
+        isPrivate: false,
+      });
+      res.status(201).json(message);
+    } catch (error) {
+      console.error('Error posting message:', error);
+      res.status(500).json({ error: 'Failed to post message' });
+    }
+  });
+
+  // Get members of a family group
+  app.get("/api/family-groups/:groupId/members", async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const members = await storage.getFamilyGroupMembers(groupId);
+      res.json(members);
+    } catch (error) {
+      console.error('Error fetching group members:', error);
+      res.status(500).json({ error: 'Failed to fetch members' });
+    }
+  });
+
   // Register extended routes for payment processing, verification, and fulfillment
   registerExtendedRoutes(app);
 

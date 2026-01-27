@@ -3843,6 +3843,66 @@ export type VendorListing = typeof vendorListings.$inferSelect;
 export type InsertVendorBooking = z.infer<typeof insertVendorBookingSchema>;
 export type VendorBooking = typeof vendorBookings.$inferSelect;
 
+// Private Family Groups - invite-only spaces for close family
+export const familyGroups = pgTable("family_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  inviteCode: varchar("invite_code", { length: 20 }).notNull().unique(),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "set null" }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_family_groups_memorial_id").on(table.memorialId),
+  index("idx_family_groups_invite_code").on(table.inviteCode),
+]);
+
+export const familyGroupMembers = pgTable("family_group_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => familyGroups.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  email: text("email"),
+  name: text("name"),
+  relationship: text("relationship"),
+  role: text("role").default("member"),
+  status: text("status").default("pending"),
+  invitedAt: timestamp("invited_at").defaultNow(),
+  joinedAt: timestamp("joined_at"),
+}, (table) => [
+  index("idx_family_group_members_group_id").on(table.groupId),
+  index("idx_family_group_members_user_id").on(table.userId),
+]);
+
+export const familyGroupMessages = pgTable("family_group_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => familyGroups.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  authorName: text("author_name").notNull(),
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"),
+  mediaType: text("media_type"),
+  isPrivate: boolean("is_private").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_family_group_messages_group_id").on(table.groupId),
+  index("idx_family_group_messages_created_at").on(table.createdAt),
+]);
+
+// Family Groups schemas and types
+export const insertFamilyGroupSchema = createInsertSchema(familyGroups).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFamilyGroup = z.infer<typeof insertFamilyGroupSchema>;
+export type FamilyGroup = typeof familyGroups.$inferSelect;
+
+export const insertFamilyGroupMemberSchema = createInsertSchema(familyGroupMembers).omit({ id: true, invitedAt: true, joinedAt: true });
+export type InsertFamilyGroupMember = z.infer<typeof insertFamilyGroupMemberSchema>;
+export type FamilyGroupMember = typeof familyGroupMembers.$inferSelect;
+
+export const insertFamilyGroupMessageSchema = createInsertSchema(familyGroupMessages).omit({ id: true, createdAt: true });
+export type InsertFamilyGroupMessage = z.infer<typeof insertFamilyGroupMessageSchema>;
+export type FamilyGroupMessage = typeof familyGroupMessages.$inferSelect;
+
 // Export schemas and types for Sports Memorials
 export const insertAthleteProfileSchema = createInsertSchema(athleteProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAthleteStatSchema = createInsertSchema(athleteStats).omit({ id: true, createdAt: true });
