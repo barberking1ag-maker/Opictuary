@@ -394,28 +394,37 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
             data-testid={`card-memory-${memory.id}`}
             type="button"
           >
-            <div className="aspect-square relative">
-              {isVideo(memory.mediaUrl) ? (
-                <div className="absolute inset-0 bg-black flex items-center justify-center">
-                  <Video className="w-12 h-12 text-white" />
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="secondary" className="bg-black/70 text-white">
-                      Video
-                    </Badge>
+            <div className="aspect-square relative bg-muted flex items-center justify-center overflow-hidden rounded-t-lg">
+              {memory.mediaUrl ? (
+                isVideo(memory.mediaUrl) ? (
+                  <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <Video className="w-12 h-12 text-white" />
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="bg-black/70 text-white">
+                        Video
+                      </Badge>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <img
+                    src={memory.mediaUrl}
+                    alt={memory.caption}
+                    className="w-full h-full object-cover"
+                    data-testid={`img-memory-${memory.id}`}
+                    loading="lazy"
+                    onError={(e) => {
+                      console.error("Image failed to load:", memory.mediaUrl);
+                      e.currentTarget.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+                    }}
+                  />
+                )
               ) : (
-                <img
-                  src={memory.mediaUrl}
-                  alt={memory.caption}
-                  className="w-full h-full object-cover rounded-t-lg"
-                  data-testid={`img-memory-${memory.id}`}
-                  loading="lazy"
-                  onError={(e) => {
-                    console.error("Image failed to load:", memory.mediaUrl);
-                    e.currentTarget.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
-                  }}
-                />
+                <div className="p-6 text-center">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-2 text-muted-foreground/40" />
+                  <p className="text-sm font-serif italic line-clamp-3 text-muted-foreground">
+                    "{memory.caption}"
+                  </p>
+                </div>
               )}
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -505,25 +514,34 @@ export function MemorialGallery({ memorialId, isOwner = false }: MemorialGallery
               </DialogHeader>
 
               {/* Media Display with Navigation */}
-              <div className="relative rounded-lg overflow-hidden bg-black">
-                {isVideo(selectedMemory.mediaUrl) ? (
-                  <video
-                    src={selectedMemory.mediaUrl}
-                    controls
-                    className="w-full max-h-[60vh]"
-                    data-testid="video-memory"
-                  />
+              <div className="relative rounded-lg overflow-hidden bg-black min-h-[300px] flex items-center justify-center">
+                {selectedMemory.mediaUrl ? (
+                  isVideo(selectedMemory.mediaUrl) ? (
+                    <video
+                      src={selectedMemory.mediaUrl}
+                      controls
+                      className="w-full max-h-[60vh]"
+                      data-testid="video-memory"
+                    />
+                  ) : (
+                    <img
+                      src={selectedMemory.mediaUrl}
+                      alt={selectedMemory.caption}
+                      className="w-full max-h-[60vh] object-contain mx-auto bg-black"
+                      data-testid="img-memory-full"
+                      onError={(e) => {
+                        console.error("Full image failed to load:", selectedMemory.mediaUrl);
+                        e.currentTarget.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                      }}
+                    />
+                  )
                 ) : (
-                  <img
-                    src={selectedMemory.mediaUrl}
-                    alt={selectedMemory.caption}
-                    className="w-full max-h-[60vh] object-contain mx-auto bg-black"
-                    data-testid="img-memory-full"
-                    onError={(e) => {
-                      console.error("Full image failed to load:", selectedMemory.mediaUrl);
-                      e.currentTarget.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
-                    }}
-                  />
+                  <div className="p-12 text-center max-w-2xl">
+                    <MessageCircle className="w-16 h-16 mx-auto mb-6 text-white/20" />
+                    <p className="text-2xl font-serif italic text-white leading-relaxed">
+                      "{selectedMemory.caption}"
+                    </p>
+                  </div>
                 )}
 
                 {/* Navigation Arrows */}

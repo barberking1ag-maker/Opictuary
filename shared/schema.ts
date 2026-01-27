@@ -120,8 +120,11 @@ export const memories = pgTable("memories", {
   memorialId: varchar("memorial_id").notNull().references(() => memorials.id, { onDelete: "cascade" }),
   authorName: text("author_name").notNull(),
   caption: text("caption").notNull(),
-  mediaUrl: text("media_url"),
+  mediaUrl: text("media_url"), // Optional for text-only memories
+  mediaType: text("media_type").default("image"), // 'image', 'video', 'text'
   isApproved: boolean("is_approved").default(false),
+  hasPaidLiveUrl: boolean("has_paid_live_url").default(false),
+  liveUrlPrice: decimal("live_url_price", { precision: 10, scale: 2 }).default("4.99"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_memories_memorial_id").on(table.memorialId),
