@@ -50,9 +50,13 @@ const speciesOptions = [
   { value: "cat", label: "Cat", icon: Cat },
   { value: "bird", label: "Bird", icon: Bird },
   { value: "rabbit", label: "Rabbit", icon: Rabbit },
-  { value: "fish", label: "Fish", icon: Fish },
+  { value: "hamster", label: "Hamster", icon: PawPrint },
+  { value: "guinea-pig", label: "Guinea Pig", icon: PawPrint },
   { value: "horse", label: "Horse", icon: PawPrint },
+  { value: "fish", label: "Fish", icon: Fish },
   { value: "reptile", label: "Reptile", icon: PawPrint },
+  { value: "ferret", label: "Ferret", icon: PawPrint },
+  { value: "turtle", label: "Turtle", icon: PawPrint },
   { value: "other", label: "Other", icon: PawPrint },
 ];
 
