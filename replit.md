@@ -67,6 +67,7 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **Alumni Memorial System:** Comprehensive system for honoring deceased alumni with university-themed design and creation wizards.
 **AI Chat Assistant:** OpenAI-powered assistant for user support and navigation, accessible via a floating button.
 **QR-Activated Physical Memorial Products System:** Full-stack e-commerce platform for physical memorial products with embedded QR codes, product catalog, customization wizard, order management, admin dashboard, and secure Stripe payment processing.
+**AI Card Maker:** Dedicated page for creating personalized memorial cards with AI-generated designs ($9.99 per design). Users can describe their vision and the AI creates unique artwork based on their descriptions.
 **Revenue Model:** Configurable platform fees on fundraisers/donations and revenue from physical memorial products.
 
 ### System Design Choices

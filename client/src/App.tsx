@@ -60,6 +60,7 @@ import UpcomingMessages from "@/pages/UpcomingMessages";
 import VideoTimeCapsules from "@/pages/VideoTimeCapsules";
 import Products from "@/pages/Products";
 import ProductCustomize from "@/pages/ProductCustomize";
+import AICardMaker from "@/pages/AICardMaker";
 import MyOrders from "@/pages/MyOrders";
 import OrderTracking from "@/pages/OrderTracking";
 import EventPlanner from "@/pages/EventPlanner";
@@ -206,6 +207,12 @@ function Router() {
                     <Link href="/qr-code">
                       <Layout className="w-4 h-4 mr-2" />
                       <span>QR Memorials</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-ai-card-maker">
+                    <Link href="/ai-card-maker">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      <span>AI Card Maker</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -502,6 +509,7 @@ function Router() {
         {/* Product Routes */}
         <Route path="/products" component={Products} />
         <Route path="/products/:productId/customize" component={ProductCustomize} />
+        <Route path="/ai-card-maker" component={AICardMaker} />
         <Route path="/orders" component={MyOrders} />
         <Route path="/orders/:orderId" component={OrderTracking} />
         
