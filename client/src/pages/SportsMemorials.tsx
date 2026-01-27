@@ -86,8 +86,9 @@ const sampleAthletes = [
       location: "Naismith Memorial Basketball Hall of Fame"
     },
     mediaLinks: [
-      { type: "highlights", title: "Career Highlights", url: "#" },
-      { type: "documentary", title: "The Last Dance", url: "#" }
+      { type: "highlights", title: "NBA Hall of Fame", url: "https://www.nba.com/halloffame/2025" },
+      { type: "documentary", title: "The Last Dance (Netflix)", url: "https://www.netflix.com/title/80203144" },
+      { type: "documentary", title: "The Last Dance (ESPN+)", url: "https://www.espn.com/watch/series/2806434b-1deb-4c5c-aae0-04b1ab8eebf7/the-last-dance" }
     ]
   },
   {
@@ -125,8 +126,9 @@ const sampleAthletes = [
       location: "Pro Football Hall of Fame"
     },
     mediaLinks: [
-      { type: "highlights", title: "7 Super Bowl Victories", url: "#" },
-      { type: "interview", title: "Retirement Speech", url: "#" }
+      { type: "documentary", title: "Man in the Arena (ESPN+)", url: "https://www.espn.com/watch/catalog/7272d9a2-61c8-4c66-a58b-e99e7bc45f48/man-in-the-arena-tom-brady" },
+      { type: "documentary", title: "Man in the Arena (Hulu)", url: "https://www.hulu.com/series/man-in-the-arena-tom-brady-0cad7172-edc8-4833-8005-7beeff66f573" },
+      { type: "documentary", title: "Man in the Arena (Disney+)", url: "https://www.disneyplus.com/series/man-in-the-arena-tom-brady/5maNr9Xqosyf" }
     ]
   },
   {
@@ -164,8 +166,9 @@ const sampleAthletes = [
       location: "International Tennis Hall of Fame"
     },
     mediaLinks: [
-      { type: "highlights", title: "23 Grand Slam Victories", url: "#" },
-      { type: "documentary", title: "Being Serena", url: "#" }
+      { type: "highlights", title: "Tennis Hall of Fame", url: "https://www.tennisfame.com" },
+      { type: "documentary", title: "Being Serena (Max)", url: "https://www.max.com/shows/being-serena" },
+      { type: "documentary", title: "Being Serena (Hulu)", url: "https://www.hulu.com/series/being-serena-c5f827d0-2571-4065-a89b-92f2e6b5b5bc" }
     ]
   }
 ];
