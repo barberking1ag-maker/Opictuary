@@ -336,7 +336,7 @@ export default function ProductCustomize() {
   const calculateTotal = () => {
     // Match server-side calculation for display purposes
     const subtotal = parseFloat(product.basePrice) * quantity;
-    const aiDesignPremium = aiDesignEnabled ? 15.00 : 0;
+    const aiDesignPremium = aiDesignEnabled ? 9.99 : 0;
     const shipping = 15.00; // Fixed shipping rate (matches server)
     const tax = (subtotal + aiDesignPremium) * 0.08; // 8% tax rate (matches server)
     return subtotal + aiDesignPremium + shipping + tax;
@@ -672,7 +672,7 @@ export default function ProductCustomize() {
                           >
                             <Sparkles className="w-4 h-4 text-primary" />
                             Add Custom AI-Generated Design
-                            <Badge variant="secondary" className="ml-2">+$15</Badge>
+                            <Badge variant="secondary" className="ml-2">+$9.99</Badge>
                           </label>
                           <p className="text-xs text-muted-foreground mt-1">
                             Create a unique, personalized design using AI
@@ -787,7 +787,7 @@ export default function ProductCustomize() {
                           <Sparkles className="w-3 h-3" />
                           AI Design Premium
                         </span>
-                        <span className="font-semibold">$15.00</span>
+                        <span className="font-semibold">$9.99</span>
                       </div>
                     )}
                     <div className="flex justify-between">
@@ -1035,7 +1035,7 @@ export default function ProductCustomize() {
                           <Sparkles className="w-3 h-3" />
                           AI Design Premium
                         </span>
-                        <span className="font-medium">$15.00</span>
+                        <span className="font-medium">$9.99</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
@@ -1044,7 +1044,7 @@ export default function ProductCustomize() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax (8%)</span>
-                      <span className="font-medium">${((parseFloat(product.basePrice) * quantity + (aiDesignEnabled ? 15 : 0)) * 0.08).toFixed(2)}</span>
+                      <span className="font-medium">${((parseFloat(product.basePrice) * quantity + (aiDesignEnabled ? 9.99 : 0)) * 0.08).toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg">

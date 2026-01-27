@@ -160,6 +160,11 @@ export default function FutureMessages() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Future Messages</h1>
           <p className="text-muted-foreground">Schedule heartfelt messages for future occasions</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary" className="text-xs" data-testid="badge-video-price">
+              $9.99/video message until released
+            </Badge>
+          </div>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>

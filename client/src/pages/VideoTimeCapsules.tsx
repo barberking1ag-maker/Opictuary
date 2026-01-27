@@ -277,6 +277,11 @@ export default function VideoTimeCapsules() {
           <p className="text-muted-foreground">
             Pre-record video messages that automatically release on future milestones
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary" className="text-xs" data-testid="badge-video-price">
+              $9.99/video until released
+            </Badge>
+          </div>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={(open) => {
           setIsCreateOpen(open);
