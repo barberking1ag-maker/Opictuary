@@ -33,7 +33,14 @@ export default function Products() {
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="text-center max-w-3xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto relative">
+            {/* Coming Soon Stamp */}
+            <div className="absolute -top-4 -right-4 sm:top-0 sm:right-0 transform rotate-12 z-10">
+              <div className="bg-amber-500 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-amber-600">
+                <span className="font-bold text-sm uppercase tracking-wider">Coming Soon</span>
+              </div>
+            </div>
+            
             <div className="flex items-center justify-center gap-3 mb-6">
               <Package className="w-10 h-10 text-primary" />
               <QrCode className="w-10 h-10 text-primary" />
@@ -44,6 +51,11 @@ export default function Products() {
             <p className="text-lg text-muted-foreground leading-relaxed">
               Beautiful physical memorial products that seamlessly connect to digital memorials. Each product features an embedded QR code, allowing visitors to access photos, videos, and memories with a simple scan.
             </p>
+            
+            <Badge variant="secondary" className="mt-6 text-amber-600 border-amber-500">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Products launching soon - stay tuned!
+            </Badge>
           </div>
         </div>
       </div>

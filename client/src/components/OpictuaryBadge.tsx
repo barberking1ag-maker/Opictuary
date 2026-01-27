@@ -114,29 +114,14 @@ function ClassicBadgeOverlay({ scale }: { scale: number }) {
         textAnchor="middle"
         className="fill-white"
         style={{
-          fontSize: '13px',
+          fontSize: '14px',
           fontFamily: 'sans-serif',
-          fontWeight: '500',
-          letterSpacing: '0.5px',
+          fontWeight: '600',
+          letterSpacing: '2px',
           filter: 'drop-shadow(1px 1px 3px rgba(0,0,0,0.9))'
         }}
       >
-        obituary app inspired to help
-      </text>
-      <text
-        x="150"
-        y="340"
-        textAnchor="middle"
-        className="fill-white"
-        style={{
-          fontSize: '13px',
-          fontFamily: 'sans-serif',
-          fontWeight: '500',
-          letterSpacing: '0.5px',
-          filter: 'drop-shadow(1px 1px 3px rgba(0,0,0,0.9))'
-        }}
-      >
-        families through times of need
+        MEMORIAL PLATFORM
       </text>
     </svg>
   );
@@ -262,48 +247,18 @@ function HaloTechBadgeOverlay({ scale }: { scale: number }) {
       
       <text
         x="150"
-        y="320"
+        y="330"
         textAnchor="middle"
         className="fill-white"
         style={{
-          fontSize: '13px',
+          fontSize: '14px',
           fontFamily: 'sans-serif',
-          fontWeight: '600',
-          letterSpacing: '1px',
+          fontWeight: '700',
+          letterSpacing: '2px',
           filter: 'drop-shadow(0px 0px 5px rgba(0,212,255,0.8)) drop-shadow(1px 1px 3px rgba(0,0,0,0.9))'
         }}
       >
-        OBITUARY APP INSPIRED
-      </text>
-      <text
-        x="150"
-        y="340"
-        textAnchor="middle"
-        className="fill-white"
-        style={{
-          fontSize: '13px',
-          fontFamily: 'sans-serif',
-          fontWeight: '600',
-          letterSpacing: '1px',
-          filter: 'drop-shadow(0px 0px 5px rgba(0,212,255,0.8)) drop-shadow(1px 1px 3px rgba(0,0,0,0.9))'
-        }}
-      >
-        TO HELP FAMILIES
-      </text>
-      <text
-        x="150"
-        y="360"
-        textAnchor="middle"
-        className="fill-white"
-        style={{
-          fontSize: '13px',
-          fontFamily: 'sans-serif',
-          fontWeight: '600',
-          letterSpacing: '1px',
-          filter: 'drop-shadow(0px 0px 5px rgba(0,212,255,0.8)) drop-shadow(1px 1px 3px rgba(0,0,0,0.9))'
-        }}
-      >
-        THROUGH TIMES OF NEED
+        MEMORIAL PLATFORM
       </text>
       
       <circle cx="20" cy="20" r="3" fill="#00D4FF" opacity="0.8"/>
