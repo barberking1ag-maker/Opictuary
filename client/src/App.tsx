@@ -401,7 +401,7 @@ function Router() {
                     <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-prison-access">
                       <Link href="/prison-access">
                         <Lock className="w-4 h-4 mr-2" />
-                        <span>Prison Access</span>
+                        <span>Prison Access (Coming Soon)</span>
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

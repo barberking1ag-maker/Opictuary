@@ -419,15 +419,22 @@ export default function Landing() {
 
           {/* Prison Access */}
           <Link href="/prison-access" className="block" data-testid="link-prison-access">
-            <Card className="hover-elevate h-full">
+            <Card className="hover-elevate h-full relative">
+              <div className="absolute top-4 right-4 z-10">
+                <Badge variant="secondary" className="bg-amber-500 text-white border-amber-600">
+                  Coming Soon
+                </Badge>
+              </div>
               <CardContent className="p-6 space-y-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Lock className="w-6 h-6 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">Prison Access</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-semibold text-foreground">Prison Access</h3>
+                  </div>
                   <p className="text-sm text-muted-foreground">
-                    Secure, monitored memorial access for incarcerated individuals to stay connected with loved ones' legacies
+                    Allow all prisoners to celebrate holidays live for only $19.99/month. Secure, monitored memorial access for incarcerated individuals.
                   </p>
                 </div>
                 <Button variant="ghost" size="sm" className="w-full">

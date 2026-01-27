@@ -82,7 +82,7 @@ export function Footer({ badgeVariant = "classic" }: FooterProps) {
               <li>
                 <Link href="/prison-access">
                   <span className="hover:text-foreground transition-colors cursor-pointer" data-testid="footer-link-prison-access">
-                    Prison Access
+                    Prison Access (Coming Soon)
                   </span>
                 </Link>
               </li>
