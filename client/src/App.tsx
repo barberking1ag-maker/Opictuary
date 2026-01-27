@@ -446,6 +446,7 @@ function Router() {
         <Route path="/pet-memorial/:inviteCode" component={PetMemorialView} />
         <Route path="/multi-faith-templates" component={MultiFaithTemplates} />
         <Route path="/living-legacy" component={LivingLegacy} />
+        <Route path="/family-tree" component={FamilyTree} />
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
         <Route path="/qr-designer" component={CustomQRCodeDesigner} />
