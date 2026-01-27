@@ -202,6 +202,52 @@ export default function About() {
           </div>
         </section>
 
+        {/* Founder Section */}
+        <section className="space-y-6">
+          <h2 className="text-3xl font-serif font-semibold text-foreground" data-testid="text-founder-title">
+            Our Founder
+          </h2>
+          
+          <Card className="overflow-hidden">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="flex-shrink-0 w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-4xl font-serif font-bold text-primary">AG</span>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-foreground" data-testid="text-founder-name">
+                      Aaron Givens
+                    </h3>
+                    <p className="text-primary font-medium" data-testid="text-founder-role">
+                      Founder & Owner, Opictuary.com
+                    </p>
+                  </div>
+                  <div className="prose prose-lg max-w-none text-muted-foreground space-y-3">
+                    <p data-testid="text-founder-bio-1">
+                      Aaron Givens founded Opictuary with a vision to transform how we honor and remember 
+                      our loved ones in the digital age. Recognizing that traditional obituaries capture 
+                      only a fraction of a life story, he set out to build the world's first continuum 
+                      memorial platform.
+                    </p>
+                    <p data-testid="text-founder-bio-2">
+                      Under Aaron's leadership, Opictuary has grown into a comprehensive remembrance 
+                      operating system that serves families, funeral homes, and communities worldwide. 
+                      The platform is protected by 22 provisional patents and continues to pioneer 
+                      innovations in memorial technology, from AI-guided storytelling to multi-faith 
+                      holiday celebrations.
+                    </p>
+                    <p data-testid="text-founder-bio-3">
+                      Aaron's commitment to dignity, inclusivity, and accessibility drives every aspect 
+                      of Opictuary's mission: to honor every life, in every dimension.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Promise */}
         <section className="space-y-6">
           <h2 className="text-3xl font-serif font-semibold text-foreground" data-testid="text-promise-title">
