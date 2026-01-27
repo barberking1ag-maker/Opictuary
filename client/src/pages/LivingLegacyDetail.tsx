@@ -197,15 +197,33 @@ export default function LivingLegacyDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No achievements documented yet.</p>
-                {isOwner && (
-                  <Button variant="outline" className="mt-4" data-testid="button-add-achievement">
-                    Add Achievement
-                  </Button>
-                )}
-              </div>
+              {legacy.achievements && legacy.achievements.length > 0 ? (
+                <div className="space-y-4">
+                  {legacy.achievements.map((achievement: any, index: number) => (
+                    <div key={index} className="flex gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 border border-purple-100 dark:border-purple-900/30">
+                      <div className="mt-1">
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                          {achievement.year || "Award"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">{achievement.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{achievement.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No achievements documented yet.</p>
+                  {isOwner && (
+                    <Button variant="outline" className="mt-4" data-testid="button-add-achievement">
+                      Add Achievement
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
