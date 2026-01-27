@@ -71,6 +71,7 @@ import CreatePetMemorial from "@/pages/CreatePetMemorial";
 import PetMemorialView from "@/pages/PetMemorialView";
 import MultiFaithTemplates from "@/pages/MultiFaithTemplates";
 import LivingLegacy from "@/pages/LivingLegacy";
+import LivingLegacyDetail from "@/pages/LivingLegacyDetail";
 import FamilyTree from "@/pages/FamilyTree";
 import CemeteryNavigator from "@/pages/CemeteryNavigator";
 import CustomQRCodeDesigner from "@/pages/CustomQRCodeDesigner";
@@ -446,6 +447,7 @@ function Router() {
         <Route path="/pet-memorial/:inviteCode" component={PetMemorialView} />
         <Route path="/multi-faith-templates" component={MultiFaithTemplates} />
         <Route path="/living-legacy" component={LivingLegacy} />
+        <Route path="/living-legacy/:id" component={LivingLegacyDetail} />
         <Route path="/family-tree" component={FamilyTree} />
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
