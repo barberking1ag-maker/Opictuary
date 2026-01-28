@@ -44,7 +44,7 @@ const eventTypeLabels: Record<string, string> = {
 
 const statusConfig = {
   draft: { label: "Draft", color: "bg-gray-500/20 text-gray-100 border-gray-500/30" },
-  pending: { label: "Pending", color: "bg-purple-500/20 text-purple-100 border-purple-500/30" },
+  pending: { label: "Pending", color: "bg-primary/20 text-foreground border-primary/30" },
   sent: { label: "Sent", color: "bg-green-500/20 text-green-100 border-green-500/30" },
   failed: { label: "Failed", color: "bg-red-500/20 text-red-100 border-red-500/30" },
 };
@@ -95,7 +95,7 @@ export default function UpcomingMessages() {
               <CardTitle className="text-lg mb-1 flex items-center gap-2 flex-wrap">
                 <span className="truncate">{message.recipientName}</span>
                 {message.isRecurring && (
-                  <Badge variant="outline" className="bg-purple-500/10 border-purple-500/30 text-purple-200">
+                  <Badge variant="outline" className="bg-primary/10 border-primary/30 text-foreground">
                     <Calendar className="w-3 h-3 mr-1" />
                     Recurring
                   </Badge>
@@ -105,17 +105,17 @@ export default function UpcomingMessages() {
                 <Badge className={`${statusInfo.color} border`}>
                   {statusInfo.label}
                 </Badge>
-                <span className="text-purple-300">•</span>
+                <span className="text-muted-foreground">•</span>
                 <span className="truncate">{eventLabel}</span>
               </CardDescription>
             </div>
             {eventDate && (
               <div className="text-right shrink-0">
-                <div className="text-sm font-medium text-purple-200">
+                <div className="text-sm font-medium text-foreground">
                   {format(eventDate, "MMM d, yyyy")}
                 </div>
                 {message.sendTime && (
-                  <div className="text-xs text-purple-400 flex items-center justify-end gap-1 mt-1">
+                  <div className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-1">
                     <Clock className="w-3 h-3" />
                     {message.sendTime}
                   </div>
@@ -125,19 +125,19 @@ export default function UpcomingMessages() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="text-sm text-purple-200 line-clamp-2">
+          <div className="text-sm text-foreground line-clamp-2">
             {message.message}
           </div>
 
           {message.recipientEmail && (
-            <div className="flex items-center gap-2 text-xs text-purple-300">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Mail className="w-3 h-3" />
               {message.recipientEmail}
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2 border-t border-purple-700/30">
-            <div className="text-xs text-purple-400">
+          <div className="flex items-center justify-between pt-2 border-t border-border">
+            <div className="text-xs text-muted-foreground">
               {message.memorialName && (
                 <span>For {message.memorialName}</span>
               )}
@@ -173,10 +173,10 @@ export default function UpcomingMessages() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-200 to-gold-200 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-2 text-foreground">
           Upcoming Messages
         </h1>
-        <p className="text-purple-300">
+        <p className="text-muted-foreground">
           Manage all your scheduled messages across all memorials
         </p>
       </div>
@@ -184,37 +184,37 @@ export default function UpcomingMessages() {
       <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-purple-300">Next 7 Days</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Next 7 Days</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-100">{next7DaysMessages.length}</div>
-            <p className="text-xs text-purple-400 mt-1">Messages scheduled</p>
+            <div className="text-3xl font-bold text-foreground">{next7DaysMessages.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Messages scheduled</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-purple-300">Next 30 Days</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Next 30 Days</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-100">{next30DaysMessages.length}</div>
-            <p className="text-xs text-purple-400 mt-1">Messages scheduled</p>
+            <div className="text-3xl font-bold text-foreground">{next30DaysMessages.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Messages scheduled</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-purple-300">Total Upcoming</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Upcoming</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-100">{upcomingMessages.length}</div>
-            <p className="text-xs text-purple-400 mt-1">All future messages</p>
+            <div className="text-3xl font-bold text-foreground">{upcomingMessages.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">All future messages</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="upcoming" className="space-y-6">
-        <TabsList className="bg-purple-900/30">
+        <TabsList>
           <TabsTrigger value="upcoming" data-testid="tab-upcoming">
             <MessageSquare className="w-4 h-4 mr-2" />
             Upcoming ({upcomingMessages.length})
@@ -237,9 +237,9 @@ export default function UpcomingMessages() {
           {upcomingMessages.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <MessageSquare className="w-16 h-16 text-purple-500/50 mb-4" />
+                <MessageSquare className="w-16 h-16 text-muted-foreground/50 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Upcoming Messages</h3>
-                <p className="text-purple-400 text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md">
                   You don't have any scheduled messages. Create future messages from individual memorial pages.
                 </p>
               </CardContent>
@@ -257,9 +257,9 @@ export default function UpcomingMessages() {
           {next7DaysMessages.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Calendar className="w-16 h-16 text-purple-500/50 mb-4" />
+                <Calendar className="w-16 h-16 text-muted-foreground/50 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Messages in Next 7 Days</h3>
-                <p className="text-purple-400 text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md">
                   No messages are scheduled to be sent in the next week.
                 </p>
               </CardContent>
@@ -277,9 +277,9 @@ export default function UpcomingMessages() {
           {draftMessages.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Filter className="w-16 h-16 text-purple-500/50 mb-4" />
+                <Filter className="w-16 h-16 text-muted-foreground/50 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Draft Messages</h3>
-                <p className="text-purple-400 text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md">
                   All your messages are scheduled or sent.
                 </p>
               </CardContent>
@@ -297,9 +297,9 @@ export default function UpcomingMessages() {
           {sentMessages.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Mail className="w-16 h-16 text-purple-500/50 mb-4" />
+                <Mail className="w-16 h-16 text-muted-foreground/50 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Sent Messages</h3>
-                <p className="text-purple-400 text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md">
                   Messages that have been delivered will appear here.
                 </p>
               </CardContent>
