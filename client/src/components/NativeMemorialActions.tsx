@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/hooks/usePlatform";
 import { nativeShare } from "@/lib/mobileUtils";
-import { Flame, Share2, Camera, MessageCircle } from "lucide-react";
+import { Flame, Share2, Camera, MessageCircle, Download, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { saveMemorialOffline, getOfflineMemorial, removeOfflineMemorial } from "@/lib/offlineStorage";
 
 interface NativeMemorialActionsProps {
   memorialId: string;
   memorialName: string;
+  memorial?: any;
   onAddMemory?: () => void;
   onAddCondolence?: () => void;
 }
@@ -19,6 +21,7 @@ interface NativeMemorialActionsProps {
 export function NativeMemorialActions({ 
   memorialId, 
   memorialName,
+  memorial,
   onAddMemory,
   onAddCondolence 
 }: NativeMemorialActionsProps) {
@@ -28,6 +31,16 @@ export function NativeMemorialActions({
   const queryClient = useQueryClient();
   const [candleLit, setCandleLit] = useState(false);
   const [candleAnimation, setCandleAnimation] = useState(false);
+  const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [savingOffline, setSavingOffline] = useState(false);
+
+  useEffect(() => {
+    const checkSaved = async () => {
+      const saved = await getOfflineMemorial(memorialId);
+      setIsSavedOffline(!!saved);
+    };
+    checkSaved();
+  }, [memorialId]);
 
   const candleMutation = useMutation({
     mutationFn: async () => {
@@ -110,6 +123,49 @@ export function NativeMemorialActions({
     }
   };
 
+  const handleSaveOffline = async () => {
+    if (!memorial) {
+      toast({
+        title: "Cannot Save",
+        description: "Memorial data not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingOffline(true);
+    impact('medium');
+
+    try {
+      if (isSavedOffline) {
+        await removeOfflineMemorial(memorialId);
+        setIsSavedOffline(false);
+        notification('success');
+        toast({
+          title: "Removed from Offline",
+          description: "This memorial is no longer saved for offline viewing",
+        });
+      } else {
+        await saveMemorialOffline({ ...memorial, id: memorialId });
+        setIsSavedOffline(true);
+        notification('success');
+        toast({
+          title: "Saved for Offline",
+          description: "You can now view this memorial without internet",
+        });
+      }
+    } catch (error) {
+      notification('error');
+      toast({
+        title: "Save Failed",
+        description: "Unable to save memorial for offline viewing",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingOffline(false);
+    }
+  };
+
   if (!isNative && !isMobile) {
     return null;
   }
@@ -117,7 +173,7 @@ export function NativeMemorialActions({
   return (
     <Card className="border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm shadow-lg">
       <CardContent className="p-4">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-2">
           {/* Light Candle */}
           <button
             onClick={handleLightCandle}
@@ -189,6 +245,36 @@ export function NativeMemorialActions({
               <MessageCircle className="w-6 h-6 text-primary" />
             </div>
             <span className="text-[10px] font-medium mt-1 text-muted-foreground">Message</span>
+          </button>
+
+          {/* Save Offline */}
+          <button
+            onClick={handleSaveOffline}
+            disabled={savingOffline}
+            data-testid="button-save-offline"
+            className={cn(
+              "flex flex-col items-center justify-center p-3 rounded-xl transition-all active:scale-90",
+              isSavedOffline 
+                ? "bg-green-500/20" 
+                : "bg-card hover:bg-card/80"
+            )}
+          >
+            <div className={cn(
+              "w-10 h-10 flex items-center justify-center",
+              savingOffline && "animate-pulse"
+            )}>
+              {isSavedOffline ? (
+                <Check className="w-6 h-6 text-green-500" />
+              ) : (
+                <Download className="w-6 h-6 text-primary" />
+              )}
+            </div>
+            <span className={cn(
+              "text-[10px] font-medium mt-1",
+              isSavedOffline ? "text-green-500" : "text-muted-foreground"
+            )}>
+              {isSavedOffline ? "Saved" : "Offline"}
+            </span>
           </button>
         </div>
       </CardContent>

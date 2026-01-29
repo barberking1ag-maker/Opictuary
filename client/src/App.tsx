@@ -90,6 +90,7 @@ import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
 import { AppTour } from "@/components/AppTour";
+import { OfflineIndicator, OfflineBanner } from "@/components/OfflineIndicator";
 import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
@@ -541,10 +542,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <OfflineBanner />
         <Router />
         <InstallPrompt />
         <AIChat />
         <AppTour />
+        <OfflineIndicator />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

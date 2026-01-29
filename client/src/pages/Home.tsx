@@ -29,6 +29,8 @@ import VideoTimeCapsuleViewer from "@/components/VideoTimeCapsuleViewer";
 import { trackPageView, trackEvent } from "@/lib/analytics";
 import { handleMobileLogin } from "@/lib/mobileUtils";
 import { NativeMemorialActions } from "@/components/NativeMemorialActions";
+import { getOfflineMemorial } from "@/lib/offlineStorage";
+import { useOnlineStatus } from "@/components/OfflineIndicator";
 
 const DEMO_MEMORIAL_ID = "e94ee1f4-2506-4848-9c7e-97b6d473cf81";
 
@@ -39,8 +41,10 @@ export default function Home() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [memorialId, setMemorialId] = useState<string | null>(params.id || null);
   const [hasValidatedAccess, setHasValidatedAccess] = useState(false);
+  const [offlineMemorial, setOfflineMemorial] = useState<any>(null);
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
+  const isOnline = useOnlineStatus();
 
   const isVideo = (url: string | null) => {
     if (!url) return false;
@@ -331,8 +335,25 @@ export default function Home() {
     );
   }
 
-  // Memorial Error State
-  if (memorialId && memorialError) {
+  // Try to load offline memorial when API fails
+  useEffect(() => {
+    const loadOfflineMemorial = async () => {
+      if (memorialError && memorialId && !isOnline) {
+        const cached = await getOfflineMemorial(memorialId);
+        if (cached) {
+          setOfflineMemorial(cached.data);
+          toast({
+            title: "Viewing Offline",
+            description: "You're viewing a saved version of this memorial.",
+          });
+        }
+      }
+    };
+    loadOfflineMemorial();
+  }, [memorialError, memorialId, isOnline, toast]);
+
+  // Memorial Error State - but check for offline data first
+  if (memorialId && memorialError && !offlineMemorial) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <InviteCodeModal 
@@ -347,9 +368,14 @@ export default function Home() {
             <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
               <QrCode className="w-8 h-8 text-destructive" />
             </div>
-            <CardTitle className="text-2xl" data-testid="text-error-title">Memorial Not Found</CardTitle>
+            <CardTitle className="text-2xl" data-testid="text-error-title">
+              {!isOnline ? "You're Offline" : "Memorial Not Found"}
+            </CardTitle>
             <CardDescription className="text-base" data-testid="text-error-message">
-              We couldn't find this memorial. It may have been removed, made private, or you may need an access code to view it.
+              {!isOnline 
+                ? "This memorial isn't saved for offline viewing. Save memorials you visit to view them without internet."
+                : "We couldn't find this memorial. It may have been removed, made private, or you may need an access code to view it."
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -420,29 +446,31 @@ export default function Home() {
     );
   }
 
-  // Memorial not loaded yet
-  if (!memorial) {
+  // Memorial not loaded yet - use offline data if available
+  const displayMemorial = memorial || offlineMemorial;
+  
+  if (!displayMemorial) {
     return null;
   }
 
-  const years = memorial.birthDate && memorial.deathDate
-    ? `${new Date(memorial.birthDate).getFullYear()} - ${new Date(memorial.deathDate).getFullYear()}`
+  const years = displayMemorial.birthDate && displayMemorial.deathDate
+    ? `${new Date(displayMemorial.birthDate).getFullYear()} - ${new Date(displayMemorial.deathDate).getFullYear()}`
     : '';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section with Background Image */}
-      <header className="relative h-[600px] md:h-[700px] w-full overflow-hidden" aria-label={`Memorial hero for ${memorial.name}`}>
+      <header className="relative h-[600px] md:h-[700px] w-full overflow-hidden" aria-label={`Memorial hero for ${displayMemorial.name}`}>
         {/* Background Image or Gradient */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: memorial.backgroundImage 
-              ? `url(${memorial.backgroundImage})` 
+            backgroundImage: displayMemorial.backgroundImage 
+              ? `url(${displayMemorial.backgroundImage})` 
               : 'linear-gradient(135deg, hsl(280, 70%, 30%) 0%, hsl(280, 60%, 20%) 50%, hsl(280, 70%, 15%) 100%)'
           }}
           role="img"
-          aria-label={memorial.backgroundImage ? `Memorial background image for ${memorial.name}` : "Memorial background gradient"}
+          aria-label={displayMemorial.backgroundImage ? `Memorial background image for ${displayMemorial.name}` : "Memorial background gradient"}
         />
         {/* Enhanced dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
@@ -456,7 +484,7 @@ export default function Home() {
             
             {/* Name with enhanced styling */}
             <h1 className="text-6xl md:text-8xl font-serif font-bold text-white mb-6 tracking-tight drop-shadow-2xl" data-testid="text-name" style={{textShadow: '0 4px 12px rgba(0,0,0,0.4)'}}>
-              {memorial.name}
+              {displayMemorial.name}
             </h1>
             
             {/* Dates with better styling */}
@@ -470,9 +498,9 @@ export default function Home() {
             )}
 
             {/* Quote/Preface with better typography */}
-            {memorial.prefaceText && (
+            {displayMemorial.prefaceText && (
               <blockquote className="text-xl md:text-2xl font-serif italic text-white/95 max-w-4xl mx-auto mt-8 leading-relaxed px-6 py-4 border-l-4 border-[hsl(45,80%,60%)]" data-testid="text-quote" style={{textShadow: '0 2px 8px rgba(0,0,0,0.3)'}}>
-                "{memorial.prefaceText}"
+                "{displayMemorial.prefaceText}"
               </blockquote>
             )}
 
@@ -540,7 +568,7 @@ export default function Home() {
               </Button>
               <ShareObituaryButton 
                 memorialId={memorialId!}
-                deceasedName={memorial.name}
+                deceasedName={displayMemorial.name}
               />
               <Button 
                 size="lg" 
@@ -556,7 +584,7 @@ export default function Home() {
               </Button>
               <FlowerOrderButton 
                 memorialId={memorialId || undefined}
-                memorialName={memorial.name}
+                memorialName={displayMemorial.name}
               />
             </nav>
           </div>
@@ -567,7 +595,8 @@ export default function Home() {
       <div className="max-w-md mx-auto px-4 -mt-6 mb-6 relative z-10">
         <NativeMemorialActions
           memorialId={memorialId!}
-          memorialName={memorial.name}
+          memorialName={displayMemorial.name}
+          memorial={displayMemorial}
           onAddMemory={() => {
             const memoriesSection = document.getElementById('memories-section');
             memoriesSection?.scrollIntoView({ behavior: 'smooth' });
@@ -730,7 +759,7 @@ export default function Home() {
       )}
 
       {/* Biography Section */}
-      {memorial.biography && (
+      {displayMemorial.biography && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="bg-gradient-to-br from-card/50 to-card/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-border/50 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
@@ -739,7 +768,7 @@ export default function Home() {
             </div>
             <div className="prose prose-lg max-w-none" data-testid="text-biography">
               <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap text-lg">
-                {memorial.biography}
+                {displayMemorial.biography}
               </p>
             </div>
           </div>
@@ -836,7 +865,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Cherished Memories</h2>
-                <p className="text-muted-foreground">Precious moments shared with {memorial.name}</p>
+                <p className="text-muted-foreground">Precious moments shared with {displayMemorial.name}</p>
               </div>
               <Button size="lg" data-testid="button-add-memory" className="shadow-md">
                 <ImageIcon className="w-5 h-5 mr-2" />
@@ -1005,7 +1034,7 @@ export default function Home() {
           <TabsContent value="events" className="space-y-8" data-testid="content-events">
             <div>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Memorial Services & Events</h2>
-              <p className="text-muted-foreground">Upcoming and past events honoring {memorial.name}</p>
+              <p className="text-muted-foreground">Upcoming and past events honoring {displayMemorial.name}</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1081,7 +1110,7 @@ export default function Home() {
           <TabsContent value="support" className="space-y-8" data-testid="content-support">
             <div>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">Support the Family</h2>
-              <p className="text-muted-foreground">Help honor {memorial.name}'s memory</p>
+              <p className="text-muted-foreground">Help honor {displayMemorial.name}'s memory</p>
             </div>
 
             {firstFundraiser && (
@@ -1131,7 +1160,7 @@ export default function Home() {
               </Card>
             )}
 
-            {memorial.cemeteryName && (
+            {displayMemorial.cemeteryName && (
               <Card data-testid="card-cemetery">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1140,10 +1169,10 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/90" data-testid="text-cemetery-name">{memorial.cemeteryName}</p>
-                  {memorial.cemeteryLocation && (
+                  <p className="text-foreground/90" data-testid="text-cemetery-name">{displayMemorial.cemeteryName}</p>
+                  {displayMemorial.cemeteryLocation && (
                     <p className="text-sm text-muted-foreground mt-1" data-testid="text-cemetery-location">
-                      {memorial.cemeteryLocation}
+                      {displayMemorial.cemeteryLocation}
                     </p>
                   )}
                 </CardContent>
@@ -1254,12 +1283,12 @@ export default function Home() {
         <div className="mt-16 pt-12 border-t border-border/30" role="region" aria-label="Memorial platform features">
           <div className="mb-8 text-center">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">Memorial Platform Features</h2>
-            <p className="text-muted-foreground text-lg">Explore all the ways to honor and remember {memorial.name}</p>
+            <p className="text-muted-foreground text-lg">Explore all the ways to honor and remember {displayMemorial.name}</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* QR Code Feature */}
-            {user?.email === memorial.creatorEmail && (
+            {user?.email === displayMemorial.creatorEmail && (
               <Card className="hover-elevate" data-testid="card-feature-qr">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -1286,7 +1315,7 @@ export default function Home() {
             )}
 
             {/* Future Messages Feature */}
-            {user?.email === memorial.creatorEmail && (
+            {user?.email === displayMemorial.creatorEmail && (
               <Card className="hover-elevate" data-testid="card-feature-future-messages">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="mx-auto w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center">
@@ -1528,7 +1557,7 @@ export default function Home() {
         {/* Merchandise Services Section */}
         <div className="mt-16 pt-16 border-t border-border/30">
           <MerchandiseServices 
-            memorialName={memorial.name}
+            memorialName={displayMemorial.name}
             memorialId={memorialId!}
           />
         </div>
@@ -1537,8 +1566,8 @@ export default function Home() {
         <div id="future-messages-section" className="mt-16 pt-16 border-t border-border/30" role="region" aria-label="Future messages for loved ones">
           <FutureMessagesSection 
             memorialId={memorialId!}
-            memorialName={memorial.name}
-            canCreate={isAuthenticated && (memorial.creatorEmail === user?.email)}
+            memorialName={displayMemorial.name}
+            canCreate={isAuthenticated && (displayMemorial.creatorEmail === user?.email)}
           />
         </div>
 
@@ -1572,7 +1601,7 @@ export default function Home() {
         open={saveDialogOpen}
         onOpenChange={setSaveDialogOpen}
         memorialId={memorialId!}
-        memorialName={memorial.name}
+        memorialName={displayMemorial.name}
       />
     </div>
   );
