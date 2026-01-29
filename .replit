@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip"]
+packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip", "rubyPackages.cocoapods"]
 
 [deployment]
 deploymentTarget = "autoscale"
