@@ -37,11 +37,6 @@ export default function Landing() {
                   Create a Memorial
                 </Button>
               </Link>
-              <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:min-w-[200px]" data-testid="button-view-demo">
-                  View Demo Memorial
-                </Button>
-              </Link>
               <Link href="/about" className="w-full sm:w-auto">
                 <Button size="lg" variant="ghost" className="w-full sm:min-w-[200px]" data-testid="button-learn-more">
                   Learn More

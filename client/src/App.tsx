@@ -29,7 +29,6 @@ import CreateAlumniMemorial from "@/pages/create-alumni-memorial";
 import AlumniMemorialDetail from "@/pages/alumni-memorial";
 import SelfObituary from "@/pages/SelfObituary";
 import CreateMemorial from "@/pages/CreateMemorial";
-import CustomizationDemo from "@/pages/CustomizationDemo";
 import AdvertiserSubmission from "@/pages/AdvertiserSubmission";
 import AdvertisementAdmin from "@/pages/AdvertisementAdmin";
 import PartnerSignup from "@/pages/PartnerSignup";
@@ -87,7 +86,6 @@ import LiveCelebration from "@/pages/LiveCelebration";
 import SharedMusic from "@/pages/SharedMusic";
 import VirtualReactions from "@/pages/VirtualReactions";
 import HolidayCelebration from "@/pages/HolidayCelebration";
-import QRScannerDemo from "@/pages/QRScannerDemo";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -137,12 +135,6 @@ function Router() {
               </div>
             </Link>
             <div className="hidden lg:flex gap-1">
-              <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81">
-                <Button variant="ghost" size="sm" data-testid="nav-demo-memorial" className="text-sm">
-                  <Image className="w-4 h-4 mr-1.5" />
-                  Demo Memorial
-                </Button>
-              </Link>
               <Link href="/create-memorial">
                 <Button variant="ghost" size="sm" data-testid="nav-create-memorial" className="text-sm">
                   <FileText className="w-4 h-4 mr-1.5" />
@@ -465,7 +457,6 @@ function Router() {
         <Route path="/family-tree/:memorialId" component={FamilyTree} />
         <Route path="/cemetery-navigator/:memorialId" component={CemeteryNavigator} />
         <Route path="/qr-designer" component={CustomQRCodeDesigner} />
-        <Route path="/qr-scanner-demo" component={QRScannerDemo} />
         <Route path="/holiday-timeline" component={HolidayTimeline} />
         <Route path="/holiday-timeline/:memorialId" component={HolidayTimeline} />
         <Route path="/birthday-celebration" component={BirthdayCelebration} />
@@ -482,7 +473,6 @@ function Router() {
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />
         <Route path="/grief-support/:memorialId" component={GriefSupport} />
-        <Route path="/customization" component={CustomizationDemo} />
         <Route path="/advertise" component={AdvertiserSubmission} />
         <Route path="/advertiser-submission" component={AdvertiserSubmission} />
         <Route path="/advertising" component={AdvertisingOpportunities} />
