@@ -1,6 +1,6 @@
-const CACHE_NAME = 'opictuary-v2';
-const STATIC_CACHE = 'opictuary-static-v2';
-const DYNAMIC_CACHE = 'opictuary-dynamic-v2';
+const CACHE_NAME = 'opictuary-v1';
+const STATIC_CACHE = 'opictuary-static-v1';
+const DYNAMIC_CACHE = 'opictuary-dynamic-v1';
 
 const STATIC_ASSETS = [
   '/',
