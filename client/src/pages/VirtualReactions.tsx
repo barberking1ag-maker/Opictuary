@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useRoute } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,41 +8,169 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   PartyPopper, Heart, Camera, MessageCircle, Sparkles, Send,
-  Image, ThumbsUp, Star, Gift, Cake, ArrowLeft, Users, Zap
+  Image, ThumbsUp, Star, Gift, Cake, ArrowLeft, Users, Zap, Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-const recentReactions = [
-  { id: 1, user: "Sarah M.", type: "emoji", content: "🎉", time: "Just now" },
-  { id: 2, user: "Uncle Joe", type: "message", content: "So happy to be part of this!", time: "1 min ago" },
-  { id: 3, user: "Cousin Amy", type: "photo", content: "family-photo.jpg", time: "2 min ago" },
-  { id: 4, user: "Grandma Rose", type: "emoji", content: "❤️", time: "2 min ago" },
-  { id: 5, user: "Mike T.", type: "emoji", content: "🎂", time: "3 min ago" },
-  { id: 6, user: "Lisa K.", type: "message", content: "Wishing you all the best!", time: "4 min ago" },
-];
+interface Reaction {
+  id: string;
+  userId?: string;
+  user?: string;
+  reactionType: string;
+  message?: string;
+  createdAt: string;
+}
 
-const quickEmojis = ["🎉", "❤️", "🎂", "🥳", "👏", "😍", "🙌", "✨", "🎁", "💐", "🌟", "💝"];
+interface ReactionCount {
+  reactionType: string;
+  count: number;
+}
+
+const quickEmojis = ["love", "celebrate", "pray", "remember", "support", "honor", "peace", "candle", "flower", "star", "heart", "light"];
+const emojiIcons: Record<string, string> = {
+  love: "❤️",
+  celebrate: "🎉",
+  pray: "🙏",
+  remember: "💭",
+  support: "💪",
+  honor: "🏆",
+  peace: "☮️",
+  candle: "🕯️",
+  flower: "🌹",
+  star: "⭐",
+  heart: "💕",
+  light: "✨",
+};
 
 export default function VirtualReactions() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [, params] = useRoute("/virtual-reactions/:memorialId");
+  const memorialId = params?.memorialId;
+  
   const [message, setMessage] = useState("");
-  const [reactionCount, setReactionCount] = useState(156);
+  const [recentActivity, setRecentActivity] = useState<Reaction[]>([]);
+  const [participantCount, setParticipantCount] = useState(0);
 
-  const sendReaction = (emoji: string) => {
-    setReactionCount(prev => prev + 1);
-    toast({ 
-      title: "Reaction Sent!", 
-      description: `You sent ${emoji} to the celebration`
-    });
+  // Fetch reactions for memorial
+  const { data: reactionsData, isLoading: reactionsLoading } = useQuery<{
+    reactions: ReactionCount[];
+    userReactions: string[];
+    counts: ReactionCount[];
+  }>({
+    queryKey: ['/api/memorials', memorialId, 'reactions'],
+    enabled: !!memorialId,
+  });
+
+  // Calculate total reactions
+  const totalReactions = reactionsData?.reactions?.reduce((acc, r) => acc + r.count, 0) || 0;
+  const userReactions = reactionsData?.userReactions || [];
+
+  // Simulate participant count based on reactions
+  useEffect(() => {
+    const baseCount = Math.max(1, Math.floor(totalReactions / 3));
+    setParticipantCount(baseCount + Math.floor(Math.random() * 5));
+  }, [totalReactions]);
+
+  // Send reaction mutation
+  const sendReactionMutation = useMutation({
+    mutationFn: async (reactionType: string) => {
+      if (!memorialId) {
+        // Demo mode - just show toast
+        return { success: true, demo: true };
+      }
+      const response = await apiRequest('POST', '/api/memorial-reactions', {
+        memorialId,
+        reactionType,
+        userId: user?.id,
+      });
+      return response.json();
+    },
+    onSuccess: (data, reactionType) => {
+      if (memorialId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/memorials', memorialId, 'reactions'] });
+      }
+      
+      // Add to recent activity
+      const newReaction: Reaction = {
+        id: Date.now().toString(),
+        user: user?.firstName || user?.email?.split('@')[0] || "You",
+        reactionType,
+        createdAt: new Date().toISOString(),
+      };
+      setRecentActivity(prev => [newReaction, ...prev.slice(0, 10)]);
+      
+      toast({ 
+        title: "Reaction Sent!", 
+        description: `You sent ${emojiIcons[reactionType] || reactionType} to the celebration`
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to send reaction",
+        variant: "destructive"
+      });
+    },
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageText: string) => {
+      if (!memorialId) {
+        return { success: true, demo: true };
+      }
+      const response = await apiRequest('POST', `/api/memorials/${memorialId}/condolences`, {
+        message: messageText,
+        userId: user?.id,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      const newReaction: Reaction = {
+        id: Date.now().toString(),
+        user: user?.firstName || user?.email?.split('@')[0] || "You",
+        reactionType: "message",
+        message: message,
+        createdAt: new Date().toISOString(),
+      };
+      setRecentActivity(prev => [newReaction, ...prev.slice(0, 10)]);
+      
+      toast({ title: "Message Sent!", description: "Your message is now visible to everyone" });
+      setMessage("");
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to send message",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const sendReaction = (reactionType: string) => {
+    sendReactionMutation.mutate(reactionType);
   };
 
   const sendMessage = () => {
     if (message.trim()) {
-      toast({ title: "Message Sent!", description: "Your message is now visible to everyone" });
-      setMessage("");
+      sendMessageMutation.mutate(message);
     }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
   };
 
   return (
@@ -66,6 +195,11 @@ export default function VirtualReactions() {
           <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
             Send reactions, photos, and messages in real-time to make every celebration interactive
           </p>
+          {!memorialId && (
+            <Badge variant="secondary" className="mt-3">
+              Demo Mode - Reactions are simulated
+            </Badge>
+          )}
         </div>
 
         <div className="max-w-5xl mx-auto grid gap-6 lg:grid-cols-3">
@@ -77,8 +211,8 @@ export default function VirtualReactions() {
                     <Zap className="h-5 w-5 text-yellow-500" />
                     Quick Reactions
                   </CardTitle>
-                  <Badge className="bg-pink-100 text-pink-700">
-                    {reactionCount} reactions
+                  <Badge className="bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
+                    {totalReactions + recentActivity.filter(r => r.reactionType !== 'message').length} reactions
                   </Badge>
                 </div>
                 <CardDescription>
@@ -87,18 +221,22 @@ export default function VirtualReactions() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-6 gap-3">
-                  {quickEmojis.map((emoji) => (
-                    <Button 
-                      key={emoji}
-                      variant="outline" 
-                      size="lg"
-                      className="text-3xl h-16 hover:scale-110 transition-transform"
-                      onClick={() => sendReaction(emoji)}
-                      data-testid={`button-emoji-${emoji}`}
-                    >
-                      {emoji}
-                    </Button>
-                  ))}
+                  {quickEmojis.map((reactionType) => {
+                    const isSelected = userReactions.includes(reactionType);
+                    return (
+                      <Button 
+                        key={reactionType}
+                        variant={isSelected ? "default" : "outline"}
+                        size="lg"
+                        className={`text-3xl h-16 transition-transform ${isSelected ? 'bg-pink-100 border-pink-400' : ''}`}
+                        onClick={() => sendReaction(reactionType)}
+                        disabled={sendReactionMutation.isPending}
+                        data-testid={`button-emoji-${reactionType}`}
+                      >
+                        {emojiIcons[reactionType]}
+                      </Button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -132,12 +270,16 @@ export default function VirtualReactions() {
                   </Button>
                   <div className="flex-1" />
                   <Button 
-                    className="bg-pink-600 hover:bg-pink-700"
+                    className="bg-pink-600"
                     onClick={sendMessage}
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || sendMessageMutation.isPending}
                     data-testid="button-send"
                   >
-                    <Send className="h-4 w-4 mr-2" />
+                    {sendMessageMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
                     Send
                   </Button>
                 </div>
@@ -190,32 +332,33 @@ export default function VirtualReactions() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {recentReactions.map((reaction) => (
-                    <div key={reaction.id} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 flex items-center justify-center text-white text-xs font-medium">
-                        {reaction.user.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{reaction.user}</span>
-                          <span className="text-xs text-muted-foreground">{reaction.time}</span>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((reaction) => (
+                      <div key={reaction.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 flex items-center justify-center text-white text-xs font-medium">
+                          {(reaction.user || "A").charAt(0)}
                         </div>
-                        {reaction.type === "emoji" && (
-                          <span className="text-2xl">{reaction.content}</span>
-                        )}
-                        {reaction.type === "message" && (
-                          <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-2 mt-1">
-                            {reaction.content}
-                          </p>
-                        )}
-                        {reaction.type === "photo" && (
-                          <div className="mt-1 w-full h-20 bg-muted rounded-lg flex items-center justify-center">
-                            <Camera className="h-6 w-6 text-muted-foreground" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{reaction.user || "Anonymous"}</span>
+                            <span className="text-xs text-muted-foreground">{formatTimeAgo(reaction.createdAt)}</span>
                           </div>
-                        )}
+                          {reaction.reactionType === "message" ? (
+                            <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-2 mt-1">
+                              {reaction.message}
+                            </p>
+                          ) : (
+                            <span className="text-2xl">{emojiIcons[reaction.reactionType] || reaction.reactionType}</span>
+                          )}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No reactions yet - be the first!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -229,7 +372,7 @@ export default function VirtualReactions() {
               </CardHeader>
               <CardContent>
                 <div className="flex -space-x-2 mb-3">
-                  {["S", "J", "M", "A", "R", "L", "+12"].map((initial, i) => (
+                  {["S", "J", "M", "A", "R", "L"].slice(0, Math.min(6, participantCount)).map((initial, i) => (
                     <div 
                       key={i}
                       className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-sm font-medium border-2 border-background"
@@ -237,9 +380,14 @@ export default function VirtualReactions() {
                       {initial}
                     </div>
                   ))}
+                  {participantCount > 6 && (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-white text-sm font-medium border-2 border-background">
+                      +{participantCount - 6}
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  18 people reacting to this celebration
+                <p className="text-sm text-muted-foreground" data-testid="text-participant-count">
+                  {participantCount} {participantCount === 1 ? 'person' : 'people'} reacting to this celebration
                 </p>
               </CardContent>
             </Card>
@@ -247,19 +395,23 @@ export default function VirtualReactions() {
             <Card className="bg-gradient-to-br from-pink-50 to-orange-50 dark:from-pink-900/20 dark:to-orange-900/20">
               <CardContent className="py-6 text-center">
                 <ThumbsUp className="h-10 w-10 mx-auto text-pink-500 mb-3" />
-                <h3 className="font-semibold">Top Reactor</h3>
+                <h3 className="font-semibold">Your Reactions</h3>
                 <p className="text-sm text-muted-foreground">
-                  Sarah M. has sent the most reactions!
+                  {userReactions.length > 0 
+                    ? `You've sent ${userReactions.length} reactions!`
+                    : recentActivity.length > 0
+                    ? `You've sent ${recentActivity.length} reactions!`
+                    : "Send your first reaction!"}
                 </p>
-                <Badge className="mt-2 bg-pink-100 text-pink-700">
-                  23 reactions
+                <Badge className="mt-2 bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
+                  {userReactions.length + recentActivity.length} reactions
                 </Badge>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {!user && (
+        {!isAuthenticated && (
           <Card className="max-w-2xl mx-auto mt-8 border-pink-200 dark:border-pink-800">
             <CardContent className="py-8 text-center">
               <PartyPopper className="h-12 w-12 mx-auto text-pink-400 mb-4" />
@@ -267,7 +419,7 @@ export default function VirtualReactions() {
               <p className="text-muted-foreground mb-4">
                 Join the celebration and send your reactions, photos, and messages
               </p>
-              <Button className="bg-pink-600 hover:bg-pink-700" data-testid="button-signin">
+              <Button className="bg-pink-600" data-testid="button-signin">
                 Sign In to Participate
               </Button>
             </CardContent>

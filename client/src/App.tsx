@@ -468,8 +468,11 @@ function Router() {
         <Route path="/registry/:shareCode" component={RegistryPublicView} />
         <Route path="/baby-shower" component={BabyShower} />
         <Route path="/live-celebration" component={LiveCelebration} />
+        <Route path="/live-celebration/:code" component={LiveCelebration} />
         <Route path="/shared-music" component={SharedMusic} />
+        <Route path="/shared-music/:code" component={SharedMusic} />
         <Route path="/virtual-reactions" component={VirtualReactions} />
+        <Route path="/virtual-reactions/:memorialId" component={VirtualReactions} />
         <Route path="/holiday-celebration/:id" component={HolidayCelebration} />
         <Route path="/self-obituary" component={SelfObituary} />
         <Route path="/create-memorial" component={CreateMemorial} />

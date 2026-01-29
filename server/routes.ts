@@ -111,6 +111,9 @@ import {
   familyTreeLeaves,
   familyTreeSubscriptions,
   familyTreeLeafContent,
+  // Shared Music & Live Celebration schemas
+  insertBluetoothPlaylistSessionSchema,
+  insertLiveCelebrationSessionSchema,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -8014,6 +8017,235 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating gift:', error);
       res.status(500).json({ error: 'Failed to update gift' });
+    }
+  });
+
+  // ============================================
+  // SHARED MUSIC (BLUETOOTH PLAYLIST SESSIONS) API ROUTES
+  // ============================================
+
+  // Generate a unique session code
+  function generateSessionCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  // Get user's music sessions
+  app.get("/api/shared-music/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const sessions = await storage.getUserBluetoothPlaylistSessions(req.user.id);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      res.status(500).json({ error: 'Failed to fetch sessions' });
+    }
+  });
+
+  // Get a session by ID
+  app.get("/api/shared-music/sessions/:id", async (req, res) => {
+    try {
+      const session = await storage.getBluetoothPlaylistSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Error fetching session:', error);
+      res.status(500).json({ error: 'Failed to fetch session' });
+    }
+  });
+
+  // Join a session by code
+  app.get("/api/shared-music/join/:code", async (req, res) => {
+    try {
+      const session = await storage.getBluetoothPlaylistSessionByCode(req.params.code.toUpperCase());
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      if (session.status !== 'active') {
+        return res.status(400).json({ error: 'Session is not active' });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Error joining session:', error);
+      res.status(500).json({ error: 'Failed to join session' });
+    }
+  });
+
+  // Create a new music session
+  app.post("/api/shared-music/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionName, playlistId, memorialId } = req.body;
+      const sessionCode = generateSessionCode();
+      
+      const data = insertBluetoothPlaylistSessionSchema.parse({
+        sessionName: sessionName || 'My Music Session',
+        sessionCode,
+        hostUserId: req.user.id,
+        hostDeviceName: req.body.deviceName || 'Host Device',
+        playlistId,
+        memorialId,
+        status: 'active',
+        connectedDevices: [],
+      });
+      
+      const session = await storage.createBluetoothPlaylistSession(data);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error('Error creating session:', error);
+      res.status(500).json({ error: 'Failed to create session' });
+    }
+  });
+
+  // Update session (play/pause, change track, add device)
+  app.patch("/api/shared-music/sessions/:id", async (req, res) => {
+    try {
+      const session = await storage.getBluetoothPlaylistSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      
+      const updates: any = {};
+      if (req.body.isPlaying !== undefined) updates.isPlaying = req.body.isPlaying;
+      if (req.body.currentTrackIndex !== undefined) updates.currentTrackIndex = req.body.currentTrackIndex;
+      if (req.body.status) updates.status = req.body.status;
+      if (req.body.connectedDevices) updates.connectedDevices = req.body.connectedDevices;
+      
+      const updated = await storage.updateBluetoothPlaylistSession(req.params.id, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating session:', error);
+      res.status(500).json({ error: 'Failed to update session' });
+    }
+  });
+
+  // End a session
+  app.delete("/api/shared-music/sessions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const session = await storage.getBluetoothPlaylistSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      if (session.hostUserId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      
+      await storage.updateBluetoothPlaylistSession(req.params.id, { 
+        status: 'ended',
+        endedAt: new Date()
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error ending session:', error);
+      res.status(500).json({ error: 'Failed to end session' });
+    }
+  });
+
+  // ============================================
+  // LIVE CELEBRATION SESSIONS API ROUTES
+  // ============================================
+
+  // Get user's live celebrations
+  app.get("/api/live-celebrations/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const sessions = await storage.getUserLiveCelebrationSessions(req.user.id);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching live celebrations:', error);
+      res.status(500).json({ error: 'Failed to fetch live celebrations' });
+    }
+  });
+
+  // Get a live celebration by ID
+  app.get("/api/live-celebrations/sessions/:id", async (req, res) => {
+    try {
+      const session = await storage.getLiveCelebrationSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Error fetching session:', error);
+      res.status(500).json({ error: 'Failed to fetch session' });
+    }
+  });
+
+  // Join a live celebration by code
+  app.get("/api/live-celebrations/join/:code", async (req, res) => {
+    try {
+      const session = await storage.getLiveCelebrationSessionByCode(req.params.code.toUpperCase());
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Error joining session:', error);
+      res.status(500).json({ error: 'Failed to join session' });
+    }
+  });
+
+  // Create a live celebration
+  app.post("/api/live-celebrations/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const joinCode = generateSessionCode();
+      
+      const data = insertLiveCelebrationSessionSchema.parse({
+        ...req.body,
+        hostUserId: req.user.id,
+        joinCode,
+        status: req.body.scheduledStart ? 'scheduled' : 'live',
+      });
+      
+      const session = await storage.createLiveCelebrationSession(data);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error('Error creating live celebration:', error);
+      res.status(500).json({ error: 'Failed to create live celebration' });
+    }
+  });
+
+  // Update a live celebration
+  app.patch("/api/live-celebrations/sessions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const session = await storage.getLiveCelebrationSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      if (session.hostUserId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      
+      const updated = await storage.updateLiveCelebrationSession(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating live celebration:', error);
+      res.status(500).json({ error: 'Failed to update live celebration' });
+    }
+  });
+
+  // End a live celebration
+  app.delete("/api/live-celebrations/sessions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const session = await storage.getLiveCelebrationSession(req.params.id);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      if (session.hostUserId !== req.user.id) {
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      
+      await storage.updateLiveCelebrationSession(req.params.id, { 
+        status: 'ended',
+        actualEndedAt: new Date()
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error ending live celebration:', error);
+      res.status(500).json({ error: 'Failed to end live celebration' });
     }
   });
 

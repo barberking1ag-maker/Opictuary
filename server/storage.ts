@@ -307,8 +307,14 @@ import {
   weddingRegistries,
   registryItems,
   registryGifts,
+  bluetoothPlaylistSessions,
+  liveCelebrationSessions,
   type WeddingRegistry,
   type InsertWeddingRegistry,
+  type BluetoothPlaylistSession,
+  type InsertBluetoothPlaylistSession,
+  type LiveCelebrationSession,
+  type InsertLiveCelebrationSession,
   type RegistryItem,
   type InsertRegistryItem,
   type RegistryGift,
@@ -861,6 +867,22 @@ export interface IStorage {
   getRegistryGifts(registryId: string): Promise<RegistryGift[]>;
   createRegistryGift(data: InsertRegistryGift): Promise<RegistryGift>;
   updateRegistryGift(id: string, data: Partial<InsertRegistryGift>): Promise<RegistryGift | undefined>;
+
+  // Bluetooth Playlist Sessions (Shared Music)
+  getBluetoothPlaylistSession(id: string): Promise<BluetoothPlaylistSession | undefined>;
+  getBluetoothPlaylistSessionByCode(code: string): Promise<BluetoothPlaylistSession | undefined>;
+  getUserBluetoothPlaylistSessions(userId: string): Promise<BluetoothPlaylistSession[]>;
+  createBluetoothPlaylistSession(data: InsertBluetoothPlaylistSession): Promise<BluetoothPlaylistSession>;
+  updateBluetoothPlaylistSession(id: string, data: Partial<InsertBluetoothPlaylistSession>): Promise<BluetoothPlaylistSession | undefined>;
+  deleteBluetoothPlaylistSession(id: string): Promise<void>;
+
+  // Live Celebration Sessions
+  getLiveCelebrationSession(id: string): Promise<LiveCelebrationSession | undefined>;
+  getLiveCelebrationSessionByCode(code: string): Promise<LiveCelebrationSession | undefined>;
+  getUserLiveCelebrationSessions(userId: string): Promise<LiveCelebrationSession[]>;
+  createLiveCelebrationSession(data: InsertLiveCelebrationSession): Promise<LiveCelebrationSession>;
+  updateLiveCelebrationSession(id: string, data: Partial<InsertLiveCelebrationSession>): Promise<LiveCelebrationSession | undefined>;
+  deleteLiveCelebrationSession(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4463,6 +4485,64 @@ export class DatabaseStorage implements IStorage {
   async updateRegistryGift(id: string, data: Partial<InsertRegistryGift>): Promise<RegistryGift | undefined> {
     const [gift] = await db.update(registryGifts).set(data).where(eq(registryGifts.id, id)).returning();
     return gift;
+  }
+
+  // Bluetooth Playlist Sessions (Shared Music)
+  async getBluetoothPlaylistSession(id: string): Promise<BluetoothPlaylistSession | undefined> {
+    const [session] = await db.select().from(bluetoothPlaylistSessions).where(eq(bluetoothPlaylistSessions.id, id));
+    return session;
+  }
+
+  async getBluetoothPlaylistSessionByCode(code: string): Promise<BluetoothPlaylistSession | undefined> {
+    const [session] = await db.select().from(bluetoothPlaylistSessions).where(eq(bluetoothPlaylistSessions.sessionCode, code));
+    return session;
+  }
+
+  async getUserBluetoothPlaylistSessions(userId: string): Promise<BluetoothPlaylistSession[]> {
+    return await db.select().from(bluetoothPlaylistSessions).where(eq(bluetoothPlaylistSessions.hostUserId, userId)).orderBy(desc(bluetoothPlaylistSessions.createdAt));
+  }
+
+  async createBluetoothPlaylistSession(data: InsertBluetoothPlaylistSession): Promise<BluetoothPlaylistSession> {
+    const [session] = await db.insert(bluetoothPlaylistSessions).values(data as any).returning();
+    return session;
+  }
+
+  async updateBluetoothPlaylistSession(id: string, data: Partial<InsertBluetoothPlaylistSession>): Promise<BluetoothPlaylistSession | undefined> {
+    const [session] = await db.update(bluetoothPlaylistSessions).set(data as any).where(eq(bluetoothPlaylistSessions.id, id)).returning();
+    return session;
+  }
+
+  async deleteBluetoothPlaylistSession(id: string): Promise<void> {
+    await db.delete(bluetoothPlaylistSessions).where(eq(bluetoothPlaylistSessions.id, id));
+  }
+
+  // Live Celebration Sessions
+  async getLiveCelebrationSession(id: string): Promise<LiveCelebrationSession | undefined> {
+    const [session] = await db.select().from(liveCelebrationSessions).where(eq(liveCelebrationSessions.id, id));
+    return session;
+  }
+
+  async getLiveCelebrationSessionByCode(code: string): Promise<LiveCelebrationSession | undefined> {
+    const [session] = await db.select().from(liveCelebrationSessions).where(eq(liveCelebrationSessions.joinCode, code));
+    return session;
+  }
+
+  async getUserLiveCelebrationSessions(userId: string): Promise<LiveCelebrationSession[]> {
+    return await db.select().from(liveCelebrationSessions).where(eq(liveCelebrationSessions.hostUserId, userId)).orderBy(desc(liveCelebrationSessions.createdAt));
+  }
+
+  async createLiveCelebrationSession(data: InsertLiveCelebrationSession): Promise<LiveCelebrationSession> {
+    const [session] = await db.insert(liveCelebrationSessions).values(data).returning();
+    return session;
+  }
+
+  async updateLiveCelebrationSession(id: string, data: Partial<InsertLiveCelebrationSession>): Promise<LiveCelebrationSession | undefined> {
+    const [session] = await db.update(liveCelebrationSessions).set({ ...data, updatedAt: new Date() }).where(eq(liveCelebrationSessions.id, id)).returning();
+    return session;
+  }
+
+  async deleteLiveCelebrationSession(id: string): Promise<void> {
+    await db.delete(liveCelebrationSessions).where(eq(liveCelebrationSessions.id, id));
   }
 }
 
