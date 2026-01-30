@@ -285,15 +285,19 @@ class PaymentProcessor {
         sessionParams.payment_intent_data = paymentIntentData;
       }
 
-      // Add subscription metadata for family tree subscriptions
-      if (type === 'family_tree_subscription') {
+      // Add subscription data with 14-day free trial for all subscriptions
+      if (isSubscription) {
         sessionParams.subscription_data = {
-          metadata: {
+          trial_period_days: 14,
+          metadata: type === 'family_tree_subscription' ? {
             type: 'family_tree_subscription',
             treeId: data.treeId || '',
             userId: data.userId || '',
             tier: data.subscriptionTier || '',
             billingPeriod: data.billingPeriod || '',
+          } : {
+            type: 'subscription',
+            memorialId: data.memorialId || '',
           },
         };
       }
