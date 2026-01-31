@@ -62,6 +62,10 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
           
+          # Verify certificate was imported
+          echo "Verifying certificate import..."
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
+          
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
 
       - name: Install Provisioning Profile
@@ -84,6 +88,24 @@ jobs:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
           
           echo "Installed provisioning profile: $PP_NAME ($PP_UUID)"
+          
+          # List installed profiles
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Configure Xcode Project for Manual Signing
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios/App
+          
+          # Update project.pbxproj to use manual signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' App.xcodeproj/project.pbxproj
+          
+          # Add provisioning profile specifier if not present
+          sed -i '' "s/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = ${APPLE_TEAM_ID};/g" App.xcodeproj/project.pbxproj
+          
+          echo "Updated project for manual signing"
 
       - name: Build iOS App
         env:
@@ -101,8 +123,9 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE="${PP_UUID}" \
             PROVISIONING_PROFILE_SPECIFIER="${PP_NAME}" \
-            -allowProvisioningUpdates
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH"
 
       - name: Export IPA
         env:
