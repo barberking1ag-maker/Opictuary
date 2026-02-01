@@ -94,6 +94,26 @@ jobs:
           echo "PP_NAME=$PP_NAME" >> $GITHUB_ENV
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
 
+      - name: Configure Code Signing
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios/App
+          
+          # Create xcconfig file to override signing settings
+          cat > CodeSigning.xcconfig << EOF
+          CODE_SIGN_STYLE = Manual
+          CODE_SIGN_IDENTITY = Apple Distribution
+          DEVELOPMENT_TEAM = ${APPLE_TEAM_ID}
+          PROVISIONING_PROFILE_SPECIFIER = ${PP_NAME}
+          EOF
+          
+          cat CodeSigning.xcconfig
+          
+          # Update project.pbxproj to use our xcconfig
+          # First, modify the Release configuration to include our xcconfig
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Manual; PROVISIONING_PROFILE_SPECIFIER = "'"${PP_NAME}"'"; DEVELOPMENT_TEAM = '"${APPLE_TEAM_ID}"';/g' App.xcodeproj/project.pbxproj
+
       - name: Build iOS App
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -109,12 +129,7 @@ jobs:
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             archive \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="$PP_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PP_NAME" \
-            -allowProvisioningUpdates
+            -xcconfig CodeSigning.xcconfig
 
       - name: Export IPA
         env:
