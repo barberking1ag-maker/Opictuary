@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
     
     steps:
       - name: Checkout code
@@ -38,12 +38,12 @@ jobs:
           cd ios/App
           pod install --repo-update
       
-      - name: Setup Keychain and Signing
+      - name: Setup Keychain
         env:
           CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: "temporary-keychain-password-${{ github.run_id }}"
+          KEYCHAIN_PASSWORD: "temporary-keychain-password"
         run: |
           # Create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
@@ -61,31 +61,15 @@ jobs:
           
           # Import certificate to keychain
           security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           
-          # Set keychain as default and add to search list
-          security list-keychain -d user -s $KEYCHAIN_PATH login.keychain-db
+          # Add temporary keychain to search list while preserving existing keychains
+          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychain -d user | tr -d '"')
           security default-keychain -s $KEYCHAIN_PATH
-          
-          # Verify certificate
-          echo "=== Verifying Certificate ==="
-          security find-identity -v -p codesigning
-          
-          # Extract provisioning profile info
-          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PROFILE_PATH))
-          PP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /dev/stdin <<< $(/usr/bin/security cms -D -i $PROFILE_PATH))
-          
-          echo "Profile UUID: $PP_UUID"
-          echo "Profile Name: $PP_NAME"
           
           # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
-          
-          # Export for later steps
-          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
-          echo "PP_NAME=$PP_NAME" >> $GITHUB_ENV
-          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+          cp $PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
           
           echo "✅ Keychain and provisioning profile configured"
       
@@ -96,6 +80,7 @@ jobs:
           if [ -z "$BUILD_NUM" ]; then
             BUILD_NUM=${{ github.run_number }}
           fi
+          # Update build number in project
           agvtool new-version -all $BUILD_NUM
           echo "📱 Build number set to: $BUILD_NUM"
       
@@ -105,55 +90,23 @@ jobs:
         run: |
           cd ios/App
           
-          echo "Building with Team ID: $TEAM_ID"
-          echo "Using Profile: $PP_NAME"
-          
+          # Build archive
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PP_NAME" \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="${TEAM_ID:-CRPD7WHX8V}" \
             archive
           
           echo "✅ Archive created successfully"
       
       - name: Export IPA
-        env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
           
-          # Create export options plist
-          cat > ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>teamID</key>
-            <string>$TEAM_ID</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.opictuary.app</key>
-              <string>$PP_NAME</string>
-            </dict>
-          </dict>
-          </plist>
-          EOF
-          
-          cat ExportOptions.plist
-          
+          # Export IPA for App Store
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -exportPath $RUNNER_TEMP/export \
@@ -168,11 +121,19 @@ jobs:
           name: Opictuary-iOS
           path: |
             ${{ runner.temp }}/export/*.ipa
+            ${{ runner.temp }}/export/ExportOptions.plist
           retention-days: 30
+      
+      - name: Upload Archive (for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Opictuary-Archive
+          path: ${{ runner.temp }}/App.xcarchive
+          retention-days: 7
       
       - name: Cleanup Keychain
         if: always()
         run: |
-          security delete-keychain $KEYCHAIN_PATH || true
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
           rm -f $RUNNER_TEMP/certificate.p12 || true
           rm -f $RUNNER_TEMP/profile.mobileprovision || true
