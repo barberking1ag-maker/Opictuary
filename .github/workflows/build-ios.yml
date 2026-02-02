@@ -149,7 +149,7 @@ jobs:
             <true/>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.opictuary.app</key>
+              <key>com.opictuary.memoriol</key>
               <string>$PP_NAME</string>
             </dict>
           </dict>
