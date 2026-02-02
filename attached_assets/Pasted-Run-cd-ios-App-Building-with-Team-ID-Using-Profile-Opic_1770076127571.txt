@@ -1,0 +1,333 @@
+Run cd ios/App
+Building with Team ID: ***
+Using Profile: Opictuary App Store (a8f4716c-89a1-40b2-9a4d-50a3ba2b6bda)
+Command line invocation:
+    /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release -archivePath /Users/runner/work/_temp/App.xcarchive archive -xcconfig CodeSigning.xcconfig
+
+User defaults from command line:
+    IDEArchivePathOverride = /Users/runner/work/_temp/App.xcarchive
+    IDEPackageSupportUseBuiltinSCM = YES
+
+Build settings from command line:
+    SDKROOT = iphoneos17.5
+
+Build settings from configuration file 'CodeSigning.xcconfig':
+    CODE_SIGN_IDENTITY = Apple Distribution
+    CODE_SIGN_STYLE = Manual
+    DEVELOPMENT_TEAM = ***
+    PROVISIONING_PROFILE_SPECIFIER = Opictuary App Store
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:0000FE00-F88C88A1593EE9CC, name:My Mac }
+{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+{ platform:visionOS Simulator, variant:Designed for [iPad,iPhone], id:67B02033-A569-4D18-B381-829C6F2B607D, OS:1.2, name:Apple Vision Pro }
+{ platform:visionOS Simulator, variant:Designed for [iPad,iPhone], id:1AD03196-92FF-4F86-98F7-E4D8506193AB, OS:2.1, name:Apple Vision Pro }
+{ platform:visionOS Simulator, variant:Designed for [iPad,iPhone], id:D490A0B7-A12A-49C5-896E-BAEDF1AE2911, OS:2.2, name:Apple Vision Pro }
+{ platform:iOS Simulator, id:9259FAD3-E48B-4C6A-9555-F09CC008E68A, OS:17.0.1, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:9259FAD3-E48B-4C6A-9555-F09CC008E68A, OS:17.0.1, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:690F33F2-3C64-405F-AC7B-F78FC25CDBEA, OS:17.2, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:690F33F2-3C64-405F-AC7B-F78FC25CDBEA, OS:17.2, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:6BB90217-2FD7-4D10-88BD-61167E26E493, OS:17.4, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:6BB90217-2FD7-4D10-88BD-61167E26E493, OS:17.4, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:83202A0D-7786-411B-81A2-7481424F31A7, OS:17.5, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:83202A0D-7786-411B-81A2-7481424F31A7, OS:17.5, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:93A7C1A5-51A6-4B68-A36F-264C4EA4096A, OS:18.1, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:93A7C1A5-51A6-4B68-A36F-264C4EA4096A, OS:18.1, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:06190FCF-7556-4B98-9732-30B718A95813, OS:18.2, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:06190FCF-7556-4B98-9732-30B718A95813, OS:18.2, name:iPad (10th generation) }
+{ platform:iOS Simulator, id:4A6D5773-ACED-425A-9E1E-6F0488052160, OS:17.0.1, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:4A6D5773-ACED-425A-9E1E-6F0488052160, OS:17.0.1, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:D143AA74-44AE-40C2-B5B5-7B2CA34A2407, OS:17.2, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:D143AA74-44AE-40C2-B5B5-7B2CA34A2407, OS:17.2, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:58188B0B-2EB8-4A19-B7C4-22A46C705E3C, OS:17.4, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:58188B0B-2EB8-4A19-B7C4-22A46C705E3C, OS:17.4, name:iPad Air (5th generation) }
+{ platform:iOS Simulator, id:F6127544-9017-4586-A1A9-836541E50204, OS:17.4, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:F6127544-9017-4586-A1A9-836541E50204, OS:17.4, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:50F93A47-BDE5-4600-BEAB-60EF236E8740, OS:17.5, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:50F93A47-BDE5-4600-BEAB-60EF236E8740, OS:17.5, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:B563A79B-C4C2-497A-88B2-809490818DEB, OS:18.1, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:B563A79B-C4C2-497A-88B2-809490818DEB, OS:18.1, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:3FED86F9-809E-43C5-8FF1-DB8387B03545, OS:18.2, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:3FED86F9-809E-43C5-8FF1-DB8387B03545, OS:18.2, name:iPad Air 11-inch (M2) }
+{ platform:iOS Simulator, id:236A913A-E495-44F2-B639-F3DEEE10B3B3, OS:17.4, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:236A913A-E495-44F2-B639-F3DEEE10B3B3, OS:17.4, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:A015C558-7FE8-40A7-A516-A0BD2E3C03BB, OS:17.5, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:A015C558-7FE8-40A7-A516-A0BD2E3C03BB, OS:17.5, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:EC3C0C6A-6188-45CF-A7B8-031F65E2D6AC, OS:18.1, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:EC3C0C6A-6188-45CF-A7B8-031F65E2D6AC, OS:18.1, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:382E275B-3463-48B3-B60B-9FE20DD01F44, OS:18.2, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:382E275B-3463-48B3-B60B-9FE20DD01F44, OS:18.2, name:iPad Air 13-inch (M2) }
+{ platform:iOS Simulator, id:2852C3E5-182F-4F7A-83CF-7C4E727F0898, OS:17.0.1, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:2852C3E5-182F-4F7A-83CF-7C4E727F0898, OS:17.0.1, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:CE9D8EC2-28E4-4957-8CAF-8FB7ED21AB53, OS:17.2, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:CE9D8EC2-28E4-4957-8CAF-8FB7ED21AB53, OS:17.2, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:929F94AA-6D8B-465C-BD1D-57394B143BBC, OS:17.4, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:929F94AA-6D8B-465C-BD1D-57394B143BBC, OS:17.4, name:iPad Pro (11-inch) (4th generation) }
+{ platform:iOS Simulator, id:FAC084B0-31ED-49FE-9295-E1466F0A1DA6, OS:17.0.1, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:FAC084B0-31ED-49FE-9295-E1466F0A1DA6, OS:17.0.1, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:D408DD6A-35E1-4A8C-BEB9-762E64803A0C, OS:17.2, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:D408DD6A-35E1-4A8C-BEB9-762E64803A0C, OS:17.2, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:7B7EF81F-B6F6-44E4-9D7B-FCD7B08B2E99, OS:17.4, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:7B7EF81F-B6F6-44E4-9D7B-FCD7B08B2E99, OS:17.4, name:iPad Pro (12.9-inch) (6th generation) }
+{ platform:iOS Simulator, id:0FC42056-8FA9-41DF-8CFE-C0C98D620D41, OS:17.4, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:0FC42056-8FA9-41DF-8CFE-C0C98D620D41, OS:17.4, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:9D5CA9E0-F204-47B4-B368-44C8C3C0A802, OS:17.5, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:9D5CA9E0-F204-47B4-B368-44C8C3C0A802, OS:17.5, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:FEC91D2F-0007-48F8-AA23-29DC273A27A1, OS:18.1, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:FEC91D2F-0007-48F8-AA23-29DC273A27A1, OS:18.1, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:274A05B7-5796-4B20-80E5-FF927DFC2103, OS:18.2, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:274A05B7-5796-4B20-80E5-FF927DFC2103, OS:18.2, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, id:BB914474-A8BF-4673-941E-4ED429B92F22, OS:17.4, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:BB914474-A8BF-4673-941E-4ED429B92F22, OS:17.4, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:06BEFBD2-1420-46A3-8D5B-59BB16B19537, OS:17.5, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:06BEFBD2-1420-46A3-8D5B-59BB16B19537, OS:17.5, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:7D905096-7737-43C7-91F9-71B435172C12, OS:18.1, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:7D905096-7737-43C7-91F9-71B435172C12, OS:18.1, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:1B7B74D1-87CE-492A-94E8-86523713BDEC, OS:18.2, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:1B7B74D1-87CE-492A-94E8-86523713BDEC, OS:18.2, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, id:31090BD3-DE8F-4815-8524-C32F7F482E86, OS:17.0.1, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:31090BD3-DE8F-4815-8524-C32F7F482E86, OS:17.0.1, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:146D3E4A-70B9-43FD-BEE5-913BCA1524B2, OS:17.2, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:146D3E4A-70B9-43FD-BEE5-913BCA1524B2, OS:17.2, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:C14FFF0E-CA44-43A0-BBF8-25A82D0AE414, OS:17.4, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:C14FFF0E-CA44-43A0-BBF8-25A82D0AE414, OS:17.4, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:F4586DE1-D6C5-48A9-B3E0-0153B070AA6B, OS:17.5, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:F4586DE1-D6C5-48A9-B3E0-0153B070AA6B, OS:17.5, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:85FECF8D-596D-4EA3-A6AD-DD567A84C2F6, OS:18.1, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:85FECF8D-596D-4EA3-A6AD-DD567A84C2F6, OS:18.1, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:6FA33748-C205-49E9-865A-AC3A664E44B4, OS:18.2, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:6FA33748-C205-49E9-865A-AC3A664E44B4, OS:18.2, name:iPad mini (6th generation) }
+{ platform:iOS Simulator, id:9E783587-BCC9-4F49-BA59-D044939155AB, OS:18.1, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, id:9E783587-BCC9-4F49-BA59-D044939155AB, OS:18.1, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, id:DCEBB38B-EF47-4CB1-9F3B-58500B20EDF7, OS:18.2, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, id:DCEBB38B-EF47-4CB1-9F3B-58500B20EDF7, OS:18.2, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, id:0376DA54-F694-41BC-9EB1-86452E2CD76C, OS:17.0.1, name:iPhone 15 }
+{ platform:iOS Simulator, id:0376DA54-F694-41BC-9EB1-86452E2CD76C, OS:17.0.1, name:iPhone 15 }
+{ platform:iOS Simulator, id:8F44FA33-6FB7-45C7-B344-5719EB2A9AC0, OS:17.2, name:iPhone 15 }
+{ platform:iOS Simulator, id:8F44FA33-6FB7-45C7-B344-5719EB2A9AC0, OS:17.2, name:iPhone 15 }
+{ platform:iOS Simulator, id:4D2DFB2A-E58A-483E-8048-4AC30BD46D93, OS:17.4, name:iPhone 15 }
+{ platform:iOS Simulator, id:4D2DFB2A-E58A-483E-8048-4AC30BD46D93, OS:17.4, name:iPhone 15 }
+{ platform:iOS Simulator, id:C178D4CC-EF1C-4A47-839E-40421529ADEA, OS:17.5, name:iPhone 15 }
+{ platform:iOS Simulator, id:C178D4CC-EF1C-4A47-839E-40421529ADEA, OS:17.5, name:iPhone 15 }
+{ platform:iOS Simulator, id:7ACAFC48-D550-401F-952F-1C443C8F241B, OS:18.1, name:iPhone 15 }
+{ platform:iOS Simulator, id:7ACAFC48-D550-401F-952F-1C443C8F241B, OS:18.1, name:iPhone 15 }
+{ platform:iOS Simulator, id:A37CD1A5-A31F-44C2-AA6C-A001967C7F88, OS:18.2, name:iPhone 15 }
+{ platform:iOS Simulator, id:A37CD1A5-A31F-44C2-AA6C-A001967C7F88, OS:18.2, name:iPhone 15 }
+{ platform:iOS Simulator, id:B9F4232C-6ABE-4F34-A0FA-639BDEE3FDBC, OS:17.0.1, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:B9F4232C-6ABE-4F34-A0FA-639BDEE3FDBC, OS:17.0.1, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:A1B442B2-3165-4EC2-8B18-D22AF9F696FB, OS:17.2, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:A1B442B2-3165-4EC2-8B18-D22AF9F696FB, OS:17.2, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:C0B3385A-AF06-4AF0-9800-A5819C3749FE, OS:17.4, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:C0B3385A-AF06-4AF0-9800-A5819C3749FE, OS:17.4, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:31D83C6D-A94C-4802-87CF-42E3D9141C77, OS:17.5, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:31D83C6D-A94C-4802-87CF-42E3D9141C77, OS:17.5, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:52B8A4EF-765E-489A-A508-A590296792B6, OS:18.1, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:52B8A4EF-765E-489A-A508-A590296792B6, OS:18.1, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:C25E5960-958A-4215-B596-D95CF884C2C2, OS:18.2, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:C25E5960-958A-4215-B596-D95CF884C2C2, OS:18.2, name:iPhone 15 Plus }
+{ platform:iOS Simulator, id:9067E3B9-6E86-4A17-ACF6-B0CAFCB5451F, OS:17.0.1, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:9067E3B9-6E86-4A17-ACF6-B0CAFCB5451F, OS:17.0.1, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:54D21FE9-3F30-48C4-AE54-79A4BE876761, OS:17.2, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:54D21FE9-3F30-48C4-AE54-79A4BE876761, OS:17.2, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:32D0F647-592C-49EF-99ED-26A027591CBC, OS:17.4, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:32D0F647-592C-49EF-99ED-26A027591CBC, OS:17.4, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:8287DCC9-8E1C-494E-9A96-A8B334C1EC3F, OS:17.5, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:8287DCC9-8E1C-494E-9A96-A8B334C1EC3F, OS:17.5, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:DF70C448-938C-4CE1-83DA-BD7E08A8FEB0, OS:18.1, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:DF70C448-938C-4CE1-83DA-BD7E08A8FEB0, OS:18.1, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:5237518F-F071-4974-AFB5-E03AE46B24AF, OS:18.2, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:5237518F-F071-4974-AFB5-E03AE46B24AF, OS:18.2, name:iPhone 15 Pro }
+{ platform:iOS Simulator, id:E7701925-389A-45CF-9772-B5A80719FB25, OS:17.0.1, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:E7701925-389A-45CF-9772-B5A80719FB25, OS:17.0.1, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:4F507C3F-907F-488F-8417-68F6E6B9B79D, OS:17.2, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:4F507C3F-907F-488F-8417-68F6E6B9B79D, OS:17.2, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:54D53C63-13E4-4353-B6A3-59B0E4406D5E, OS:17.4, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:54D53C63-13E4-4353-B6A3-59B0E4406D5E, OS:17.4, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:1893AC2D-D3A9-4F92-8256-A6417CDE8004, OS:17.5, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:1893AC2D-D3A9-4F92-8256-A6417CDE8004, OS:17.5, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:E192D038-6C70-4A82-879C-BFE7FFC07679, OS:18.1, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:E192D038-6C70-4A82-879C-BFE7FFC07679, OS:18.1, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:65C6A405-2A5A-416C-9392-063DC798F55D, OS:18.2, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:65C6A405-2A5A-416C-9392-063DC798F55D, OS:18.2, name:iPhone 15 Pro Max }
+{ platform:iOS Simulator, id:99F1EF8C-9A6A-497B-8456-2EEE8F816AC4, OS:18.1, name:iPhone 16 }
+{ platform:iOS Simulator, id:99F1EF8C-9A6A-497B-8456-2EEE8F816AC4, OS:18.1, name:iPhone 16 }
+{ platform:iOS Simulator, id:739A708E-7674-428D-8749-7395833A1883, OS:18.2, name:iPhone 16 }
+{ platform:iOS Simulator, id:739A708E-7674-428D-8749-7395833A1883, OS:18.2, name:iPhone 16 }
+{ platform:iOS Simulator, id:998A8E78-999E-4954-9286-1F7CD44F985B, OS:18.1, name:iPhone 16 Plus }
+{ platform:iOS Simulator, id:998A8E78-999E-4954-9286-1F7CD44F985B, OS:18.1, name:iPhone 16 Plus }
+{ platform:iOS Simulator, id:65FC9D00-5CBA-48E1-BE23-8F1BB0CA08AF, OS:18.2, name:iPhone 16 Plus }
+{ platform:iOS Simulator, id:65FC9D00-5CBA-48E1-BE23-8F1BB0CA08AF, OS:18.2, name:iPhone 16 Plus }
+{ platform:iOS Simulator, id:246996BC-E28F-4C91-A28A-2F9C9CDE2E01, OS:18.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:246996BC-E28F-4C91-A28A-2F9C9CDE2E01, OS:18.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:B3A98DA2-269A-4908-B63F-0FF0E8F283FD, OS:18.2, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:B3A98DA2-269A-4908-B63F-0FF0E8F283FD, OS:18.2, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:A373062E-07DA-4509-94CA-625D93F50E7A, OS:18.1, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, id:A373062E-07DA-4509-94CA-625D93F50E7A, OS:18.1, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, id:7A5B1CE9-4283-4C07-9E0F-BDB1C8CE147E, OS:18.2, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, id:7A5B1CE9-4283-4C07-9E0F-BDB1C8CE147E, OS:18.2, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, id:F9B374D1-F27D-4B66-8E53-CDD46D365526, OS:17.0.1, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:F9B374D1-F27D-4B66-8E53-CDD46D365526, OS:17.0.1, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:AE184617-DB94-4370-8C4B-F9D414397ABC, OS:17.2, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:AE184617-DB94-4370-8C4B-F9D414397ABC, OS:17.2, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:07114B2A-6E50-474F-97A4-61BA12CFD28B, OS:17.4, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:07114B2A-6E50-474F-97A4-61BA12CFD28B, OS:17.4, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:0FFE26DC-2516-4B7E-B3E5-55A1B96E5EBF, OS:17.5, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:0FFE26DC-2516-4B7E-B3E5-55A1B96E5EBF, OS:17.5, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:8EEA20E1-49D3-4726-8E11-CC259022A316, OS:18.1, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:8EEA20E1-49D3-4726-8E11-CC259022A316, OS:18.1, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:54F07A60-40A4-4A7D-A278-DC7BC453960B, OS:18.2, name:iPhone SE (3rd generation) }
+{ platform:iOS Simulator, id:54F07A60-40A4-4A7D-A278-DC7BC453960B, OS:18.2, name:iPhone SE (3rd generation) }
+Prepare packages
+
+note: Using codesigning identity override: Apple Distribution
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (30 targets)
+    Target 'App' in project 'App'
+        ➜ Implicit dependency on target 'Pods-App' in project 'Pods' via file 'Pods_App.framework' in build phase 'Link Binary'
+        ➜ Implicit dependency on target 'Capacitor' in project 'Pods' via options '-framework Capacitor' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorBrowser' in project 'Pods' via options '-framework CapacitorBrowser' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorCamera' in project 'Pods' via options '-framework CapacitorCamera' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorHaptics' in project 'Pods' via options '-framework CapacitorHaptics' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorMlkitBarcodeScanning' in project 'Pods' via options '-framework CapacitorMlkitBarcodeScanning' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorPreferences' in project 'Pods' via options '-framework CapacitorPreferences' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorPushNotifications' in project 'Pods' via options '-framework CapacitorPushNotifications' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorShare' in project 'Pods' via options '-framework CapacitorShare' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorStatusBar' in project 'Pods' via options '-framework CapacitorStatusBar' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorCordova' in project 'Pods' via options '-framework Cordova' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'PromisesObjC' in project 'Pods' via options '-framework FBLPromises' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'GTMSessionFetcher' in project 'Pods' via options '-framework GTMSessionFetcher' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'GoogleDataTransport' in project 'Pods' via options '-framework GoogleDataTransport' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'GoogleToolboxForMac' in project 'Pods' via options '-framework GoogleToolboxForMac' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'GoogleUtilities' in project 'Pods' via options '-framework GoogleUtilities' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'nanopb' in project 'Pods' via options '-framework nanopb' in build setting 'OTHER_LDFLAGS'
+    Target 'Pods-App' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorBrowser' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorCamera' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorCordova' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorHaptics' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorMlkitBarcodeScanning' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorPreferences' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorPushNotifications' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorShare' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorStatusBar' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleDataTransport' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleMLKit' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleToolboxForMac' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleUtilities' in project 'Pods'
+        ➜ Explicit dependency on target 'MLImage' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitBarcodeScanning' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitCommon' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitVision' in project 'Pods'
+        ➜ Explicit dependency on target 'PromisesObjC' in project 'Pods'
+        ➜ Explicit dependency on target 'nanopb' in project 'Pods'
+    Target 'CapacitorStatusBar' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorShare' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorPushNotifications' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorPreferences' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorMlkitBarcodeScanning' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleMLKit' in project 'Pods'
+    Target 'GoogleMLKit' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitBarcodeScanning' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitCommon' in project 'Pods'
+    Target 'MLKitBarcodeScanning' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitCommon' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitVision' in project 'Pods'
+    Target 'MLKitVision' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleToolboxForMac' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher' in project 'Pods'
+        ➜ Explicit dependency on target 'MLImage' in project 'Pods'
+        ➜ Explicit dependency on target 'MLKitCommon' in project 'Pods'
+    Target 'MLImage' in project 'Pods' (no dependencies)
+    Target 'MLKitCommon' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleDataTransport' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleToolboxForMac' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleUtilities' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher' in project 'Pods'
+    Target 'GTMSessionFetcher' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' in project 'Pods'
+    Target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' in project 'Pods' (no dependencies)
+    Target 'GoogleUtilities' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleUtilities-GoogleUtilities_Privacy' in project 'Pods'
+    Target 'GoogleUtilities-GoogleUtilities_Privacy' in project 'Pods' (no dependencies)
+    Target 'GoogleToolboxForMac' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleToolboxForMac-GoogleToolboxForMac_Logger_Privacy' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleToolboxForMac-GoogleToolboxForMac_Privacy' in project 'Pods'
+    Target 'GoogleToolboxForMac-GoogleToolboxForMac_Privacy' in project 'Pods' (no dependencies)
+    Target 'GoogleToolboxForMac-GoogleToolboxForMac_Logger_Privacy' in project 'Pods' (no dependencies)
+    Target 'GoogleDataTransport' in project 'Pods'
+        ➜ Explicit dependency on target 'GoogleDataTransport-GoogleDataTransport_Privacy' in project 'Pods'
+        ➜ Explicit dependency on target 'PromisesObjC' in project 'Pods'
+        ➜ Explicit dependency on target 'nanopb' in project 'Pods'
+    Target 'GoogleDataTransport-GoogleDataTransport_Privacy' in project 'Pods'
+        ➜ Implicit dependency on target 'PromisesObjC' in project 'Pods' via options '-framework FBLPromises' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'nanopb' in project 'Pods' via options '-framework nanopb' in build setting 'OTHER_LDFLAGS'
+    Target 'nanopb' in project 'Pods'
+        ➜ Explicit dependency on target 'nanopb-nanopb_Privacy' in project 'Pods'
+    Target 'nanopb-nanopb_Privacy' in project 'Pods' (no dependencies)
+    Target 'PromisesObjC' in project 'Pods'
+        ➜ Explicit dependency on target 'PromisesObjC-FBLPromises_Privacy' in project 'Pods'
+    Target 'PromisesObjC-FBLPromises_Privacy' in project 'Pods' (no dependencies)
+    Target 'CapacitorHaptics' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorCamera' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'CapacitorBrowser' in project 'Pods'
+        ➜ Explicit dependency on target 'Capacitor' in project 'Pods'
+    Target 'Capacitor' in project 'Pods'
+        ➜ Explicit dependency on target 'CapacitorCordova' in project 'Pods'
+    Target 'CapacitorCordova' in project 'Pods' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/runner/work/Opictuary/Opictuary/ios/App/App/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode_15.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk -x objective-c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -v
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool -V
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 87247e002b75feb27265a95a74470ea2
+** ARCHIVE FAILED **
+Build description path: /Users/runner/Library/Developer/Xcode/DerivedData/App-caahrbyzdyfhqldfstgkzvudkfaa/Build/Intermediates.noindex/ArchiveIntermediates/App/IntermediateBuildFilesPath/XCBuildData/87247e002b75feb27265a95a74470ea2.xcbuilddata
+
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: GoogleUtilities does not support provisioning profiles. GoogleUtilities does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'GoogleUtilities' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorHaptics does not support provisioning profiles. CapacitorHaptics does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorHaptics' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorShare does not support provisioning profiles. CapacitorShare does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorShare' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorPreferences does not support provisioning profiles. CapacitorPreferences does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorPreferences' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorStatusBar does not support provisioning profiles. CapacitorStatusBar does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorStatusBar' from project 'Pods')
+warning: Run script build phase '[CP] Embed Pods Frameworks' will be run during every build because it does not specify any outputs. To address this warning, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'App' from project 'App')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: GoogleToolboxForMac does not support provisioning profiles. GoogleToolboxForMac does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'GoogleToolboxForMac' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorMlkitBarcodeScanning does not support provisioning profiles. CapacitorMlkitBarcodeScanning does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorMlkitBarcodeScanning' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: GTMSessionFetcher does not support provisioning profiles. GTMSessionFetcher does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'GTMSessionFetcher' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: Pods-App does not support provisioning profiles. Pods-App does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'Pods-App' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: Capacitor does not support provisioning profiles. Capacitor does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'Capacitor' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorCordova does not support provisioning profiles. CapacitorCordova does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorCordova' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: PromisesObjC does not support provisioning profiles. PromisesObjC does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'PromisesObjC' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: nanopb does not support provisioning profiles. nanopb does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'nanopb' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorPushNotifications does not support provisioning profiles. CapacitorPushNotifications does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorPushNotifications' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: GoogleDataTransport does not support provisioning profiles. GoogleDataTransport does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'GoogleDataTransport' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorBrowser does not support provisioning profiles. CapacitorBrowser does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorBrowser' from project 'Pods')
+/Users/runner/work/Opictuary/Opictuary/ios/App/Pods/Pods.xcodeproj: error: CapacitorCamera does not support provisioning profiles. CapacitorCamera does not support provisioning profiles, but provisioning profile Opictuary App Store has been manually specified. Set the provisioning profile value to "Automatic" in the build settings editor. (in target 'CapacitorCamera' from project 'Pods')
+Error: Process completed with exit code 65.
