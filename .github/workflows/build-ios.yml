@@ -99,6 +99,19 @@ jobs:
           agvtool new-version -all $BUILD_NUM
           echo "📱 Build number set to: $BUILD_NUM"
       
+      - name: Configure Project Signing
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios/App
+          
+          # Update only the App target's signing settings in project.pbxproj
+          # This avoids applying signing to Pods
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ""/PROVISIONING_PROFILE_SPECIFIER = "'"$PP_NAME"'"/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "'"$TEAM_ID"'";/g' App.xcodeproj/project.pbxproj
+          
+          echo "✅ Project signing configured"
+
       - name: Build and Archive
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -108,18 +121,12 @@ jobs:
           echo "Building with Team ID: $TEAM_ID"
           echo "Using Profile: $PP_NAME"
           
-          # Build with signing only for the App target (not Pods)
+          # Build archive - signing settings come from project file
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]=$PP_NAME" \
-            CODE_SIGNING_REQUIRED=YES \
-            CODE_SIGNING_ALLOWED=YES \
             -showBuildTimingSummary \
             archive
           
