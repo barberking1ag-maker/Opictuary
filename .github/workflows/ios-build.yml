@@ -224,7 +224,7 @@ jobs:
           ls -la $RUNNER_TEMP/export/
 
       - name: Upload to App Store Connect
-        if: ${{ secrets.APP_STORE_CONNECT_KEY_ID != '' }}
+        continue-on-error: true
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
