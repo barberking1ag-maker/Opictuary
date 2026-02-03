@@ -130,19 +130,36 @@ jobs:
           
           echo "✅ App target signing configured"
 
+      - name: Verify Signing After Sync
+        run: |
+          cd ios/App
+          echo "=== Checking project.pbxproj signing settings ==="
+          grep -n "DEVELOPMENT_TEAM\|PROVISIONING_PROFILE_SPECIFIER\|CODE_SIGN\|PRODUCT_BUNDLE_IDENTIFIER" App.xcodeproj/project.pbxproj | head -30
+
       - name: Build and Archive
         run: |
           cd ios/App
           
-          echo "Building archive..."
+          echo "Building archive with verbose output..."
           
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -archivePath $RUNNER_TEMP/App.xcarchive \
             -destination 'generic/platform=iOS' \
-            -showBuildTimingSummary \
-            archive
+            archive \
+            2>&1 | tee build.log
+          
+          BUILD_RESULT=${PIPESTATUS[0]}
+          
+          if [ $BUILD_RESULT -ne 0 ]; then
+            echo "❌ Build failed! Last 100 lines of log:"
+            tail -100 build.log
+            echo ""
+            echo "=== Errors found: ==="
+            grep -i "error:" build.log || echo "No explicit errors found"
+            exit $BUILD_RESULT
+          fi
           
           echo "✅ Archive created successfully"
 
