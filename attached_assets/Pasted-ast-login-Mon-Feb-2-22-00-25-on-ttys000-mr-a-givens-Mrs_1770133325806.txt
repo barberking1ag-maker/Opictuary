@@ -1,0 +1,175 @@
+ast login: Mon Feb  2 22:00:25 on ttys000
+mr.a.givens@Mrs-iMac ~ % curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.zshrc
+nvm install 22
+nvm use 22
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 14984  100 14984    0     0  87116      0 --:--:-- --:--:-- --:--:-- 87116
+=> nvm is already installed in /Users/mr.a.givens/.nvm, trying to update using git
+=> => Compressing and cleaning up git repository
+
+=> Profile not found. Tried ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile.
+=> Create one of them and run this script again
+   OR
+=> Append the following lines to the correct file yourself:
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+=> Close and reopen your terminal to start using nvm or run the following to use it now:
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+source: no such file or directory: /Users/mr.a.givens/.zshrc
+Downloading and installing node v22.22.0...
+Downloading https://nodejs.org/dist/v22.22.0/node-v22.22.0-darwin-x64.tar.xz...
+######################################################################### 100.0%
+Computing checksum with shasum -a 256
+Checksums matched!
+Now using node v22.22.0 (npm v10.9.4)
+Now using node v22.22.0 (npm v10.9.4)
+mr.a.givens@Mrs-iMac ~ % cd ~/Desktop/Opictuary
+cd: no such file or directory: /Users/mr.a.givens/Desktop/Opictuary
+mr.a.givens@Mrs-iMac ~ % cd ~/Desktop/Opictuarycd ~/Desktop
+git clone https://github.com/Opictuary/Opictuary.git
+cd Opictuary
+git checkout opic1
+npm install
+npm run build
+npx cap sync ios
+open ios/App/App.xcworkspace
+cd: string not in pwd: /Users/mr.a.givens/Desktop/Opictuarycd
+fatal: destination path 'Opictuary' already exists and is not an empty directory.
+Already on 'opic1'
+Your branch is up to date with 'origin/opic1'.
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+added 848 packages, and audited 849 packages in 43s
+
+88 packages are looking for funding
+  run `npm fund` for details
+
+36 vulnerabilities (3 low, 8 moderate, 24 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.20 building for production...
+transforming (2) ../vite/modulepreload-polyfill.jsBrowserslist: browsers data (caniuse-lite) is 16 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+transforming (4) src/App.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 2762 modules transformed.
+../dist/public/index.html                                                       5.11 kB │ gzip:   1.67 kB
+../dist/public/assets/IMG_0164_1763131894014-CgjHEKFA.jpeg                     36.75 kB
+../dist/public/assets/IMG_0729_1760000535499-VrPPRHzR.jpeg                    247.78 kB
+../dist/public/assets/IMG_0102_1760999703535-DrlZ2jT3.jpeg                    283.61 kB
+../dist/public/assets/IMG_0728_1760000535499-jqifloLZ.jpeg                    288.46 kB
+../dist/public/assets/IMG_0723_1760000535499-B3rIJTpv.jpeg                    356.33 kB
+../dist/public/assets/IMG_0721_1760000535499-VSarnAYA.jpeg                    406.88 kB
+../dist/public/assets/IMG_0725_1760000535499-oesvtg5M.jpeg                    428.26 kB
+../dist/public/assets/IMG_0724_1760000535499-DzPE6HTK.jpeg                    436.35 kB
+../dist/public/assets/IMG_0722_1760000535499-Bi9Uqkpy.jpeg                    442.98 kB
+../dist/public/assets/IMG_0726_1760000535499-CpUWStVU.jpeg                    527.03 kB
+../dist/public/assets/IMG_0727_1760000535499-Dj5ImS0x.jpeg                    548.61 kB
+../dist/public/assets/original_o_with_world_and_feature_icons-0WPubkKE.png    946.24 kB
+../dist/public/assets/opictuary_logo_no_cross_symbol-BkKekP0m.png             951.15 kB
+../dist/public/assets/index-B24A0wGv.css                                      166.34 kB │ gzip:  23.39 kB
+../dist/public/assets/purify.es-sOfw8HaZ.js                                    22.67 kB │ gzip:   8.79 kB
+../dist/public/assets/index.es-v2tXRO8B.js                                    150.56 kB │ gzip:  51.50 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js                             201.42 kB │ gzip:  48.03 kB
+../dist/public/assets/index-QyLOMNte.js                                     2,117.99 kB │ gzip: 545.90 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 21.99s
+
+  dist/index.js  593.1kb
+
+⚡ Done in 96ms
+✔ Copying web assets from public to ios/App/App/public in 19.50ms
+✔ Creating capacitor.config.json in ios/App/App in 1.25ms
+✔ copy ios in 506.66ms
+✔ Updating iOS plugins in 32.98ms
+✖ Updating iOS native dependencies with pod install - failed!
+✖ update ios - failed!
+[error] /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/dependency.rb:311:in
+        `to_specs': Could not find 'ffi' (>= 1.15.0) among 87 total gem(s)
+        (Gem::MissingSpecError)
+        Checked in
+        'GEM_PATH=/Users/mr.a.givens/.gem/ruby/2.6.0:/Library/Ruby/Gems/2.6.0:/System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/gems/2.6.0',
+        execute `gem env` for more information
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1449:in
+        `block in activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `each'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in
+        `activate'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in
+        `block in activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `each'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in
+        `activate'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in
+        `block in activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `each'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in
+        `activate'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in
+        `block in activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `each'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in
+        `activate_dependencies'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in
+        `activate'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:304:in
+        `block in activate_bin_path'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:303:in
+        `synchronize'
+        from
+        /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:303:in
+        `activate_bin_path'
+        from /usr/local/bin/pod:23:in `<main>'
+        
+mr.a.givens@Mrs-iMac Opictuary % 
