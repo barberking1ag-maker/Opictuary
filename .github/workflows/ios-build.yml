@@ -83,28 +83,36 @@ jobs:
         run: |
           cd ios/App
           
-          # Only update App target signing in project.pbxproj (not Pods)
-          # Find and replace empty provisioning profile specifier for App target
+          echo "=== BEFORE: Checking project signing settings ==="
+          grep -n "PROVISIONING_PROFILE_SPECIFIER\|DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj || echo "No signing settings found"
+          
+          # Update App target signing in project.pbxproj
           python3 << 'EOF'
           import re
+          import os
+          
+          pp_name = os.environ.get('PP_NAME', '')
+          team_id = os.environ.get('TEAM_ID', '')
+          
+          print(f"Setting Profile: {pp_name}")
+          print(f"Setting Team: {team_id}")
           
           with open('App.xcodeproj/project.pbxproj', 'r') as f:
               content = f.read()
           
-          # Update PROVISIONING_PROFILE_SPECIFIER for Release config
-          # Only match App target sections (not Pods)
-          import os
-          pp_name = os.environ.get('PP_NAME', '')
-          team_id = os.environ.get('TEAM_ID', '')
+          # Count matches before replacement
+          pp_matches = len(re.findall(r'PROVISIONING_PROFILE_SPECIFIER = "";', content))
+          team_matches = len(re.findall(r'DEVELOPMENT_TEAM = "";', content))
+          print(f"Found {pp_matches} empty PROVISIONING_PROFILE_SPECIFIER entries")
+          print(f"Found {team_matches} empty DEVELOPMENT_TEAM entries")
           
-          # Replace empty provisioning profile specifier
+          # Replace empty values
           content = re.sub(
               r'PROVISIONING_PROFILE_SPECIFIER = "";',
               f'PROVISIONING_PROFILE_SPECIFIER = "{pp_name}";',
               content
           )
           
-          # Ensure DEVELOPMENT_TEAM is set
           content = re.sub(
               r'DEVELOPMENT_TEAM = "";',
               f'DEVELOPMENT_TEAM = "{team_id}";',
@@ -114,8 +122,11 @@ jobs:
           with open('App.xcodeproj/project.pbxproj', 'w') as f:
               f.write(content)
           
-          print(f"Updated project with Profile: {pp_name}, Team: {team_id}")
+          print("✅ Project updated successfully")
           EOF
+          
+          echo "=== AFTER: Checking project signing settings ==="
+          grep -n "PROVISIONING_PROFILE_SPECIFIER\|DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj || echo "No signing settings found"
           
           echo "✅ App target signing configured"
 
