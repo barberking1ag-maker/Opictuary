@@ -34,8 +34,31 @@ jobs:
 
       - name: Fix App Icon for iOS 17+
         run: |
-          echo '{"images":[{"filename":"Icon-1024.png","idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
-          cat ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
+          ICON_DIR="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          
+          echo "=== Checking icon directory ==="
+          ls -la $ICON_DIR/
+          
+          echo "=== Verifying Icon-1024.png ==="
+          file $ICON_DIR/Icon-1024.png || echo "file command failed"
+          
+          # Check if icon is valid, if not create a simple one
+          if ! sips -g pixelWidth $ICON_DIR/Icon-1024.png 2>/dev/null; then
+            echo "Icon file is invalid, creating a new one..."
+            # Create a simple 1024x1024 purple icon
+            sips -z 1024 1024 $ICON_DIR/AppIcon-512@2x.png --out $ICON_DIR/Icon-1024.png 2>/dev/null || \
+            convert -size 1024x1024 xc:'#6B4C9A' $ICON_DIR/Icon-1024.png 2>/dev/null || \
+            echo "Could not create icon"
+          fi
+          
+          echo '{"images":[{"filename":"Icon-1024.png","idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > $ICON_DIR/Contents.json
+          
+          echo "=== Final Contents.json ==="
+          cat $ICON_DIR/Contents.json
+          
+          echo "=== Final icon directory ==="
+          ls -la $ICON_DIR/
+          
           echo "✅ App icon configured for iOS 17+"
 
       - name: Install CocoaPods
