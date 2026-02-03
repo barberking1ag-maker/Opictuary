@@ -1,0 +1,147 @@
+mr.a.givens@Mrs-iMac Desktop % brew install node@22
+export PATH="/usr/local/opt/node@22/bin:$PATH"
+==> Auto-updating Homebrew...
+Adjust how often this is run with `$HOMEBREW_AUTO_UPDATE_SECS` or disable with
+`$HOMEBREW_NO_AUTO_UPDATE=1`. Hide these hints with `$HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+sudo gem install ffi
+sudo gem install cocoapods
+npm install
+npm run build
+npx cap sync ios
+cd ios/App
+pod install
+==> Auto-updated Homebrew!
+Updated 2 taps (homebrew/core and homebrew/cask).
+==> New Formulae
+cargo-features-manager: TUI like cli tool to manage the features of your rust-project dependencies
+codex-acp: Use Codex from ACP-compatible clients such as Zed!
+dbcsr: Distributed Block Compressed Sparse Row matrix library
+dovi_convert: Dolby Vision Profile 7 to 8.1 MKV converter
+durdraw: Versatile ASCII and ANSI Art text editor for drawing in the terminal
+ekphos: Terminal-based markdown research tool inspired by Obsidian
+fence: Lightweight sandbox for commands with network and filesystem restrictions
+fzf-tab: Replace zsh completion selection menu with fzf
+gnuastro: Astronomical data manipulation and analysis utilities and libraries
+go-air: Live reload for Go apps
+gogcli: Google Suite CLI
+hdrhistogram_c: C port of the HdrHistogram
+imagemagick-full: Tools and libraries to manipulate images in many formats
+kubefwd: Bulk port forwarding Kubernetes services for local development
+libigloo: Generic C framework used and developed by the Icecast project
+libks: Foundational support for signalwire C products
+litra: Control Logitech Litra lights from the command-line
+llhttp: Port of http_parser to llparse
+mac-cleanup-go: TUI macOS cleaner that scans caches/logs and lets you select what to delete
+magics: ECMWF's meteorological plotting software
+mlx-c: C API for MLX
+nativefiledialog-extended: Native file dialog library with C and C++ bindings
+openskills: Universal skills loader for AI coding agents
+pocket-tts: Text-to-speech application designed to run efficiently on CPUs
+radicle: Sovereign code forge built on Git
+ralph-orchestrator: Multi-agent orchestration framework for autonomous AI task completion
+repeater: Flashcard program that uses spaced repetition
+sandvault: Run AI agents isolated in a sandboxed macOS user account
+signalwire-client-c: SignalWire C Client SDK
+tftp-now: Single-binary TFTP server and client that you can use right now
+tock: Powerful time tracking tool for the command-line
+tpix: Simple terminal image viewer using the Kitty graphics protocol
+vampire: High-performance theorem prover
+vtsls: LSP wrapper for typescript extension of vscode
+whosthere: LAN discovery tool with a modern TUI written in Go
+wik: View Wikipedia pages from your terminal
+worktrunk: CLI for Git worktree management, designed for parallel AI agent workflows
+xcsift: Swift tool to parse xcodebuild output for coding agents
+
+You have 14 outdated formulae installed.
+
+Warning: You are using macOS 10.15.
+We (and Apple) do not provide support for this old version.
+You may have better luck with MacPorts which supports older versions of macOS:
+  https://www.macports.org
+
+This is a Tier 3 configuration:
+  https://docs.brew.sh/Support-Tiers#tier-3
+You can report Tier 3 unrelated issues to Homebrew/* repositories!
+Read the above document before opening any issues or PRs.
+
+==> Fetching downloads for: node@22
+✔︎ API Source node@22.rb                              Verified      6.4KB/  6.4KB
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/d26d4b9b51db437d99b50b6f3ea265e325ce90b63c9ac3c0455a0153c469ab96--cmake.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/c39f93179fb7b9cc5edc933274b496b58a7ea7b0276b9113e76a93f2e49f81d6--libnghttp3.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/00d97d1dad78dce54272ce9a1a02099921be090bb8707b69b90096783a1d68f4--openssl@3.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/85326c0e466978e75071904d1c59a10b7dcad4fbcb306be172560393c41212c7--libngtcp2.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/8479c22c126c85de3dcf7600fb81ea0e1871c3fbc8a842ed3d040d10d942af68--simdutf.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/5786c472504337a30ede510cfbd7309971502508c7787ddbeca5395a12257f58--expat.rb
+==> Downloading https://raw.githubusercontent.com/Homebrew/homebrew-core/ee8e3f5
+Already downloaded: /Users/mr.a.givens/Library/Caches/Homebrew/downloads/beb3a72835cf0e810ba072effc0916bbf9853138c6f1279c084689223bfdacb9--python@3.13.rb
+✔︎ API Source cmake.rb                                Verified      3.4KB/  3.4KB
+✔︎ Patch 6347854fa279cda0682c72dffbb402a0ce29ba51.pat Verified      4.4KB/  4.4KB
+✔︎ Formula cmake (4.2.3)                              Verified     12.3MB/ 12.3MB
+✔︎ API Source libnghttp3.rb                           Verified      1.8KB/  1.8KB
+✔︎ Formula libnghttp3 (1.15.0)                        Verified    408.7KB/408.7KB
+✔︎ API Source openssl@3.rb                            Verified      7.4KB/  7.4KB
+✔︎ Formula openssl@3 (3.6.1)                          Verified     54.9MB/ 54.9MB
+✔︎ API Source libngtcp2.rb                            Verified      9.1KB/  9.1KB
+✔︎ Formula libngtcp2 (1.20.0)                         Verified    684.1KB/684.1KB
+✔︎ API Source simdutf.rb                              Verified      1.9KB/  1.9KB
+✔︎ Formula simdutf (8.0.0)                            Verified      2.4MB/  2.4MB
+✔︎ API Source expat.rb                                Verified      2.8KB/  2.8KB
+✔︎ Formula expat (2.7.4)                              Verified    505.7KB/505.7KB
+✔︎ API Source python@3.13.rb                          Verified     23.2KB/ 23.2KB
+✔︎ Resource python@3.13--flit-core                    Verified     53.7KB/ 53.7KB
+✔︎ Resource python@3.13--packaging                    Verified    143.4KB/143.4KB
+✔︎ Resource python@3.13--pip                          Verified      1.8MB/  1.8MB
+✔︎ Resource python@3.13--wheel                        Verified     60.6KB/ 60.6KB
+✔︎ Patch 3.13-sysconfig.diff                          Verified      1.8KB/  1.8KB
+✔︎ Formula python@3.13 (3.13.11)                      Verified     29.4MB/ 29.4MB
+✔︎ Formula node@22 (22.22.0)                          Verified     50.9MB/ 50.9MB
+==> Installing dependencies for node@22: openssl@3, expat, python@3.13, cmake, libnghttp3, libngtcp2 and simdutf
+==> Installing node@22 dependency: openssl@3
+sudo gem install ffi
+sudo gem install cocoapods
+npm install
+npm run build
+npx cap sync ios
+cd ios/App
+pod install
+==> perl ./Configure --prefix=/usr/local/Cellar/openssl@3/3.6.1 --openssldir=/us
+==> make
+xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath ~/Desktop/App.xcarchive -destination 'generic/platform=iOS' archive
+xcodebuild -exportArchive -archivePath ~/Desktop/App.xcarchive -exportPath ~/Desktop/AppExport -exportOptionsPlist ExportOptions.plist
+==> make install MANDIR=/usr/local/Cellar/openssl@3/3.6.1/share/man MANSUFFIX=ss
+==> make HARNESS_JOBS=4 test TESTS=-test_afalg
+Warning: The post-install step did not complete successfully
+You can try again using:
+  brew postinstall openssl@3
+==> Summary
+🍺  /usr/local/Cellar/openssl@3/3.6.1: 7,624 files, 38.2MB, built in 12 minutes 35 seconds
+==> Installing node@22 dependency: expat
+==> ./configure --mandir=/usr/local/Cellar/expat/2.7.4/share/man
+==> make install
+🍺  /usr/local/Cellar/expat/2.7.4: 23 files, 724.2KB, built in 613 minutes 20 seconds
+==> Installing node@22 dependency: python@3.13
+==> Patching
+==> Applying 3.13-sysconfig.diff
+==> ./configure --enable-ipv6 --datarootdir=/usr/local/Cellar/python@3.13/3.13.1
+==> make
+==> make altinstall PYTHONAPPSDIR=/usr/local/Cellar/python@3.13/3.13.11_1
+==> make frameworkinstallextras PYTHONAPPSDIR=/usr/local/Cellar/python@3.13/3.13
+==> /usr/local/Cellar/python@3.13/3.13.11_1/bin/python3.13 -m venv /private/tmp/
+==> /private/tmp/pythonA3.13-20260203-90465-z94v42/Python-3.13.11/whl_build/bin/
+==> /private/tmp/pythonA3.13-20260203-90465-z94v42/Python-3.13.11/whl_build/bin/
+==> /private/tmp/pythonA3.13-20260203-90465-z94v42/Python-3.13.11/whl_build/bin/
+==> /private/tmp/pythonA3.13-20260203-90465-z94v42/Python-3.13.11/whl_build/bin/
+==> /usr/local/Cellar/python@3.13/3.13.11_1/bin/python3.13 -Im ensurepip
+==> /usr/local/Cellar/python@3.13/3.13.11_1/bin/python3.13 -Im pip install -v --
+🍺  /usr/local/Cellar/python@3.13/3.13.11_1: 9,270 files, 216.6MB, built in 19 minutes 32 seconds
+==> Installing node@22 dependency: cmake
+==> Patching
+==> Applying 6347854fa279cda0682c72dffbb402a0ce29ba51.patch
+==> ./bootstrap --prefix=/usr/local/Cellar/cmake/4.2.3 --no-system-libs --parall
+==> make
