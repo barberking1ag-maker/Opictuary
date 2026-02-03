@@ -32,6 +32,26 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
+      - name: Fix App Icon for iOS 17+
+        run: |
+          cat > ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json << 'EOF'
+          {
+            "images" : [
+              {
+                "filename" : "Icon-1024.png",
+                "idiom" : "universal",
+                "platform" : "ios",
+                "size" : "1024x1024"
+              }
+            ],
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          EOF
+          echo "✅ App icon configured for iOS 17+"
+
       - name: Install CocoaPods
         run: |
           cd ios/App
