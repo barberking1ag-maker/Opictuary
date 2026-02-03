@@ -1,0 +1,68 @@
+ >....                                                  
+# Install pods
+pod install
+
+# Archive
+xcodebuild -workspace App.xcworkspace \
+  -scheme App \
+  -configuration Release \
+  -archivePath ~/Desktop/App.xcarchive \
+  -destination 'generic/platform=iOS' \
+  archive
+
+# Export IPA
+xcodebuild -exportArchive \
+  -archivePath ~/Desktop/App.xcarchive \
+  -exportPath ~/Desktop/AppExport \
+  -exportOptionsPlist ExportOptions.plist
+
+# Upload to App Store
+xcrun altool --upload-app \
+  -f ~/Desktop/AppExport/App.ipa \
+  -t ios \
+  -u YOUR_APPLE_ID \
+  -p YOUR_APP_SPECIFIC_PASSWORD
+zsh: command not found: #
+fatal: not a git repository (or any of the parent directories): .git
+zsh: command not found: #
+npm error Missing script: "build"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /Users/mr.a.givens/.npm/_logs/2026-02-03T04_02_21_713Z-debug-0.log
+zsh: command not found: #
+[fatal] The Capacitor CLI requires NodeJS >=22.0.0
+        Please install the latest LTS version.
+zsh: command not found: #
+cd: no such file or directory: ios/App
+zsh: command not found: #
+Traceback (most recent call last):
+	20: from /usr/local/bin/pod:23:in `<main>'
+	19: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:303:in `activate_bin_path'
+	18: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:303:in `synchronize'
+	17: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems.rb:304:in `block in activate_bin_path'
+	16: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in `activate'
+	15: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `activate_dependencies'
+	14: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `each'
+	13: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in `block in activate_dependencies'
+	12: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in `activate'
+	11: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `activate_dependencies'
+	10: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `each'
+	 9: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in `block in activate_dependencies'
+	 8: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in `activate'
+	 7: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `activate_dependencies'
+	 6: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `each'
+	 5: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1452:in `block in activate_dependencies'
+	 4: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1420:in `activate'
+	 3: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `activate_dependencies'
+	 2: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1438:in `each'
+	 1: from /System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/specification.rb:1449:in `block in activate_dependencies'
+/System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/2.6.0/rubygems/dependency.rb:311:in `to_specs': Could not find 'ffi' (>= 1.15.0) among 87 total gem(s) (Gem::MissingSpecError)
+Checked in 'GEM_PATH=/Users/mr.a.givens/.gem/ruby/2.6.0:/Library/Ruby/Gems/2.6.0:/System/Library/Frameworks/Ruby.framework/Versions/2.6/usr/lib/ruby/gems/2.6.0', execute `gem env` for more information
+zsh: command not found: #
+xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory '/Library/Developer/CommandLineTools' is a command line tools instance
+zsh: command not found: #
+xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory '/Library/Developer/CommandLineTools' is a command line tools instance
+zsh: command not found: #
+xcrun: error: unable to find utility "altool", not a developer tool or in PATH
+mr.a.givens@Mrs-iMac ~ % 
