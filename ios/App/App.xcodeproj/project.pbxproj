@@ -371,9 +371,9 @@
                                 "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
                                 CODE_SIGN_STYLE = Manual;
                                 CURRENT_PROJECT_VERSION = 1;
-                                DEVELOPMENT_TEAM = "";
+                                DEVELOPMENT_TEAM = CRPD7WHX8V;
                                 INFOPLIST_FILE = App/Info.plist;
-                                PROVISIONING_PROFILE_SPECIFIER = "";
+                                PROVISIONING_PROFILE_SPECIFIER = "Opictuary App Store";
                                 IPHONEOS_DEPLOYMENT_TARGET = 17.0;
                                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
                                 MARKETING_VERSION = 1.0;
