@@ -1,0 +1,49 @@
+Run cd ios/App
+  cd ios/App
+  
+  echo "Building archive..."
+  
+  xcodebuild -workspace App.xcworkspace \
+    -scheme App \
+    -configuration Release \
+    -archivePath $RUNNER_TEMP/App.xcarchive \
+    -destination 'generic/platform=iOS' \
+    -showBuildTimingSummary \
+    archive
+  
+  echo "✅ Archive created successfully"
+  shell: /bin/bash -e {0}
+  env:
+    PP_UUID: a8f4716c-89a1-40b2-9a4d-50a3ba2b6bda
+    PP_NAME: Opictuary App Store
+    KEYCHAIN_PATH: /Users/runner/work/_temp/app-signing.keychain-db
+Building archive...
+Command line invocation:
+    /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath /Users/runner/work/_temp/App.xcarchive -destination generic/platform=iOS -showBuildTimingSummary archive
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (30 targets)
+    Target 'App' in project 'App'
+        ➜ Implicit dependency on target 'Pods-App' in project 'Pods' via file 'Pods_App.framework' in build phase 'Link Binary'
+        ➜ Implicit dependency on target 'Capacitor' in project 'Pods' via options '-framework Capacitor' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorBrowser' in project 'Pods' via options '-framework CapacitorBrowser' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorCamera' in project 'Pods' via options '-framework CapacitorCamera' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorHaptics' in project 'Pods' via options '-framework CapacitorHaptics' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorMlkitBarcodeScanning' in project 'Pods' via options '-framework CapacitorMlkitBarcodeScanning' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorPreferences' in project 'Pods' via options '-framework CapacitorPreferences' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorPushNotifications' in project 'Pods' via options '-framework CapacitorPushNotifications' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorShare' in project 'Pods' via options '-framework CapacitorShare' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorStatusBar' in project 'Pods' via options '-framework CapacitorStatusBar' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'CapacitorCordova' in project 'Pods' via options '-framework Cordova' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'PromisesObjC' in project 'Pods' via options '-framework FBLPromises' in build setting 'OTHER_LDFLAGS'
