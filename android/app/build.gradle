@@ -13,7 +13,7 @@ android {
         applicationId "com.opictuary.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2026020500
+        versionCode 2026020501
         versionName "2.6.15"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

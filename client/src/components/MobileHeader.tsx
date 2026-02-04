@@ -13,7 +13,7 @@ export function MobileHeader() {
     >
       <div className="flex items-center justify-between h-14 px-4">
         <Link href="/">
-          <OpictuaryLogo variant="classic" showTagline={false} className="scale-90" />
+          <OpictuaryLogo variant="classic" showTagline={false} />
         </Link>
         
         <div className="flex items-center gap-2">

@@ -11,9 +11,27 @@ export function OpictuaryLogo({
   showTagline = true,
   className = ""
 }: OpictuaryLogoProps) {
+  // Compact horizontal layout for headers (when no tagline)
+  if (!showTagline) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="relative w-10 h-10 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
+          <img 
+            src={opictuaryIcon} 
+            alt="Opictuary"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <h1 className="text-lg font-serif font-bold text-foreground leading-tight">
+          Opictuary
+        </h1>
+      </div>
+    );
+  }
+
+  // Full vertical layout with tagline
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
-      {/* New purple icon with built-in O and halo */}
       <div className="relative w-12 h-12 rounded-lg overflow-hidden shadow-md">
         <img 
           src={opictuaryIcon} 
@@ -26,11 +44,9 @@ export function OpictuaryLogo({
         <h1 className="text-2xl font-serif font-bold text-foreground leading-tight">
           Opictuary
         </h1>
-        {showTagline && (
-          <span className="text-xs text-muted-foreground tracking-wide text-center">
-            Honoring Life · Preserving Legacy
-          </span>
-        )}
+        <span className="text-xs text-muted-foreground tracking-wide text-center">
+          Honoring Life · Preserving Legacy
+        </span>
       </div>
     </div>
   );
