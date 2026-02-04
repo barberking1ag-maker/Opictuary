@@ -38,7 +38,7 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **Frontend:** Built with React 18, TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS, featuring over 30 reusable components and 18+ distinct pages.
 **Backend:** Developed using Express.js with Node.js and TypeScript, designed as a RESTful API with over 80 endpoints.
 **Content Moderation:** Implements server-side profanity filtering.
-**Authentication:** Integrates Replit Auth (OpenID Connect) for session-based authentication.
+**Authentication:** Dual authentication system supporting both Replit Auth (OpenID Connect) for web and email/password authentication for native mobile apps (iOS/Android via Capacitor). Mobile auth uses bcryptjs password hashing with secure session management. Auth page available at `/auth`.
 **Authorization:** Employs role-based access control.
 **Data Storage:** Uses PostgreSQL (Neon serverless) with Drizzle ORM, comprising over 25 tables.
 **Security:** Features Zod validation, whitelisted fields, session-based authentication, CSRF protection, protected routes, and lazy-loaded Stripe.
