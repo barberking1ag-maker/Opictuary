@@ -113,15 +113,15 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
   ) || [];
 
   return (
-    <Card className="bg-purple-900/50 border-purple-700/50" data-testid="card-qr-manager">
+    <Card data-testid="card-qr-manager">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <CardTitle className="text-purple-100 flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
               <QrCode className="w-5 h-5" />
               QR Codes
             </CardTitle>
-            <CardDescription className="text-purple-300">
+            <CardDescription>
               Generate printable QR codes for uploading photos and videos
             </CardDescription>
           </div>
@@ -136,22 +136,22 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
                 Generate QR Code
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-purple-900 border-purple-700">
+            <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-purple-100">Generate QR Code</DialogTitle>
-                <DialogDescription className="text-purple-300">
+                <DialogTitle>Generate QR Code</DialogTitle>
+                <DialogDescription>
                   Create a printable QR code for this memorial
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
                 <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <p className="text-xs text-amber-200">
+                  <p className="text-xs text-amber-700 dark:text-amber-200">
                     <strong>Live Data Connection:</strong> $9.99/month per QR code to keep your data live and connected forever. Perfect for traditional obituaries and gravesite memorials.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="purpose" className="text-purple-100">
+                  <Label htmlFor="purpose">
                     QR Code Purpose
                   </Label>
                   <Select
@@ -161,7 +161,6 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
                     <SelectTrigger
                       id="purpose"
                       data-testid="select-qr-purpose"
-                      className="bg-purple-950/50 border-purple-700/50 text-purple-100"
                     >
                       <SelectValue placeholder="Select purpose" />
                     </SelectTrigger>
@@ -171,7 +170,7 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
                       <SelectItem value="tombstone">Memorial View Only</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-purple-400">
+                  <p className="text-xs text-muted-foreground">
                     {selectedPurpose === "tombstone_upload" && "Perfect for placing on gravestones - allows visitors to upload photos and videos"}
                     {selectedPurpose === "upload" && "General upload QR code for sharing on memorial cards or announcements"}
                     {selectedPurpose === "tombstone" && "Links to memorial view page without upload functionality"}
@@ -205,14 +204,14 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
       <CardContent>
         {isLoading ? (
           <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 text-gold-400 animate-spin mx-auto mb-2" />
-            <p className="text-purple-300">Loading QR codes...</p>
+            <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading QR codes...</p>
           </div>
         ) : uploadQRCodes.length === 0 ? (
-          <div className="text-center py-8 border-2 border-dashed border-purple-700/50 rounded-lg">
-            <QrCode className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-            <p className="text-purple-300 mb-2">No upload QR codes yet</p>
-            <p className="text-sm text-purple-400 mb-4">
+          <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+            <QrCode className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-foreground mb-2">No upload QR codes yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
               Generate a QR code to place on the tombstone or share with visitors
             </p>
           </div>
@@ -221,15 +220,15 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
             {uploadQRCodes.map((qr) => (
               <div
                 key={qr.id}
-                className="border border-purple-700/50 rounded-lg p-4 bg-purple-950/30"
+                className="border border-border rounded-lg p-4 bg-muted/30"
                 data-testid={`qr-code-item-${qr.id}`}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between gap-2 flex-wrap mb-3">
                   <div>
-                    <h4 className="font-medium text-purple-100">
+                    <h4 className="font-medium">
                       {getPurposeLabel(qr.purpose)}
                     </h4>
-                    <p className="text-sm text-purple-400">
+                    <p className="text-sm text-muted-foreground">
                       Created {new Date(qr.createdAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -269,10 +268,10 @@ export function QRCodeManager({ memorialId, memorialName, inviteCode }: QRCodeMa
 
         {/* Printable QR Code Dialog */}
         <Dialog open={!!selectedQRCode} onOpenChange={(open) => !open && setSelectedQRCode(null)}>
-          <DialogContent className="max-w-4xl bg-purple-900 border-purple-700">
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="text-purple-100">Printable QR Code</DialogTitle>
-              <DialogDescription className="text-purple-300">
+              <DialogTitle>Printable QR Code</DialogTitle>
+              <DialogDescription>
                 Print this QR code to place on the tombstone or memorial
               </DialogDescription>
             </DialogHeader>
