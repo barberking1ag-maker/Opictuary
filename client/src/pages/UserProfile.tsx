@@ -201,22 +201,152 @@ export default function UserProfile() {
     );
   }
 
+  // Show demo profile for non-authenticated users (allows Apple reviewers to see features)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Login Required</CardTitle>
-            <CardDescription>
-              Please login to view and manage your profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => handleMobileLogin()} className="w-full">
-              Login to Continue
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="mb-6 bg-primary/5 border-primary/20">
+            <CardContent className="py-4">
+              <p className="text-sm text-center text-muted-foreground">
+                This is a preview of the user profile settings. Login to manage your own profile.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-10 h-10 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Demo User</CardTitle>
+                  <CardDescription>demo@opictuary.com</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+          
+          <Tabs defaultValue="profile" className="mt-6">
+            <TabsList className="grid w-full grid-cols-4 gap-1">
+              <TabsTrigger value="profile">
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </TabsTrigger>
+              <TabsTrigger value="notifications">
+                <Bell className="w-4 h-4 mr-2" />
+                Alerts
+              </TabsTrigger>
+              <TabsTrigger value="privacy">
+                <Shield className="w-4 h-4 mr-2" />
+                Privacy
+              </TabsTrigger>
+              <TabsTrigger value="saved">
+                <Heart className="w-4 h-4 mr-2" />
+                Saved
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="profile">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profile Information</CardTitle>
+                  <CardDescription>Update your personal information</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>First Name</Label>
+                      <Input placeholder="John" disabled />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Last Name</Label>
+                      <Input placeholder="Doe" disabled />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input placeholder="demo@opictuary.com" disabled />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Bio</Label>
+                    <Textarea placeholder="Tell us about yourself..." disabled />
+                  </div>
+                  <Button onClick={() => handleMobileLogin()} className="w-full" data-testid="button-login-profile">
+                    Login to Edit Profile
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="notifications">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>Manage your notification settings</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Email Notifications</Label>
+                    <Switch checked disabled />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Push Notifications</Label>
+                    <Switch checked disabled />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Memorial Updates</Label>
+                    <Switch checked disabled />
+                  </div>
+                  <Button onClick={() => handleMobileLogin()} className="w-full" data-testid="button-login-notifications">
+                    Login to Manage Notifications
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="privacy">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Privacy Settings</CardTitle>
+                  <CardDescription>Control your privacy preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Public Profile</Label>
+                    <Switch checked disabled />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Share Activity with Creators</Label>
+                    <Switch checked disabled />
+                  </div>
+                  <Button onClick={() => handleMobileLogin()} className="w-full" data-testid="button-login-privacy">
+                    Login to Update Privacy
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="saved">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Saved Memorials</CardTitle>
+                  <CardDescription>Memorials you've saved for quick access</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-4">Login to view your saved memorials</p>
+                    <Button onClick={() => handleMobileLogin()} data-testid="button-login-saved">
+                      Login to View Saved
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     );
   }

@@ -73,22 +73,103 @@ export default function MyMemorials() {
     );
   }
 
+  // Show demo content for non-authenticated users (allows Apple reviewers to see features)
   if (!isAuthenticated) {
+    const demoMemorials = [
+      {
+        id: "demo-1",
+        name: "Margaret Rose Johnson",
+        dates: "1945 - 2024",
+        photoCount: 12,
+        condolenceCount: 47,
+        status: "published",
+      },
+      {
+        id: "demo-2", 
+        name: "Robert James Williams",
+        dates: "1938 - 2023",
+        photoCount: 8,
+        condolenceCount: 23,
+        status: "published",
+      },
+      {
+        id: "demo-3",
+        name: "Eleanor Grace Smith",
+        dates: "1952 - 2024",
+        photoCount: 5,
+        condolenceCount: 15,
+        status: "draft",
+      },
+    ];
+    
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Login Required</CardTitle>
-            <CardDescription>
-              Please login to view your memorials.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => handleMobileLogin()} className="w-full">
-              Login to Continue
+      <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+            <div>
+              <h1 className="text-3xl font-serif font-bold mb-2" data-testid="text-my-memorials-heading">
+                My Memorials
+              </h1>
+              <p className="text-muted-foreground">
+                Preview of memorial management features
+              </p>
+            </div>
+            <Button onClick={() => handleMobileLogin()} data-testid="button-login-to-manage">
+              Login to Manage
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+          
+          <Card className="mb-6 bg-primary/5 border-primary/20">
+            <CardContent className="py-4">
+              <p className="text-sm text-center text-muted-foreground">
+                This is a preview of the memorial management dashboard. Login to create and manage your own memorials.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="demo-memorials-grid">
+            {demoMemorials.map((memorial) => (
+              <Card key={memorial.id} className="hover-elevate" data-testid={`card-demo-memorial-${memorial.id}`}>
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <CardTitle className="text-lg">{memorial.name}</CardTitle>
+                    <Badge variant={memorial.status === "published" ? "default" : "secondary"}>
+                      {memorial.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>{memorial.dates}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold">{memorial.photoCount}</p>
+                      <p className="text-xs text-muted-foreground">Photos</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold">{memorial.condolenceCount}</p>
+                      <p className="text-xs text-muted-foreground">Condolences</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href="/memorial/e94ee1f4-2506-4848-9c7e-97b6d473cf81" className="flex-1">
+                      <Button variant="outline" className="w-full" data-testid={`button-view-demo-${memorial.id}`}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="flex-1" onClick={() => handleMobileLogin()} data-testid={`button-manage-demo-${memorial.id}`}>
+                      <Users className="w-4 h-4 mr-2" />
+                      Manage
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
