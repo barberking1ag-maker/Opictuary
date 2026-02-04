@@ -39,10 +39,10 @@ export function MobileTabBar() {
     if (!isNative) {
       toast({
         title: "QR Scanner",
-        description: "Point your camera at a memorial QR code to visit that memorial instantly.",
+        description: "QR scanning requires the native app. Use this page to generate or view QR codes.",
         duration: 3000,
       });
-      navigate("/qr-scanner-demo");
+      navigate("/qr-code");
       return;
     }
 
