@@ -17,7 +17,7 @@ export default function Privacy() {
             <CardContent className="space-y-3 text-muted-foreground">
               <p>We collect the following types of information to provide our memorial services:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Account Information</strong>: Email address, name, and profile photo through Replit authentication</li>
+                <li><strong>Account Information</strong>: Email address, name, and profile photo through secure authentication</li>
                 <li><strong>Memorial Content</strong>: Photos, videos, text, and other content you upload to create memorials</li>
                 <li><strong>Payment Information</strong>: Processed securely through Stripe for donations and fundraisers</li>
                 <li><strong>Analytics Data</strong>: Page views, usage patterns, and interaction data to improve our platform</li>
@@ -51,7 +51,7 @@ export default function Privacy() {
               <p>We may share data with:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Stripe</strong>: For secure payment processing (subject to their privacy policy)</li>
-                <li><strong>Analytics Services</strong>: Google Analytics and Plausible for usage analytics</li>
+                <li><strong>Analytics Services</strong>: Privacy-focused analytics for usage patterns</li>
                 <li><strong>Memorial Visibility</strong>: Content visibility is controlled by memorial creators through public/private settings</li>
                 <li><strong>Legal Requirements</strong>: When required by law or to protect our rights</li>
               </ul>

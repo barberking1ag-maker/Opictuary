@@ -162,7 +162,7 @@ export default function ChildSafety() {
               <div className="mt-6 p-4 bg-muted rounded-md">
                 <p className="text-sm">
                   <strong>Note:</strong> This page serves as our publicly accessible Child Safety Standards as required by 
-                  Google Play Store policies. It is non-editable and permanently available at this URL for compliance purposes.
+                  app store policies. It is non-editable and permanently available at this URL for compliance purposes.
                 </p>
               </div>
             </CardContent>

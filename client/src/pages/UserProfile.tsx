@@ -512,7 +512,7 @@ export default function UserProfile() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Password & Security</h3>
                   <p className="text-sm text-muted-foreground">
-                    Your account is secured through Replit authentication. Password management is handled automatically.
+                    Your account is secured with encrypted authentication. You can manage your password through your account settings.
                   </p>
                 </div>
 
