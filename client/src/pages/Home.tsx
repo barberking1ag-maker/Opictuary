@@ -295,6 +295,23 @@ export default function Home() {
     }
   };
 
+  // Try to load offline memorial when API fails - MUST be before any conditional returns
+  useEffect(() => {
+    const loadOfflineMemorial = async () => {
+      if (memorialError && memorialId && !isOnline) {
+        const cached = await getOfflineMemorial(memorialId);
+        if (cached) {
+          setOfflineMemorial(cached.data);
+          toast({
+            title: "Viewing Offline",
+            description: "You're viewing a saved version of this memorial.",
+          });
+        }
+      }
+    };
+    loadOfflineMemorial();
+  }, [memorialError, memorialId, isOnline, toast]);
+
   // Memorial Loading Skeleton
   if (memorialId && memorialLoading) {
     return (
@@ -334,23 +351,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // Try to load offline memorial when API fails
-  useEffect(() => {
-    const loadOfflineMemorial = async () => {
-      if (memorialError && memorialId && !isOnline) {
-        const cached = await getOfflineMemorial(memorialId);
-        if (cached) {
-          setOfflineMemorial(cached.data);
-          toast({
-            title: "Viewing Offline",
-            description: "You're viewing a saved version of this memorial.",
-          });
-        }
-      }
-    };
-    loadOfflineMemorial();
-  }, [memorialError, memorialId, isOnline, toast]);
 
   // Memorial Error State - but check for offline data first
   if (memorialId && memorialError && !offlineMemorial) {
