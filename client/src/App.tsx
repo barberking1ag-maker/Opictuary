@@ -90,7 +90,7 @@ import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
 import { OfflineIndicator, OfflineBanner } from "@/components/OfflineIndicator";
-import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift } from "lucide-react";
+import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift, Mail } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
@@ -291,23 +291,25 @@ function Router() {
               </Link>
             </div>
             <div className="flex items-center gap-2">
-              {/* Notifications Bell */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="relative hidden md:flex"
-                data-testid="button-notifications"
-                aria-label="Notifications - 3 unread"
-              >
-                <Bell className="w-5 h-5" aria-hidden="true" />
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  aria-label="3 notifications"
+              {/* Notifications Bell - Links to Upcoming Messages */}
+              <Link href="/upcoming-messages">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hidden md:flex"
+                  data-testid="button-notifications"
+                  aria-label="View Messages & Notifications"
                 >
-                  3
-                </Badge>
-              </Button>
+                  <Bell className="w-5 h-5" aria-hidden="true" />
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    aria-label="notifications"
+                  >
+                    <Mail className="w-3 h-3" />
+                  </Badge>
+                </Button>
+              </Link>
 
               {/* User Menu */}
               <UserMenu />
