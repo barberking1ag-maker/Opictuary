@@ -1,14 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Image, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { Capacitor } from '@capacitor/core';
 
 export default function AdminScreenshots() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'web'>('web');
+
+  useEffect(() => {
+    const detectPlatform = () => {
+      if (Capacitor.isNativePlatform()) {
+        const nativePlatform = Capacitor.getPlatform();
+        if (nativePlatform === 'ios') {
+          setPlatform('ios');
+        } else if (nativePlatform === 'android') {
+          setPlatform('android');
+        }
+      } else {
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (/iphone|ipad|ipod/.test(userAgent)) {
+          setPlatform('ios');
+        } else if (/android/.test(userAgent)) {
+          setPlatform('android');
+        }
+      }
+    };
+    detectPlatform();
+  }, []);
+
+  const isIOS = platform === 'ios';
+  const storeName = isIOS ? 'App Store' : 'Google Play Store';
+  const consoleName = isIOS ? 'App Store Connect' : 'Google Play Console';
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -18,7 +45,7 @@ export default function AdminScreenshots() {
     onSuccess: () => {
       toast({
         title: 'Success!',
-        description: '8 Google Play Store screenshots generated and compiled into PDF',
+        description: `8 ${storeName} screenshots generated and compiled into PDF`,
       });
       setIsGenerating(false);
     },
@@ -41,16 +68,16 @@ export default function AdminScreenshots() {
     window.open('/api/admin/download-screenshots', '_blank');
     toast({
       title: 'Download Started',
-      description: 'Your Play Store screenshots PDF is downloading',
+      description: `Your ${storeName} screenshots PDF is downloading`,
     });
   };
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Google Play Store Screenshots</h1>
+        <h1 className="text-3xl font-bold text-foreground">{storeName} Screenshots</h1>
         <p className="text-muted-foreground mt-2">
-          Generate and download 8 professional screenshots for your Play Store listing
+          Generate and download 8 professional screenshots for your {storeName} listing
         </p>
       </div>
 
@@ -62,7 +89,7 @@ export default function AdminScreenshots() {
               Screenshot Generator
             </CardTitle>
             <CardDescription>
-              Automatically captures 8 key pages of Opictuary at 1080 x 1920 resolution
+              Automatically captures 8 key pages of Opictuary at {isIOS ? '1290 x 2796' : '1080 x 1920'} resolution
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -138,16 +165,22 @@ export default function AdminScreenshots() {
             </div>
 
             <div className="space-y-2 text-sm">
-              <p className="font-medium">2. Upload to Google Play Console</p>
+              <p className="font-medium">2. Upload to {consoleName}</p>
               <p className="text-muted-foreground ml-4">
-                In your Play Console, navigate to: Store presence → Main store listing → Graphics → Phone screenshots
+                {isIOS 
+                  ? 'In App Store Connect, navigate to: App Store → App Information → Screenshots'
+                  : 'In your Play Console, navigate to: Store presence → Main store listing → Graphics → Phone screenshots'
+                }
               </p>
             </div>
 
             <div className="space-y-2 text-sm">
               <p className="font-medium">3. Add captions (optional)</p>
               <p className="text-muted-foreground ml-4">
-                Google recommends adding short captions to highlight key features
+                {isIOS 
+                  ? 'Apple recommends adding promotional text to highlight key features'
+                  : 'Google recommends adding short captions to highlight key features'
+                }
               </p>
             </div>
           </CardContent>
@@ -155,15 +188,27 @@ export default function AdminScreenshots() {
 
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle>Google Play Requirements</CardTitle>
+            <CardTitle>{storeName} Requirements</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>✅ <strong>Minimum:</strong> 2 screenshots required</li>
-              <li>✅ <strong>Recommended:</strong> 8 screenshots (what we're generating)</li>
-              <li>✅ <strong>Dimensions:</strong> 1080 x 1920 pixels (portrait)</li>
-              <li>✅ <strong>Format:</strong> PNG (high quality)</li>
-              <li>✅ <strong>Compiled:</strong> Single PDF for easy sharing</li>
+              {isIOS ? (
+                <>
+                  <li>✅ <strong>Minimum:</strong> 1 screenshot required per device</li>
+                  <li>✅ <strong>Recommended:</strong> Up to 10 screenshots per device</li>
+                  <li>✅ <strong>iPhone 6.7":</strong> 1290 x 2796 pixels (required)</li>
+                  <li>✅ <strong>iPhone 6.5":</strong> 1284 x 2778 pixels (optional)</li>
+                  <li>✅ <strong>Format:</strong> PNG or JPEG (high quality)</li>
+                </>
+              ) : (
+                <>
+                  <li>✅ <strong>Minimum:</strong> 2 screenshots required</li>
+                  <li>✅ <strong>Recommended:</strong> 8 screenshots (what we're generating)</li>
+                  <li>✅ <strong>Dimensions:</strong> 1080 x 1920 pixels (portrait)</li>
+                  <li>✅ <strong>Format:</strong> PNG (high quality)</li>
+                  <li>✅ <strong>Compiled:</strong> Single PDF for easy sharing</li>
+                </>
+              )}
             </ul>
           </CardContent>
         </Card>
