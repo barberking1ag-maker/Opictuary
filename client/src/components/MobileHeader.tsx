@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Bell } from "lucide-react";
+import { Bell, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
@@ -17,20 +17,23 @@ export function MobileHeader() {
         </Link>
         
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="relative"
-            data-testid="button-mobile-notifications"
-          >
-            <Bell className="w-5 h-5" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+          <Link href="/upcoming-messages">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative"
+              data-testid="button-mobile-notifications"
+              aria-label="View Messages & Notifications"
             >
-              3
-            </Badge>
-          </Button>
+              <Bell className="w-5 h-5" />
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
+              >
+                <Mail className="w-3 h-3" />
+              </Badge>
+            </Button>
+          </Link>
           <UserMenu />
         </div>
       </div>
