@@ -10,6 +10,8 @@ import { openai } from "./openai";
 import { registerExtendedRoutes } from "./extendedRoutes";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -250,6 +252,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Mobile Auth: Register with email/password
+  const mobileRegisterSchema = z.object({
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().optional(),
+  });
+
+  app.post('/api/auth/mobile/register', async (req, res) => {
+    try {
+      const { email, password, firstName, lastName } = mobileRegisterSchema.parse(req.body);
+      
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "An account with this email already exists" });
+      }
+      
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 12);
+      
+      // Generate unique user ID
+      const userId = crypto.randomUUID();
+      
+      // Create user
+      const user = await storage.upsertUser({
+        id: userId,
+        email,
+        passwordHash,
+        authProvider: 'email',
+        firstName,
+        lastName: lastName || null,
+      });
+      
+      // Set session
+      (req.session as any).mobileUserId = userId;
+      
+      res.json({ 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          firstName: user.firstName, 
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        },
+        message: "Account created successfully" 
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      console.error("Mobile register error:", error);
+      res.status(500).json({ error: "Failed to create account" });
+    }
+  });
+
+  // Mobile Auth: Login with email/password
+  const mobileLoginSchema = z.object({
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().min(1, "Password is required"),
+  });
+
+  app.post('/api/auth/mobile/login', async (req, res) => {
+    try {
+      const { email, password } = mobileLoginSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      // Check if user has a password (email auth)
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: "This account uses a different login method. Please try signing in with Replit." });
+      }
+      
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      // Set session
+      (req.session as any).mobileUserId = user.id;
+      
+      res.json({ 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          firstName: user.firstName, 
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        },
+        message: "Login successful" 
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      console.error("Mobile login error:", error);
+      res.status(500).json({ error: "Failed to login" });
+    }
+  });
+
+  // Mobile Auth: Logout
+  app.post('/api/auth/mobile/logout', (req, res) => {
+    (req.session as any).mobileUserId = null;
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  // Mobile Auth: Get current user (works for both Replit and mobile auth)
+  app.get('/api/auth/mobile/user', async (req: any, res) => {
+    try {
+      // Check for mobile session first
+      const mobileUserId = (req.session as any)?.mobileUserId;
+      if (mobileUserId) {
+        const user = await storage.getUser(mobileUserId);
+        if (user) {
+          return res.json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            authProvider: user.authProvider || 'email',
+            isAdmin: user.isAdmin || false,
+          });
+        }
+      }
+      
+      // Fall back to Replit auth
+      if (req.user?.claims?.sub) {
+        const user = await storage.getUser(req.user.claims.sub);
+        if (user) {
+          return res.json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            authProvider: user.authProvider || 'replit',
+            isAdmin: user.isAdmin || false,
+          });
+        }
+      }
+      
+      res.status(401).json({ error: "Not authenticated" });
+    } catch (error) {
+      console.error("Error fetching mobile user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
     }
   });
 

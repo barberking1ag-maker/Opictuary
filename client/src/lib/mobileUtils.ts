@@ -13,55 +13,20 @@ let browserListenerRegistered = false;
 export async function handleMobileLogin(): Promise<void> {
   await hapticImpact('light');
   
-  if (isNativeApp()) {
-    const loginUrl = `${getApiBaseUrl()}/api/login`;
-    
-    if (!browserListenerRegistered) {
-      Browser.addListener('browserFinished', () => {
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      });
-      browserListenerRegistered = true;
-    }
-    
-    // Use fullscreen presentation for iOS Safari View Controller (in-app browser)
-    // This keeps the user within the app per Apple guidelines
-    await Browser.open({
-      url: loginUrl,
-      presentationStyle: 'fullscreen',
-      toolbarColor: '#4A1D6A',
-      windowName: '_self',
-    });
-  } else {
-    window.location.href = '/api/login';
-  }
+  // Use the in-app auth page for both mobile and web
+  // This works everywhere unlike OAuth-based Replit Auth
+  window.location.href = '/auth';
 }
 
 export async function handleMobileLogout(): Promise<void> {
   await hapticImpact('light');
   
-  if (isNativeApp()) {
-    const logoutUrl = `${getApiBaseUrl()}/api/logout`;
-    
-    if (!browserListenerRegistered) {
-      Browser.addListener('browserFinished', () => {
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      });
-      browserListenerRegistered = true;
-    }
-    
-    // Use fullscreen presentation for iOS Safari View Controller (in-app browser)
-    await Browser.open({
-      url: logoutUrl,
-      presentationStyle: 'fullscreen',
-      toolbarColor: '#4A1D6A',
-      windowName: '_self',
-    });
-  } else {
-    window.location.href = '/api/logout';
+  // Use the mobile logout endpoint and redirect to home
+  try {
+    await fetch('/api/auth/mobile/logout', { method: 'POST' });
+    window.location.href = '/';
+  } catch (error) {
+    window.location.href = '/';
   }
 }
 

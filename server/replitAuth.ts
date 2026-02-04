@@ -129,9 +129,23 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Check for mobile session first (email/password auth)
+  const mobileUserId = (req.session as any)?.mobileUserId;
+  if (mobileUserId) {
+    // Create a compatible user object for mobile sessions
+    (req as any).user = {
+      claims: {
+        sub: mobileUserId,
+      },
+      isMobileAuth: true,
+    };
+    return next();
+  }
+
+  // Fall back to Replit OAuth
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user?.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

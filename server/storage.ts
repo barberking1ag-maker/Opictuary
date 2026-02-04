@@ -325,8 +325,9 @@ import { eq, desc, and, sql, count } from "drizzle-orm";
 import * as QRCodeGenerator from "qrcode";
 
 export interface IStorage {
-  // User operations (Replit Auth)
+  // User operations (Replit Auth and Mobile Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // User Settings operations
@@ -886,9 +887,14 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (Replit Auth)
+  // User operations (Replit Auth and Mobile Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
   }
 

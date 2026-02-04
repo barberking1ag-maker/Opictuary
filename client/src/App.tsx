@@ -86,6 +86,7 @@ import LiveCelebration from "@/pages/LiveCelebration";
 import SharedMusic from "@/pages/SharedMusic";
 import VirtualReactions from "@/pages/VirtualReactions";
 import HolidayCelebration from "@/pages/HolidayCelebration";
+import AuthPage from "@/pages/AuthPage";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
@@ -431,6 +432,7 @@ function Router() {
       <main id="main-content" role="main">
         <Switch>
           <Route path="/" component={Landing} />
+          <Route path="/auth" component={AuthPage} />
           <Route path="/obituary/:memorialId" component={ObituaryPage} />
           <Route path="/memorial/:code/upload" component={MemorialUpload} />
           <Route path="/memorial/:id" component={Home} />

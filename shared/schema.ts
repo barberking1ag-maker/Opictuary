@@ -15,10 +15,12 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for Replit Auth and Mobile Auth
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey(), // No default - Replit Auth provides ID from sub claim
+  id: varchar("id").primaryKey(), // No default - Replit Auth provides ID from sub claim, or UUID for mobile auth
   email: varchar("email").unique("users_email_key"),
+  passwordHash: varchar("password_hash"), // For mobile email/password auth
+  authProvider: varchar("auth_provider").default("replit"), // 'replit' or 'email'
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
