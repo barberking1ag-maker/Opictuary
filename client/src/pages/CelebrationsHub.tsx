@@ -547,6 +547,24 @@ export default function CelebrationsHub() {
             </Link>
           </div>
         </div>
+
+        <div className="mt-8">
+          <Link href="/ai-holiday-cards">
+            <Card className="hover-elevate cursor-pointer" data-testid="card-ai-holiday-cards-promo">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">AI Holiday Cards</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Create beautiful, personalized holiday cards with AI for any celebration or faith tradition
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
     </div>
   );

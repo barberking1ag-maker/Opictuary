@@ -21,6 +21,7 @@ const quickActions: QuickAction[] = [
   { href: "/create-memorial", icon: FileText, label: "Create Memorial", color: "text-primary", testId: "action-create-memorial" },
   { href: "/celebrations", icon: PartyPopper, label: "Celebrations", color: "text-primary", testId: "action-celebrations" },
   { href: "/products", icon: ShoppingBag, label: "Products", color: "text-primary", testId: "action-products" },
+  { href: "/ai-holiday-cards", icon: Gift, label: "Holiday Cards", color: "text-primary", testId: "action-holiday-cards" },
   { href: "/ai-card-maker", icon: Sparkles, label: "AI Cards", color: "text-primary", testId: "action-ai-cards" },
 ];
 

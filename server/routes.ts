@@ -6116,6 +6116,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  const holidayCardGenerateSchema = z.object({
+    prompt: z.string().min(1, "A description is required to generate your card.").max(1000, "Description is too long. Please keep it under 1000 characters."),
+    holiday: z.string().optional().default("general"),
+  });
+
+  // POST /api/holiday-cards/generate - Generate AI holiday card (standalone, no order required)
+  app.post("/api/holiday-cards/generate", isAuthenticated, async (req: any, res) => {
+    try {
+      const parsed = holidayCardGenerateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0]?.message || "Invalid request." });
+      }
+      const { prompt, holiday } = parsed.data;
+
+      const moderationResult = await moderateContent(prompt);
+      if (!moderationResult.isClean) {
+        return res.status(400).json({
+          error: "Your description didn't pass our content check. Please try a different description.",
+          categories: moderationResult.categories ?? []
+        });
+      }
+
+      const sanitizedPrompt = moderationResult.filteredText.trim();
+
+      const holidayContext: Record<string, string> = {
+        christmas: "Christmas holiday, festive winter",
+        hanukkah: "Hanukkah, Festival of Lights, Jewish holiday",
+        eid: "Eid celebration, Islamic holiday",
+        diwali: "Diwali, Festival of Lights, Hindu celebration",
+        easter: "Easter, spring, Christian celebration",
+        kwanzaa: "Kwanzaa, African heritage celebration",
+        thanksgiving: "Thanksgiving, autumn harvest",
+        newyear: "New Year celebration",
+        valentines: "Valentine's Day, love",
+        "mothers-day": "Mother's Day celebration",
+        "fathers-day": "Father's Day celebration",
+        memorial: "remembrance, memorial, honoring loved ones",
+      };
+
+      const context = holidayContext[holiday] || "holiday celebration";
+      const fullPrompt = `Beautiful holiday greeting card design. Theme: ${context}. ${sanitizedPrompt}. High quality, vibrant, warm, suitable for a greeting card. No text or words in the image.`;
+
+      let response;
+      try {
+        response = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: fullPrompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard"
+        });
+      } catch (openaiError: any) {
+        console.error("[Holiday Card] OpenAI API error:", openaiError);
+        if (openaiError.code === 'content_policy_violation') {
+          return res.status(400).json({ error: "This description couldn't be used. Please try something different." });
+        } else if (openaiError.status === 429) {
+          return res.status(429).json({ error: "Too many requests. Please wait a moment and try again." });
+        }
+        throw openaiError;
+      }
+
+      const imageUrl = response.data?.[0]?.url;
+      if (!imageUrl) {
+        return res.status(500).json({ error: "Failed to generate card. Please try again." });
+      }
+
+      res.json({ imageUrl, prompt: sanitizedPrompt, holiday });
+    } catch (error: any) {
+      console.error("[Holiday Card] Error:", error);
+      res.status(500).json({ error: "Something went wrong generating your card. Please try again." });
+    }
+  });
+
   // 4. POST /api/product-orders - Create new product order (SERVER-SIDE PRICING)
   app.post("/api/product-orders", isAuthenticated, async (req: any, res) => {
     try {

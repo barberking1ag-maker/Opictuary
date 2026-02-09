@@ -60,6 +60,7 @@ import VideoTimeCapsules from "@/pages/VideoTimeCapsules";
 import Products from "@/pages/Products";
 import ProductCustomize from "@/pages/ProductCustomize";
 import AICardMaker from "@/pages/AICardMaker";
+import AIHolidayCards from "@/pages/AIHolidayCards";
 import MyOrders from "@/pages/MyOrders";
 import OrderTracking from "@/pages/OrderTracking";
 import EventPlanner from "@/pages/EventPlanner";
@@ -208,6 +209,12 @@ function Router() {
                     <Link href="/ai-card-maker">
                       <Sparkles className="w-4 h-4 mr-2" />
                       <span>AI Card Maker</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-ai-holiday-cards">
+                    <Link href="/ai-holiday-cards">
+                      <Gift className="w-4 h-4 mr-2" />
+                      <span>AI Holiday Cards</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -365,6 +372,12 @@ function Router() {
                         <span>QR Memorials</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-ai-holiday-cards">
+                      <Link href="/ai-holiday-cards">
+                        <Gift className="w-4 h-4 mr-2" />
+                        <span>AI Holiday Cards</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer" data-testid="dropdown-mobile-celebrity-memorials">
                       <Link href="/celebrity-memorials">
@@ -509,6 +522,7 @@ function Router() {
         <Route path="/products" component={Products} />
         <Route path="/products/:productId/customize" component={ProductCustomize} />
         <Route path="/ai-card-maker" component={AICardMaker} />
+        <Route path="/ai-holiday-cards" component={AIHolidayCards} />
         <Route path="/orders" component={MyOrders} />
         <Route path="/orders/:orderId" component={OrderTracking} />
         

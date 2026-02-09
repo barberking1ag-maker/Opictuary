@@ -580,11 +580,17 @@ const watchIsTraditional = form.watch("isTraditional");
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-6 space-y-2">
           <p className="text-sm text-muted-foreground">
             Need to create your own obituary in advance?{" "}
             <Link href="/self-obituary" className="text-primary hover:underline" data-testid="link-self-obituary">
               Write Self-Obituary
+            </Link>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Create a personalized holiday card with AI{" "}
+            <Link href="/ai-holiday-cards" className="text-primary hover:underline" data-testid="link-ai-holiday-cards">
+              AI Holiday Cards
             </Link>
           </p>
         </div>
