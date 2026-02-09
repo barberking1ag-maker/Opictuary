@@ -73,14 +73,14 @@ async function generateSticker() {
   const leftFeatures = [
     "Immersive\nMemorial Hubs",
     "AI Holiday\nCards",
-    "Multi-Faith\nCelebrations",
+    "Multi Faith\nCelebrations",
     "Future Messages\nTime Capsules",
   ];
   const rightFeatures = [
-    "QR-Connected\nKeepsakes",
+    "QR Connected\nKeepsakes",
     "Family Trees\nCollaboration",
     "Live Streaming",
-    "Wedding, Baby\nRegistries",
+    "Wedding Baby\nRegistries",
     "Memorial Products",
   ];
 
