@@ -189,9 +189,9 @@ async function generateSticker() {
   ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, taglineY);
 
   const buffer = canvas.toBuffer('image/png');
-  fs.writeFileSync('attached_assets/generated_images/opictuary-sticker-print.png', buffer);
+  fs.writeFileSync('attached_assets/generated_images/opictuary_sticker_print.png', buffer);
   console.log('Sticker generated successfully!');
-  console.log('Saved to: attached_assets/generated_images/opictuary-sticker-print.png');
+  console.log('Saved to: attached_assets/generated_images/opictuary_sticker_print.png');
 }
 
 generateSticker().catch(console.error);
