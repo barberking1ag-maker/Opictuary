@@ -87,16 +87,18 @@ import SharedMusic from "@/pages/SharedMusic";
 import VirtualReactions from "@/pages/VirtualReactions";
 import HolidayCelebration from "@/pages/HolidayCelebration";
 import AuthPage from "@/pages/AuthPage";
+import MobileHome from "@/pages/MobileHome";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIChat } from "@/components/AIChat";
+import { MobileOnboarding } from "@/components/MobileOnboarding";
 import { OfflineIndicator, OfflineBanner } from "@/components/OfflineIndicator";
 import { FileText, Image, Layout, Bell, Calendar, Crown, GraduationCap, Shield, Users, MapPin, Lock, ChevronDown, Sparkles, ShoppingBag, Trophy, PawPrint, QrCode, Navigation, Cake, TreeDeciduous, PartyPopper, Heart, Gift, Mail } from "lucide-react";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Footer } from "@/components/Footer";
 import { UserMenu } from "@/components/UserMenu";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
 import { usePlatform } from "@/hooks/usePlatform";
@@ -431,7 +433,7 @@ function Router() {
 
       <main id="main-content" role="main">
         <Switch>
-          <Route path="/" component={Landing} />
+          <Route path="/">{() => showMobileLayout ? <MobileHome /> : <Landing />}</Route>
           <Route path="/auth" component={AuthPage} />
           <Route path="/obituary/:memorialId" component={ObituaryPage} />
           <Route path="/memorial/:code/upload" component={MemorialUpload} />
@@ -536,6 +538,10 @@ function Router() {
 }
 
 function App() {
+  const { isNative, isMobile } = usePlatform();
+  const showMobileLayout = isNative || isMobile;
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   // From blueprint: javascript_google_analytics - Initialize Google Analytics when app loads
   useEffect(() => {
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
@@ -545,9 +551,21 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (showMobileLayout) {
+      const onboardingComplete = localStorage.getItem("opictuary_onboarding_complete");
+      if (!onboardingComplete) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [showMobileLayout]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        {showOnboarding && showMobileLayout && (
+          <MobileOnboarding onComplete={() => setShowOnboarding(false)} />
+        )}
         <OfflineBanner />
         <Router />
         <InstallPrompt />
