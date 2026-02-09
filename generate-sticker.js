@@ -81,7 +81,6 @@ async function generateSticker() {
     "Family Trees\nCollaboration",
     "Live Streaming",
     "Wedding Baby\nRegistries",
-    "Memorial Products",
   ];
 
   const LEFT_START_Y = 400;
