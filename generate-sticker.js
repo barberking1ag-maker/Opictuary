@@ -155,14 +155,14 @@ async function generateSticker() {
   }
 
   const nameY = whiteStripeY + 120;
-  ctx.font = 'bold 130px serif';
+  ctx.font = 'bold 150px serif';
   ctx.fillStyle = '#3B1066';
   ctx.textAlign = 'center';
   ctx.fillText('Opictuary', WIDTH / 2, nameY);
 
-  ctx.font = '38px sans-serif';
+  ctx.font = '48px sans-serif';
   ctx.fillStyle = '#6B4F8A';
-  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, nameY + 65);
+  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, nameY + 75);
 
   const dividerY = nameY + 110;
   const lineGrad = ctx.createLinearGradient(120, dividerY, WIDTH - 120, dividerY);
@@ -190,17 +190,17 @@ async function generateSticker() {
     "Wedding Baby\nRegistries",
   ];
 
-  const FEAT_START_Y = dividerY + 70;
-  const FEAT_SPACING = 115;
+  const FEAT_START_Y = dividerY + 80;
+  const FEAT_SPACING = 135;
 
   ctx.textAlign = 'left';
   leftFeatures.forEach((feat, i) => {
     const lines = feat.split('\n');
     const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 40px sans-serif';
+    ctx.font = 'bold 52px sans-serif';
     ctx.fillStyle = '#3B1066';
     lines.forEach((line, li) => {
-      ctx.fillText(line, 80, yBase + li * 48);
+      ctx.fillText(line, 80, yBase + li * 60);
     });
   });
 
@@ -208,14 +208,14 @@ async function generateSticker() {
   rightFeatures.forEach((feat, i) => {
     const lines = feat.split('\n');
     const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 40px sans-serif';
+    ctx.font = 'bold 52px sans-serif';
     ctx.fillStyle = '#3B1066';
     lines.forEach((line, li) => {
-      ctx.fillText(line, WIDTH - 80, yBase + li * 48);
+      ctx.fillText(line, WIDTH - 80, yBase + li * 60);
     });
   });
 
-  ctx.font = 'italic bold 36px serif';
+  ctx.font = 'italic bold 44px serif';
   ctx.fillStyle = '#6B3FA0';
   ctx.textAlign = 'center';
   ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, HEIGHT - 60);
