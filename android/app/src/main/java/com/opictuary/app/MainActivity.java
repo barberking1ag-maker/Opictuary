@@ -1,4 +1,4 @@
-package com.opictuary.memoriol;
+package com.opictuary.app;
 
 import com.getcapacitor.BridgeActivity;
 
