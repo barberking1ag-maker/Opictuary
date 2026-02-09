@@ -46,8 +46,8 @@ async function generateSticker() {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, whiteStripeY, WIDTH, 6);
 
-  const ICON_SIZE = 420;
-  const iconY = 120;
+  const ICON_SIZE = 550;
+  const iconY = 180;
   try {
     const icon = await loadImage('client/public/icon-512.png');
     const iconX = (WIDTH - ICON_SIZE) / 2;
@@ -79,9 +79,9 @@ async function generateSticker() {
 
   ctx.textAlign = 'center';
 
-  const gpBadgeY = iconY + ICON_SIZE + 60;
-  const gpBadgeW = 340;
-  const gpBadgeH = 90;
+  const gpBadgeY = iconY + ICON_SIZE + 70;
+  const gpBadgeW = 460;
+  const gpBadgeH = 120;
   const gpBadgeX = (WIDTH - gpBadgeW) / 2;
 
   ctx.save();
@@ -98,12 +98,12 @@ async function generateSticker() {
   roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 12);
   ctx.stroke();
 
-  const triX = gpBadgeX + 28;
+  const triX = gpBadgeX + 35;
   const triCenterY = gpBadgeY + gpBadgeH / 2;
   ctx.beginPath();
-  ctx.moveTo(triX, triCenterY - 18);
-  ctx.lineTo(triX, triCenterY + 18);
-  ctx.lineTo(triX + 30, triCenterY);
+  ctx.moveTo(triX, triCenterY - 24);
+  ctx.lineTo(triX, triCenterY + 24);
+  ctx.lineTo(triX + 40, triCenterY);
   ctx.closePath();
   const triGrad = ctx.createLinearGradient(triX, triCenterY - 18, triX + 30, triCenterY + 18);
   triGrad.addColorStop(0, '#4285F4');
@@ -114,18 +114,18 @@ async function generateSticker() {
   ctx.fill();
 
   ctx.textAlign = 'left';
-  ctx.font = '18px sans-serif';
+  ctx.font = '24px sans-serif';
   ctx.fillStyle = '#CCCCCC';
-  ctx.fillText('DOWNLOAD ON', gpBadgeX + 75, gpBadgeY + 32);
+  ctx.fillText('DOWNLOAD ON', gpBadgeX + 95, gpBadgeY + 42);
 
-  ctx.font = 'bold 36px sans-serif';
+  ctx.font = 'bold 48px sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Google Play', gpBadgeX + 75, gpBadgeY + 68);
+  ctx.fillText('Google Play', gpBadgeX + 95, gpBadgeY + 90);
 
   ctx.textAlign = 'center';
 
-  const QR_SIZE = 380;
-  const qrY = gpBadgeY + gpBadgeH + 50;
+  const QR_SIZE = 480;
+  const qrY = gpBadgeY + gpBadgeH + 60;
   try {
     const qrDataUrl = await QRCode.toDataURL('https://opictuary.replit.app', {
       width: 800,
