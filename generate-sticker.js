@@ -74,13 +74,13 @@ async function generateSticker() {
     "Immersive\nMemorial Hubs",
     "AI Holiday\nCards",
     "Multi-Faith\nCelebrations",
-    "Future Messages\n& Time Capsules",
+    "Future Messages\nTime Capsules",
   ];
   const rightFeatures = [
     "QR-Connected\nKeepsakes",
-    "Family Trees &\nCollaboration",
+    "Family Trees\nCollaboration",
     "Live Streaming",
-    "Wedding & Baby\nRegistries",
+    "Wedding, Baby\nRegistries",
     "Memorial Products",
   ];
 
@@ -131,13 +131,13 @@ async function generateSticker() {
 
   ctx.font = 'bold 100px serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Opictuary', WIDTH / 2, centerY + 10);
+  ctx.fillText('Opictuary', WIDTH / 2, centerY + 5);
 
   ctx.font = '36px sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, centerY + 58);
+  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, centerY + 70);
 
-  const divider2Y = centerY + 85;
+  const divider2Y = centerY + 100;
   const lineGrad2 = ctx.createLinearGradient(120, divider2Y, WIDTH - 120, divider2Y);
   lineGrad2.addColorStop(0, 'rgba(255,255,255,0)');
   lineGrad2.addColorStop(0.3, 'rgba(255,255,255,0.3)');
