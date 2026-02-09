@@ -14,6 +14,7 @@ import {
 import Home from "@/pages/Home";
 import Landing from "@/pages/Landing";
 import About from "@/pages/About";
+import StickerDesign from "@/pages/StickerDesign";
 import CelebrityMemorials from "@/pages/CelebrityMemorials";
 import CreateCelebrityMemorial from "@/pages/CreateCelebrityMemorial";
 import PrisonAccessRequest from "@/pages/PrisonAccessRequest";
@@ -439,6 +440,7 @@ function Router() {
           <Route path="/memorial/:code/upload" component={MemorialUpload} />
           <Route path="/memorial/:id" component={Home} />
           <Route path="/about" component={About} />
+          <Route path="/sticker" component={StickerDesign} />
         <Route path="/celebrity-memorials" component={CelebrityMemorials} />
         <Route path="/create-celebrity-memorial" component={CreateCelebrityMemorial} />
         <Route path="/prison-access" component={PrisonAccessRequest} />
