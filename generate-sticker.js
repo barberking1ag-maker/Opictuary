@@ -6,8 +6,8 @@ async function generateSticker() {
   const DPI = 300;
   const WIDTH = 1680;
   const HEIGHT = 1680;
-  const BLEED = 15;
-  const SAFE = 37;
+  const BLEED = 30;
+  const SAFE = 50;
 
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
@@ -26,39 +26,29 @@ async function generateSticker() {
     ctx.closePath();
   }
 
-  const topGrad = ctx.createLinearGradient(0, 0, 0, HEIGHT * 0.52);
-  topGrad.addColorStop(0, '#6B3FA0');
-  topGrad.addColorStop(0.4, '#5A2D90');
-  topGrad.addColorStop(0.7, '#9B7DC4');
-  topGrad.addColorStop(1, '#C4B0DB');
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, WIDTH, HEIGHT * 0.52);
-
-  const bottomGrad = ctx.createLinearGradient(0, HEIGHT * 0.46, 0, HEIGHT);
-  bottomGrad.addColorStop(0, '#E8DFF0');
-  bottomGrad.addColorStop(0.15, '#F5F0FA');
-  bottomGrad.addColorStop(0.4, '#FFFFFF');
-  bottomGrad.addColorStop(1, '#FFFFFF');
-  ctx.fillStyle = bottomGrad;
-  ctx.fillRect(0, HEIGHT * 0.46, WIDTH, HEIGHT * 0.54);
-
-  const whiteStripeY = HEIGHT * 0.48;
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, whiteStripeY, WIDTH, 3);
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  const topH = 520;
+  const topGrad = ctx.createLinearGradient(0, 0, 0, topH);
+  topGrad.addColorStop(0, '#5A2D90');
+  topGrad.addColorStop(1, '#7B4DB5');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, WIDTH, topH);
 
   const M = BLEED + SAFE;
 
-  const ICON_SIZE = 260;
-  const iconY = M;
+  const ICON_SIZE = 200;
+  const iconX = M;
+  const iconY = 80;
   try {
     const icon = await loadImage('client/public/icon-512.png');
-    const iconX = (WIDTH - ICON_SIZE) / 2;
-    const iconR = 32;
+    const iconR = 28;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 6;
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
     roundedRect(ctx, iconX, iconY, ICON_SIZE, ICON_SIZE, iconR);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
@@ -73,30 +63,75 @@ async function generateSticker() {
     console.log('Could not load icon');
   }
 
+  const textX = iconX + ICON_SIZE + 40;
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 120px serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('Opictuary', textX, iconY + 110);
+
+  ctx.font = '36px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText('Memorial Legacy Platform', textX, iconY + 165);
+
+  const QR_SIZE = 340;
+  const qrX = WIDTH - M - QR_SIZE - 20;
+  const qrCenterY = topH + 40;
+  try {
+    const qrDataUrl = await QRCode.toDataURL('https://play.google.com/store/apps/details?id=com.opictuary.app', {
+      width: 1000,
+      margin: 2,
+      color: { dark: '#2D1050', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H',
+    });
+    const qrImage = await loadImage(qrDataUrl);
+    const qrPad = 16;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 4;
+    roundedRect(ctx, qrX - qrPad, qrCenterY - qrPad, QR_SIZE + qrPad * 2, QR_SIZE + qrPad * 2, 16);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = '#E0D4EE';
+    ctx.lineWidth = 2;
+    roundedRect(ctx, qrX - qrPad, qrCenterY - qrPad, QR_SIZE + qrPad * 2, QR_SIZE + qrPad * 2, 16);
+    ctx.stroke();
+
+    ctx.drawImage(qrImage, qrX, qrCenterY, QR_SIZE, QR_SIZE);
+  } catch (e) {
+    console.error('QR generation failed:', e);
+  }
+
   ctx.textAlign = 'center';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillStyle = '#5A2D90';
+  ctx.fillText('Scan to Download', qrX + QR_SIZE / 2, qrCenterY + QR_SIZE + 50);
 
-  const gpBadgeY = iconY + ICON_SIZE + 22;
-  const gpBadgeW = 280;
-  const gpBadgeH = 72;
-  const gpBadgeX = (WIDTH - gpBadgeW) / 2;
+  const gpBadgeW = 320;
+  const gpBadgeH = 80;
+  const gpBadgeX = qrX + (QR_SIZE - gpBadgeW) / 2;
+  const gpBadgeY = qrCenterY + QR_SIZE + 70;
 
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 8);
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
   ctx.fillStyle = '#000000';
   ctx.fill();
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 1.5;
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 8);
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
   ctx.stroke();
 
-  const triX = gpBadgeX + 20;
+  const triX = gpBadgeX + 22;
   const triCenterY = gpBadgeY + gpBadgeH / 2;
   ctx.beginPath();
-  ctx.moveTo(triX, triCenterY - 14);
-  ctx.lineTo(triX, triCenterY + 14);
-  ctx.lineTo(triX + 24, triCenterY);
+  ctx.moveTo(triX, triCenterY - 16);
+  ctx.lineTo(triX, triCenterY + 16);
+  ctx.lineTo(triX + 28, triCenterY);
   ctx.closePath();
-  const triGrad = ctx.createLinearGradient(triX, triCenterY - 14, triX + 24, triCenterY + 14);
+  const triGrad = ctx.createLinearGradient(triX, triCenterY - 16, triX + 28, triCenterY + 16);
   triGrad.addColorStop(0, '#4285F4');
   triGrad.addColorStop(0.33, '#34A853');
   triGrad.addColorStop(0.66, '#FBBC04');
@@ -105,108 +140,64 @@ async function generateSticker() {
   ctx.fill();
 
   ctx.textAlign = 'left';
-  ctx.font = '15px sans-serif';
+  ctx.font = '18px sans-serif';
   ctx.fillStyle = '#CCCCCC';
-  ctx.fillText('DOWNLOAD ON', gpBadgeX + 56, gpBadgeY + 26);
+  ctx.fillText('GET IT ON', gpBadgeX + 64, gpBadgeY + 30);
 
-  ctx.font = 'bold 30px sans-serif';
+  ctx.font = 'bold 34px sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Google Play', gpBadgeX + 56, gpBadgeY + 56);
+  ctx.fillText('Google Play', gpBadgeX + 64, gpBadgeY + 62);
 
-  ctx.textAlign = 'center';
+  const featStartY = topH + 60;
+  const featX = M + 20;
+  const featMaxW = qrX - featX - 60;
 
-  const QR_SIZE = 230;
-  const qrY = gpBadgeY + gpBadgeH + 18;
-  try {
-    const qrDataUrl = await QRCode.toDataURL('https://play.google.com/store/apps/details?id=com.opictuary.app', {
-      width: 800,
-      margin: 3,
-      color: { dark: '#1a0f29', light: '#FFFFFF' },
-      errorCorrectionLevel: 'H',
-    });
-    const qrImage = await loadImage(qrDataUrl);
-    const qrX = (WIDTH - QR_SIZE) / 2;
-    const qrPad = 12;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 3;
-    roundedRect(ctx, qrX - qrPad, qrY - qrPad, QR_SIZE + qrPad * 2, QR_SIZE + qrPad * 2, 14);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fill();
-    ctx.restore();
-
-    ctx.drawImage(qrImage, qrX, qrY, QR_SIZE, QR_SIZE);
-  } catch (e) {
-    console.error('QR generation failed:', e);
-  }
-
-  const nameY = whiteStripeY + 72;
-  ctx.font = 'bold 90px serif';
-  ctx.fillStyle = '#3B1066';
-  ctx.textAlign = 'center';
-  ctx.fillText('Opictuary', WIDTH / 2, nameY);
-
-  ctx.font = '28px sans-serif';
-  ctx.fillStyle = '#6B4F8A';
-  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, nameY + 42);
-
-  const dividerY = nameY + 62;
-  const lineGrad = ctx.createLinearGradient(M, dividerY, WIDTH - M, dividerY);
-  lineGrad.addColorStop(0, 'rgba(107, 63, 160, 0)');
-  lineGrad.addColorStop(0.3, 'rgba(107, 63, 160, 0.3)');
-  lineGrad.addColorStop(0.7, 'rgba(107, 63, 160, 0.3)');
-  lineGrad.addColorStop(1, 'rgba(107, 63, 160, 0)');
-  ctx.strokeStyle = lineGrad;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(M, dividerY);
-  ctx.lineTo(WIDTH - M, dividerY);
-  ctx.stroke();
-
-  const leftFeatures = [
-    "Immersive\nMemorial Hubs",
-    "AI Holiday\nCards",
-    "Multi Faith\nCelebrations",
-    "Future Messages\nTime Capsules",
-  ];
-  const rightFeatures = [
-    "QR Connected\nKeepsakes",
-    "Family Trees\nCollaboration",
+  const features = [
+    "Immersive Memorial Hubs",
+    "AI Holiday Cards",
+    "Multi Faith Celebrations",
+    "Future Messages",
+    "QR Connected Keepsakes",
+    "Family Trees",
     "Live Streaming",
-    "Wedding Baby\nRegistries",
+    "Wedding Registries",
   ];
 
-  const FEAT_START_Y = dividerY + 40;
-  const FEAT_SPACING = 80;
+  const bulletSize = 14;
+  const featSpacing = 68;
 
-  ctx.textAlign = 'left';
-  leftFeatures.forEach((feat, i) => {
-    const lines = feat.split('\n');
-    const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 32px sans-serif';
-    ctx.fillStyle = '#3B1066';
-    lines.forEach((line, li) => {
-      ctx.fillText(line, M, yBase + li * 36);
-    });
+  features.forEach((feat, i) => {
+    const y = featStartY + i * featSpacing;
+
+    ctx.fillStyle = '#7B4DB5';
+    ctx.beginPath();
+    ctx.arc(featX + bulletSize / 2, y + 6, bulletSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillStyle = '#2D1050';
+    ctx.fillText(feat, featX + bulletSize + 18, y + 18);
   });
 
-  ctx.textAlign = 'right';
-  rightFeatures.forEach((feat, i) => {
-    const lines = feat.split('\n');
-    const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 32px sans-serif';
-    ctx.fillStyle = '#3B1066';
-    lines.forEach((line, li) => {
-      ctx.fillText(line, WIDTH - M, yBase + li * 36);
-    });
-  });
-
-  ctx.font = 'italic bold 26px serif';
-  ctx.fillStyle = '#6B3FA0';
+  const tagY = HEIGHT - M - 20;
   ctx.textAlign = 'center';
-  ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, HEIGHT - M);
+  ctx.font = 'italic bold 38px serif';
+  ctx.fillStyle = '#5A2D90';
+  ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, tagY);
+
+  const lineY = tagY - 30;
+  const lineGrad = ctx.createLinearGradient(M + 100, lineY, WIDTH - M - 100, lineY);
+  lineGrad.addColorStop(0, 'rgba(90, 45, 144, 0)');
+  lineGrad.addColorStop(0.3, 'rgba(90, 45, 144, 0.3)');
+  lineGrad.addColorStop(0.7, 'rgba(90, 45, 144, 0.3)');
+  lineGrad.addColorStop(1, 'rgba(90, 45, 144, 0)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(M + 100, lineY);
+  ctx.lineTo(WIDTH - M - 100, lineY);
+  ctx.stroke();
 
   const buffer = canvas.toBuffer('image/png', {
     resolution: DPI,
@@ -217,7 +208,6 @@ async function generateSticker() {
   console.log(`DPI: ${DPI}`);
   console.log(`Print size with bleed: ${(WIDTH/DPI).toFixed(2)} x ${(HEIGHT/DPI).toFixed(2)} inches`);
   console.log(`Trim size: 5.50 x 5.50 inches`);
-  console.log('Includes 0.1" bleed on all sides');
 }
 
 generateSticker().catch(console.error);
