@@ -16,7 +16,8 @@
   - 50+ multi-faith holidays (Hindu, Jewish, Islamic, Christian, Buddhist, Sikh, and more)
   - Birthday celebrations with Bluetooth playlists, live streaming, and shopping spree
   - Wedding gift registries with cash gift support
-- Family tree integration
+- **Visual Family Tree** with SVG tree visualization, photo leaves, and dynamic growth
+- **Celebrity Legacy Vault** - Netflix-style content vault for estates (tiered pricing: Basic $29.99/mo, Premium $99.99/mo, Enterprise $249.99/mo)
 - GPS cemetery navigation
 - Olympian/athletic legacy scoring
 - Celebrity and alumni memorial systems
@@ -68,6 +69,8 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **AI Chat Assistant:** OpenAI-powered assistant for user support and navigation, accessible via a floating button.
 **QR-Activated Physical Memorial Products System:** Full-stack e-commerce platform for physical memorial products with embedded QR codes, product catalog, customization wizard, order management, admin dashboard, and secure Stripe payment processing.
 **AI Card Maker:** Dedicated page for creating personalized memorial cards with AI-generated designs ($9.99 per design). Users can describe their vision and the AI creates unique artwork based on their descriptions.
+**Celebrity Legacy Vault System:** Netflix-style content vault for celebrity estates to pre-load and release post-passing content. Features estate verification workflow, tiered subscriptions (Basic $29.99/mo for 50 items, Premium $99.99/mo unlimited, Enterprise $249.99/mo with white-glove service), content categories (Documentaries, Music, Writings, Photos, Books, Unreleased, Films, Interviews), fan purchases with 10-15% platform commission, and estate management dashboard. Database tables: celebrity_legacy_vault_items, celebrity_estate_subscriptions, celebrity_estate_verifications, vault_item_purchases. Route: `/celebrity/:id/legacy-vault`.
+**Visual Family Tree System:** SVG-based interactive tree visualization with brown trunk/branches, circular photo leaves using foreignObject, generation-based layout (grandparents at top, grandchildren at bottom), dynamic growth based on member count (small/medium/large tree sizes), and photo upload capability. Route: `/memorial/:id/family-tree`.
 **Revenue Model:** Configurable platform fees on fundraisers/donations and revenue from physical memorial products.
 
 ### System Design Choices
