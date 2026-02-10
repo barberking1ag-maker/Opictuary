@@ -18,7 +18,7 @@ import {
   Trophy, Users, Medal, Award, Calendar, MapPin, Play, 
   Star, TrendingUp, Shield, Target, Timer, Hash, 
   UserPlus, Filter, Search, ChevronRight, ExternalLink,
-  BarChart3, Clock, Zap, Heart, Crown, Circle
+  BarChart3, Clock, Zap, Heart, Crown, Circle, ThumbsUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,18 +33,9 @@ function SportIcon({ sport }: { sport: string }) {
     }
   };
   
-  const getLabel = () => {
-    switch (sport) {
-      case "Basketball": return "🏀";
-      case "Football": return "🏈";
-      case "Tennis": return "🎾";
-      default: return "🏆";
-    }
-  };
-  
   return (
-    <div className={`w-full h-full flex items-center justify-center text-2xl ${getColor()}`}>
-      {getLabel()}
+    <div className={`w-full h-full flex items-center justify-center ${getColor()}`}>
+      <Trophy className="w-5 h-5" />
     </div>
   );
 }
@@ -281,6 +272,103 @@ const statsToStories = [
   }
 ];
 
+function GoatLeaderboard() {
+  const { toast } = useToast();
+
+  const { data: leaderboard = [], isLoading } = useQuery<{ athleteProfileId: string; voteCount: number }[]>({
+    queryKey: ['/api/goat-leaderboard'],
+  });
+
+  const athleteMap: Record<string, typeof sampleAthletes[0]> = {};
+  sampleAthletes.forEach(a => { athleteMap[a.id] = a; });
+
+  const rankedAthletes = leaderboard.length > 0
+    ? leaderboard.map(entry => ({
+        ...entry,
+        athlete: athleteMap[entry.athleteProfileId],
+      })).filter(e => e.athlete)
+    : sampleAthletes.map((a, idx) => ({
+        athleteProfileId: a.id,
+        voteCount: 0,
+        athlete: a,
+      }));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Crown className="w-6 h-6 text-yellow-500" />
+          GOAT Leaderboard
+        </CardTitle>
+        <CardDescription>
+          Vote for who you think is the Greatest of All Time. One vote per athlete - sign in to cast your vote.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {rankedAthletes.map((entry, idx) => (
+              <div key={entry.athleteProfileId} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50" data-testid={`goat-rank-${entry.athleteProfileId}`}>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg" 
+                  style={{ 
+                    backgroundColor: idx === 0 ? 'hsl(45, 80%, 60%)' : idx === 1 ? 'hsl(0, 0%, 75%)' : idx === 2 ? 'hsl(30, 60%, 50%)' : 'transparent',
+                    color: idx < 3 ? 'white' : 'inherit'
+                  }}>
+                  {idx + 1}
+                </div>
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                  {entry.athlete && <SportIcon sport={entry.athlete.sport} />}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">{entry.athlete?.name || "Unknown"}</p>
+                  <p className="text-sm text-muted-foreground">{entry.athlete?.sport} - {entry.athlete?.position}</p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4 text-yellow-500" />
+                    <span className="font-bold">{entry.voteCount}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Votes</p>
+                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    apiRequest("POST", `/api/athlete-profiles/${entry.athleteProfileId}/goat-vote`, {
+                      sport: entry.athlete?.sport,
+                    }).then(r => r.json()).then((data: any) => {
+                      toast({
+                        title: data.voted ? "GOAT Vote Cast!" : "Vote Removed",
+                        description: data.message,
+                      });
+                      queryClient.invalidateQueries({ queryKey: ['/api/goat-leaderboard'] });
+                    }).catch(() => {
+                      toast({
+                        title: "Sign in to vote",
+                        description: "You need to be signed in to cast your GOAT vote.",
+                        variant: "destructive",
+                      });
+                    });
+                  }}
+                  data-testid={`button-goat-leaderboard-vote-${entry.athleteProfileId}`}
+                >
+                  <ThumbsUp className="w-4 h-4 mr-1" />
+                  Vote GOAT
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SportsMemorials() {
   const [activeTab, setActiveTab] = useState("athletes");
   const [selectedSport, setSelectedSport] = useState("all");
@@ -428,17 +516,21 @@ export default function SportsMemorials() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="athletes" data-testid="tab-athletes">
               <Medal className="w-4 h-4 mr-2" />
               Athletes
+            </TabsTrigger>
+            <TabsTrigger value="goat" data-testid="tab-goat">
+              <Crown className="w-4 h-4 mr-2" />
+              GOAT Votes
             </TabsTrigger>
             <TabsTrigger value="teams" data-testid="tab-teams">
               <Users className="w-4 h-4 mr-2" />
               Teams
             </TabsTrigger>
             <TabsTrigger value="hall-of-fame" data-testid="tab-hall-of-fame">
-              <Crown className="w-4 h-4 mr-2" />
+              <Award className="w-4 h-4 mr-2" />
               Hall of Fame
             </TabsTrigger>
             <TabsTrigger value="jersey-retirements" data-testid="tab-jersey-retirements">
@@ -554,9 +646,33 @@ export default function SportsMemorials() {
                       ))}
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex gap-2">
                     <Button 
-                      className="w-full" 
+                      variant="outline"
+                      onClick={() => {
+                        apiRequest("POST", `/api/athlete-profiles/${athlete.id}/goat-vote`, {
+                          sport: athlete.sport,
+                        }).then(r => r.json()).then((data: any) => {
+                          toast({
+                            title: data.voted ? "GOAT Vote Cast!" : "Vote Removed",
+                            description: data.message,
+                          });
+                          queryClient.invalidateQueries({ queryKey: ['/api/goat-leaderboard'] });
+                        }).catch(() => {
+                          toast({
+                            title: "Sign in to vote",
+                            description: "You need to be signed in to cast your GOAT vote.",
+                            variant: "destructive",
+                          });
+                        });
+                      }}
+                      data-testid={`button-goat-vote-${athlete.id}`}
+                    >
+                      <Crown className="w-4 h-4 mr-1" />
+                      GOAT
+                    </Button>
+                    <Button 
+                      className="flex-1" 
                       onClick={() => setSelectedAthlete(athlete)}
                       data-testid={`button-view-profile-${athlete.id}`}
                     >
@@ -583,7 +699,9 @@ export default function SportsMemorials() {
                 {statsToStories.map((story, idx) => (
                   <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-start gap-4">
-                      <div className="text-3xl">{story.visual}</div>
+                      <div className="flex items-center justify-center w-8 h-8">
+                        <BarChart3 className="w-6 h-6 text-blue-500" />
+                      </div>
                       <div className="flex-1">
                         <p className="font-semibold mb-1">{story.athlete}</p>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
@@ -598,6 +716,11 @@ export default function SportsMemorials() {
                 ))}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* GOAT Leaderboard Tab */}
+          <TabsContent value="goat" className="space-y-6">
+            <GoatLeaderboard />
           </TabsContent>
 
           {/* Teams Tab */}

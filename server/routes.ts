@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
-import { moderateContent } from "./contentModeration";
+import { moderateContent, moderateImage } from "./contentModeration";
 import { fromZonedTime, toZonedTime, format } from "date-fns-tz";
 import { openai } from "./openai";
 import { registerExtendedRoutes } from "./extendedRoutes";
@@ -122,6 +122,8 @@ import {
   insertCelebrityEstateSubscriptionSchema,
   insertCelebrityEstateVerificationSchema,
   insertVaultItemPurchaseSchema,
+  goatVotes,
+  insertGoatVoteSchema,
   // Shared Music & Live Celebration schemas
   insertBluetoothPlaylistSessionSchema,
   insertLiveCelebrationSessionSchema,
@@ -7095,6 +7097,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching athlete stats:", error);
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============================================
+  // GOAT VOTING SYSTEM
+  // ============================================
+
+  app.post('/api/athlete-profiles/:id/goat-vote', isAuthenticated, async (req: any, res) => {
+    try {
+      const athleteProfileId = req.params.id;
+      const voterId = req.user?.id;
+      if (!voterId) {
+        return res.status(401).json({ error: "You must be signed in to vote" });
+      }
+
+      const existing = await db.select().from(goatVotes)
+        .where(and(eq(goatVotes.athleteProfileId, athleteProfileId), eq(goatVotes.voterId, voterId)));
+
+      if (existing.length > 0) {
+        await db.delete(goatVotes)
+          .where(and(eq(goatVotes.athleteProfileId, athleteProfileId), eq(goatVotes.voterId, voterId)));
+        const count = await db.select().from(goatVotes).where(eq(goatVotes.athleteProfileId, athleteProfileId));
+        return res.json({ voted: false, voteCount: count.length, message: "Vote removed" });
+      }
+
+      await db.insert(goatVotes).values([{
+        athleteProfileId,
+        voterId,
+        voterName: req.user?.username || "Anonymous",
+        sport: req.body.sport || null,
+      }]);
+
+      const count = await db.select().from(goatVotes).where(eq(goatVotes.athleteProfileId, athleteProfileId));
+      res.json({ voted: true, voteCount: count.length, message: "GOAT vote cast!" });
+    } catch (error: any) {
+      console.error("Error casting GOAT vote:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/athlete-profiles/:id/goat-votes', async (req: any, res) => {
+    try {
+      const athleteProfileId = req.params.id;
+      const votes = await db.select().from(goatVotes).where(eq(goatVotes.athleteProfileId, athleteProfileId));
+      const voterId = req.query.voterId || "";
+      const hasVoted = votes.some(v => v.voterId === voterId);
+      res.json({ voteCount: votes.length, hasVoted, votes });
+    } catch (error: any) {
+      console.error("Error fetching GOAT votes:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/goat-leaderboard', async (req: any, res) => {
+    try {
+      const sport = req.query.sport as string | undefined;
+      let allVotes;
+      if (sport) {
+        allVotes = await db.select().from(goatVotes).where(eq(goatVotes.sport, sport));
+      } else {
+        allVotes = await db.select().from(goatVotes);
+      }
+
+      const voteCounts: Record<string, number> = {};
+      allVotes.forEach(v => {
+        voteCounts[v.athleteProfileId] = (voteCounts[v.athleteProfileId] || 0) + 1;
+      });
+
+      const leaderboard = Object.entries(voteCounts)
+        .map(([athleteProfileId, count]) => ({ athleteProfileId, voteCount: count }))
+        .sort((a, b) => b.voteCount - a.voteCount)
+        .slice(0, 50);
+
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching GOAT leaderboard:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Image Moderation endpoint
+  app.post('/api/moderate-image', isAuthenticated, async (req: any, res) => {
+    try {
+      const { imageUrl } = req.body;
+      if (!imageUrl) {
+        return res.status(400).json({ error: "Image URL required" });
+      }
+      const result = await moderateImage(imageUrl);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error moderating image:", error);
+      res.status(500).json({ error: error.message });
     }
   });
 

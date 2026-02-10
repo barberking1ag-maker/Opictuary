@@ -4058,3 +4058,24 @@ export type CelebrityEstateVerification = typeof celebrityEstateVerifications.$i
 export const insertVaultItemPurchaseSchema = createInsertSchema(vaultItemPurchases).omit({ id: true, createdAt: true });
 export type InsertVaultItemPurchase = z.infer<typeof insertVaultItemPurchaseSchema>;
 export type VaultItemPurchase = typeof vaultItemPurchases.$inferSelect;
+
+// ============================================
+// GOAT VOTING SYSTEM
+// ============================================
+
+export const goatVotes = pgTable("goat_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  athleteProfileId: varchar("athlete_profile_id").notNull().references(() => athleteProfiles.id, { onDelete: "cascade" }),
+  voterId: varchar("voter_id").notNull(),
+  voterName: text("voter_name"),
+  sport: text("sport"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_goat_votes_athlete").on(table.athleteProfileId),
+  index("idx_goat_votes_voter").on(table.voterId),
+  index("idx_goat_votes_sport").on(table.sport),
+]);
+
+export const insertGoatVoteSchema = createInsertSchema(goatVotes).omit({ id: true, createdAt: true });
+export type InsertGoatVote = z.infer<typeof insertGoatVoteSchema>;
+export type GoatVote = typeof goatVotes.$inferSelect;
