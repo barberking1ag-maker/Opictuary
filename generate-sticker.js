@@ -220,7 +220,9 @@ async function generateSticker() {
   ctx.textAlign = 'center';
   ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, HEIGHT - 60);
 
-  const buffer = canvas.toBuffer('image/png');
+  const buffer = canvas.toBuffer('image/png', {
+    resolution: 450,
+  });
   fs.writeFileSync('attached_assets/generated_images/OpictuaryStickerHiRes.png', buffer);
   console.log('Sticker generated successfully!');
   console.log('Saved to: attached_assets/generated_images/OpictuaryStickerHiRes.png');
