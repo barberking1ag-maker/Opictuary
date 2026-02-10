@@ -302,8 +302,8 @@ export default function NeighborhoodDetail() {
                           )}
                         </div>
                       </div>
-                      {memorial.legendStatus && (
-                        <Badge variant="secondary" className="w-fit">{memorial.legendStatus}</Badge>
+                      {memorial.legendStatus && memorial.legendStatus !== "false" && (
+                        <Badge variant="secondary" className="w-fit">{memorial.legendStatus === "true" ? "Neighborhood Legend" : memorial.legendStatus}</Badge>
                       )}
                     </CardHeader>
                     <CardContent className="space-y-2">

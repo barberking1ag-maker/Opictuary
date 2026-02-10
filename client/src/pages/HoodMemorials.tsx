@@ -196,9 +196,9 @@ export default function HoodMemorials() {
                     <MapPin className="w-4 h-4" />
                     <span>{memorial.neighborhoodName}, {memorial.city}, {memorial.state}</span>
                   </div>
-                  {memorial.legendStatus && (
+                  {memorial.legendStatus && memorial.legendStatus !== "false" && (
                     <Badge variant="secondary" className="bg-[hsl(45,80%,60%)] text-foreground">
-                      {memorial.legendStatus}
+                      {memorial.legendStatus === "true" ? "Neighborhood Legend" : memorial.legendStatus}
                     </Badge>
                   )}
                 </div>
