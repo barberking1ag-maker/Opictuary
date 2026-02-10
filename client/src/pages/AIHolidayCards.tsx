@@ -184,6 +184,8 @@ export default function AIHolidayCards() {
     setOgTag("og:description", descContent);
     setOgTag("og:type", "website");
     setOgTag("og:url", window.location.href);
+    setOgTag("og:image", `${window.location.origin}/icon-512.png`);
+    setOgTag("og:site_name", "Opictuary");
   }, []);
   const [selectedCategory, setSelectedCategory] = useState<HolidayCategory | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");

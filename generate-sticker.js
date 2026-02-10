@@ -118,7 +118,7 @@ async function generateSticker() {
   const QR_SIZE = 230;
   const qrY = gpBadgeY + gpBadgeH + 18;
   try {
-    const qrDataUrl = await QRCode.toDataURL('https://opictuary.replit.app', {
+    const qrDataUrl = await QRCode.toDataURL('https://play.google.com/store/apps/details?id=com.opictuary.app', {
       width: 800,
       margin: 3,
       color: { dark: '#1a0f29', light: '#FFFFFF' },
