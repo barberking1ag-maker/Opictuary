@@ -55,8 +55,6 @@
         <string>Opictuary needs microphone access to record audio messages for memorial tributes</string>
         <key>NSLocationWhenInUseUsageDescription</key>
         <string>Opictuary uses your location to help find nearby cemeteries and memorial locations</string>
-        <key>NSUserTrackingUsageDescription</key>
-        <string>Opictuary uses analytics to improve the memorial experience and provide better service</string>
         <key>ITSAppUsesNonExemptEncryption</key>
         <false/>
         <key>UIBackgroundModes</key>
