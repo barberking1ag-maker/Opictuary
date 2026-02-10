@@ -67,11 +67,12 @@ async function generateSticker() {
   ctx.textAlign = 'left';
   ctx.font = 'bold 120px serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Opictuary', textX, iconY + 110);
+  ctx.fillText('Opictuary', textX, iconY + 100);
 
-  ctx.font = '36px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText('Memorial Legacy Platform', textX, iconY + 165);
+  ctx.font = 'bold 48px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('Celebration Memorial', textX, iconY + 160);
+  ctx.fillText('Legacy Platform', textX, iconY + 215);
 
   const QR_SIZE = 340;
   const qrX = WIDTH - M - QR_SIZE - 20;
@@ -110,28 +111,28 @@ async function generateSticker() {
   ctx.fillStyle = '#5A2D90';
   ctx.fillText('Scan to Download', qrX + QR_SIZE / 2, qrCenterY + QR_SIZE + 50);
 
-  const gpBadgeW = 320;
-  const gpBadgeH = 80;
+  const gpBadgeW = 380;
+  const gpBadgeH = 100;
   const gpBadgeX = qrX + (QR_SIZE - gpBadgeW) / 2;
   const gpBadgeY = qrCenterY + QR_SIZE + 70;
 
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 12);
   ctx.fillStyle = '#000000';
   ctx.fill();
 
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 1.5;
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
+  ctx.lineWidth = 2;
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 12);
   ctx.stroke();
 
-  const triX = gpBadgeX + 22;
+  const triX = gpBadgeX + 26;
   const triCenterY = gpBadgeY + gpBadgeH / 2;
   ctx.beginPath();
-  ctx.moveTo(triX, triCenterY - 16);
-  ctx.lineTo(triX, triCenterY + 16);
-  ctx.lineTo(triX + 28, triCenterY);
+  ctx.moveTo(triX, triCenterY - 20);
+  ctx.lineTo(triX, triCenterY + 20);
+  ctx.lineTo(triX + 34, triCenterY);
   ctx.closePath();
-  const triGrad = ctx.createLinearGradient(triX, triCenterY - 16, triX + 28, triCenterY + 16);
+  const triGrad = ctx.createLinearGradient(triX, triCenterY - 20, triX + 34, triCenterY + 20);
   triGrad.addColorStop(0, '#4285F4');
   triGrad.addColorStop(0.33, '#34A853');
   triGrad.addColorStop(0.66, '#FBBC04');
@@ -140,13 +141,13 @@ async function generateSticker() {
   ctx.fill();
 
   ctx.textAlign = 'left';
-  ctx.font = '18px sans-serif';
+  ctx.font = '22px sans-serif';
   ctx.fillStyle = '#CCCCCC';
-  ctx.fillText('GET IT ON', gpBadgeX + 64, gpBadgeY + 30);
+  ctx.fillText('GET IT ON', gpBadgeX + 76, gpBadgeY + 36);
 
-  ctx.font = 'bold 34px sans-serif';
+  ctx.font = 'bold 42px sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Google Play', gpBadgeX + 64, gpBadgeY + 62);
+  ctx.fillText('Google Play', gpBadgeX + 76, gpBadgeY + 76);
 
   const featStartY = topH + 60;
   const featX = M + 20;
@@ -202,7 +203,7 @@ async function generateSticker() {
   const buffer = canvas.toBuffer('image/png', {
     resolution: DPI,
   });
-  fs.writeFileSync('attached_assets/generated_images/OpictuaryGotPrint.png', buffer);
+  fs.writeFileSync('attached_assets/generated_images/OpictuarySticker5x5.png', buffer);
   console.log('Sticker generated successfully!');
   console.log(`Pixels: ${WIDTH} x ${HEIGHT}`);
   console.log(`DPI: ${DPI}`);
