@@ -58,6 +58,7 @@ const treeFormSchema = z.object({
 const leafFormSchema = z.object({
   personName: z.string().min(1, "Name is required"),
   relationship: z.string().min(1, "Relationship is required"),
+  profilePhoto: z.string().optional().or(z.literal("")),
   birthDate: z.string().optional(),
   invitedEmail: z.string().email().optional().or(z.literal("")),
 });
@@ -78,17 +79,6 @@ interface LeafContent {
 }
 
 function TreeVisualization({ leaves, hasAccess, onLeafClick }: { leaves: FamilyTreeLeaf[]; hasAccess: boolean; onLeafClick?: (leaf: FamilyTreeLeaf) => void }) {
-  const groupedByGeneration = leaves.reduce((acc, leaf) => {
-    const gen = leaf.generation || 0;
-    if (!acc[gen]) acc[gen] = [];
-    acc[gen].push(leaf);
-    return acc;
-  }, {} as Record<number, FamilyTreeLeaf[]>);
-
-  const sortedGenerations = Object.keys(groupedByGeneration)
-    .map(Number)
-    .sort((a, b) => a - b);
-
   if (leaves.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -101,71 +91,284 @@ function TreeVisualization({ leaves, hasAccess, onLeafClick }: { leaves: FamilyT
     );
   }
 
+  const count = leaves.length;
+  const treeSize = count <= 3 ? "small" : count <= 8 ? "medium" : "large";
+
+  const svgWidth = treeSize === "small" ? 500 : treeSize === "medium" ? 700 : 900;
+  const svgHeight = treeSize === "small" ? 450 : treeSize === "medium" ? 580 : 700;
+
+  const trunkBaseX = svgWidth / 2;
+  const trunkBaseY = svgHeight - 30;
+  const trunkTopY = treeSize === "small" ? svgHeight - 180 : treeSize === "medium" ? svgHeight - 280 : svgHeight - 380;
+  const trunkWidth = treeSize === "small" ? 18 : treeSize === "medium" ? 22 : 26;
+
+  const groupedByGeneration = leaves.reduce((acc, leaf) => {
+    const gen = leaf.generation || 0;
+    if (!acc[gen]) acc[gen] = [];
+    acc[gen].push(leaf);
+    return acc;
+  }, {} as Record<number, FamilyTreeLeaf[]>);
+
+  const sortedGenerations = Object.keys(groupedByGeneration)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  const generationLabels: Record<number, string> = {
+    [-2]: "Grandparents",
+    [-1]: "Parents",
+    [0]: "You",
+    [1]: "Children",
+    [2]: "Grandchildren",
+  };
+
+  const canopyTop = 40;
+  const canopyBottom = trunkTopY + 20;
+  const totalGenSlots = sortedGenerations.length;
+
+  const getGenerationY = (gen: number): number => {
+    const idx = sortedGenerations.indexOf(gen);
+    if (totalGenSlots === 1) return (canopyTop + canopyBottom) / 2;
+    return canopyTop + (idx / (totalGenSlots - 1)) * (canopyBottom - canopyTop);
+  };
+
+  const getLeafPositions = (gen: number): { x: number; y: number }[] => {
+    const members = groupedByGeneration[gen];
+    const y = getGenerationY(gen);
+    const maxSpread = svgWidth - 120;
+    const spacing = Math.min(140, maxSpread / Math.max(members.length, 1));
+    const totalWidth = (members.length - 1) * spacing;
+    const startX = trunkBaseX - totalWidth / 2;
+    return members.map((_, i) => ({
+      x: members.length === 1 ? trunkBaseX : startX + i * spacing,
+      y,
+    }));
+  };
+
+  const allPositions: { leaf: FamilyTreeLeaf; x: number; y: number }[] = [];
+  sortedGenerations.forEach((gen) => {
+    const positions = getLeafPositions(gen);
+    groupedByGeneration[gen].forEach((leaf, i) => {
+      allPositions.push({ leaf, x: positions[i].x, y: positions[i].y });
+    });
+  });
+
+  const branchPaths: string[] = [];
+  allPositions.forEach(({ x, y }) => {
+    const branchStartY = Math.min(trunkTopY + 30, y + 60);
+    const ctrlY1 = branchStartY - (branchStartY - y) * 0.3;
+    const ctrlY2 = y + (branchStartY - y) * 0.3;
+    const ctrlX = trunkBaseX + (x - trunkBaseX) * 0.4;
+    branchPaths.push(
+      `M ${trunkBaseX} ${branchStartY} C ${ctrlX} ${ctrlY1}, ${x} ${ctrlY2}, ${x} ${y + 30}`
+    );
+  });
+
+  const canopyRadius = treeSize === "small" ? 120 : treeSize === "medium" ? 180 : 240;
+  const canopyCenterY = (canopyTop + canopyBottom) / 2;
+
   return (
-    <div className="relative py-8">
-      <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/20 via-primary/40 to-primary/20 -translate-x-1/2" />
-      
-      {sortedGenerations.map((generation) => (
-        <div key={generation} className="relative mb-8">
-          <div className="text-center mb-4">
-            <Badge variant="secondary" className="text-xs">
-              {generation === 0 ? "You" : generation < 0 ? `${Math.abs(generation)} Generation${Math.abs(generation) > 1 ? "s" : ""} Up` : `${generation} Generation${generation > 1 ? "s" : ""} Down`}
-            </Badge>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            {groupedByGeneration[generation].map((leaf) => (
-              <div 
-                key={leaf.id} 
-                className="relative group cursor-pointer"
+    <div className="w-full flex justify-center" data-testid="tree-visualization">
+      <style>{`
+        .tree-branch {
+          transition: stroke-width 0.3s ease;
+        }
+        .tree-branch:hover {
+          stroke-width: 5;
+        }
+        .tree-leaf-group {
+          transition: transform 0.3s ease;
+          cursor: pointer;
+        }
+        .tree-leaf-group:hover {
+          transform: translateY(-3px);
+        }
+        @keyframes gentle-sway {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(0.5deg); }
+        }
+        .tree-canopy {
+          animation: gentle-sway 6s ease-in-out infinite;
+          transform-origin: ${trunkBaseX}px ${trunkTopY}px;
+        }
+      `}</style>
+      <svg
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        className="w-full max-w-4xl"
+        style={{ maxHeight: `${svgHeight}px` }}
+        data-testid="tree-svg"
+      >
+        <defs>
+          <linearGradient id="trunkGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#6B3410" />
+            <stop offset="40%" stopColor="#8B4513" />
+            <stop offset="100%" stopColor="#A0522D" />
+          </linearGradient>
+          <radialGradient id="canopyGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.15" />
+            <stop offset="70%" stopColor="#22c55e" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+          <filter id="leafShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.15" />
+          </filter>
+        </defs>
+
+        <g className="tree-canopy">
+          <ellipse
+            cx={trunkBaseX}
+            cy={canopyCenterY}
+            rx={canopyRadius * 1.4}
+            ry={canopyRadius}
+            fill="url(#canopyGradient)"
+          />
+
+          <path
+            d={`M ${trunkBaseX - trunkWidth / 2} ${trunkBaseY} 
+                L ${trunkBaseX - trunkWidth / 2 - 4} ${trunkTopY + 20} 
+                Q ${trunkBaseX} ${trunkTopY - 10} ${trunkBaseX + trunkWidth / 2 + 4} ${trunkTopY + 20} 
+                L ${trunkBaseX + trunkWidth / 2} ${trunkBaseY} Z`}
+            fill="url(#trunkGradient)"
+          />
+
+          {treeSize !== "small" && (
+            <>
+              <path
+                d={`M ${trunkBaseX - 3} ${trunkBaseY - 20} Q ${trunkBaseX - 40} ${trunkBaseY - 50} ${trunkBaseX - 55} ${trunkBaseY - 10}`}
+                stroke="#6B3410"
+                strokeWidth="5"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path
+                d={`M ${trunkBaseX + 3} ${trunkBaseY - 25} Q ${trunkBaseX + 35} ${trunkBaseY - 55} ${trunkBaseX + 50} ${trunkBaseY - 15}`}
+                stroke="#6B3410"
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </>
+          )}
+
+          {branchPaths.map((d, i) => (
+            <path
+              key={`branch-${i}`}
+              d={d}
+              stroke="#8B4513"
+              strokeWidth={3}
+              fill="none"
+              strokeLinecap="round"
+              className="tree-branch"
+              opacity={0.7}
+            />
+          ))}
+
+          {allPositions.map(({ leaf, x, y }) => {
+            const initials = leaf.personName
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .slice(0, 2);
+            const relLabel =
+              relationshipTypes.find((r) => r.value === leaf.relationship)?.label ||
+              leaf.relationship;
+
+            return (
+              <g
+                key={leaf.id}
+                className="tree-leaf-group"
                 onClick={() => hasAccess && onLeafClick?.(leaf)}
                 data-testid={`leaf-card-${leaf.id}`}
+                filter="url(#leafShadow)"
               >
-                <div className={`
-                  flex flex-col items-center p-4 rounded-2xl transition-all
-                  ${hasAccess ? 'bg-card border border-border hover-elevate' : 'bg-muted/50 opacity-60'}
-                `}>
-                  <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full opacity-20 animate-pulse" />
-                    <Avatar className="w-16 h-16 border-2 border-primary/30">
+                <circle cx={x - 18} cy={y - 12} r={6} fill="#22c55e" opacity={0.6} />
+                <circle cx={x + 20} cy={y - 8} r={5} fill="#4ade80" opacity={0.5} />
+                <circle cx={x - 12} cy={y + 22} r={4} fill="#16a34a" opacity={0.4} />
+
+                <foreignObject x={x - 28} y={y - 28} width={56} height={56}>
+                  <div style={{ width: 56, height: 56 }}>
+                    <Avatar className="w-14 h-14 border-2 border-green-500/40">
                       <AvatarImage src={leaf.profilePhoto || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
-                        {leaf.personName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      <AvatarFallback className="bg-primary/10 text-primary text-base font-semibold">
+                        {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <Leaf className="absolute -bottom-1 -right-1 w-5 h-5 text-green-500 fill-green-500/30" />
                   </div>
-                  
-                  <p className="mt-2 font-medium text-sm text-center max-w-[120px] truncate">
-                    {hasAccess ? leaf.personName : "••••••"}
+                </foreignObject>
+
+                <foreignObject x={x - 50} y={y + 30} width={100} height={20}>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      textAlign: "center",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      lineHeight: "16px",
+                    }}
+                    className="text-foreground"
+                  >
+                    {hasAccess ? leaf.personName : "------"}
                   </p>
-                  
-                  <Badge variant="outline" className="mt-1 text-xs">
-                    {relationshipTypes.find(r => r.value === leaf.relationship)?.label || leaf.relationship}
-                  </Badge>
-                  
-                  {leaf.invitationStatus === "pending" && leaf.invitedEmail && (
-                    <Badge variant="secondary" className="mt-1 text-xs gap-1">
-                      <Mail className="w-3 h-3" />
-                      Invited
+                </foreignObject>
+
+                <foreignObject x={x - 45} y={y + 48} width={90} height={22}>
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Badge variant="outline" className="text-[10px] leading-tight">
+                      {relLabel}
                     </Badge>
-                  )}
-                  
-                  {hasAccess && (
-                    <p className="text-xs text-muted-foreground mt-2">Click to view</p>
-                  )}
-                </div>
-                
-                {!hasAccess && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Lock className="w-6 h-6 text-muted-foreground" />
                   </div>
+                </foreignObject>
+
+                {leaf.invitationStatus === "pending" && leaf.invitedEmail && (
+                  <foreignObject x={x - 30} y={y + 68} width={60} height={18}>
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <Badge variant="secondary" className="text-[9px] gap-0.5 leading-tight">
+                        <Mail className="w-2.5 h-2.5" />
+                        Invited
+                      </Badge>
+                    </div>
+                  </foreignObject>
                 )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+
+                {!hasAccess && (
+                  <foreignObject x={x - 12} y={y - 12} width={24} height={24}>
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <Lock className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  </foreignObject>
+                )}
+              </g>
+            );
+          })}
+        </g>
+
+        {sortedGenerations.map((gen) => {
+          const y = getGenerationY(gen);
+          const label =
+            generationLabels[gen] ??
+            (gen < 0
+              ? `${Math.abs(gen)} Gen Up`
+              : `${gen} Gen Down`);
+          return (
+            <foreignObject key={`label-${gen}`} x={4} y={y - 10} width={80} height={20}>
+              <Badge variant="secondary" className="text-[9px] leading-tight">
+                {label}
+              </Badge>
+            </foreignObject>
+          );
+        })}
+      </svg>
     </div>
   );
 }
@@ -825,6 +1028,7 @@ export default function FamilyTree() {
     defaultValues: {
       personName: "",
       relationship: "",
+      profilePhoto: "",
       birthDate: "",
       invitedEmail: "",
     },
@@ -1081,6 +1285,19 @@ export default function FamilyTree() {
                             <FormLabel>Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Full name" {...field} data-testid="input-leaf-name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={leafForm.control}
+                        name="profilePhoto"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Photo URL (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://..." {...field} data-testid="input-leaf-photo" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

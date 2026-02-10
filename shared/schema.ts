@@ -3928,3 +3928,133 @@ export type InsertAthleticLegacyScore = z.infer<typeof insertAthleticLegacyScore
 export type AthleticLegacyScore = typeof athleticLegacyScores.$inferSelect;
 export type InsertJerseyRetirement = z.infer<typeof insertJerseyRetirementSchema>;
 export type JerseyRetirement = typeof jerseyRetirements.$inferSelect;
+
+// ============================================
+// CELEBRITY LEGACY VAULT SYSTEM
+// ============================================
+
+export const celebrityLegacyVaultItems = pgTable("celebrity_legacy_vault_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  celebrityMemorialId: varchar("celebrity_memorial_id").notNull().references(() => celebrityMemorials.id, { onDelete: "cascade" }),
+
+  title: text("title").notNull(),
+  description: text("description"),
+  
+  contentCategory: text("content_category").notNull(), // 'documentary', 'music', 'writing', 'photo', 'book', 'unreleased', 'film', 'interview'
+  mediaUrl: text("media_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  
+  releaseStatus: text("release_status").notNull().default("vault"), // 'vault' (stored), 'pending_review' (awaiting estate approval), 'approved' (estate approved), 'released' (publicly available)
+  scheduledReleaseDate: timestamp("scheduled_release_date"),
+  releasedAt: timestamp("released_at"),
+  
+  price: decimal("price", { precision: 10, scale: 2 }).default("0"), // 0 = free, >0 = paid content
+  platformCommission: integer("platform_commission").default(15), // percentage taken by platform
+  
+  uploaderName: text("uploader_name"),
+  uploaderEmail: text("uploader_email"),
+  uploaderRole: text("uploader_role"), // 'celebrity', 'manager', 'estate', 'family'
+  
+  estateApprovedBy: text("estate_approved_by"),
+  estateApprovalDate: timestamp("estate_approval_date"),
+  estateApprovalNotes: text("estate_approval_notes"),
+  
+  purchaseCount: integer("purchase_count").default(0),
+  viewCount: integer("view_count").default(0),
+  
+  metadata: json("metadata").$type<{ duration?: string; pages?: number; format?: string; genre?: string; year?: string }>(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_vault_items_memorial").on(table.celebrityMemorialId),
+  index("idx_vault_items_category").on(table.contentCategory),
+  index("idx_vault_items_status").on(table.releaseStatus),
+  index("idx_vault_items_released").on(table.releasedAt),
+]);
+
+export const celebrityEstateSubscriptions = pgTable("celebrity_estate_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  celebrityMemorialId: varchar("celebrity_memorial_id").notNull().references(() => celebrityMemorials.id, { onDelete: "cascade" }),
+  
+  subscriberEmail: text("subscriber_email").notNull(),
+  subscriberName: text("subscriber_name"),
+  
+  tier: text("tier").notNull().default("basic"), // 'basic' ($29.99/mo), 'premium' ($99.99/mo), 'enterprise' ($249.99/mo)
+  
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  
+  status: text("status").notNull().default("inactive"), // 'active', 'inactive', 'cancelled', 'past_due'
+  
+  maxItems: integer("max_items").default(50), // basic=50, premium=unlimited(-1), enterprise=unlimited(-1)
+  featuresIncluded: json("features_included").$type<string[]>(),
+  
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_estate_subs_memorial").on(table.celebrityMemorialId),
+  index("idx_estate_subs_status").on(table.status),
+  index("idx_estate_subs_email").on(table.subscriberEmail),
+]);
+
+export const celebrityEstateVerifications = pgTable("celebrity_estate_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  celebrityMemorialId: varchar("celebrity_memorial_id").notNull().references(() => celebrityMemorials.id, { onDelete: "cascade" }),
+  
+  verifierName: text("verifier_name").notNull(),
+  verifierEmail: text("verifier_email").notNull(),
+  verifierRole: text("verifier_role").notNull(), // 'family_member', 'estate_lawyer', 'manager', 'executor'
+  verifierPhone: text("verifier_phone"),
+  
+  documentUrls: json("document_urls").$type<string[]>(),
+  
+  verificationStatus: text("verification_status").notNull().default("pending"), // 'pending', 'approved', 'rejected'
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_estate_verify_memorial").on(table.celebrityMemorialId),
+  index("idx_estate_verify_status").on(table.verificationStatus),
+]);
+
+export const vaultItemPurchases = pgTable("vault_item_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vaultItemId: varchar("vault_item_id").notNull().references(() => celebrityLegacyVaultItems.id, { onDelete: "cascade" }),
+  
+  buyerEmail: text("buyer_email").notNull(),
+  buyerName: text("buyer_name"),
+  
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  platformAmount: decimal("platform_amount", { precision: 10, scale: 2 }).notNull(),
+  estateAmount: decimal("estate_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  stripePaymentId: varchar("stripe_payment_id"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_vault_purchases_item").on(table.vaultItemId),
+  index("idx_vault_purchases_buyer").on(table.buyerEmail),
+]);
+
+// Legacy Vault schemas and types
+export const insertCelebrityLegacyVaultItemSchema = createInsertSchema(celebrityLegacyVaultItems).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCelebrityLegacyVaultItem = z.infer<typeof insertCelebrityLegacyVaultItemSchema>;
+export type CelebrityLegacyVaultItem = typeof celebrityLegacyVaultItems.$inferSelect;
+
+export const insertCelebrityEstateSubscriptionSchema = createInsertSchema(celebrityEstateSubscriptions).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCelebrityEstateSubscription = z.infer<typeof insertCelebrityEstateSubscriptionSchema>;
+export type CelebrityEstateSubscription = typeof celebrityEstateSubscriptions.$inferSelect;
+
+export const insertCelebrityEstateVerificationSchema = createInsertSchema(celebrityEstateVerifications).omit({ id: true, createdAt: true });
+export type InsertCelebrityEstateVerification = z.infer<typeof insertCelebrityEstateVerificationSchema>;
+export type CelebrityEstateVerification = typeof celebrityEstateVerifications.$inferSelect;
+
+export const insertVaultItemPurchaseSchema = createInsertSchema(vaultItemPurchases).omit({ id: true, createdAt: true });
+export type InsertVaultItemPurchase = z.infer<typeof insertVaultItemPurchaseSchema>;
+export type VaultItemPurchase = typeof vaultItemPurchases.$inferSelect;

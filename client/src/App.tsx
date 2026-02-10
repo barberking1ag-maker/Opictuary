@@ -54,6 +54,7 @@ import QRCodeGenerator from "@/pages/QRCodeGenerator";
 import MemorialEvents from "@/pages/MemorialEvents";
 import FuneralProgramCreator from "@/pages/FuneralProgramCreator";
 import CelebrityEstateContent from "@/pages/CelebrityEstateContent";
+import CelebrityLegacyVault from "@/pages/CelebrityLegacyVault";
 import FutureMessages from "@/pages/FutureMessages";
 import UpcomingMessages from "@/pages/UpcomingMessages";
 import VideoTimeCapsules from "@/pages/VideoTimeCapsules";
@@ -517,6 +518,7 @@ function Router() {
         <Route path="/upcoming-messages" component={UpcomingMessages} />
         <Route path="/event-planner" component={EventPlanner} />
         <Route path="/celebrity/:id/estate-content" component={CelebrityEstateContent} />
+        <Route path="/celebrity/:id/legacy-vault" component={CelebrityLegacyVault} />
         
         {/* Product Routes */}
         <Route path="/products" component={Products} />

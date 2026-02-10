@@ -113,12 +113,21 @@ import {
   familyTreeLeaves,
   familyTreeSubscriptions,
   familyTreeLeafContent,
+  // Celebrity Legacy Vault schemas
+  celebrityLegacyVaultItems,
+  celebrityEstateSubscriptions,
+  celebrityEstateVerifications,
+  vaultItemPurchases,
+  insertCelebrityLegacyVaultItemSchema,
+  insertCelebrityEstateSubscriptionSchema,
+  insertCelebrityEstateVerificationSchema,
+  insertVaultItemPurchaseSchema,
   // Shared Music & Live Celebration schemas
   insertBluetoothPlaylistSessionSchema,
   insertLiveCelebrationSessionSchema,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const inviteCodeSchema = z.object({
   inviteCode: z.string().min(1, "Invite code is required"),
@@ -3339,6 +3348,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.publishCelebrityFanContent(req.params.id);
       const content = await storage.getCelebrityFanContent(req.params.id);
       res.json(content);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Celebrity Legacy Vault routes
+  app.get("/api/celebrity-memorials/:celebrityMemorialId/vault", async (req: any, res) => {
+    try {
+      const { celebrityMemorialId } = req.params;
+      const isAdminUser = req.user?.claims?.sub ? (await storage.getUser(req.user.claims.sub))?.isAdmin : false;
+
+      let items;
+      if (isAdminUser) {
+        items = await db.select().from(celebrityLegacyVaultItems).where(eq(celebrityLegacyVaultItems.celebrityMemorialId, celebrityMemorialId));
+      } else {
+        items = await db.select().from(celebrityLegacyVaultItems).where(and(eq(celebrityLegacyVaultItems.celebrityMemorialId, celebrityMemorialId), eq(celebrityLegacyVaultItems.releaseStatus, "released")));
+      }
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/celebrity-memorials/:celebrityMemorialId/vault", isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertCelebrityLegacyVaultItemSchema.parse({
+        ...req.body,
+        celebrityMemorialId: req.params.celebrityMemorialId,
+      });
+      const [item] = await db.insert(celebrityLegacyVaultItems).values([data]).returning();
+      res.status(201).json(item);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/celebrity-vault/:id/status", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { releaseStatus } = req.body;
+      if (!releaseStatus) {
+        return res.status(400).json({ error: "releaseStatus is required" });
+      }
+      const updateData: any = { releaseStatus, updatedAt: new Date() };
+      if (releaseStatus === "released") {
+        updateData.releasedAt = new Date();
+      }
+      const [item] = await db.update(celebrityLegacyVaultItems).set(updateData).where(eq(celebrityLegacyVaultItems.id, req.params.id)).returning();
+      if (!item) {
+        return res.status(404).json({ error: "Vault item not found" });
+      }
+      res.json(item);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/celebrity-vault/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const { approvalNotes } = req.body;
+      const [item] = await db.update(celebrityLegacyVaultItems).set({
+        releaseStatus: "approved",
+        estateApprovedBy: userEmail,
+        estateApprovalDate: new Date(),
+        estateApprovalNotes: approvalNotes || null,
+        updatedAt: new Date(),
+      }).where(eq(celebrityLegacyVaultItems.id, req.params.id)).returning();
+      if (!item) {
+        return res.status(404).json({ error: "Vault item not found" });
+      }
+      res.json(item);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/celebrity-memorials/:celebrityMemorialId/vault/storefront", async (req, res) => {
+    try {
+      const items = await db.select().from(celebrityLegacyVaultItems).where(and(eq(celebrityLegacyVaultItems.celebrityMemorialId, req.params.celebrityMemorialId), eq(celebrityLegacyVaultItems.releaseStatus, "released")));
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/celebrity-vault/:id/purchase", isAuthenticated, async (req: any, res) => {
+    try {
+      const userEmail = req.user.claims.email;
+      const userName = req.user.claims.first_name || req.user.claims.email;
+
+      const [vaultItem] = await db.select().from(celebrityLegacyVaultItems).where(eq(celebrityLegacyVaultItems.id, req.params.id));
+      if (!vaultItem) {
+        return res.status(404).json({ error: "Vault item not found" });
+      }
+      if (vaultItem.releaseStatus !== "released") {
+        return res.status(400).json({ error: "This item is not available for purchase" });
+      }
+
+      const amount = parseFloat(vaultItem.price || "0");
+      const commissionRate = (vaultItem.platformCommission || 15) / 100;
+      const platformAmount = parseFloat((amount * commissionRate).toFixed(2));
+      const estateAmount = parseFloat((amount - platformAmount).toFixed(2));
+
+      const purchaseData = insertVaultItemPurchaseSchema.parse({
+        vaultItemId: vaultItem.id,
+        buyerEmail: userEmail,
+        buyerName: userName,
+        amount: amount.toString(),
+        platformAmount: platformAmount.toString(),
+        estateAmount: estateAmount.toString(),
+        stripePaymentId: req.body.stripePaymentId || null,
+      });
+
+      const [purchase] = await db.insert(vaultItemPurchases).values(purchaseData).returning();
+      await db.update(celebrityLegacyVaultItems).set({ purchaseCount: (vaultItem.purchaseCount || 0) + 1, updatedAt: new Date() }).where(eq(celebrityLegacyVaultItems.id, req.params.id));
+      res.status(201).json(purchase);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/celebrity-memorials/:celebrityMemorialId/estate-verification", isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertCelebrityEstateVerificationSchema.parse({
+        ...req.body,
+        celebrityMemorialId: req.params.celebrityMemorialId,
+      });
+      const [verification] = await db.insert(celebrityEstateVerifications).values([data]).returning();
+      res.status(201).json(verification);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/celebrity-memorials/:celebrityMemorialId/estate-verification", async (req, res) => {
+    try {
+      const verifications = await db.select().from(celebrityEstateVerifications).where(eq(celebrityEstateVerifications.celebrityMemorialId, req.params.celebrityMemorialId));
+      res.json(verifications);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/celebrity-memorials/:celebrityMemorialId/estate-subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const data = insertCelebrityEstateSubscriptionSchema.parse({
+        ...req.body,
+        celebrityMemorialId: req.params.celebrityMemorialId,
+      });
+      const [subscription] = await db.insert(celebrityEstateSubscriptions).values([data]).returning();
+      res.status(201).json(subscription);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/celebrity-memorials/:celebrityMemorialId/estate-subscription", async (req, res) => {
+    try {
+      const subscriptions = await db.select().from(celebrityEstateSubscriptions).where(eq(celebrityEstateSubscriptions.celebrityMemorialId, req.params.celebrityMemorialId));
+      res.json(subscriptions);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
