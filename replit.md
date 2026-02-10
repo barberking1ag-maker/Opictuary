@@ -50,7 +50,7 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **Prison Access System:** Provides secure, monitored access to memorials for incarcerated individuals.
 **Flower Shop Partnership System:** Connects users with local florists.
 **Saved Memorials System:** Allows authenticated users to save and categorize memorials.
-**Future Messages System:** Enables scheduling of future messages with templates, recurrence, and media attachments.
+**Future Messages System:** Enables scheduling of future messages with templates, recurrence, and media attachments. Tiered pricing: Text messages (Free), Short video up to 2 min ($4.99), Long video up to 10 min ($9.99), Video time capsules ($14.99). Stripe payment integration with server-side price enforcement and payment verification.
 **Merchandise Services Integration:** Connects users with external services for physical memorial products.
 **Essential Worker Memorial Creation System:** Guided creation flow for honoring essential workers.
 **Celebrity Memorial Interactive System:** Enhanced platform for celebrity tributes with verification processes.

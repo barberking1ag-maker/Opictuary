@@ -4,7 +4,7 @@ import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Video, Trash2, Edit, Eye, Clock, User } from "lucide-react";
+import { Plus, Calendar, Video, Trash2, Edit, Eye, Clock, User, DollarSign } from "lucide-react";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +46,9 @@ interface VideoTimeCapsule {
   viewCount: number;
   uniqueViewers: number;
   releasedCount: number;
+  paymentStatus?: string;
+  priceTier?: string;
+  priceAmount?: string;
   createdAt: string;
 }
 
@@ -122,7 +125,17 @@ export default function VideoTimeCapsules() {
 
   const createCapsuleMutation = useMutation({
     mutationFn: async (data: CapsuleFormData) => {
-      const res = await apiRequest("POST", `/api/memorials/${memorialId}/video-time-capsules`, data);
+      const paymentRes = await apiRequest("POST", `/api/future-message-payment`, {
+        type: 'time_capsule',
+        memorialId,
+      });
+      const paymentData = await paymentRes.json();
+
+      const res = await apiRequest("POST", `/api/memorials/${memorialId}/video-time-capsules`, {
+        ...data,
+        paymentStatus: 'pending',
+        stripePaymentIntentId: paymentData.paymentIntentId,
+      });
       return await res.json();
     },
     onSuccess: () => {
@@ -279,7 +292,8 @@ export default function VideoTimeCapsules() {
           </p>
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="secondary" className="text-xs" data-testid="badge-video-price">
-              $9.99/video until released
+              <DollarSign className="w-3 h-3 mr-1" />
+              $14.99 per time capsule
             </Badge>
           </div>
         </div>
@@ -679,6 +693,16 @@ export default function VideoTimeCapsules() {
                         {capsule.title}
                       </CardTitle>
                       {getStatusBadge(capsule)}
+                      {capsule.paymentStatus && (
+                        <Badge
+                          variant={capsule.paymentStatus === 'paid' ? 'secondary' : 'outline'}
+                          className="text-xs"
+                          data-testid={`badge-payment-${capsule.id}`}
+                        >
+                          <DollarSign className="w-3 h-3 mr-1" />
+                          {capsule.paymentStatus === 'paid' ? 'Paid' : capsule.paymentStatus === 'pending' ? 'Payment Pending' : capsule.paymentStatus === 'failed' ? 'Payment Failed' : capsule.paymentStatus}
+                        </Badge>
+                      )}
                     </div>
                     {capsule.description && (
                       <CardDescription data-testid={`description-capsule-${capsule.id}`}>

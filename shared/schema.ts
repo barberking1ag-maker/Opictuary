@@ -462,6 +462,10 @@ export const scheduledMessages = pgTable("scheduled_messages", {
   deliveryError: text("delivery_error"), // Error message if delivery failed
   deliveryAttempts: integer("delivery_attempts").default(0), // Number of delivery attempts
   lastDeliveryAttempt: timestamp("last_delivery_attempt"), // Timestamp of last delivery attempt
+  priceTier: text("price_tier").default("free"),
+  priceAmount: decimal("price_amount", { precision: 10, scale: 2 }).default("0"),
+  paymentStatus: text("payment_status").default("not_required"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -514,6 +518,11 @@ export const videoTimeCapsules = pgTable("video_time_capsules", {
   viewCount: integer("view_count").default(0),
   uniqueViewers: integer("unique_viewers").default(0),
   lastViewedAt: timestamp("last_viewed_at"),
+  
+  priceTier: text("price_tier").default("time_capsule"),
+  priceAmount: decimal("price_amount", { precision: 10, scale: 2 }).default("14.99"),
+  paymentStatus: text("payment_status").default("pending"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1838,6 +1847,10 @@ export const insertScheduledMessageSchema = createInsertSchema(scheduledMessages
   isRecurring: z.boolean().optional(),
   recurrenceInterval: z.enum(['yearly', 'monthly', 'custom']).optional(),
   status: z.enum(['draft', 'pending', 'sent', 'failed']).optional(),
+  priceTier: z.enum(['free', 'video_short', 'video_long']).optional(),
+  priceAmount: z.string().optional(),
+  paymentStatus: z.enum(['not_required', 'pending', 'paid', 'failed']).optional(),
+  stripePaymentIntentId: z.string().optional(),
 });
 
 export const insertVideoTimeCapsuleSchema = createInsertSchema(videoTimeCapsules).omit({
@@ -1856,6 +1869,10 @@ export const insertVideoTimeCapsuleSchema = createInsertSchema(videoTimeCapsules
   isRecurring: z.boolean().optional(),
   recurrenceInterval: z.enum(['yearly']).optional(),
   status: z.enum(['scheduled', 'released', 'viewed', 'expired']).optional(),
+  priceTier: z.string().optional(),
+  priceAmount: z.string().optional(),
+  paymentStatus: z.enum(['pending', 'paid', 'failed']).optional(),
+  stripePaymentIntentId: z.string().optional(),
 });
 
 export const insertVideoTimeCapsuleViewSchema = createInsertSchema(videoTimeCapsuleViews).omit({

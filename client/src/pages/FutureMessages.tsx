@@ -4,7 +4,7 @@ import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Mail, Repeat, Clock } from "lucide-react";
+import { Plus, Calendar, Mail, Repeat, Clock, DollarSign, Video } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -46,7 +46,14 @@ const messageSchema = z.object({
   recurrenceCount: z.number().optional(),
   recurrenceEndDate: z.string().optional(),
   mediaAttachmentUrl: z.string().optional(),
+  mediaType: z.enum(['text', 'video_short', 'video_long']).default('text'),
 });
+
+const priceTiers = {
+  text: { label: "Text Message", price: "Free", amount: 0 },
+  video_short: { label: "Short Video (up to 2 min)", price: "$4.99", amount: 4.99 },
+  video_long: { label: "Long Video (up to 10 min)", price: "$9.99", amount: 9.99 },
+};
 
 type MessageFormData = z.infer<typeof messageSchema>;
 
@@ -102,25 +109,46 @@ export default function FutureMessages() {
       recurrenceCount: undefined,
       recurrenceEndDate: "",
       mediaAttachmentUrl: "",
+      mediaType: "text" as const,
     },
   });
 
   const createMessageMutation = useMutation({
     mutationFn: async (data: MessageFormData) => {
-      // Transform frontend field names to backend field names
+      const selectedTier = data.mediaType || 'text';
+      const isVideo = selectedTier !== 'text';
+      let stripePaymentIntentId: string | undefined;
+
+      if (isVideo) {
+        const paymentRes = await apiRequest("POST", `/api/future-message-payment`, {
+          type: selectedTier,
+          memorialId,
+        });
+        const paymentData = await paymentRes.json();
+        stripePaymentIntentId = paymentData.paymentIntentId;
+      }
+
+      const priceTier = selectedTier === 'text' ? 'free' : selectedTier;
+      const tier = priceTiers[selectedTier as keyof typeof priceTiers];
+
       const backendData = {
         recipientName: data.recipientName,
         recipientEmail: data.recipientEmail,
         eventType: data.occasion,
-        eventDate: data.scheduledDate.split('T')[0], // Extract date part only
-        sendTime: data.scheduledDate.split('T')[1], // Extract time part
+        eventDate: data.scheduledDate.split('T')[0],
+        sendTime: data.scheduledDate.split('T')[1],
         message: data.message,
         isRecurring: data.isRecurring,
         recurrenceInterval: data.recurrencePattern as 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined,
         recurrenceCount: data.recurrenceCount,
         recurrenceEndDate: data.recurrenceEndDate || undefined,
         attachmentUrls: data.mediaAttachmentUrl ? [data.mediaAttachmentUrl] : undefined,
+        mediaType: isVideo ? 'video' : 'text',
         status: 'pending' as const,
+        priceTier,
+        priceAmount: tier.amount.toFixed(2),
+        paymentStatus: isVideo ? 'pending' as const : 'not_required' as const,
+        stripePaymentIntentId,
       };
       const res = await apiRequest("POST", `/api/memorials/${memorialId}/scheduled-messages`, backendData);
       return await res.json();
@@ -160,9 +188,15 @@ export default function FutureMessages() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Future Messages</h1>
           <p className="text-muted-foreground">Schedule heartfelt messages for future occasions</p>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary" className="text-xs" data-testid="badge-video-price">
-              $9.99/video message until released
+          <div className="flex items-center gap-2 flex-wrap mt-2">
+            <Badge variant="secondary" className="text-xs" data-testid="badge-price-free">
+              Text: Free
+            </Badge>
+            <Badge variant="secondary" className="text-xs" data-testid="badge-price-short">
+              Short Video (2 min): $4.99
+            </Badge>
+            <Badge variant="secondary" className="text-xs" data-testid="badge-price-long">
+              Long Video (10 min): $9.99
             </Badge>
           </div>
         </div>
@@ -251,6 +285,48 @@ export default function FutureMessages() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="mediaType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-media-type">
+                            <SelectValue placeholder="Select message type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="text" data-testid="option-type-text">Text Message (Free)</SelectItem>
+                          <SelectItem value="video_short" data-testid="option-type-video-short">Short Video - up to 2 min ($4.99)</SelectItem>
+                          <SelectItem value="video_long" data-testid="option-type-video-long">Long Video - up to 10 min ($9.99)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch("mediaType") !== "text" && (
+                  <Card className="border-dashed">
+                    <CardContent className="flex items-center gap-3 py-3 px-4">
+                      <DollarSign className="w-5 h-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium" data-testid="text-selected-price">
+                          {priceTiers[form.watch("mediaType") as keyof typeof priceTiers]?.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Payment will be processed when you submit
+                        </p>
+                      </div>
+                      <Badge data-testid="badge-selected-amount">
+                        {priceTiers[form.watch("mediaType") as keyof typeof priceTiers]?.price}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <FormField
                   control={form.control}

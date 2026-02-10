@@ -2249,6 +2249,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recurrenceEndDate: req.body.recurrenceEndDate || undefined,
       };
 
+      // Server-side pricing enforcement - ignore any client-supplied payment fields
+      const mediaType = cleanedBody.mediaType || 'text';
+      let priceTier = 'free';
+      let priceAmount = '0';
+      let paymentStatus = 'not_required';
+
+      if (mediaType === 'video' || cleanedBody.mediaUrl) {
+        // Determine tier from client hint, but enforce price server-side
+        const requestedTier = cleanedBody.priceTier;
+        if (requestedTier === 'video_long') {
+          priceTier = 'video_long';
+          priceAmount = '9.99';
+        } else {
+          priceTier = 'video_short';
+          priceAmount = '4.99';
+        }
+        paymentStatus = 'pending';
+
+        // If a valid payment intent is provided, verify it with Stripe
+        if (cleanedBody.stripePaymentIntentId) {
+          try {
+            const pi = await getStripe().paymentIntents.retrieve(cleanedBody.stripePaymentIntentId);
+            if (pi.status === 'succeeded' && pi.metadata.memorialId === req.params.memorialId && pi.metadata.priceTier === priceTier) {
+              paymentStatus = 'paid';
+            }
+          } catch (e) {
+            // Invalid payment intent, leave as pending
+          }
+        }
+      }
+
       // Calculate nextSendDate if this is a recurring message
       let nextSendDate = undefined;
       if (cleanedBody.isRecurring && cleanedBody.eventDate && cleanedBody.recurrenceInterval) {
@@ -2260,6 +2291,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...cleanedBody,
         memorialId: req.params.memorialId,
         nextSendDate: nextSendDate,
+        priceTier,
+        priceAmount,
+        paymentStatus,
+        stripePaymentIntentId: cleanedBody.stripePaymentIntentId || undefined,
       };
 
       const data = insertScheduledMessageSchema.parse(dataToValidate);
@@ -2457,8 +2492,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Forbidden: You do not have permission to create video time capsules for this memorial" });
       }
       
-      // Validate request body
-      const validatedData = insertVideoTimeCapsuleSchema.parse(req.body);
+      // Server-side pricing enforcement - ignore client-supplied payment fields
+      let capsulePaymentStatus = 'pending';
+      const clientPaymentIntentId = req.body.stripePaymentIntentId;
+      
+      // If payment intent provided, verify with Stripe before marking as paid
+      if (clientPaymentIntentId) {
+        try {
+          const pi = await getStripe().paymentIntents.retrieve(clientPaymentIntentId);
+          if (pi.status === 'succeeded' && pi.metadata.memorialId === req.params.memorialId && pi.metadata.priceTier === 'time_capsule') {
+            capsulePaymentStatus = 'paid';
+          }
+        } catch (e) {
+          // Invalid payment intent, leave as pending
+        }
+      }
+
+      const bodyWithPayment = {
+        ...req.body,
+        priceTier: 'time_capsule',
+        priceAmount: '14.99',
+        paymentStatus: capsulePaymentStatus,
+        stripePaymentIntentId: clientPaymentIntentId || undefined,
+      };
+      const validatedData = insertVideoTimeCapsuleSchema.parse(bodyWithPayment);
       
       // Compute nextReleaseDate from releaseDate + releaseTime in memorial's timezone, converted to UTC
       const nextReleaseDateObj = computeNextReleaseDate(
@@ -3118,6 +3175,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.json(donations);
       }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/future-message-payment", isAuthenticated, async (req: any, res) => {
+    try {
+      const { type, memorialId } = req.body;
+      const userEmail = req.user.claims.email;
+      
+      if (!type || !memorialId) {
+        return res.status(400).json({ error: "type and memorialId are required" });
+      }
+
+      const priceMap: Record<string, number> = {
+        video_short: 499,
+        video_long: 999,
+        time_capsule: 1499,
+      };
+
+      const amount = priceMap[type];
+      if (!amount) {
+        return res.status(400).json({ error: "Invalid price tier. Must be video_short, video_long, or time_capsule" });
+      }
+
+      const memorial = await storage.getMemorial(memorialId);
+      if (!memorial) {
+        return res.status(404).json({ error: "Memorial not found" });
+      }
+
+      // Verify user owns the memorial
+      const admins = await storage.getMemorialAdmins(memorialId);
+      const isCreator = memorial.creatorEmail === userEmail;
+      const isAdmin = admins.some((a: any) => a.email === userEmail);
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ error: "Forbidden: You do not have permission" });
+      }
+
+      const paymentIntent = await getStripe().paymentIntents.create({
+        amount,
+        currency: "usd",
+        metadata: {
+          memorialId,
+          priceTier: type,
+          type: "future_message",
+        },
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        amount: (amount / 100).toFixed(2),
+        priceTier: type,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/future-message-payment/:paymentIntentId/confirm", isAuthenticated, async (req: any, res) => {
+    try {
+      const { paymentIntentId } = req.params;
+      const { messageId, capsuleId } = req.body;
+      const userEmail = req.user.claims.email;
+
+      if (!messageId && !capsuleId) {
+        return res.status(400).json({ error: "messageId or capsuleId is required" });
+      }
+
+      const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId);
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({ 
+          error: "Payment has not been completed",
+          status: paymentIntent.status,
+        });
+      }
+
+      // Verify the payment intent metadata matches the resource
+      const piMemorialId = paymentIntent.metadata.memorialId;
+
+      if (messageId) {
+        const message = await storage.getScheduledMessage(messageId);
+        if (!message) {
+          return res.status(404).json({ error: "Message not found" });
+        }
+        // Verify ownership: message belongs to the memorial in the payment intent
+        if (message.memorialId !== piMemorialId) {
+          return res.status(403).json({ error: "Payment does not match this message" });
+        }
+        // Verify user owns the memorial
+        const memorial = await storage.getMemorial(message.memorialId);
+        if (!memorial) {
+          return res.status(404).json({ error: "Memorial not found" });
+        }
+        const admins = await storage.getMemorialAdmins(message.memorialId);
+        const isCreator = memorial.creatorEmail === userEmail;
+        const isAdmin = admins.some((a: any) => a.email === userEmail);
+        if (!isCreator && !isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+        await storage.updateScheduledMessage(messageId, {
+          paymentStatus: "paid",
+          stripePaymentIntentId: paymentIntentId,
+        });
+      } else if (capsuleId) {
+        const capsule = await storage.getVideoTimeCapsule(capsuleId);
+        if (!capsule) {
+          return res.status(404).json({ error: "Time capsule not found" });
+        }
+        if (capsule.memorialId !== piMemorialId) {
+          return res.status(403).json({ error: "Payment does not match this time capsule" });
+        }
+        const memorial = await storage.getMemorial(capsule.memorialId);
+        if (!memorial) {
+          return res.status(404).json({ error: "Memorial not found" });
+        }
+        const admins = await storage.getMemorialAdmins(capsule.memorialId);
+        const isCreator = memorial.creatorEmail === userEmail;
+        const isAdmin = admins.some((a: any) => a.email === userEmail);
+        if (!isCreator && !isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+        await storage.updateVideoTimeCapsule(capsuleId, {
+          paymentStatus: "paid",
+          stripePaymentIntentId: paymentIntentId,
+        });
+      }
+
+      res.json({ success: true, status: "paid" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
