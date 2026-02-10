@@ -3,11 +3,11 @@ import QRCode from 'qrcode';
 import fs from 'fs';
 
 async function generateSticker() {
-  const WIDTH = 2475;
-  const HEIGHT = 2475;
+  const WIDTH = 1650;
+  const HEIGHT = 1650;
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
-  const CORNER_RADIUS = 75;
+  const CORNER_RADIUS = 50;
 
   function roundedRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -44,19 +44,19 @@ async function generateSticker() {
 
   const whiteStripeY = HEIGHT * 0.50;
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, whiteStripeY, WIDTH, 5);
+  ctx.fillRect(0, whiteStripeY, WIDTH, 4);
 
-  const ICON_SIZE = 450;
-  const iconY = 60;
+  const ICON_SIZE = 300;
+  const iconY = 40;
   try {
     const icon = await loadImage('client/public/icon-512.png');
     const iconX = (WIDTH - ICON_SIZE) / 2;
-    const iconR = 60;
+    const iconR = 40;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 30;
-    ctx.shadowOffsetY = 12;
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 8;
     roundedRect(ctx, iconX, iconY, ICON_SIZE, ICON_SIZE, iconR);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
@@ -79,13 +79,13 @@ async function generateSticker() {
 
   ctx.textAlign = 'center';
 
-  const gpBadgeY = iconY + ICON_SIZE + 45;
-  const gpBadgeW = 510;
-  const gpBadgeH = 128;
+  const gpBadgeY = iconY + ICON_SIZE + 30;
+  const gpBadgeW = 340;
+  const gpBadgeH = 85;
   const gpBadgeX = (WIDTH - gpBadgeW) / 2;
 
   ctx.save();
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 15);
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
   ctx.fillStyle = '#000000';
   ctx.fill();
   ctx.restore();
@@ -95,17 +95,17 @@ async function generateSticker() {
 
   ctx.strokeStyle = 'rgba(255,255,255,0.4)';
   ctx.lineWidth = 2;
-  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 15);
+  roundedRect(ctx, gpBadgeX, gpBadgeY, gpBadgeW, gpBadgeH, 10);
   ctx.stroke();
 
-  const triX = gpBadgeX + 42;
+  const triX = gpBadgeX + 28;
   const triCenterY = gpBadgeY + gpBadgeH / 2;
   ctx.beginPath();
-  ctx.moveTo(triX, triCenterY - 27);
-  ctx.lineTo(triX, triCenterY + 27);
-  ctx.lineTo(triX + 45, triCenterY);
+  ctx.moveTo(triX, triCenterY - 18);
+  ctx.lineTo(triX, triCenterY + 18);
+  ctx.lineTo(triX + 30, triCenterY);
   ctx.closePath();
-  const triGrad = ctx.createLinearGradient(triX, triCenterY - 27, triX + 45, triCenterY + 27);
+  const triGrad = ctx.createLinearGradient(triX, triCenterY - 18, triX + 30, triCenterY + 18);
   triGrad.addColorStop(0, '#4285F4');
   triGrad.addColorStop(0.33, '#34A853');
   triGrad.addColorStop(0.66, '#FBBC04');
@@ -114,34 +114,34 @@ async function generateSticker() {
   ctx.fill();
 
   ctx.textAlign = 'left';
-  ctx.font = '27px sans-serif';
+  ctx.font = '18px sans-serif';
   ctx.fillStyle = '#CCCCCC';
-  ctx.fillText('DOWNLOAD ON', gpBadgeX + 108, gpBadgeY + 45);
+  ctx.fillText('DOWNLOAD ON', gpBadgeX + 72, gpBadgeY + 30);
 
-  ctx.font = 'bold 54px sans-serif';
+  ctx.font = 'bold 36px sans-serif';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('Google Play', gpBadgeX + 108, gpBadgeY + 98);
+  ctx.fillText('Google Play', gpBadgeX + 72, gpBadgeY + 65);
 
   ctx.textAlign = 'center';
 
-  const QR_SIZE = 420;
-  const qrY = gpBadgeY + gpBadgeH + 38;
+  const QR_SIZE = 280;
+  const qrY = gpBadgeY + gpBadgeH + 25;
   try {
     const qrDataUrl = await QRCode.toDataURL('https://opictuary.replit.app', {
-      width: 1000,
+      width: 800,
       margin: 3,
       color: { dark: '#1a0f29', light: '#FFFFFF' },
       errorCorrectionLevel: 'H',
     });
     const qrImage = await loadImage(qrDataUrl);
     const qrX = (WIDTH - QR_SIZE) / 2;
-    const qrPad = 22;
+    const qrPad = 15;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 22;
-    ctx.shadowOffsetY = 6;
-    roundedRect(ctx, qrX - qrPad, qrY - qrPad, QR_SIZE + qrPad * 2, QR_SIZE + qrPad * 2, 24);
+    ctx.shadowBlur = 15;
+    ctx.shadowOffsetY = 4;
+    roundedRect(ctx, qrX - qrPad, qrY - qrPad, QR_SIZE + qrPad * 2, QR_SIZE + qrPad * 2, 18);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
     ctx.restore();
@@ -154,18 +154,18 @@ async function generateSticker() {
     console.error('QR generation failed:', e);
   }
 
-  const nameY = whiteStripeY + 135;
-  ctx.font = 'bold 165px serif';
+  const nameY = whiteStripeY + 90;
+  ctx.font = 'bold 110px serif';
   ctx.fillStyle = '#3B1066';
   ctx.textAlign = 'center';
   ctx.fillText('Opictuary', WIDTH / 2, nameY);
 
-  ctx.font = '54px sans-serif';
+  ctx.font = '36px sans-serif';
   ctx.fillStyle = '#6B4F8A';
-  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, nameY + 82);
+  ctx.fillText('A Celebration Memorial Legacy Platform', WIDTH / 2, nameY + 55);
 
-  const dividerY = nameY + 128;
-  const lineGrad = ctx.createLinearGradient(150, dividerY, WIDTH - 150, dividerY);
+  const dividerY = nameY + 85;
+  const lineGrad = ctx.createLinearGradient(100, dividerY, WIDTH - 100, dividerY);
   lineGrad.addColorStop(0, 'rgba(107, 63, 160, 0)');
   lineGrad.addColorStop(0.3, 'rgba(107, 63, 160, 0.3)');
   lineGrad.addColorStop(0.7, 'rgba(107, 63, 160, 0.3)');
@@ -173,8 +173,8 @@ async function generateSticker() {
   ctx.strokeStyle = lineGrad;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(150, dividerY);
-  ctx.lineTo(WIDTH - 150, dividerY);
+  ctx.moveTo(100, dividerY);
+  ctx.lineTo(WIDTH - 100, dividerY);
   ctx.stroke();
 
   const leftFeatures = [
@@ -190,17 +190,17 @@ async function generateSticker() {
     "Wedding Baby\nRegistries",
   ];
 
-  const FEAT_START_Y = dividerY + 82;
-  const FEAT_SPACING = 150;
+  const FEAT_START_Y = dividerY + 55;
+  const FEAT_SPACING = 100;
 
   ctx.textAlign = 'left';
   leftFeatures.forEach((feat, i) => {
     const lines = feat.split('\n');
     const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 60px sans-serif';
+    ctx.font = 'bold 40px sans-serif';
     ctx.fillStyle = '#3B1066';
     lines.forEach((line, li) => {
-      ctx.fillText(line, 90, yBase + li * 69);
+      ctx.fillText(line, 60, yBase + li * 46);
     });
   });
 
@@ -208,24 +208,24 @@ async function generateSticker() {
   rightFeatures.forEach((feat, i) => {
     const lines = feat.split('\n');
     const yBase = FEAT_START_Y + i * FEAT_SPACING;
-    ctx.font = 'bold 60px sans-serif';
+    ctx.font = 'bold 40px sans-serif';
     ctx.fillStyle = '#3B1066';
     lines.forEach((line, li) => {
-      ctx.fillText(line, WIDTH - 90, yBase + li * 69);
+      ctx.fillText(line, WIDTH - 60, yBase + li * 46);
     });
   });
 
-  ctx.font = 'italic bold 51px serif';
+  ctx.font = 'italic bold 34px serif';
   ctx.fillStyle = '#6B3FA0';
   ctx.textAlign = 'center';
-  ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, HEIGHT - 60);
+  ctx.fillText('Honor every life, in every dimension.', WIDTH / 2, HEIGHT - 40);
 
   const buffer = canvas.toBuffer('image/png', {
-    resolution: 450,
+    resolution: 300,
   });
-  fs.writeFileSync('attached_assets/generated_images/OpictuaryStickerHiRes.png', buffer);
+  fs.writeFileSync('attached_assets/generated_images/OpictuaryPrintSticker.png', buffer);
   console.log('Sticker generated successfully!');
-  console.log('Saved to: attached_assets/generated_images/OpictuaryStickerHiRes.png');
+  console.log('Saved to: attached_assets/generated_images/OpictuaryPrintSticker.png');
 }
 
 generateSticker().catch(console.error);
