@@ -39,7 +39,7 @@ The platform follows a "Dignity in Digital" design philosophy with a respectful,
 **Frontend:** Built with React 18, TypeScript, Vite, Wouter, TanStack Query, and Tailwind CSS, featuring over 30 reusable components and 18+ distinct pages.
 **Backend:** Developed using Express.js with Node.js and TypeScript, designed as a RESTful API with over 80 endpoints.
 **Content Moderation:** Implements server-side profanity filtering.
-**Authentication:** Dual authentication system supporting both Replit Auth (OpenID Connect) for web and email/password authentication for native mobile apps (iOS/Android via Capacitor). Mobile auth uses bcryptjs password hashing with secure session management. Auth page available at `/auth`.
+**Authentication:** Multi-provider authentication system supporting Replit Auth (OpenID Connect) for web, email/password for native mobile apps (iOS/Android via Capacitor), and Google/Apple OAuth social sign-in. Mobile auth uses bcryptjs password hashing with secure session management. Social auth uses OAuth 2.0 with CSRF state validation, Apple ID token signature verification via JWK, and Google email verification. Requires GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET and APPLE_CLIENT_ID/APPLE_CLIENT_SECRET secrets for social login. Auth page available at `/auth`. Social login routes: `/api/auth/google`, `/api/auth/apple`.
 **Authorization:** Employs role-based access control.
 **Data Storage:** Uses PostgreSQL (Neon serverless) with Drizzle ORM, comprising over 25 tables.
 **Security:** Features Zod validation, whitelisted fields, session-based authentication, CSRF protection, protected routes, and lazy-loaded Stripe.

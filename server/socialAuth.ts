@@ -5,17 +5,89 @@ import { storage } from "./storage";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+const GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 
 const APPLE_AUTH_URL = "https://appleid.apple.com/auth/authorize";
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
+const APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys";
 
-function getBaseUrl(req: any): string {
+function getBaseUrl(req: Request): string {
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || req.hostname;
   return `https://${domain}`;
 }
 
+function base64UrlDecode(str: string): Buffer {
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return Buffer.from(str, "base64");
+}
+
+async function verifyAppleIdToken(idToken: string, expectedClientId: string): Promise<{ email: string; sub: string } | null> {
+  try {
+    const parts = idToken.split(".");
+    if (parts.length !== 3) return null;
+
+    const header = JSON.parse(base64UrlDecode(parts[0]).toString());
+    const payload = JSON.parse(base64UrlDecode(parts[1]).toString());
+
+    if (payload.iss !== "https://appleid.apple.com") {
+      console.error("[APPLE AUTH] Invalid issuer:", payload.iss);
+      return null;
+    }
+
+    if (payload.aud !== expectedClientId) {
+      console.error("[APPLE AUTH] Invalid audience:", payload.aud);
+      return null;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      console.error("[APPLE AUTH] Token expired");
+      return null;
+    }
+
+    const keysRes = await fetch(APPLE_KEYS_URL);
+    if (!keysRes.ok) {
+      console.error("[APPLE AUTH] Failed to fetch Apple public keys");
+      return null;
+    }
+
+    const { keys } = await keysRes.json();
+    const matchingKey = keys.find((k: any) => k.kid === header.kid && k.alg === header.alg);
+    if (!matchingKey) {
+      console.error("[APPLE AUTH] No matching key found for kid:", header.kid);
+      return null;
+    }
+
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      matchingKey,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const signatureValid = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      base64UrlDecode(parts[2]),
+      Buffer.from(`${parts[0]}.${parts[1]}`)
+    );
+
+    if (!signatureValid) {
+      console.error("[APPLE AUTH] Signature verification failed");
+      return null;
+    }
+
+    return { email: payload.email || "", sub: payload.sub || "" };
+  } catch (error) {
+    console.error("[APPLE AUTH] Token verification error:", error);
+    return null;
+  }
+}
+
 export function setupSocialAuth(app: Express) {
-  app.get("/api/auth/google", (req, res) => {
+  app.get("/api/auth/google", (req: Request, res: Response) => {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (!clientId) {
       return res.status(500).json({ error: "Google Sign-In is not configured yet" });
@@ -38,7 +110,7 @@ export function setupSocialAuth(app: Express) {
     res.redirect(`${GOOGLE_AUTH_URL}?${params.toString()}`);
   });
 
-  app.get("/api/auth/google/callback", async (req, res) => {
+  app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
     try {
       const { code, state } = req.query;
       const savedState = (req.session as any).oauthState;
@@ -86,6 +158,12 @@ export function setupSocialAuth(app: Express) {
 
       const profile = await userInfoRes.json();
       const email = profile.email;
+
+      if (!email || !profile.email_verified) {
+        console.error("[GOOGLE AUTH] No verified email in profile");
+        return res.redirect("/auth?error=no_email");
+      }
+
       const firstName = profile.given_name || profile.name?.split(" ")[0] || "";
       const lastName = profile.family_name || "";
       const profileImageUrl = profile.picture || null;
@@ -111,7 +189,7 @@ export function setupSocialAuth(app: Express) {
     }
   });
 
-  app.get("/api/auth/apple", (req, res) => {
+  app.get("/api/auth/apple", (req: Request, res: Response) => {
     const clientId = process.env.APPLE_CLIENT_ID;
     if (!clientId) {
       return res.status(500).json({ error: "Apple Sign-In is not configured yet" });
@@ -133,7 +211,7 @@ export function setupSocialAuth(app: Express) {
     res.redirect(`${APPLE_AUTH_URL}?${params.toString()}`);
   });
 
-  app.post("/api/auth/apple/callback", async (req, res) => {
+  app.post("/api/auth/apple/callback", async (req: Request, res: Response) => {
     try {
       const { code, state, id_token, user: appleUser } = req.body;
       const savedState = (req.session as any).oauthState;
@@ -170,16 +248,20 @@ export function setupSocialAuth(app: Express) {
 
       const tokenData = await tokenRes.json();
 
-      let email = "";
+      if (!tokenData.id_token) {
+        console.error("[APPLE AUTH] No ID token in response");
+        return res.redirect("/auth?error=token_failed");
+      }
+
+      const verified = await verifyAppleIdToken(tokenData.id_token, clientId);
+      if (!verified) {
+        console.error("[APPLE AUTH] ID token verification failed");
+        return res.redirect("/auth?error=token_failed");
+      }
+
+      let email = verified.email;
       let firstName = "";
       let lastName = "";
-
-      if (tokenData.id_token) {
-        const payload = JSON.parse(
-          Buffer.from(tokenData.id_token.split(".")[1], "base64").toString()
-        );
-        email = payload.email || "";
-      }
 
       if (appleUser) {
         try {
@@ -187,10 +269,13 @@ export function setupSocialAuth(app: Express) {
           firstName = parsedUser?.name?.firstName || "";
           lastName = parsedUser?.name?.lastName || "";
           if (parsedUser?.email) email = parsedUser.email;
-        } catch {}
+        } catch (e) {
+          console.error("[APPLE AUTH] Failed to parse user data:", e);
+        }
       }
 
       if (!email) {
+        console.error("[APPLE AUTH] No email after verification");
         return res.redirect("/auth?error=no_email");
       }
 
@@ -214,7 +299,7 @@ export function setupSocialAuth(app: Express) {
     }
   });
 
-  app.get("/api/auth/social/status", (_req, res) => {
+  app.get("/api/auth/social/status", (_req: Request, res: Response) => {
     res.json({
       google: !!process.env.GOOGLE_CLIENT_ID,
       apple: !!process.env.APPLE_CLIENT_ID,
