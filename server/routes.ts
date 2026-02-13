@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { setupSocialAuth } from "./socialAuth";
 import { ZodError } from "zod";
 import { z } from "zod";
 import { moderateContent, moderateImage } from "./contentModeration";
@@ -170,6 +171,9 @@ function getStripe(): Stripe {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
+
+  // Setup Google & Apple social auth
+  setupSocialAuth(app);
 
   // Static support page route - serves static HTML for App Store compliance
   app.get('/support', (req, res) => {

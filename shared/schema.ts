@@ -20,7 +20,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey(), // No default - Replit Auth provides ID from sub claim, or UUID for mobile auth
   email: varchar("email").unique("users_email_key"),
   passwordHash: varchar("password_hash"), // For mobile email/password auth
-  authProvider: varchar("auth_provider").default("replit"), // 'replit' or 'email'
+  authProvider: varchar("auth_provider").default("replit"), // 'replit', 'email', 'google', or 'apple'
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
