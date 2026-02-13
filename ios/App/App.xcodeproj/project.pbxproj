@@ -348,11 +348,11 @@
                         buildSettings = {
                                 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
                                 CODE_SIGN_STYLE = Automatic;
-                                CURRENT_PROJECT_VERSION = 20260210000001;
+                                CURRENT_PROJECT_VERSION = 20260213000001;
                                 INFOPLIST_FILE = App/Info.plist;
                                 IPHONEOS_DEPLOYMENT_TARGET = 17.0;
                                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-                                MARKETING_VERSION = 1.1;
+                                MARKETING_VERSION = 1.2;
                                 OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
                                 PRODUCT_BUNDLE_IDENTIFIER = com.opictuary.memoriol;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
@@ -370,13 +370,13 @@
                                 CODE_SIGN_IDENTITY = "Apple Distribution";
                                 "CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
                                 CODE_SIGN_STYLE = Manual;
-                                CURRENT_PROJECT_VERSION = 20260210000001;
+                                CURRENT_PROJECT_VERSION = 20260213000001;
                                 DEVELOPMENT_TEAM = CRPD7WHX8V;
                                 INFOPLIST_FILE = App/Info.plist;
                                 PROVISIONING_PROFILE_SPECIFIER = "Opictuary App Store";
                                 IPHONEOS_DEPLOYMENT_TARGET = 17.0;
                                 LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-                                MARKETING_VERSION = 1.1;
+                                MARKETING_VERSION = 1.2;
                                 PRODUCT_BUNDLE_IDENTIFIER = com.opictuary.memoriol;
                                 PRODUCT_NAME = "$(TARGET_NAME)";
                                 SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
