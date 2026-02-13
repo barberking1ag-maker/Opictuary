@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import crypto from "crypto";
 import { storage } from "./storage";
 

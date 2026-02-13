@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { OpictuaryLogo } from "@/components/OpictuaryLogo";
 import { Loader2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { SiGoogle, SiApple } from "react-icons/si";
 import { Link } from "wouter";
 
 export default function AuthPage() {
@@ -24,6 +27,33 @@ export default function AuthPage() {
     firstName: "", 
     lastName: "" 
   });
+
+  const { data: socialStatus } = useQuery<{ google: boolean; apple: boolean }>({
+    queryKey: ["/api/auth/social/status"],
+    staleTime: 1000 * 60 * 10,
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if (error) {
+      const messages: Record<string, string> = {
+        invalid_state: "Sign-in session expired. Please try again.",
+        not_configured: "This sign-in method is not configured yet.",
+        token_failed: "Could not complete sign-in. Please try again.",
+        userinfo_failed: "Could not retrieve your profile. Please try again.",
+        google_failed: "Google sign-in failed. Please try again.",
+        apple_failed: "Apple sign-in failed. Please try again.",
+        no_email: "Could not get your email. Please allow email access.",
+      };
+      toast({
+        title: "Sign-in issue",
+        description: messages[error] || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, "", "/auth");
+    }
+  }, []);
 
   if (isAuthenticated) {
     navigate("/");
@@ -74,6 +104,57 @@ export default function AuthPage() {
       });
     }
   };
+
+  const handleGoogleSignIn = () => {
+    window.location.href = "/api/auth/google";
+  };
+
+  const handleAppleSignIn = () => {
+    window.location.href = "/api/auth/apple";
+  };
+
+  const showSocialButtons = socialStatus?.google || socialStatus?.apple;
+
+  const SocialButtons = () => (
+    <>
+      {showSocialButtons && (
+        <>
+          <div className="relative my-4">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+              or continue with
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {socialStatus?.google && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                data-testid="button-google-signin"
+              >
+                <SiGoogle className="h-4 w-4 mr-2" />
+                Continue with Google
+              </Button>
+            )}
+            {socialStatus?.apple && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleAppleSignIn}
+                data-testid="button-apple-signin"
+              >
+                <SiApple className="h-4 w-4 mr-2" />
+                Continue with Apple
+              </Button>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-purple-950 flex flex-col">
@@ -143,7 +224,7 @@ export default function AuthPage() {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600"
                     disabled={isLoggingIn}
                     data-testid="button-login"
                   >
@@ -157,6 +238,8 @@ export default function AuthPage() {
                     )}
                   </Button>
                 </form>
+
+                <SocialButtons />
               </TabsContent>
               
               <TabsContent value="register">
@@ -245,7 +328,7 @@ export default function AuthPage() {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600"
                     disabled={isRegistering}
                     data-testid="button-register"
                   >
@@ -259,6 +342,8 @@ export default function AuthPage() {
                     )}
                   </Button>
                 </form>
+
+                <SocialButtons />
               </TabsContent>
             </Tabs>
             
