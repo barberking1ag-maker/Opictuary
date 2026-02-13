@@ -11,6 +11,72 @@ const APPLE_AUTH_URL = "https://appleid.apple.com/auth/authorize";
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys";
 
+async function generateAppleClientSecret(): Promise<string | null> {
+  const teamId = process.env.APPLE_TEAM_ID;
+  const keyId = process.env.APPLE_KEY_ID;
+  const clientId = process.env.APPLE_CLIENT_ID;
+  const privateKey = process.env.APPLE_PRIVATE_KEY;
+
+  if (!teamId || !keyId || !clientId || !privateKey) {
+    if (process.env.APPLE_CLIENT_SECRET) {
+      return process.env.APPLE_CLIENT_SECRET;
+    }
+    return null;
+  }
+
+  try {
+    const header = {
+      alg: "ES256",
+      kid: keyId,
+    };
+
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      iss: teamId,
+      iat: now,
+      exp: now + 15777000,
+      aud: "https://appleid.apple.com",
+      sub: clientId,
+    };
+
+    const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
+    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    const cleanKey = privateKey.replace(/\\n/g, "\n");
+    const key = await crypto.subtle.importKey(
+      "pkcs8",
+      pemToBuffer(cleanKey),
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["sign"]
+    );
+
+    const signature = await crypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-256" },
+      key,
+      Buffer.from(signingInput)
+    );
+
+    const sigBytes = new Uint8Array(signature);
+    const encodedSignature = Buffer.from(sigBytes).toString("base64url");
+
+    return `${signingInput}.${encodedSignature}`;
+  } catch (error) {
+    console.error("[APPLE AUTH] Failed to generate client secret:", error);
+    return null;
+  }
+}
+
+function pemToBuffer(pem: string): ArrayBuffer {
+  const lines = pem.split("\n").filter(line =>
+    !line.startsWith("-----") && line.trim().length > 0
+  );
+  const base64 = lines.join("");
+  const binary = Buffer.from(base64, "base64");
+  return binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength);
+}
+
 function getBaseUrl(req: Request): string {
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || req.hostname;
   return `https://${domain}`;
@@ -223,8 +289,9 @@ export function setupSocialAuth(app: Express) {
       delete (req.session as any).oauthState;
 
       const clientId = process.env.APPLE_CLIENT_ID;
-      const clientSecret = process.env.APPLE_CLIENT_SECRET;
+      const clientSecret = await generateAppleClientSecret();
       if (!clientId || !clientSecret) {
+        console.error("[APPLE AUTH] Client ID or secret not available");
         return res.redirect("/auth?error=not_configured");
       }
 
@@ -300,9 +367,13 @@ export function setupSocialAuth(app: Express) {
   });
 
   app.get("/api/auth/social/status", (_req: Request, res: Response) => {
+    const appleConfigured = !!process.env.APPLE_CLIENT_ID && (
+      !!process.env.APPLE_CLIENT_SECRET ||
+      (!!process.env.APPLE_TEAM_ID && !!process.env.APPLE_KEY_ID && !!process.env.APPLE_PRIVATE_KEY)
+    );
     res.json({
       google: !!process.env.GOOGLE_CLIENT_ID,
-      apple: !!process.env.APPLE_CLIENT_ID,
+      apple: appleConfigured,
     });
   });
 }
