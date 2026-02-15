@@ -9,7 +9,7 @@ packages = ["jdk", "android-tools", "imagemagick", "wget", "unzip", "rubyPackage
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["bash", "-c", "NODE_ENV=production node dist/index.js"]
+run = ["npm", "run", "start"]
 publicDir = "dist/public"
 
 [[ports]]
