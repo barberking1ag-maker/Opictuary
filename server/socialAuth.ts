@@ -265,6 +265,10 @@ export function setupSocialAuth(app: Express) {
     (req.session as any).oauthState = state;
 
     const redirectUri = `${getBaseUrl(req)}/api/auth/apple/callback`;
+    console.log("[APPLE AUTH] Starting Apple Sign-In flow");
+    console.log("[APPLE AUTH] Client ID:", clientId);
+    console.log("[APPLE AUTH] Redirect URI:", redirectUri);
+    console.log("[APPLE AUTH] Base URL:", getBaseUrl(req));
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -274,7 +278,9 @@ export function setupSocialAuth(app: Express) {
       response_mode: "form_post",
     });
 
-    res.redirect(`${APPLE_AUTH_URL}?${params.toString()}`);
+    const fullUrl = `${APPLE_AUTH_URL}?${params.toString()}`;
+    console.log("[APPLE AUTH] Redirecting to:", fullUrl);
+    res.redirect(fullUrl);
   });
 
   app.post("/api/auth/apple/callback", async (req: Request, res: Response) => {
