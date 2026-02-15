@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user has a password (email auth)
       if (!user.passwordHash) {
-        return res.status(401).json({ error: "This account uses a different login method. Please try signing in with Replit." });
+        return res.status(401).json({ error: "This account was created with a social login. Please use 'Continue with Google' or 'Continue with Apple' to sign in, or create a new account with email and password." });
       }
       
       // Verify password
