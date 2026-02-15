@@ -294,10 +294,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password, firstName, lastName } = mobileRegisterSchema.parse(req.body);
       
-      // Check if email already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ error: "An account with this email already exists" });
+        if (existingUser.passwordHash) {
+          return res.status(400).json({ 
+            error: "An account with this email already exists. Please sign in instead.",
+            code: "ACCOUNT_EXISTS_WITH_PASSWORD"
+          });
+        }
+        
+        const passwordHash = await bcrypt.hash(password, 12);
+        const user = await storage.upsertUser({
+          id: existingUser.id,
+          email,
+          passwordHash,
+          firstName: firstName || existingUser.firstName,
+          lastName: lastName || existingUser.lastName || null,
+        });
+        
+        (req.session as any).mobileUserId = existingUser.id;
+        
+        return res.json({ 
+          user: { 
+            id: user.id, 
+            email: user.email, 
+            firstName: user.firstName, 
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+          },
+          message: "Account linked successfully! You can now sign in with your email and password." 
+        });
       }
       
       // Hash password

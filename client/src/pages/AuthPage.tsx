@@ -88,18 +88,20 @@ export default function AuthPage() {
     }
 
     try {
-      await register({
+      const result = await register({
         email: registerForm.email,
         password: registerForm.password,
         firstName: registerForm.firstName,
         lastName: registerForm.lastName || undefined,
       });
-      toast({ title: "Account created!", description: "Welcome to Opictuary." });
+      const msg = result?.message || "Welcome to Opictuary.";
+      toast({ title: "Account created!", description: msg });
       navigate("/");
     } catch (error: any) {
+      const message = error.message || "Please try again";
       toast({ 
         title: "Registration failed", 
-        description: error.message || "Please try again",
+        description: message,
         variant: "destructive" 
       });
     }

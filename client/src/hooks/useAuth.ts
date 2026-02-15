@@ -49,11 +49,11 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterCredentials) => {
       const res = await apiRequest("POST", "/api/auth/mobile/register", credentials);
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Registration failed");
       }
-      return res.json();
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
