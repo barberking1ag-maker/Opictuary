@@ -52,8 +52,11 @@ export function useAuth() {
     onSuccess: (data) => {
       if (data?.token) {
         setAuthToken(data.token);
+        console.log('[AUTH] Token stored successfully');
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
+      if (data?.user) {
+        queryClient.setQueryData(["/api/auth/mobile/user"], data.user);
+      }
     },
   });
 
@@ -74,8 +77,11 @@ export function useAuth() {
     onSuccess: (data) => {
       if (data?.token) {
         setAuthToken(data.token);
+        console.log('[AUTH] Token stored successfully');
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
+      if (data?.user) {
+        queryClient.setQueryData(["/api/auth/mobile/user"], data.user);
+      }
     },
   });
 
