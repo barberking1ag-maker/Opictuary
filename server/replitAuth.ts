@@ -129,10 +129,25 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Check for mobile session first (email/password auth)
+  // Check for Bearer token first (mobile apps use token-based auth)
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const { verifyMobileAuthToken } = await import('./mobileToken.js');
+    const tokenUserId = verifyMobileAuthToken(authHeader.slice(7));
+    if (tokenUserId) {
+      (req as any).user = {
+        claims: {
+          sub: tokenUserId,
+        },
+        isMobileAuth: true,
+      };
+      return next();
+    }
+  }
+
+  // Check for mobile session (email/password auth)
   const mobileUserId = (req.session as any)?.mobileUserId;
   if (mobileUserId) {
-    // Create a compatible user object for mobile sessions
     (req as any).user = {
       claims: {
         sub: mobileUserId,

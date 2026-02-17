@@ -13,6 +13,7 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { generateMobileAuthToken, verifyMobileAuthToken } from "./mobileToken";
 
 // User profile update schema - allow phone, bio, timezone, language
 const updateProfileSchema = z.object({
@@ -414,6 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         (req.session as any).mobileUserId = existingUser.id;
+        const token = generateMobileAuthToken(existingUser.id);
         
         return res.json({ 
           user: { 
@@ -423,6 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: user.lastName,
             profileImageUrl: user.profileImageUrl,
           },
+          token,
           message: "Account linked successfully! You can now sign in with your email and password." 
         });
       }
@@ -445,6 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set session
       (req.session as any).mobileUserId = userId;
+      const token = generateMobileAuthToken(userId);
       
       res.json({ 
         user: { 
@@ -454,6 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
         },
+        token,
         message: "Account created successfully" 
       });
     } catch (error) {
@@ -494,6 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set session
       (req.session as any).mobileUserId = user.id;
+      const token = generateMobileAuthToken(user.id);
       
       res.json({ 
         user: { 
@@ -503,6 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
         },
+        token,
         message: "Login successful" 
       });
     } catch (error) {
@@ -529,7 +536,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mobile Auth: Get current user (works for both Replit and mobile auth)
   app.get('/api/auth/mobile/user', async (req: any, res) => {
     try {
-      // Check for mobile session first
+      // Check for Bearer token first (mobile apps)
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        const tokenUserId = verifyMobileAuthToken(authHeader.slice(7));
+        if (tokenUserId) {
+          const user = await storage.getUser(tokenUserId);
+          if (user) {
+            return res.json({
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              profileImageUrl: user.profileImageUrl,
+              authProvider: user.authProvider || 'email',
+              isAdmin: user.isAdmin || false,
+            });
+          }
+        }
+      }
+
+      // Check for mobile session
       const mobileUserId = (req.session as any)?.mobileUserId;
       if (mobileUserId) {
         const user = await storage.getUser(mobileUserId);

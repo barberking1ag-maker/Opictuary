@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { setAuthToken, clearAuthToken } from "@/lib/authToken";
 
 interface User {
   id: string;
@@ -41,7 +42,10 @@ export function useAuth() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.token) {
+        setAuthToken(data.token);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
     },
   });
@@ -55,7 +59,10 @@ export function useAuth() {
       }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.token) {
+        setAuthToken(data.token);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
     },
   });
@@ -69,6 +76,7 @@ export function useAuth() {
       return res.json();
     },
     onSuccess: () => {
+      clearAuthToken();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
       queryClient.clear();
     },

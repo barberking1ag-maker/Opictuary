@@ -21,7 +21,10 @@ export async function handleMobileLogin(): Promise<void> {
 export async function handleMobileLogout(): Promise<void> {
   await hapticImpact('light');
   
-  // Use the mobile logout endpoint and redirect to home
+  try {
+    localStorage.removeItem('opictuary_auth_token');
+  } catch {}
+  
   try {
     await fetch('/api/auth/mobile/logout', { method: 'POST' });
     window.location.href = '/';

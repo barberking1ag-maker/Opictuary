@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import crypto from "crypto";
 import { storage } from "./storage";
+import { generateMobileAuthToken } from "./mobileToken";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -248,7 +249,8 @@ export function setupSocialAuth(app: Express) {
       }
 
       (req.session as any).mobileUserId = user.id;
-      res.redirect("/");
+      const token = generateMobileAuthToken(user.id);
+      res.redirect(`/?auth_token=${encodeURIComponent(token)}`);
     } catch (error) {
       console.error("[GOOGLE AUTH] Callback error:", error);
       res.redirect("/auth?error=google_failed");
@@ -419,7 +421,8 @@ export function setupSocialAuth(app: Express) {
 
       console.log("[APPLE AUTH] Success - user:", user.id, email);
       (req.session as any).mobileUserId = user.id;
-      res.redirect("/");
+      const token = generateMobileAuthToken(user.id);
+      res.redirect(`/?auth_token=${encodeURIComponent(token)}`);
     } catch (error) {
       console.error("[APPLE AUTH] Callback error:", error);
       res.redirect("/auth?error=apple_failed");

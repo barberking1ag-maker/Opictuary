@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getApiBaseUrl, isNativeApp } from "@/config/api";
+import { getAuthToken } from "@/lib/authToken";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -8,27 +9,25 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Get fetch options based on platform
-// Native apps need different CORS handling than web
 function getFetchOptions(additionalHeaders?: Record<string, string>): RequestInit {
-  const baseOptions: RequestInit = {
-    headers: {
-      ...additionalHeaders,
-    },
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    ...additionalHeaders,
   };
-  
-  // For native apps, we don't use credentials: "include" as CORS works differently
-  // Native apps bypass CORS restrictions but still need proper headers
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   if (isNativeApp()) {
     return {
-      ...baseOptions,
+      headers,
       mode: 'cors',
     };
   }
   
-  // For web, include credentials for session cookies
   return {
-    ...baseOptions,
+    headers,
     credentials: "include",
   };
 }

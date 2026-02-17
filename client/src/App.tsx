@@ -558,6 +558,20 @@ function App() {
   const showMobileLayout = isNative || isMobile;
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('auth_token');
+    if (token) {
+      try { localStorage.setItem('opictuary_auth_token', token); } catch {}
+      params.delete('auth_token');
+      const newUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/mobile/user"] });
+    }
+  }, []);
+
   // From blueprint: javascript_google_analytics - Initialize Google Analytics when app loads
   useEffect(() => {
     if (!import.meta.env.VITE_GA_MEASUREMENT_ID) {
