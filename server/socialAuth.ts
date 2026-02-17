@@ -258,17 +258,24 @@ export function setupSocialAuth(app: Express) {
   app.get("/api/auth/apple", (req: Request, res: Response) => {
     const clientId = process.env.APPLE_CLIENT_ID;
     if (!clientId) {
-      return res.status(500).json({ error: "Apple Sign-In is not configured yet" });
+      return res.redirect("/auth?error=not_configured");
     }
 
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).oauthState = state;
 
+    res.cookie("apple_oauth_state", state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 10 * 60 * 1000,
+      path: "/",
+    });
+
     const redirectUri = `${getBaseUrl(req)}/api/auth/apple/callback`;
-    console.log("[APPLE AUTH] Starting Apple Sign-In flow");
-    console.log("[APPLE AUTH] Client ID:", clientId);
+    console.log("[APPLE AUTH] Starting flow - Client ID:", clientId);
     console.log("[APPLE AUTH] Redirect URI:", redirectUri);
-    console.log("[APPLE AUTH] Base URL:", getBaseUrl(req));
+    
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -278,61 +285,107 @@ export function setupSocialAuth(app: Express) {
       response_mode: "form_post",
     });
 
-    const fullUrl = `${APPLE_AUTH_URL}?${params.toString()}`;
-    console.log("[APPLE AUTH] Redirecting to:", fullUrl);
-    res.redirect(fullUrl);
+    res.redirect(`${APPLE_AUTH_URL}?${params.toString()}`);
   });
 
   app.post("/api/auth/apple/callback", async (req: Request, res: Response) => {
     try {
-      const { code, state, id_token, user: appleUser } = req.body;
-      const savedState = (req.session as any).oauthState;
+      const { code, state, id_token: formIdToken, user: appleUser, error: appleError } = req.body;
+      const sessionState = (req.session as any).oauthState;
+      const cookieState = req.cookies?.apple_oauth_state;
 
-      if (!code || !state || state !== savedState) {
+      console.log("[APPLE AUTH] Callback received - has code:", !!code, "has state:", !!state, "has id_token:", !!formIdToken, "has sessionState:", !!sessionState, "has cookieState:", !!cookieState);
+
+      if (appleError) {
+        console.error("[APPLE AUTH] Apple returned error:", appleError);
+        res.clearCookie("apple_oauth_state");
+        return res.redirect("/auth?error=apple_failed");
+      }
+
+      if (!code) {
+        console.error("[APPLE AUTH] No authorization code received");
+        res.clearCookie("apple_oauth_state");
+        return res.redirect("/auth?error=apple_failed");
+      }
+
+      let stateValid = false;
+      if (sessionState && cookieState) {
+        stateValid = state === sessionState && state === cookieState;
+      } else if (sessionState) {
+        stateValid = state === sessionState;
+      } else if (cookieState) {
+        stateValid = state === cookieState;
+      }
+
+      if (!state || !stateValid) {
+        console.error("[APPLE AUTH] State validation failed - received:", state, "sessionState:", sessionState, "cookieState:", cookieState);
+        res.clearCookie("apple_oauth_state");
         return res.redirect("/auth?error=invalid_state");
       }
 
       delete (req.session as any).oauthState;
+      res.clearCookie("apple_oauth_state");
 
       const clientId = process.env.APPLE_CLIENT_ID;
       const clientSecret = await generateAppleClientSecret();
       if (!clientId || !clientSecret) {
-        console.error("[APPLE AUTH] Client ID or secret not available");
+        console.error("[APPLE AUTH] Client ID or secret not available. ClientID:", !!clientId, "Secret generated:", !!clientSecret);
         return res.redirect("/auth?error=not_configured");
       }
 
-      const redirectUri = `${getBaseUrl(req)}/api/auth/apple/callback`;
-      const tokenRes = await fetch(APPLE_TOKEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          code: code as string,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: "authorization_code",
-        }),
-      });
+      let verifiedPayload: { email: string; sub: string } | null = null;
 
-      if (!tokenRes.ok) {
-        console.error("[APPLE AUTH] Token exchange failed:", await tokenRes.text());
+      if (formIdToken) {
+        verifiedPayload = await verifyAppleIdToken(formIdToken, clientId);
+        if (verifiedPayload) {
+          console.log("[APPLE AUTH] Verified from form_post id_token");
+        }
+      }
+
+      if (!verifiedPayload) {
+        const redirectUri = `${getBaseUrl(req)}/api/auth/apple/callback`;
+        console.log("[APPLE AUTH] Exchanging code for token, redirect_uri:", redirectUri);
+        
+        const tokenRes = await fetch(APPLE_TOKEN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            code: code as string,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectUri,
+            grant_type: "authorization_code",
+          }),
+        });
+
+        const tokenBody = await tokenRes.text();
+        if (!tokenRes.ok) {
+          console.error("[APPLE AUTH] Token exchange failed:", tokenRes.status, tokenBody);
+          return res.redirect("/auth?error=token_failed");
+        }
+
+        let tokenData: any;
+        try {
+          tokenData = JSON.parse(tokenBody);
+        } catch {
+          console.error("[APPLE AUTH] Failed to parse token response:", tokenBody);
+          return res.redirect("/auth?error=token_failed");
+        }
+
+        if (!tokenData.id_token) {
+          console.error("[APPLE AUTH] No ID token in token response");
+          return res.redirect("/auth?error=token_failed");
+        }
+
+        verifiedPayload = await verifyAppleIdToken(tokenData.id_token, clientId);
+      }
+
+      if (!verifiedPayload) {
+        console.error("[APPLE AUTH] All token verification attempts failed");
         return res.redirect("/auth?error=token_failed");
       }
 
-      const tokenData = await tokenRes.json();
-
-      if (!tokenData.id_token) {
-        console.error("[APPLE AUTH] No ID token in response");
-        return res.redirect("/auth?error=token_failed");
-      }
-
-      const verified = await verifyAppleIdToken(tokenData.id_token, clientId);
-      if (!verified) {
-        console.error("[APPLE AUTH] ID token verification failed");
-        return res.redirect("/auth?error=token_failed");
-      }
-
-      let email = verified.email;
+      let email = verifiedPayload.email;
       let firstName = "";
       let lastName = "";
 
@@ -348,7 +401,7 @@ export function setupSocialAuth(app: Express) {
       }
 
       if (!email) {
-        console.error("[APPLE AUTH] No email after verification");
+        console.error("[APPLE AUTH] No email found - sub:", verifiedPayload.sub);
         return res.redirect("/auth?error=no_email");
       }
 
@@ -364,6 +417,7 @@ export function setupSocialAuth(app: Express) {
         });
       }
 
+      console.log("[APPLE AUTH] Success - user:", user.id, email);
       (req.session as any).mobileUserId = user.id;
       res.redirect("/");
     } catch (error) {

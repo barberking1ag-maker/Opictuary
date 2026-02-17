@@ -176,86 +176,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupSocialAuth(app);
 
   // Static support page route - serves static HTML for App Store compliance
-  app.get('/support', (req, res) => {
-    // In production, serve from dist/public/support
-    // In development, serve from static-support/support
-    const isProd = process.env.NODE_ENV === 'production';
-    
-    // Try multiple paths to find the support page
-    const pathsToTry = isProd 
-      ? [
-          path.resolve(process.cwd(), 'dist', 'public', 'support', 'index.html'),
-          path.resolve(import.meta.dirname, 'public', 'support', 'index.html'),
-          path.resolve(import.meta.dirname, '..', 'public', 'support', 'index.html'),
-        ]
-      : [
-          path.resolve(process.cwd(), 'static-support', 'support', 'index.html'),
-        ];
-    
-    for (const supportPath of pathsToTry) {
-      if (fs.existsSync(supportPath)) {
-        console.log(`[Support] Serving from: ${supportPath}`);
-        return res.sendFile(supportPath);
-      }
-    }
-    
-    // Log error for debugging
-    console.error('[Support] Could not find support page. Tried paths:', pathsToTry);
-    
-    // Fallback: serve inline support page
-    res.send(`
-<!DOCTYPE html>
+  const supportPageStyle = `
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f6f3; color: #333; min-height: 100vh; }
+    .header { background: linear-gradient(135deg, #5B2C6F 0%, #7D3C98 100%); color: #fff; padding: 40px 20px; text-align: center; }
+    .header h1 { font-size: 2rem; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 1rem; }
+    .container { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    h2 { font-size: 1.25rem; margin-bottom: 12px; color: #5B2C6F; }
+    p { color: #555; line-height: 1.7; margin-bottom: 12px; }
+    a { color: #7D3C98; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .contact-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .contact-item:last-child { border-bottom: none; }
+    .footer { text-align: center; padding: 24px; color: #999; font-size: 0.85rem; }
+  `;
+
+  app.get('/support', (_req, res) => {
+    res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Support - Opictuary</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
-    .container { max-width: 600px; width: 100%; }
-    h1 { color: #9b59b6; font-size: 2rem; margin-bottom: 20px; text-align: center; }
-    .card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-    h2 { font-size: 1.25rem; margin-bottom: 12px; }
-    p { color: #a0a0a0; line-height: 1.6; margin-bottom: 12px; }
-    a { color: #9b59b6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .contact-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #2a2a4a; }
-    .contact-item:last-child { border-bottom: none; }
-  </style>
+  <style>${supportPageStyle}</style>
 </head>
 <body>
-  <div class="container">
+  <div class="header">
     <h1>Opictuary Support</h1>
+    <p>Honor every life, in every dimension</p>
+  </div>
+  <div class="container">
     <div class="card">
       <h2>Contact Us</h2>
-      <div class="contact-item">
-        <span>Email:</span>
-        <a href="mailto:support@opictuary.com">support@opictuary.com</a>
-      </div>
-      <div class="contact-item">
-        <span>Phone:</span>
-        <a href="tel:+18723496798">872-349-6798</a>
-      </div>
-      <div class="contact-item">
-        <span>Hours:</span>
-        <span>Monday - Friday, 9 AM - 6 PM CST</span>
-      </div>
+      <div class="contact-item"><span>Email:</span><a href="mailto:support@opictuary.com">support@opictuary.com</a></div>
+      <div class="contact-item"><span>Phone:</span><a href="tel:+18723496798">872-349-6798</a></div>
+      <div class="contact-item"><span>Hours:</span><span>Monday - Friday, 9 AM - 6 PM CST</span></div>
     </div>
     <div class="card">
       <h2>About Opictuary</h2>
-      <p>Opictuary is the world's first continuum memorial platform. We help families honor every life, in every dimension, through immersive digital memorials.</p>
+      <p>Opictuary is the world's first continuum memorial platform. We help families honor every life, in every dimension, through immersive digital memorials, AI-guided storytelling, and always-on family collaboration.</p>
       <p>Developer: Aaron Givens</p>
-      <p>Website: <a href="https://opictuary.com">opictuary.com</a></p>
     </div>
     <div class="card">
       <h2>App Support</h2>
-      <p>For app-related issues, feature requests, or feedback, please email us at <a href="mailto:support@opictuary.com">support@opictuary.com</a> or use the in-app feedback option.</p>
+      <p>For app-related issues, feature requests, or feedback, please email us at <a href="mailto:support@opictuary.com">support@opictuary.com</a>.</p>
+      <p>We typically respond within 24 hours on business days.</p>
+    </div>
+    <div class="card">
+      <h2>Frequently Asked Questions</h2>
+      <p><strong>How do I create a memorial?</strong><br/>Tap "Create Memorial" from the home screen and follow the guided steps to add photos, stories, and details about your loved one.</p>
+      <p><strong>How do I sign in?</strong><br/>You can sign in with your email and password, or use "Continue with Google" or "Continue with Apple" on the sign-in page.</p>
+      <p><strong>Is my data private?</strong><br/>Yes. Memorials are private by default and can only be accessed with an invite code. You control who sees your content.</p>
+      <p><strong>How do I delete my account?</strong><br/>Email <a href="mailto:support@opictuary.com">support@opictuary.com</a> with your account email address and we will process your deletion request within 30 days.</p>
     </div>
   </div>
+  <div class="footer">
+    <p>&copy; ${new Date().getFullYear()} Opictuary. All rights reserved.</p>
+    <p><a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+  </div>
 </body>
-</html>
-    `);
+</html>`);
+  });
+
+  app.get('/privacy', (_req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Opictuary</title>
+  <style>${supportPageStyle}</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Privacy Policy</h1>
+    <p>Last updated: February 17, 2026</p>
+  </div>
+  <div class="container">
+    <div class="card">
+      <h2>Introduction</h2>
+      <p>Opictuary ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our memorial platform application.</p>
+    </div>
+    <div class="card">
+      <h2>Information We Collect</h2>
+      <p><strong>Account Information:</strong> When you create an account, we collect your name, email address, and password (encrypted). If you sign in with Google or Apple, we receive your name and email from those services.</p>
+      <p><strong>Memorial Content:</strong> Photos, videos, stories, and other content you upload to create memorials.</p>
+      <p><strong>Usage Data:</strong> We collect anonymous analytics data about how you use the app to improve our services.</p>
+      <p><strong>Payment Information:</strong> Payment processing is handled securely by Stripe. We do not store your credit card details.</p>
+    </div>
+    <div class="card">
+      <h2>How We Use Your Information</h2>
+      <p>We use your information to provide and improve our memorial services, process transactions, send important updates about your account, and ensure the security of our platform.</p>
+    </div>
+    <div class="card">
+      <h2>Data Sharing</h2>
+      <p>We do not sell your personal information. We share data only with service providers necessary to operate the platform (such as payment processors and hosting providers) and when required by law.</p>
+    </div>
+    <div class="card">
+      <h2>Data Security</h2>
+      <p>We use industry-standard encryption and security measures to protect your data. Passwords are hashed using bcrypt. All connections use HTTPS encryption.</p>
+    </div>
+    <div class="card">
+      <h2>Your Rights</h2>
+      <p>You have the right to access, update, or delete your personal data. To request data deletion, email <a href="mailto:support@opictuary.com">support@opictuary.com</a>. We will process your request within 30 days.</p>
+    </div>
+    <div class="card">
+      <h2>Children's Privacy</h2>
+      <p>Our services are not directed to children under 13. We do not knowingly collect personal information from children under 13.</p>
+    </div>
+    <div class="card">
+      <h2>Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, contact us at <a href="mailto:support@opictuary.com">support@opictuary.com</a>.</p>
+    </div>
+  </div>
+  <div class="footer">
+    <p>&copy; ${new Date().getFullYear()} Opictuary. All rights reserved.</p>
+    <p><a href="/support">Support</a> | <a href="/terms">Terms of Service</a></p>
+  </div>
+</body>
+</html>`);
+  });
+
+  app.get('/terms', (_req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service - Opictuary</title>
+  <style>${supportPageStyle}</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Terms of Service</h1>
+    <p>Last updated: February 17, 2026</p>
+  </div>
+  <div class="container">
+    <div class="card">
+      <h2>Acceptance of Terms</h2>
+      <p>By accessing or using Opictuary, you agree to be bound by these Terms of Service. If you do not agree, please do not use our services.</p>
+    </div>
+    <div class="card">
+      <h2>Description of Service</h2>
+      <p>Opictuary is a memorial platform that allows users to create, share, and preserve digital memorials for loved ones. Our services include memorial creation, photo and video galleries, scheduled messages, celebration hubs, and related features.</p>
+    </div>
+    <div class="card">
+      <h2>User Accounts</h2>
+      <p>You are responsible for maintaining the confidentiality of your account credentials. You must provide accurate information when creating an account. You must be at least 13 years old to use our services.</p>
+    </div>
+    <div class="card">
+      <h2>User Content</h2>
+      <p>You retain ownership of content you upload. By posting content, you grant Opictuary a license to display and distribute that content as part of our memorial services. You are responsible for ensuring you have the right to share any content you upload.</p>
+    </div>
+    <div class="card">
+      <h2>Prohibited Conduct</h2>
+      <p>You agree not to upload offensive, harassing, or illegal content; impersonate others; attempt to interfere with the platform's operation; or use the service for any unlawful purpose.</p>
+    </div>
+    <div class="card">
+      <h2>Payments and Refunds</h2>
+      <p>Some features require payment. All payments are processed securely through Stripe. Refund requests can be submitted to <a href="mailto:support@opictuary.com">support@opictuary.com</a> within 30 days of purchase.</p>
+    </div>
+    <div class="card">
+      <h2>Termination</h2>
+      <p>We reserve the right to suspend or terminate accounts that violate these terms. You may delete your account at any time by contacting support.</p>
+    </div>
+    <div class="card">
+      <h2>Limitation of Liability</h2>
+      <p>Opictuary is provided "as is" without warranties. We are not liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+    </div>
+    <div class="card">
+      <h2>Contact</h2>
+      <p>For questions about these terms, contact <a href="mailto:support@opictuary.com">support@opictuary.com</a>.</p>
+    </div>
+  </div>
+  <div class="footer">
+    <p>&copy; ${new Date().getFullYear()} Opictuary. All rights reserved.</p>
+    <p><a href="/support">Support</a> | <a href="/privacy">Privacy Policy</a></p>
+  </div>
+</body>
+</html>`);
   });
 
   // Auth routes
