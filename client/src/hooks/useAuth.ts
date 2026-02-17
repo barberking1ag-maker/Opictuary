@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { getApiBaseUrl } from "@/config/api";
 import { setAuthToken, clearAuthToken } from "@/lib/authToken";
 
 interface User {
@@ -27,20 +28,26 @@ interface RegisterCredentials {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading, error } = useQuery<User>({
+  const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/auth/mobile/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
-      const res = await apiRequest("POST", "/api/auth/mobile/login", credentials);
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/mobile/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(credentials),
+      });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Login failed");
       }
-      return res.json();
+      return data;
     },
     onSuccess: (data) => {
       if (data?.token) {
@@ -52,7 +59,12 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterCredentials) => {
-      const res = await apiRequest("POST", "/api/auth/mobile/register", credentials);
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/mobile/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(credentials),
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Registration failed");
